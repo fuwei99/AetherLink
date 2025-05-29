@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { Box, IconButton, Tooltip, Snackbar, useTheme, Chip, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import { debounce } from 'lodash';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -13,7 +12,6 @@ import HtmlPreview from './HtmlPreview';
 import MermaidPreview from './MermaidPreview';
 import SvgPreview from './SvgPreview';
 import PlantUmlPreview from './PlantUmlPreview';
-import { highlightCode } from '../../../utils/shiki';
 
 type ViewMode = 'source' | 'preview' | 'split';
 
@@ -35,10 +33,6 @@ const ShikiCodeRenderer: React.FC<Props> = ({ code, language, onSave, codeBlockI
   const [viewMode, setViewMode] = useState<ViewMode>('source');
   const [editedCode, setEditedCode] = useState(code);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [highlightedHtml, setHighlightedHtml] = useState<string>('');
-  const [isHighlighting, setIsHighlighting] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [codeSettings, setCodeSettings] = useState({
     showLineNumbers: true,
     wordWrap: true,
@@ -67,69 +61,10 @@ const ShikiCodeRenderer: React.FC<Props> = ({ code, language, onSave, codeBlockI
     setEditedCode(code);
   }, [code]);
 
-  // 防抖的高亮函数，减少流式输出时的频繁重新渲染
-  const debouncedHighlight = useMemo(
-    () => debounce(async (codeToHighlight: string, lang: string, theme: 'one-light' | 'material-theme-darker') => {
-      if (!codeToHighlight) return;
-
-      setIsHighlighting(true);
-      try {
-        const html = await highlightCode(codeToHighlight, lang, theme);
-        setHighlightedHtml(html);
-      } catch (error) {
-        console.error('Shiki 高亮失败:', error);
-        // 降级到简单显示
-        setHighlightedHtml(`<pre><code>${escapeHtml(codeToHighlight)}</code></pre>`);
-      } finally {
-        setIsHighlighting(false);
-      }
-    }, 300), // 300ms防抖延迟，在流式输出时减少重新渲染
-    []
-  );
-
-  // 使用 Shiki 进行代码高亮
+  // 当原始代码变化时，更新编辑内容
   useEffect(() => {
-    if (!editedCode || isEditing) {
-      return;
-    }
-
-    // 清除之前的防抖调用
-    if (highlightTimeoutRef.current) {
-      clearTimeout(highlightTimeoutRef.current);
-    }
-
-    const shikiTheme = isDarkMode ? 'material-theme-darker' : 'one-light';
-
-    // 检测是否可能是流式输出
-    // 流式输出的特征：代码不完整（没有闭合的括号、引号等）或者长度较短且在快速变化
-    const hasUnclosedBrackets = (editedCode.match(/[({[]/g) || []).length > (editedCode.match(/[)}\]]/g) || []).length;
-    const hasUnclosedQuotes = (editedCode.match(/["`']/g) || []).length % 2 !== 0;
-    const isShortCode = editedCode.length < 500;
-    const isLikelyStreaming = isShortCode && (hasUnclosedBrackets || hasUnclosedQuotes);
-
-    setIsStreaming(isLikelyStreaming);
-
-    if (isLikelyStreaming) {
-      // 流式输出时使用较长的防抖延迟，减少闪烁
-      debouncedHighlight.cancel(); // 取消之前的防抖调用
-      highlightTimeoutRef.current = setTimeout(() => {
-        debouncedHighlight(editedCode, language, shikiTheme);
-      }, 500); // 流式输出时使用更长的延迟
-    } else {
-      // 非流式输出时使用较短的延迟
-      debouncedHighlight.cancel();
-      highlightTimeoutRef.current = setTimeout(() => {
-        debouncedHighlight(editedCode, language, shikiTheme);
-      }, 100);
-    }
-
-    // 清理函数
-    return () => {
-      if (highlightTimeoutRef.current) {
-        clearTimeout(highlightTimeoutRef.current);
-      }
-    };
-  }, [editedCode, language, isDarkMode, isEditing, debouncedHighlight]);
+    setEditedCode(code);
+  }, [code]);
 
   // 加载代码块设置
   useEffect(() => {
@@ -179,20 +114,7 @@ const ShikiCodeRenderer: React.FC<Props> = ({ code, language, onSave, codeBlockI
     setIsCollapsed(prev => !prev);
   }, []);
 
-  // 转义 HTML
-  const escapeHtml = (text: string): string => {
-    const map: Record<string, string> = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, (m) => map[m]);
-  };
 
-  // 根据设置决定使用编辑器还是预览
-  const shouldUseEditor = codeSettings.editorEnabled && isEditing;
 
   // 可以在开发模式下显示代码块ID，方便调试
   const showDebugInfo = false;
@@ -200,7 +122,7 @@ const ShikiCodeRenderer: React.FC<Props> = ({ code, language, onSave, codeBlockI
   return (
     <Box
       sx={{
-        marginY: 2,
+        marginY: 1,  // 减少上下外边距从 2 到 1 (8px)
         borderRadius: 2,
         border: isDarkMode ? '1px solid #404040' : '1px solid #d0d0d0',
         backgroundColor: isDarkMode ? '#1e1e1e' : '#f8f8f8',
@@ -343,7 +265,6 @@ const ShikiCodeRenderer: React.FC<Props> = ({ code, language, onSave, codeBlockI
       </Box>
 
       {/* 代码内容区域 */}
-      <Box sx={{ position: 'relative' }}>
         {isCollapsed ? (
           // 折叠状态：显示简化信息
           <Box
@@ -381,88 +302,21 @@ const ShikiCodeRenderer: React.FC<Props> = ({ code, language, onSave, codeBlockI
                 {codeType === 'svg' && <SvgPreview>{editedCode}</SvgPreview>}
                 {codeType === 'plantuml' && <PlantUmlPreview>{editedCode}</PlantUmlPreview>}
               </>
-            ) : shouldUseEditor || isEditing ? (
-              // 编辑模式
+            ) : (
+              // Always use CodeMirrorEditor for code display
               <CodeMirrorEditor
                 value={editedCode}
                 onChange={handleCodeChange}
                 language={language}
-                readOnly={false}
+                readOnly={!isEditing}
                 height="auto"
                 showLineNumbers={codeSettings.showLineNumbers}
                 wordWrap={codeSettings.wordWrap}
                 copyEnabled={false}
               />
-            ) : (
-              // Shiki 高亮预览模式
-              <Box
-                sx={{
-                  '& .shiki-code-block': {
-                    margin: 0,
-                    borderRadius: 0,
-                    backgroundColor: 'transparent !important',
-                    border: 'none',
-                    padding: '20px',
-                    lineHeight: '1.5',
-                    maxHeight: '400px',
-                    overflow: 'auto',
-                    fontSize: '14px',
-                    fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Source Code Pro", Consolas, "Liberation Mono", Menlo, Courier, monospace',
-                    whiteSpace: 'pre-wrap', /* 新增：允许代码块换行 */
-                    wordBreak: 'break-word', /* 新增：长单词换行 */
-                  },
-                  '& .shiki-fallback': {
-                    margin: 0,
-                    padding: '20px',
-                    backgroundColor: isDarkMode ? '#1e1e1e' : '#f8f8f8',
-                    color: isDarkMode ? '#e6e6e6' : '#2d3748',
-                    fontFamily: 'monospace',
-                    fontSize: '14px',
-                    lineHeight: '1.5',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    overflow: 'auto',
-                    maxHeight: '400px'
-                  }
-                }}
-              >
-                {isHighlighting ? (
-                  <Box sx={{
-                    padding: '20px',
-                    textAlign: 'center',
-                    color: isDarkMode ? '#888' : '#666',
-                    fontSize: '14px'
-                  }}>
-                    {isStreaming ? '正在接收代码...' : '正在使用 Shiki 进行语法高亮...'}
-                  </Box>
-                ) : highlightedHtml ? (
-                  <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
-                ) : (
-                  // 流式输出时的简单显示，避免频繁重新渲染
-                  <Box
-                    component="pre"
-                    sx={{
-                      margin: 0,
-                      padding: '20px',
-                      backgroundColor: isDarkMode ? '#1e1e1e' : '#f8f8f8',
-                      color: isDarkMode ? '#e6e6e6' : '#2d3748',
-                      fontFamily: 'monospace',
-                      fontSize: '14px',
-                      lineHeight: '1.5',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      overflow: 'auto',
-                      maxHeight: '400px'
-                    }}
-                  >
-                    <code>{editedCode}</code>
-                  </Box>
-                )}
-              </Box>
             )}
           </>
         )}
-      </Box>
 
       <Snackbar
         open={copySuccess}

@@ -38,9 +38,15 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
     models: [
       { id: 'gpt-4o', name: 'GPT-4o', provider: 'openai', enabled: true, isDefault: true },
       { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai', enabled: true, isDefault: false },
+      { id: 'gpt-4.1', name: 'GPT-4.1', provider: 'openai', enabled: true, isDefault: false },
+      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', provider: 'openai', enabled: true, isDefault: false },
+      { id: 'gpt-4.1-nano', name: 'GPT-4.1 Nano', provider: 'openai', enabled: true, isDefault: false },
       { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'openai', enabled: true, isDefault: false },
       { id: 'o1', name: 'o1', provider: 'openai', enabled: true, isDefault: false },
       { id: 'o1-mini', name: 'o1-mini', provider: 'openai', enabled: true, isDefault: false },
+      { id: 'o1-pro', name: 'o1-pro', provider: 'openai', enabled: true, isDefault: false },
+      { id: 'o3', name: 'o3', provider: 'openai', enabled: true, isDefault: false },
+      { id: 'o4-mini', name: 'o4-mini', provider: 'openai', enabled: true, isDefault: false },
     ]
   },
   {
@@ -53,9 +59,12 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
     baseUrl: 'https://generativelanguage.googleapis.com/v1',
     providerType: 'gemini',
     models: [
+      { id: 'gemini-2.5-pro-preview-05-06', name: 'Gemini 2.5 Pro Preview', provider: 'gemini', enabled: true, isDefault: false },
+      { id: 'gemini-2.5-flash-preview-04-17', name: 'Gemini 2.5 Flash Preview', provider: 'gemini', enabled: true, isDefault: false },
       { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash Experimental', provider: 'gemini', enabled: true, isDefault: false },
-      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'gemini', enabled: true, isDefault: false },
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'gemini', enabled: true, isDefault: false },
+      { id: 'gemini-2.0-flash-001', name: 'Gemini 2.0 Flash', provider: 'gemini', enabled: true, isDefault: false },
+      { id: 'gemini-1.5-pro-002', name: 'Gemini 1.5 Pro', provider: 'gemini', enabled: true, isDefault: false },
+      { id: 'gemini-1.5-flash-002', name: 'Gemini 1.5 Flash', provider: 'gemini', enabled: true, isDefault: false },
     ]
   },
   {
@@ -68,6 +77,9 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
     baseUrl: 'https://api.anthropic.com/v1',
     providerType: 'anthropic',
     models: [
+      { id: 'claude-opus-4-20250514', name: 'Claude Opus 4', provider: 'anthropic', enabled: true, isDefault: false },
+      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', provider: 'anthropic', enabled: true, isDefault: false },
+      { id: 'claude-3-7-sonnet-20250219', name: 'Claude 3.7 Sonnet', provider: 'anthropic', enabled: true, isDefault: false },
       { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'anthropic', enabled: true, isDefault: false },
       { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', provider: 'anthropic', enabled: true, isDefault: false },
       { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', provider: 'anthropic', enabled: true, isDefault: false },
@@ -83,8 +95,8 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
     baseUrl: 'https://api.deepseek.com',
     providerType: 'openai',
     models: [
-      { id: 'deepseek-chat', name: 'DeepSeek-V3', provider: 'deepseek', enabled: true, isDefault: false },
-      { id: 'deepseek-reasoner', name: 'DeepSeek-R1', provider: 'deepseek', enabled: true, isDefault: false },
+      { id: 'deepseek-chat', name: 'DeepSeek-V3', provider: 'deepseek', enabled: true, isDefault: false, description: '最新一代通用对话模型，性能全面提升' },
+      { id: 'deepseek-reasoner', name: 'DeepSeek-R1', provider: 'deepseek', enabled: true, isDefault: false, description: '推理专用模型，在数学、编程、科学推理等领域表现突出' },
     ]
   },
   {
@@ -97,10 +109,10 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
     baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
     providerType: 'volcengine',
     models: [
-      { id: 'doubao-1.5-pro', name: '豆包 1.5 Pro', provider: 'volcengine', enabled: true, isDefault: false, description: '豆包大模型专业版' },
-      { id: 'doubao-1.5-lite', name: '豆包 1.5 Lite', provider: 'volcengine', enabled: true, isDefault: false, description: '豆包大模型轻量版' },
-      { id: 'doubao-1.5-thinking-pro', name: '豆包 1.5 Thinking Pro', provider: 'volcengine', enabled: true, isDefault: false, description: '豆包大模型思考专业版' },
-      { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'volcengine', enabled: true, isDefault: false, description: 'DeepSeek R1大模型' }
+      { id: 'doubao-1.5-pro', name: '豆包 1.5 Pro', provider: 'volcengine', enabled: true, isDefault: false, description: '豆包大模型专业版，综合能力强' },
+      { id: 'doubao-1.5-lite', name: '豆包 1.5 Lite', provider: 'volcengine', enabled: true, isDefault: false, description: '豆包大模型轻量版，快速响应' },
+      { id: 'doubao-1.5-thinking-pro', name: '豆包 1.5 Thinking Pro', provider: 'volcengine', enabled: true, isDefault: false, description: '原生多模态深度思考模型，在数学、编程、科学推理等专业领域表现突出' },
+      { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'volcengine', enabled: true, isDefault: false, description: 'DeepSeek R1推理模型，通过火山引擎提供' }
     ]
   },
   {
@@ -113,6 +125,8 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
     baseUrl: 'https://open.bigmodel.cn/api/paas/v4/',
     providerType: 'zhipu',
     models: [
+      { id: 'glm-5-plus', name: 'GLM-5-Plus', provider: 'zhipu', enabled: true, isDefault: false, description: 'GLM-5增强版，最新一代大模型' },
+      { id: 'glm-5-air', name: 'GLM-5-Air', provider: 'zhipu', enabled: true, isDefault: false, description: 'GLM-5轻量版，平衡性能与速度' },
       { id: 'glm-4-0520', name: 'GLM-4-0520', provider: 'zhipu', enabled: true, isDefault: false, description: 'GLM-4最新版本，性能优化' },
       { id: 'glm-4-plus', name: 'GLM-4-Plus', provider: 'zhipu', enabled: true, isDefault: false, description: 'GLM-4增强版，更强推理能力' },
       { id: 'glm-4-long', name: 'GLM-4-Long', provider: 'zhipu', enabled: true, isDefault: false, description: 'GLM-4长文本版，支持超长上下文' },

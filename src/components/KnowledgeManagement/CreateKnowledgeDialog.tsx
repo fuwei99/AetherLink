@@ -22,6 +22,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { getAvailableEmbeddingModels, getModelDimensions } from '../../shared/services/MobileEmbeddingService';
+import { MobileEmbeddingService } from '../../shared/services/MobileEmbeddingService';
 import {
   DEFAULT_KNOWLEDGE_DOCUMENT_COUNT,
   DEFAULT_DIMENSIONS,
@@ -129,15 +130,29 @@ const CreateKnowledgeDialog: React.FC<CreateKnowledgeDialogProps> = ({
     }
   };
 
-  const handleModelChange = (event: any) => {
+  const handleModelChange = async (event: any) => {
     const modelId = event.target.value as string;
-    const dimensions = getModelDimensions(modelId);
 
-    setFormData((prev) => ({
-      ...prev,
-      model: modelId,
-      dimensions: dimensions, // 根据模型自动获取正确的维度
-    }));
+    // 获取模型的真实维度
+    try {
+      const embeddingService = MobileEmbeddingService.getInstance();
+      const dimensions = await embeddingService.getEmbeddingDimensions(modelId);
+
+      setFormData((prev) => ({
+        ...prev,
+        model: modelId,
+        dimensions: dimensions, // 使用真实的维度
+      }));
+    } catch (error) {
+      console.error('获取模型维度失败:', error);
+      // 回退到配置文件中的维度
+      const dimensions = getModelDimensions(modelId);
+      setFormData((prev) => ({
+        ...prev,
+        model: modelId,
+        dimensions: dimensions,
+      }));
+    }
   };
 
   const validateForm = (): boolean => {

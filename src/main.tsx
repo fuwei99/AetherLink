@@ -10,6 +10,12 @@ import { loadSystemPrompts } from './shared/store/slices/systemPromptsSlice';
 // 导入 EventSource polyfill 以支持移动端 SSE
 import { EventSourcePolyfill } from 'event-source-polyfill';
 
+// 🔥 保存原生fetch引用，防止被拦截器覆盖
+if (typeof globalThis !== 'undefined' && globalThis.fetch) {
+  (globalThis as any).__originalFetch = globalThis.fetch.bind(globalThis);
+  console.log('[Fetch Backup] 原生fetch已备份');
+}
+
 // 全局替换 EventSource
 if (typeof window !== 'undefined') {
   (window as any).EventSource = EventSourcePolyfill;

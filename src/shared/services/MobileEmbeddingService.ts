@@ -6,6 +6,7 @@ import type { KnowledgeDocument, KnowledgeSearchResult } from '../types/Knowledg
 import type { Model } from '../types';
 import { isEmbeddingModel } from '../config/models';
 import { getEmbeddingDimensions } from '../config/embeddingModels';
+import { universalFetch } from '../utils/universalFetch';
 import store from '../store';
 
 /**
@@ -70,6 +71,23 @@ export class MobileEmbeddingService {
   }
 
   /**
+   * 获取嵌入模型的真实维度
+   * @param modelId 模型ID
+   * @returns 模型维度
+   */
+  public async getEmbeddingDimensions(modelId: string): Promise<number> {
+    try {
+      // 使用测试文本获取真实维度
+      const testVector = await this.getEmbedding('test', modelId);
+      return testVector.length;
+    } catch (error) {
+      console.error('[MobileEmbeddingService] 获取模型维度失败:', error);
+      // 回退到配置文件中的维度
+      return getEmbeddingDimensions(modelId);
+    }
+  }
+
+  /**
    * 根据模型ID获取模型配置
    */
   private getModelById(modelId: string): Model | null {
@@ -115,8 +133,8 @@ export class MobileEmbeddingService {
         'Authorization': `Bearer ${model.apiKey}`
       };
 
-      // 调用API
-      const response = await fetch(apiEndpoint, {
+      // 调用API - 使用universalFetch确保移动端兼容性
+      const response = await universalFetch(apiEndpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -126,12 +144,32 @@ export class MobileEmbeddingService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`API错误: ${response.status} - ${JSON.stringify(errorData)}`);
+        let errorMessage = `API错误: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage += ` - ${JSON.stringify(errorData)}`;
+        } catch {
+          errorMessage += ` - ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      const embedding = data.data[0].embedding;
+
+      // 兼容不同API响应格式
+      let embedding: number[];
+      if (data.data && Array.isArray(data.data) && data.data[0]?.embedding) {
+        // OpenAI格式
+        embedding = data.data[0].embedding;
+      } else if (data.embedding && Array.isArray(data.embedding)) {
+        // Gemini格式
+        embedding = data.embedding;
+      } else if (Array.isArray(data)) {
+        // 直接数组格式
+        embedding = data;
+      } else {
+        throw new Error('无法解析嵌入向量响应格式');
+      }
 
       // 缓存结果
       this.embeddingCache.set(cacheKey, embedding);

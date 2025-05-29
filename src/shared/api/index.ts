@@ -220,18 +220,12 @@ async function processModelRequest(model: Model, options: ChatRequest): Promise<
               const currentReasoningTime = reasoningStartTime > 0 ? Date.now() - reasoningStartTime : undefined;
 
               try {
-                // 创建一个全新的对象，确保它是可扩展的
-                const chunkWithMetadata = Object.create(null);
-                // 添加属性
-                chunkWithMetadata.content = content;
-                chunkWithMetadata.reasoning = reasoningContent;
-                chunkWithMetadata.reasoningTime = currentReasoningTime;
-
+                // 🔥 修复网络搜索后AI响应流式输出问题：直接发送内容，不使用JSON包装
                 // 发送完整内容而不是增量，避免增量更新带来的问题
-                options.onChunk!(JSON.stringify(chunkWithMetadata));
+                options.onChunk!(content);
               } catch (error) {
-                console.error('创建或发送消息元数据时出错:', error);
-                // 降级处理：只发送内容，不包含元数据
+                console.error('发送流式内容时出错:', error);
+                // 降级处理：仍然发送内容
                 options.onChunk!(content);
               }
               hasReceivedReasoning = false; // 重置标志

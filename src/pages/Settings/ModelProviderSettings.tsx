@@ -44,7 +44,58 @@ import SimpleModelDialog from '../../components/settings/SimpleModelDialog';
 import { testApiConnection } from '../../shared/api';
 import { sendChatRequest } from '../../shared/api';
 
+// API调用注意: 配置中保存原始URL，实际请求时使用formatApiHost处理URL并添加正确路径
 
+/**
+ * 格式化API主机地址
+ * @param host 输入的基础URL
+ * @returns 格式化后的URL
+ */
+const formatApiHost = (host: string) => {
+  const forceUseOriginalHost = () => {
+    if (host.endsWith('/')) {
+      return true;
+    }
+    
+    // 特定URL保持原样
+    return host.endsWith('volces.com/api/v3');
+  };
+
+  // 如果强制使用原始主机地址，直接返回
+  if (forceUseOriginalHost()) {
+    return host;
+  }
+
+  // 正确处理URL格式
+  // 1. 确保URL不以/结尾
+  let normalizedUrl = host.trim();
+  if (normalizedUrl.endsWith('/')) {
+    normalizedUrl = normalizedUrl.slice(0, -1);
+  }
+
+  // 2. 添加/v1/
+  return `${normalizedUrl}/v1/`;
+};
+
+/**
+ * 生成预览URL
+ */
+const hostPreview = (baseUrl: string, providerType?: string) => {
+  if (baseUrl.endsWith('#')) {
+    return baseUrl.replace('#', '');
+  }
+
+  // 去除可能的@前缀
+  let cleanUrl = baseUrl;
+  if (cleanUrl.startsWith('@')) {
+    cleanUrl = cleanUrl.substring(1);
+  }
+  
+  if (providerType === 'openai') {
+    return formatApiHost(cleanUrl) + 'chat/completions';
+  }
+  return formatApiHost(cleanUrl) + 'responses';
+};
 
 /**
  * 智能URL补全函数 - 专门处理OpenAI兼容格式的API
@@ -55,51 +106,19 @@ import { sendChatRequest } from '../../shared/api';
 const smartCompleteApiUrl = (baseUrl: string, providerType?: string): string => {
   if (!baseUrl.trim()) return '';
 
+  // 去除可能的@前缀
+  let cleanUrl = baseUrl.trim();
+  if (cleanUrl.startsWith('@')) {
+    cleanUrl = cleanUrl.substring(1);
+    }
+
   // 如果用户在末尾添加了 #，表示强制使用原始URL
-  if (baseUrl.endsWith('#')) {
-    return baseUrl.slice(0, -1);
+  if (cleanUrl.endsWith('#')) {
+    return cleanUrl.slice(0, -1);
   }
 
-  // 标准化URL - 移除末尾的斜杠
-  let normalizedUrl = baseUrl.trim();
-  if (normalizedUrl.endsWith('/')) {
-    normalizedUrl = normalizedUrl.slice(0, -1);
-  }
-
-  // 如果已经包含完整的API路径，直接返回
-  if (normalizedUrl.includes('/chat/completions') ||
-      normalizedUrl.includes('/v1/models') ||
-      normalizedUrl.includes('/models/')) {
-    return normalizedUrl;
-  }
-
-  // 只处理OpenAI兼容格式的供应商
-  const isOpenAICompatible = ['openai', 'deepseek', 'grok', 'siliconflow'].includes(providerType || '');
-
-  if (isOpenAICompatible || !providerType || providerType === 'custom') {
-    // 检查常见的供应商域名并补全
-    if (normalizedUrl === 'https://api.openai.com' || normalizedUrl.endsWith('openai.com')) {
-      return 'https://api.openai.com/v1';
-    }
-    if (normalizedUrl === 'https://api.deepseek.com' || normalizedUrl.endsWith('deepseek.com')) {
-      return 'https://api.deepseek.com';
-    }
-    if (normalizedUrl === 'https://api.x.ai' || normalizedUrl.endsWith('x.ai')) {
-      return 'https://api.x.ai/v1';
-    }
-    if (normalizedUrl.includes('siliconflow.cn') && !normalizedUrl.includes('/v1')) {
-      return 'https://api.siliconflow.cn/v1';
-    }
-
-    // 对于其他自定义域名，如果没有 /v1 路径则智能添加
-    // 例如: https://tow.bt6.top -> https://tow.bt6.top/v1
-    if (!normalizedUrl.includes('/v1')) {
-      return `${normalizedUrl}/v1`;
-    }
-  }
-
-  // 对于非OpenAI兼容的供应商，直接返回原URL
-  return normalizedUrl;
+  // 其他情况保持URL不变
+  return cleanUrl;
 };
 
 /**
@@ -109,26 +128,8 @@ const smartCompleteApiUrl = (baseUrl: string, providerType?: string): string => 
  * @returns 显示用的完整API端点
  */
 const getCompleteApiUrl = (baseUrl: string, providerType?: string): string => {
-  const smartUrl = smartCompleteApiUrl(baseUrl, providerType);
-  if (!smartUrl) return '';
-
-  // 如果已经包含完整路径，直接返回
-  if (smartUrl.includes('/chat/completions') ||
-      smartUrl.includes('/messages') ||
-      smartUrl.includes('/generateContent') ||
-      smartUrl.includes('/models/')) {
-    return smartUrl;
-  }
-
-  // 只为OpenAI兼容的供应商添加 /chat/completions 端点
-  const isOpenAICompatible = ['openai', 'deepseek', 'grok', 'siliconflow'].includes(providerType || '');
-
-  if (isOpenAICompatible || !providerType || providerType === 'custom') {
-    return `${smartUrl}/chat/completions`;
-  }
-
-  // 对于其他供应商类型，直接返回智能补全的URL
-  return smartUrl;
+  if (!baseUrl.trim()) return '';
+  return hostPreview(baseUrl, providerType);
 };
 
 const ModelProviderSettings: React.FC = () => {
@@ -182,14 +183,12 @@ const ModelProviderSettings: React.FC = () => {
         return false;
       }
 
-      // 使用智能补全的URL进行保存
-      const smartUrl = baseUrl ? smartCompleteApiUrl(baseUrl, provider.providerType) : '';
-
+      // 直接保存原始URL，不进行预处理（与新行为一致）
       dispatch(updateProvider({
         id: provider.id,
         updates: {
           apiKey,
-          baseUrl: smartUrl, // 保存智能补全后的URL
+          baseUrl: baseUrl.trim(), // 保存原始URL，只去除前后空格
           isEnabled
         }
       }));
@@ -739,7 +738,7 @@ const ModelProviderSettings: React.FC = () => {
                 </Typography>
                 <TextField
                   fullWidth
-                  placeholder="输入基础URL，例如: https://api.openai.com"
+                  placeholder="输入基础URL，例如: https://tow.bt6.top"
                   value={baseUrl}
                   onChange={(e) => {
                     setBaseUrl(e.target.value);
@@ -754,13 +753,13 @@ const ModelProviderSettings: React.FC = () => {
                         </span>
                       )}
                       <span style={{ display: 'block', color: 'text.secondary', marginBottom: '4px', fontSize: '0.75rem' }}>
-                        在URL末尾添加 # 可强制使用自定义格式
+                        在URL末尾添加#可强制使用自定义格式，末尾添加/也可保持原格式
                       </span>
                       {baseUrl && (
                         <span
                           style={{
                             display: 'inline-block',
-                            color: baseUrl.endsWith('#') ? '#ed6c02' : '#666',
+                            color: baseUrl.endsWith('#') || baseUrl.endsWith('/') ? '#ed6c02' : '#666',
                             fontFamily: 'monospace',
                             fontSize: '0.7rem',
                             backgroundColor: 'rgba(0, 0, 0, 0.04)',
@@ -769,7 +768,8 @@ const ModelProviderSettings: React.FC = () => {
                             marginTop: '4px'
                           }}
                         >
-                          {baseUrl.endsWith('#') ? '强制使用: ' : '完整地址: '}
+                          {baseUrl.endsWith('#') ? '强制使用: ' : 
+                           baseUrl.endsWith('/') ? '保持原格式: ' : '完整地址: '}
                           {getCompleteApiUrl(baseUrl, provider?.providerType)}
                         </span>
                       )}

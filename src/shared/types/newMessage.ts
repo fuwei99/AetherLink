@@ -193,8 +193,8 @@ export interface ModelComparisonMessageBlock extends BaseMessageBlock {
 export interface ChartMessageBlock extends BaseMessageBlock {
   type: typeof MessageBlockType.CHART;
   chartType: 'bar' | 'line' | 'pie' | 'scatter';
-  data: any;
-  options?: any;
+  data: unknown;
+  options?: Record<string, unknown>;
 }
 
 // 数学公式块
@@ -224,6 +224,15 @@ export interface KnowledgeReferenceMessageBlock extends BaseMessageBlock {
     fileId?: string;
     knowledgeDocumentId?: string;
     searchQuery?: string;
+    // 综合引用块的额外字段
+    isCombined?: boolean;
+    resultCount?: number;
+    results?: Array<{
+      index: number;
+      content: string;
+      similarity: number;
+      documentId?: string;
+    }>;
   };
 }
 
@@ -282,6 +291,13 @@ export interface Metrics {
   firstTokenLatency?: number;
 }
 
+// 元数据类型，用于替代any
+export interface MessageMetadata {
+  [key: string]: unknown;
+  interrupted?: boolean;
+  interruptedAt?: string;
+}
+
 // 消息版本类型
 export interface MessageVersion {
   id: string;
@@ -295,7 +311,7 @@ export interface MessageVersion {
     content?: string;
     blockIds?: string[];
     isInitialVersion?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -320,4 +336,5 @@ export type Message = {
   blocks: MessageBlock['id'][]
   versions?: MessageVersion[]
   currentVersionId?: string // 当前显示的版本ID
+  metadata?: MessageMetadata // 使用具体的MessageMetadata类型
 }

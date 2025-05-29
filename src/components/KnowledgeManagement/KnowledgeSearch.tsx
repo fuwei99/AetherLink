@@ -16,11 +16,18 @@ import {
   Card,
   CardContent,
   Stack,
+  FormControlLabel,
+  Switch,
+  Chip,
+  Tooltip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import SpeedIcon from '@mui/icons-material/Speed';
 import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeService';
+import { RAGSearchMode } from '../../shared/constants/ragConfig';
 import type { KnowledgeSearchResult, KnowledgeBase } from '../../shared/types/KnowledgeBase';
 import { BlockManager } from '../../shared/services/messages/BlockManager';
 import { useSelector } from 'react-redux';
@@ -42,6 +49,8 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBase | null>(null);
   const [threshold, setThreshold] = useState(0.7);
   const [maxResults, setMaxResults] = useState(5);
+  const [useEnhancedRAG, setUseEnhancedRAG] = useState(true); // 新增：RAG模式开关
+  const [searchTime, setSearchTime] = useState<number | null>(null); // 新增：搜索耗时
   const currentTopicId = useSelector((state: RootState) => state.messages.currentTopicId);
   
   useEffect(() => {
@@ -65,20 +74,27 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
       setError('请输入搜索内容');
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+    setSearchTime(null);
+
+    const startTime = Date.now();
+
     try {
       const searchResults = await MobileKnowledgeService.getInstance().search({
         knowledgeBaseId,
         query: query.trim(),
         threshold,
-        limit: maxResults
+        limit: maxResults,
+        useEnhancedRAG // 使用RAG模式开关
       });
-      
+
+      const endTime = Date.now();
+      setSearchTime(endTime - startTime);
+
       setResults(searchResults);
-      
+
       if (searchResults.length === 0) {
         setError('没有找到匹配的内容');
       }
@@ -130,9 +146,31 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
   return (
     <Box sx={{ width: '100%', overflow: 'auto', maxHeight: 'calc(100vh - 300px)' }}>
       <Paper elevation={0} sx={{ p: 2, mb: 2 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          知识库搜索
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="subtitle1">
+            知识库搜索
+          </Typography>
+
+          <Tooltip title={useEnhancedRAG ? "增强RAG搜索：使用查询扩展、混合搜索和重排序" : "简单搜索：仅使用向量相似度"}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={useEnhancedRAG}
+                  onChange={(e) => setUseEnhancedRAG(e.target.checked)}
+                  size="small"
+                />
+              }
+              label={
+                <Box display="flex" alignItems="center" gap={0.5}>
+                  {useEnhancedRAG ? <AutoAwesomeIcon fontSize="small" /> : <SpeedIcon fontSize="small" />}
+                  <Typography variant="caption">
+                    {useEnhancedRAG ? '增强RAG' : '简单搜索'}
+                  </Typography>
+                </Box>
+              }
+            />
+          </Tooltip>
+        </Box>
 
         <TextField
           fullWidth
@@ -178,9 +216,28 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
 
       {results.length > 0 && (
         <Box>
-          <Typography variant="subtitle2" gutterBottom>
-            搜索结果 ({results.length})
-          </Typography>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+            <Typography variant="subtitle2">
+              搜索结果 ({results.length})
+            </Typography>
+
+            <Box display="flex" gap={1}>
+              {searchTime && (
+                <Chip
+                  label={`${searchTime}ms`}
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                />
+              )}
+              <Chip
+                label={useEnhancedRAG ? '增强RAG' : '简单搜索'}
+                size="small"
+                color={useEnhancedRAG ? 'success' : 'default'}
+                icon={useEnhancedRAG ? <AutoAwesomeIcon /> : <SpeedIcon />}
+              />
+            </Box>
+          </Box>
           
           <List disablePadding>
             {results.map((result) => (

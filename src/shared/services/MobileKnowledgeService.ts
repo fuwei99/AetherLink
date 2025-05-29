@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid';
 import { dexieStorage } from './DexieStorageService';
 import { EventEmitter, EVENT_NAMES } from './EventService';
 import { MobileEmbeddingService } from './MobileEmbeddingService';
+import { EnhancedRAGService } from './EnhancedRAGService';
 import {
   DEFAULT_KNOWLEDGE_DOCUMENT_COUNT,
   DEFAULT_KNOWLEDGE_THRESHOLD,
@@ -19,13 +20,10 @@ import type { KnowledgeBase, KnowledgeDocument, KnowledgeSearchResult } from '..
  */
 export class MobileKnowledgeService {
   private static instance: MobileKnowledgeService;
-  // 先注释掉未定义的服务
-  // private embeddingService: MobileEmbeddingService;
-  // private fileService: MobileFileStorageService;
+  private enhancedRAGService: EnhancedRAGService;
 
   private constructor() {
-    // this.embeddingService = MobileEmbeddingService.getInstance();
-    // this.fileService = MobileFileStorageService.getInstance();
+    this.enhancedRAGService = EnhancedRAGService.getInstance();
   }
 
   /**
@@ -328,9 +326,64 @@ export class MobileKnowledgeService {
   }
 
   /**
-   * 搜索知识库
+   * 增强RAG搜索（新增）
+   */
+  public async enhancedSearch(params: {
+    knowledgeBaseId: string;
+    query: string;
+    threshold?: number;
+    limit?: number;
+    enableRerank?: boolean;
+    enableQueryExpansion?: boolean;
+    enableHybridSearch?: boolean;
+  }): Promise<KnowledgeSearchResult[]> {
+    console.log(`[MobileKnowledgeService] 使用增强RAG搜索: ${params.query}`);
+    return this.enhancedRAGService.enhancedSearch(params);
+  }
+
+  /**
+   * 搜索知识库 - 支持选择搜索模式
    */
   public async search(params: {
+    knowledgeBaseId: string;
+    query: string;
+    threshold?: number;
+    limit?: number;
+    useEnhancedRAG?: boolean; // 新增：是否使用增强RAG
+  }): Promise<KnowledgeSearchResult[]> {
+    // 如果启用增强RAG，使用新的搜索算法
+    if (params.useEnhancedRAG !== false) {
+      console.log(`[MobileKnowledgeService] 使用增强RAG搜索模式`);
+      try {
+        return await this.enhancedRAGService.enhancedSearch({
+          knowledgeBaseId: params.knowledgeBaseId,
+          query: params.query,
+          threshold: params.threshold,
+          limit: params.limit,
+          config: {
+            enableQueryExpansion: true,
+            enableHybridSearch: true,
+            enableRerank: true,
+            enableContextAware: true,
+            maxCandidates: 50,
+            diversityThreshold: 0.8
+          }
+        });
+      } catch (error) {
+        console.warn('[MobileKnowledgeService] 增强RAG搜索失败，回退到简单搜索:', error);
+        // 继续执行简单搜索作为回退
+      }
+    }
+
+    // 简单搜索模式（原有逻辑）
+    console.log(`[MobileKnowledgeService] 使用简单搜索模式`);
+    return this.simpleSearch(params);
+  }
+
+  /**
+   * 简单搜索模式（原有逻辑重构）
+   */
+  private async simpleSearch(params: {
     knowledgeBaseId: string;
     query: string;
     threshold?: number;
@@ -342,7 +395,7 @@ export class MobileKnowledgeService {
         throw new Error(`知识库不存在: ${params.knowledgeBaseId}`);
       }
 
-      // 获取查询向量（使用云端API）
+      // 获取查询向量（使用知识库创建时的模型）
       let queryVector: number[];
       try {
         const embeddingService = MobileEmbeddingService.getInstance();
@@ -350,7 +403,7 @@ export class MobileKnowledgeService {
         console.log(`[MobileKnowledgeService] 查询向量获取成功，维度: ${queryVector.length}`);
       } catch (embeddingError) {
         console.warn(`[MobileKnowledgeService] 查询向量获取失败，使用本地模拟向量:`, embeddingError);
-        // 回退到本地模拟向量
+        // 回退到本地模拟向量，使用知识库的维度
         queryVector = this.createFallbackVector(knowledgeBase.dimensions);
         console.log(`[MobileKnowledgeService] 使用回退向量，维度: ${queryVector.length}`);
       }
@@ -370,7 +423,7 @@ export class MobileKnowledgeService {
         console.log(`[MobileKnowledgeService] 查询向量维度: ${queryVector.length}`);
 
         if (firstDocVector && firstDocVector.length !== queryVector.length) {
-          console.warn(`[MobileKnowledgeService] 维度不匹配警告: 查询向量(${queryVector.length}) vs 文档向量(${firstDocVector.length})`);
+          throw new Error(`向量维度不匹配: 查询向量(${queryVector.length}) vs 知识库文档向量(${firstDocVector.length})。请使用相同的嵌入模型或重新创建知识库。`);
         }
       }
 
@@ -381,11 +434,11 @@ export class MobileKnowledgeService {
       // 使用简单的相似度计算
       const results = this.localVectorSearch(queryVector, documents, threshold, limit);
 
-      console.log(`[MobileKnowledgeService] 搜索结果: ${results.length} 条`);
+      console.log(`[MobileKnowledgeService] 简单搜索结果: ${results.length} 条`);
 
       return results;
     } catch (error) {
-      console.error('[MobileKnowledgeService] 搜索知识库失败:', error);
+      console.error('[MobileKnowledgeService] 简单搜索失败:', error);
       return [];
     }
   }
@@ -417,22 +470,12 @@ export class MobileKnowledgeService {
   }
 
   /**
-   * 计算余弦相似度（带维度兼容性处理）
+   * 计算余弦相似度
    */
   private cosineSimilarity(vecA: number[], vecB: number[]): number {
-    // 处理维度不匹配的情况
+    // 维度必须匹配
     if (vecA.length !== vecB.length) {
-      console.warn(`[MobileKnowledgeService] 向量维度不匹配: ${vecA.length} vs ${vecB.length}，尝试维度对齐`);
-
-      // 尝试维度对齐
-      const alignedVectors = this.alignVectorDimensions(vecA, vecB);
-      if (!alignedVectors) {
-        console.error('[MobileKnowledgeService] 无法对齐向量维度，返回0相似度');
-        return 0;
-      }
-
-      vecA = alignedVectors.vecA;
-      vecB = alignedVectors.vecB;
+      throw new Error(`向量维度不匹配: ${vecA.length} vs ${vecB.length}`);
     }
 
     let dotProduct = 0;
@@ -455,32 +498,7 @@ export class MobileKnowledgeService {
     return dotProduct / (magnitudeA * magnitudeB);
   }
 
-  /**
-   * 对齐向量维度（处理维度不匹配）
-   */
-  private alignVectorDimensions(vecA: number[], vecB: number[]): { vecA: number[], vecB: number[] } | null {
-    const lenA = vecA.length;
-    const lenB = vecB.length;
 
-    if (lenA === lenB) {
-      return { vecA, vecB };
-    }
-
-    // 取较小的维度作为目标维度
-    const targetDim = Math.min(lenA, lenB);
-
-    if (targetDim === 0) {
-      return null;
-    }
-
-    // 截断到目标维度
-    const alignedVecA = vecA.slice(0, targetDim);
-    const alignedVecB = vecB.slice(0, targetDim);
-
-    console.log(`[MobileKnowledgeService] 向量维度已对齐: ${lenA},${lenB} -> ${targetDim}`);
-
-    return { vecA: alignedVecA, vecB: alignedVecB };
-  }
 
   /**
    * 创建回退向量（当云端API失败时使用）

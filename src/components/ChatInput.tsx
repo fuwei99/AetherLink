@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { IconButton, CircularProgress, Badge, Tooltip } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
-import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import LinkIcon from '@mui/icons-material/Link';
 import StopIcon from '@mui/icons-material/Stop';
 
@@ -24,6 +23,9 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../shared/store';
 import AIDebateButton from './AIDebateButton';
 import type { DebateConfig } from '../shared/services/AIDebateService';
+import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition';
+import { VoiceButton, VoiceInputArea } from './VoiceRecognition';
+import EnhancedVoiceInput from './VoiceRecognition/EnhancedVoiceInput';
 
 interface ChatInputProps {
   onSendMessage: (message: string, images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => void;
@@ -65,6 +67,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [uploadMenuAnchorEl, setUploadMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [multiModelSelectorOpen, setMultiModelSelectorOpen] = useState(false);
   const [isIOS, setIsIOS] = useState(false); // 新增: 是否是iOS设备
+  const [isVoiceMode, setIsVoiceMode] = useState(false); // 语音输入模式状态
+
 
   // 文件和图片状态
   const [images, setImages] = useState<ImageContent[]>([]);
@@ -135,6 +139,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
     availableModels
   });
 
+  // 语音识别功能
+  const {
+    isListening,
+    recognitionText,
+    startRecognition,
+    stopRecognition,
+  } = useVoiceRecognition();
+
   // 当话题ID变化时，从数据库获取话题信息
   useEffect(() => {
     const loadTopic = async () => {
@@ -167,8 +179,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   // 检测iOS设备
   useEffect(() => {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                       (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
     setIsIOS(isIOSDevice);
   }, []);
 
@@ -247,28 +259,28 @@ const ChatInput: React.FC<ChatInputProps> = ({
     // 添加键盘显示检测
     const handleFocus = () => {
       setIsKeyboardVisible(true);
-      
+
       // iOS设备特殊处理
       if (isIOS && textareaRef.current) {
         // 延迟执行，确保输入法已弹出
         setTimeout(() => {
           // 滚动到输入框位置
           textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          
+
           // 额外处理：尝试滚动页面到底部
           window.scrollTo({
             top: document.body.scrollHeight,
             behavior: 'smooth'
           });
-          
+
           // iOS特有：确保输入框在可视区域内
           const viewportHeight = window.innerHeight;
           const keyboardHeight = viewportHeight * 0.4; // 估计键盘高度约为视口的40%
-          
+
           if (textareaRef.current) {
             const inputRect = textareaRef.current.getBoundingClientRect();
             const inputBottom = inputRect.bottom;
-            
+
             // 如果输入框底部被键盘遮挡，则滚动页面
             if (inputBottom > viewportHeight - keyboardHeight) {
               const scrollAmount = inputBottom - (viewportHeight - keyboardHeight) + 20; // 额外20px空间
@@ -347,6 +359,88 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
+
+  // 语音识别处理函数
+  const handleToggleVoiceMode = () => {
+    // 如果当前在语音模式，退出前确保停止录音
+    if (isVoiceMode) {
+      if (isListening) {
+        stopRecognition().catch(err => console.error('停止语音识别出错:', err));
+      }
+      setIsVoiceMode(false);
+    } else {
+      // 进入语音模式
+      setIsVoiceMode(true);
+    }
+  };
+
+  const handleStartVoiceRecognition = async () => {
+    try {
+      await startRecognition({
+        language: 'zh-CN',
+        maxResults: 1,
+        partialResults: true,
+        popup: false,
+      });
+    } catch (error) {
+      console.error('启动语音识别失败:', error);
+      // 打印更详细的错误信息，便于调试
+      if (error instanceof Error) {
+        console.error('错误详情:', error.message, error.stack);
+      }
+    }
+  };
+
+  const handleStopVoiceRecognition = async () => {
+    try {
+      await stopRecognition();
+    } catch (error) {
+      console.error('停止语音识别失败:', error);
+      if (error instanceof Error) {
+        console.error('错误详情:', error.message, error.stack);
+      }
+    }
+  };
+
+  const handleVoiceSendMessage = (voiceMessage: string) => {
+    // 确保有内容才发送
+    if (voiceMessage && voiceMessage.trim()) {
+      // 创建正确的图片格式
+      const formattedImages: SiliconFlowImageFormat[] = [
+        ...images, 
+        ...files.filter(f => f.mimeType.startsWith('image/'))
+      ].map(img => ({
+        type: 'image_url',
+        image_url: {
+          url: img.base64Data || img.url
+        }
+      }));
+
+      onSendMessage(
+        voiceMessage.trim(),
+        formattedImages.length > 0 ? formattedImages : undefined,
+        toolsEnabled,
+        files
+      );
+
+      // 重置状态
+      setImages([]);
+      setFiles([]);
+      setUploadingMedia(false);
+      setIsVoiceMode(false); // 发送后退出语音模式
+      
+      // 添加触觉反馈 (如果支持)
+      if ('navigator' in window && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(50); // 短振动反馈
+        } catch (e) {
+          // 忽略振动API错误
+        }
+      }
+    }
+  };
+
+
 
   // 显示正在加载的指示器，但不禁用输入框
   const showLoadingIndicator = isLoading && !allowConsecutiveMessages;
@@ -452,137 +546,157 @@ const ChatInput: React.FC<ChatInputProps> = ({
         WebkitBackdropFilter: inputBoxStyle === 'modern' ? 'blur(10px)' : 'none',
         transition: 'all 0.3s ease'
       }}>
-        {/* 语音图标 */}
-          <IconButton
+        {/* 语音识别按钮 */}
+        <VoiceButton
+          isVoiceMode={isVoiceMode}
+          isDisabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+          onToggleVoiceMode={handleToggleVoiceMode}
           size={isTablet ? "large" : "medium"}
-          style={{
-            color: iconColor,
-            padding: isTablet ? '10px' : '8px',
-            marginRight: isTablet ? '6px' : '4px'
-          }}
-          >
-          <KeyboardVoiceIcon />
-          </IconButton>
+          color="default"
+          tooltip={isVoiceMode ? "退出语音输入模式" : "切换到语音输入模式"}
+          className=""
+        />
 
-        {/* 文本输入区域 */}
+        {/* 输入区域 - 根据模式显示不同的输入方式 */}
         <div style={{
           flexGrow: 1,
           margin: isTablet ? '0 12px' : '0 8px',
           position: 'relative'
         }}>
-          <textarea
-            ref={textareaRef}
-            style={{
-              fontSize: isTablet ? '17px' : '16px',
-              padding: isTablet ? '10px 0' : '8px 0', // 减少padding以给placeholder更多空间
-              border: 'none',
-              outline: 'none',
-              width: '100%',
-              backgroundColor: 'transparent',
-              lineHeight: '1.4', // 优化行高，减少垂直空间占用
-              fontFamily: 'inherit',
-              resize: 'none',
-              overflow: textareaHeight >= (isMobile ? 200 : 250) ? 'auto' : 'hidden',
-              minHeight: `${isMobile ? 32 : isTablet ? 36 : 34}px`, // 与计算逻辑保持一致
-              height: `${textareaHeight}px`,
-              maxHeight: `${isMobile ? 200 : 250}px`,
-              color: textColor,
-              transition: 'height 0.2s ease-out',
-              scrollbarWidth: 'thin',
-              scrollbarColor: `${isDarkMode ? '#555 transparent' : '#ccc transparent'}`
-            }}
-            placeholder={imageGenerationMode ? "输入图像生成提示词..." : webSearchActive ? "输入网络搜索内容..." : "和ai助手说点什么"}
-            value={message}
-            onChange={enhancedHandleChange}
-            onKeyDown={handleKeyDown}
-            onCompositionStart={handleCompositionStart}
-            onCompositionEnd={handleCompositionEnd}
-            disabled={isLoading && !allowConsecutiveMessages}
-            rows={1}
-          />
-
-          {/* 字符计数显示 */}
-          {showCharCount && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '-20px',
-                right: '0',
-                fontSize: '12px',
-                color: message.length > 1000 ? '#f44336' : isDarkMode ? '#888' : '#666',
-                opacity: 0.8,
-                transition: 'all 0.2s ease'
+          {isVoiceMode ? (
+            /* 替换为增强语音输入组件 */
+            <EnhancedVoiceInput
+              isDarkMode={isDarkMode}
+              onClose={() => setIsVoiceMode(false)}
+              onSendMessage={handleVoiceSendMessage}
+              onInsertText={(text) => {
+                setMessage(prev => prev + text);
+                setIsVoiceMode(false);
               }}
-            >
-              {message.length}{message.length > 1000 ? ' (过长)' : ''}
-            </div>
+            />
+          ) : (
+            /* 文本输入区域 */
+            <>
+              <textarea
+                ref={textareaRef}
+                style={{
+                  fontSize: isTablet ? '17px' : '16px',
+                  padding: isTablet ? '10px 0' : '8px 0', // 减少padding以给placeholder更多空间
+                  border: 'none',
+                  outline: 'none',
+                  width: '100%',
+                  backgroundColor: 'transparent',
+                  lineHeight: '1.4', // 优化行高，减少垂直空间占用
+                  fontFamily: 'inherit',
+                  resize: 'none',
+                  overflow: textareaHeight >= (isMobile ? 200 : 250) ? 'auto' : 'hidden',
+                  minHeight: `${isMobile ? 32 : isTablet ? 36 : 34}px`, // 与计算逻辑保持一致
+                  height: `${textareaHeight}px`,
+                  maxHeight: `${isMobile ? 200 : 250}px`,
+                  color: textColor,
+                  transition: 'height 0.2s ease-out',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: `${isDarkMode ? '#555 transparent' : '#ccc transparent'}`
+                }}
+                placeholder={imageGenerationMode ? "输入图像生成提示词..." : webSearchActive ? "输入网络搜索内容..." : "和ai助手说点什么"}
+                value={message}
+                onChange={enhancedHandleChange}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                disabled={isLoading && !allowConsecutiveMessages}
+                rows={1}
+              />
+
+              {/* 字符计数显示 */}
+              {showCharCount && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '-20px',
+                    right: '0',
+                    fontSize: '12px',
+                    color: message.length > 1000 ? '#f44336' : isDarkMode ? '#888' : '#666',
+                    opacity: 0.8,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {message.length}{message.length > 1000 ? ' (过长)' : ''}
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* 添加按钮，打开上传菜单 */}
-        <Tooltip title="添加图片或文件">
-          <IconButton
-            size={isTablet ? "large" : "medium"}
-            onClick={handleOpenUploadMenu}
-            disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-            style={{
-              color: uploadingMedia ? disabledColor : iconColor,
-              padding: isTablet ? '10px' : '8px',
-              position: 'relative',
-              marginRight: isTablet ? '4px' : '0'
-            }}
-          >
-            {uploadingMedia ? (
-              <CircularProgress size={isTablet ? 28 : 24} />
-            ) : (
-              <Badge badgeContent={images.length + files.length} color="primary" max={9} invisible={images.length + files.length === 0}>
-                <AddCircleIcon />
-              </Badge>
-            )}
-          </IconButton>
-        </Tooltip>
+        {/* 在非语音模式下显示其他按钮 */}
+        {!isVoiceMode && (
+          <>
+            {/* 添加按钮，打开上传菜单 */}
+            <Tooltip title="添加图片或文件">
+              <IconButton
+                size={isTablet ? "large" : "medium"}
+                onClick={handleOpenUploadMenu}
+                disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+                style={{
+                  color: uploadingMedia ? disabledColor : iconColor,
+                  padding: isTablet ? '10px' : '8px',
+                  position: 'relative',
+                  marginRight: isTablet ? '4px' : '0'
+                }}
+              >
+                {uploadingMedia ? (
+                  <CircularProgress size={isTablet ? 28 : 24} />
+                ) : (
+                  <Badge badgeContent={images.length + files.length} color="primary" max={9} invisible={images.length + files.length === 0}>
+                    <AddCircleIcon />
+                  </Badge>
+                )}
+              </IconButton>
+            </Tooltip>
 
-        {/* AI辩论按钮 */}
-        <AIDebateButton
-          onStartDebate={onStartDebate}
-          onStopDebate={onStopDebate}
-          isDebating={isDebating}
-          disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-          question={message}
-        />
+            {/* AI辩论按钮 */}
+            <AIDebateButton
+              onStartDebate={onStartDebate}
+              onStopDebate={onStopDebate}
+              isDebating={isDebating}
+              disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+              question={message}
+            />
 
-        {/* 发送按钮或停止按钮 */}
-        <IconButton
-          onClick={isStreaming && onStopResponse ? onStopResponse : handleSubmit}
-          disabled={!isStreaming && (!canSendMessage() || (isLoading && !allowConsecutiveMessages))}
-          size={isTablet ? "large" : "medium"}
-          style={{
-            color: isStreaming ? '#ff4d4f' : !canSendMessage() || (isLoading && !allowConsecutiveMessages) ? disabledColor : imageGenerationMode ? '#9C27B0' : webSearchActive ? '#3b82f6' : urlScraperStatus === 'success' ? '#26C6DA' : isDarkMode ? '#4CAF50' : '#09bb07',
-            padding: isTablet ? '10px' : '8px'
-          }}
-        >
-          {isStreaming ? (
-            <Tooltip title="停止生成">
-              <StopIcon fontSize={isTablet ? "medium" : "small"} />
-            </Tooltip>
-          ) : showLoadingIndicator ? (
-            <CircularProgress size={isTablet ? 28 : 24} color="inherit" />
-          ) : imageGenerationMode ? (
-            <Tooltip title="生成图像">
-              <ImageIcon fontSize={isTablet ? "medium" : "small"} />
-            </Tooltip>
-          ) : webSearchActive ? (
-            <Tooltip title="搜索网络">
-              <SearchIcon fontSize={isTablet ? "medium" : "small"} />
-            </Tooltip>
-          ) : urlScraperStatus === 'success' ? (
-            <Tooltip title="发送解析的网页内容">
-              <LinkIcon fontSize={isTablet ? "medium" : "small"} />
-            </Tooltip>
-          ) : (
-            <SendIcon fontSize={isTablet ? "medium" : "small"} />
-          )}
-        </IconButton>
+            {/* 发送按钮或停止按钮 */}
+            <IconButton
+              onClick={isStreaming && onStopResponse ? onStopResponse : handleSubmit}
+              disabled={!isStreaming && (!canSendMessage() || (isLoading && !allowConsecutiveMessages))}
+              size={isTablet ? "large" : "medium"}
+              style={{
+                color: isStreaming ? '#ff4d4f' : !canSendMessage() || (isLoading && !allowConsecutiveMessages) ? disabledColor : imageGenerationMode ? '#9C27B0' : webSearchActive ? '#3b82f6' : urlScraperStatus === 'success' ? '#26C6DA' : isDarkMode ? '#4CAF50' : '#09bb07',
+                padding: isTablet ? '10px' : '8px'
+              }}
+            >
+              {isStreaming ? (
+                <Tooltip title="停止生成">
+                  <StopIcon fontSize={isTablet ? "medium" : "small"} />
+                </Tooltip>
+              ) : showLoadingIndicator ? (
+                <CircularProgress size={isTablet ? 28 : 24} color="inherit" />
+              ) : imageGenerationMode ? (
+                <Tooltip title="生成图像">
+                  <ImageIcon fontSize={isTablet ? "medium" : "small"} />
+                </Tooltip>
+              ) : webSearchActive ? (
+                <Tooltip title="搜索网络">
+                  <SearchIcon fontSize={isTablet ? "medium" : "small"} />
+                </Tooltip>
+              ) : urlScraperStatus === 'success' ? (
+                <Tooltip title="发送解析的网页内容">
+                  <LinkIcon fontSize={isTablet ? "medium" : "small"} />
+                </Tooltip>
+              ) : (
+                <SendIcon fontSize={isTablet ? "medium" : "small"} />
+              )}
+            </IconButton>
+          </>
+        )}
       </div>
 
       {/* 上传选择菜单 */}
@@ -611,6 +725,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onClose={(id) => toastManager.remove(id)}
         maxVisible={3}
       />
+
+
     </div>
   );
 };

@@ -64,6 +64,8 @@ const MainTextBlock: React.FC<Props> = ({ block, role, messageId }) => {
     const toolUseMatches = fixedContent.match(/<tool_use[\s\S]*?<\/tool_use>/gi) || [];
     console.log(`[MainTextBlock] 检测到 ${toolUseMatches.length} 个工具标签，${toolBlocks.length} 个工具块`);
 
+
+
     if (toolBlocks.length === 0) {
       // 没有工具块，移除工具标签
       const cleanContent = fixedContent.replace(/<tool_use[\s\S]*?<\/tool_use>/gi, '');

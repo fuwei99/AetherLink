@@ -1,7 +1,7 @@
 import { throttle } from 'lodash';
 import store from '../../store';
 import { dexieStorage } from '../DexieStorageService';
-import { EventEmitter, EVENT_NAMES } from '../EventEmitter';
+import { EventEmitter, EVENT_NAMES } from '../EventService';
 import { createStreamProcessor } from '../StreamProcessingService';
 import { MessageBlockStatus, AssistantMessageStatus, MessageBlockType } from '../../types/newMessage';
 import type { MessageBlock, ToolMessageBlock } from '../../types/newMessage';
@@ -9,16 +9,14 @@ import { newMessagesActions } from '../../store/slices/newMessagesSlice';
 import type { ErrorInfo } from '../../store/slices/newMessagesSlice';
 import { formatErrorMessage, getErrorType } from '../../utils/error';
 import { updateOneBlock, addOneBlock } from '../../store/slices/messageBlocksSlice';
-
-
 import type { Chunk } from '../../types/chunk';
 import { v4 as uuid } from 'uuid';
 import { globalToolTracker } from '../../utils/toolExecutionSync';
 import { createToolBlock } from '../../utils/messageUtils';
 import { hasToolUseTags } from '../../utils/mcpToolParser';
 import { parseComparisonResult, createModelComparisonBlock } from '../../utils/modelComparisonUtils';
-import { isApiKeyError, retryApiKeyError, showApiKeyConfigHint } from '../../utils/apiKeyErrorHandler';
 import { TopicNamingService } from '../TopicNamingService';
+import { checkAndHandleApiKeyError } from '../../utils/apiKeyErrorHandler';
 
 /**
  * 响应处理器配置类型
@@ -41,8 +39,6 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 }
-
-
 
 /**
  * 创建响应处理器
@@ -150,7 +146,18 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
     },
 
     onThinkingChunk: (text: string, thinking_millsec?: number) => {
-      accumulatedThinking += text;
+      // 🔥 修复DeepSeek-R1重复内容问题：检查是否为累积内容
+      if (text.length > accumulatedThinking.length && text.startsWith(accumulatedThinking)) {
+        // 如果新文本包含已有内容且更长，说明是累积内容，直接设置
+        accumulatedThinking = text;
+      } else if (text !== accumulatedThinking && !accumulatedThinking.includes(text)) {
+        // 如果是真正的增量内容且不重复，则累加
+        accumulatedThinking += text;
+      } else {
+        // 如果内容完全相同或已包含，跳过处理
+        return;
+      }
+
       if (lastBlockId) {
         if (lastBlockType === MessageBlockType.UNKNOWN) {
           // 第一次收到思考内容，转换占位符块为思考块（立即执行，不节流）
@@ -191,10 +198,17 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
   // ResponseHandler应该只通过直接回调处理流式数据，不需要监听全局事件
   // 这样可以避免同一个内容被处理两次的问题
   const setupEventListeners = () => {
-    console.log(`[ResponseHandler] 跳过事件监听器设置，使用直接回调处理流式数据`);
+    console.log(`[ResponseHandler] 设置知识库搜索事件监听器`);
 
-    // 返回空的清理函数
-    eventCleanupFunctions = [];
+    // 监听知识库搜索完成事件（借鉴MCP工具块的事件机制）
+    const knowledgeSearchCleanup = EventEmitter.on(EVENT_NAMES.KNOWLEDGE_SEARCH_COMPLETED, async (data: any) => {
+      if (data.messageId === messageId) {
+        console.log(`[ResponseHandler] 处理知识库搜索完成事件，结果数量: ${data.searchResults?.length || 0}`);
+        await responseHandlerInstance.handleKnowledgeSearchComplete(data);
+      }
+    });
+
+    eventCleanupFunctions = [knowledgeSearchCleanup];
 
     return () => {
       eventCleanupFunctions.forEach(cleanup => cleanup());
@@ -211,7 +225,6 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         switch (chunk.type) {
           case 'thinking.delta':
             const thinkingDelta = chunk as import('../../types/chunk').ThinkingDeltaChunk;
-            console.log(`[ResponseHandler] 处理思考增量，长度: ${thinkingDelta.text.length}`);
             callbacks.onThinkingChunk?.(thinkingDelta.text, thinkingDelta.thinking_millsec);
             break;
 
@@ -246,7 +259,6 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
 
           case 'text.delta':
             const textDelta = chunk as import('../../types/chunk').TextDeltaChunk;
-            console.log(`[ResponseHandler] 处理文本增量，长度: ${textDelta.text.length}`);
             callbacks.onTextChunk?.(textDelta.text);
             break;
 
@@ -387,11 +399,9 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
       // 完全模仿最佳实例的回调架构
       if (isThinking) {
         // 调用onThinkingChunk回调
-        console.log(`[ResponseHandler] 处理思考内容，长度: ${thinkingContent.length}`);
         callbacks.onThinkingChunk?.(thinkingContent, thinkingTime);
       } else {
         // 调用onTextChunk回调
-        console.log(`[ResponseHandler] 处理普通文本，长度: ${chunk.length}`);
         callbacks.onTextChunk?.(chunk);
       }
 
@@ -640,9 +650,13 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         if (!blockId) return undefined;
 
         const block = store.getState().messageBlocks.entities[blockId];
-        if (!block?.metadata?.startTime) return undefined;
+        if (!block?.metadata || typeof block.metadata !== 'object') return undefined;
+        
+        // 添加类型断言
+        const metadata = block.metadata as Record<string, any>;
+        if (!metadata.startTime) return undefined;
 
-        const startTime = new Date(block.metadata.startTime).getTime();
+        const startTime = new Date(metadata.startTime).getTime();
         const endTime = new Date().getTime();
         return endTime - startTime;
       } catch (error) {
@@ -661,6 +675,86 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         console.log(`[ResponseHandler] 清理工具执行: toolId: ${toolId}`);
       } catch (error) {
         console.error(`[ResponseHandler] 清理工具执行失败:`, error);
+      }
+    },
+
+    /**
+     * 处理知识库搜索完成事件（借鉴MCP工具块的处理机制）
+     * 创建一个综合的知识库引用块，包含所有搜索结果
+     */
+    async handleKnowledgeSearchComplete(data: {
+      messageId: string;
+      knowledgeBaseId: string;
+      knowledgeBaseName: string;
+      searchQuery: string;
+      searchResults: any[];
+      references: any[];
+    }) {
+      try {
+        console.log(`[ResponseHandler] 处理知识库搜索完成，创建综合引用块，包含 ${data.searchResults.length} 个结果`);
+
+        // 动态导入知识库引用块创建函数
+        const { createKnowledgeReferenceBlock } = await import('../../utils/messageUtils');
+
+        // 创建一个综合的引用块，包含所有搜索结果
+        const combinedContent = data.searchResults.map((result, index) =>
+          `[${index + 1}] ${result.content} (相似度: ${(result.similarity * 100).toFixed(1)}%)`
+        ).join('\n\n');
+
+        const referenceBlock = createKnowledgeReferenceBlock(
+          messageId,
+          combinedContent,
+          data.knowledgeBaseId,
+          {
+            searchQuery: data.searchQuery,
+            source: data.knowledgeBaseName,
+            // 添加额外的元数据来标识这是一个综合块
+            metadata: {
+              isCombined: true,
+              resultCount: data.searchResults.length,
+              results: data.searchResults.map((result, index) => ({
+                index: index + 1,
+                content: result.content,
+                similarity: result.similarity,
+                documentId: result.documentId
+              }))
+            }
+          }
+        );
+
+        console.log(`[ResponseHandler] 创建综合知识库引用块: ${referenceBlock.id}`);
+
+        // 添加到Redux状态
+        store.dispatch(addOneBlock(referenceBlock));
+
+        // 保存到数据库
+        await dexieStorage.saveMessageBlock(referenceBlock);
+
+        // 将块添加到消息的blocks数组的开头（显示在顶部）
+        const currentMessage = store.getState().messages.entities[messageId];
+        if (currentMessage) {
+          const updatedBlocks = [referenceBlock.id, ...(currentMessage.blocks || [])];
+
+          // 更新Redux中的消息
+          store.dispatch(newMessagesActions.updateMessage({
+            id: messageId,
+            changes: {
+              blocks: updatedBlocks
+            }
+          }));
+
+          // 同步更新数据库
+          await dexieStorage.updateMessage(messageId, {
+            blocks: updatedBlocks
+          });
+
+          console.log(`[ResponseHandler] 知识库引用块已添加到消息顶部: ${referenceBlock.id}`);
+        }
+
+        console.log(`[ResponseHandler] 综合知识库引用块创建完成，包含 ${data.searchResults.length} 个结果`);
+
+      } catch (error) {
+        console.error(`[ResponseHandler] 处理知识库搜索完成事件失败:`, error);
       }
     },
 
@@ -1087,6 +1181,12 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
           finalContent = '> ⚠️ **回复已被中断，未生成任何内容**\n> \n> 请重新发送消息以获取完整回复。';
         }
 
+        // 创建元数据对象
+        const interruptedMetadata = {
+          interrupted: true,
+          interruptedAt: now
+        };
+
         // 更新主文本块内容和状态
         store.dispatch(updateOneBlock({
           id: blockId,
@@ -1096,22 +1196,17 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
             updatedAt: now,
             metadata: {
               ...store.getState().messageBlocks.entities[blockId]?.metadata,
-              interrupted: true, // 标记为被中断
-              interruptedAt: now
+              ...interruptedMetadata
             }
           }
         }));
 
-        // 更新消息状态
+        // 更新消息状态 - 不直接包含metadata
         store.dispatch(newMessagesActions.updateMessage({
           id: messageId,
           changes: {
-            status: AssistantMessageStatus.SUCCESS,
-            updatedAt: now,
-            metadata: {
-              interrupted: true,
-              interruptedAt: now
-            }
+            status: MessageBlockStatus.SUCCESS,
+            updatedAt: now
           }
         }));
 
@@ -1127,7 +1222,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
           loading: false
         }));
 
-        // 保存到数据库
+        // 保存到数据库 - 这里可以包含metadata
         await Promise.all([
           dexieStorage.updateMessageBlock(blockId, {
             content: finalContent,
@@ -1139,12 +1234,9 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
             }
           }),
           dexieStorage.updateMessage(messageId, {
-            status: AssistantMessageStatus.SUCCESS,
+            status: MessageBlockStatus.SUCCESS,
             updatedAt: now,
-            metadata: {
-              interrupted: true,
-              interruptedAt: now
-            }
+            metadata: interruptedMetadata
           })
         ]);
 
@@ -1183,7 +1275,6 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
       console.error(`[ResponseHandler] 响应失败 - 消息ID: ${messageId}, 错误: ${error.message}`);
 
       // 🔥 新增：检测 API Key 问题并提供重试机制
-      const { checkAndHandleApiKeyError } = await import('../../utils/apiKeyErrorHandler');
       const isApiKeyError = await checkAndHandleApiKeyError(error, messageId, topicId);
       if (isApiKeyError) {
         // API Key 错误已被处理，不需要继续执行错误处理流程

@@ -304,7 +304,11 @@ export function isEmbeddingModel(model: Model): boolean {
     modelId.includes('embed') ||
     modelId === 'text-embedding-3-small' ||
     modelId === 'text-embedding-3-large' ||
-    modelId === 'text-embedding-ada-002'
+    modelId === 'text-embedding-ada-002' ||
+    modelId.includes('gemini-embedding') ||
+    modelId.includes('Doubao-embedding') ||
+    modelId.includes('bge-') ||
+    modelId.includes('jina-embeddings')
   );
 }
 

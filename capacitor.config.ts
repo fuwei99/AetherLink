@@ -18,19 +18,20 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     allowNavigation: [],
-    cleartext: false
+    cleartext: true  // 允许HTTP明文传输
   },
   plugins: {
     CapacitorHttp: {
-      enabled: false
+      enabled: false  // 🔥 禁用CapacitorHttp，使用标准fetch支持流式输出
     },
     WebView: {
       scrollEnabled: true,
       allowFileAccess: true
     },
     Keyboard: {
-      resize: 'body',
-      resizeOnFullScreen: true
+      resize: 'native',
+      resizeOnFullScreen: true,
+      style: 'DARK'
     },
     StatusBar: {
       backgroundColor: '#475569', // 浅色模式默认颜色

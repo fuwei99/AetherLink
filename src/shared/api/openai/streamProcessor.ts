@@ -163,11 +163,15 @@ export class OpenAIStreamProcessor {
 
       console.log(`[OpenAIStreamProcessor] 完整内容: ${this.content.substring(0, 100) + (this.content.length > 100 ? '...' : '')}`);
 
+      // 检查是否包含工具调用
+      const hasTools = this.checkForToolCalls(this.content);
+
       // 返回处理结果
       return {
         content: this.content,
         reasoning: this.reasoning || undefined,
-        reasoningTime: this.reasoningStartTime > 0 ? reasoningTime : undefined
+        reasoningTime: this.reasoningStartTime > 0 ? reasoningTime : undefined,
+        hasToolCalls: hasTools // 添加工具调用标记
       };
     } catch (error) {
       if (isAbortError(error)) {
@@ -380,5 +384,20 @@ export class OpenAIStreamProcessor {
       console.log(`[OpenAIStreamProcessor] 更新思考块ID: ${blockId}`);
       this.thinkingBlockId = blockId;
     }
+  }
+
+  /**
+   * 检查内容是否包含工具调用
+   * @param content 要检查的内容
+   * @returns 是否包含工具调用
+   */
+  private checkForToolCalls(content: string): boolean {
+    if (!content || content.trim() === '') {
+      return false;
+    }
+
+    // 检查是否包含 <tool_use> 标签
+    const toolUsePattern = /<tool_use[\s\S]*?<\/tool_use>/gi;
+    return toolUsePattern.test(content);
   }
 }

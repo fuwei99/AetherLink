@@ -23,6 +23,8 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import MicIcon from '@mui/icons-material/Mic'; // 新增导入 MicIcon
+import StopIcon from '@mui/icons-material/Stop';
 
 import { useNavigate } from 'react-router-dom';
 import { TTSService } from '../../shared/services/TTSService';
@@ -34,13 +36,19 @@ import {
   type SiliconFlowTTSSettings,
   type OpenAITTSSettings,
   type AzureTTSSettings,
-
 } from '../../components/TTS';
+import TTSTestSection from '../../components/TTS/TTSTestSection'; // 导入 TTSTestSection
+import { useVoiceRecognition } from '../../shared/hooks/useVoiceRecognition'; // 导入 useVoiceRecognition
+import type { VoiceRecognitionSettings, OpenAIWhisperSettings } from '../../shared/types/voice'; // 导入语音识别类型
+import { OpenAIWhisperTab, WhisperTestSection } from '../../components/VoiceRecognition'; // 导入OpenAI Whisper组件
+import { voiceRecognitionService } from '../../shared/services/VoiceRecognitionService'; // 导入语音识别服务
 
 // 🚀 性能优化：定义状态类型，便于状态合并
 
 interface UIState {
-  tabValue: number;
+  mainTabValue: number; // 主Tab索引
+  ttsSubTabValue: number; // TTS子Tab索引
+  sttSubTabValue: number; // 新增：STT子Tab索引
   isSaved: boolean;
   saveError: string;
   isTestPlaying: boolean;
@@ -76,10 +84,34 @@ const VoiceSettings: React.FC = () => {
   });
 
   const [uiState, setUIState] = useState<UIState>({
-    tabValue: 0,
+    mainTabValue: 0, // 默认显示TTS Tab
+    ttsSubTabValue: 0, // 默认显示硅基流动TTS
+    sttSubTabValue: 0, // 默认显示Capacitor语音识别
     isSaved: false,
     saveError: '',
     isTestPlaying: false,
+  });
+
+  // 语音识别相关状态
+  const [speechRecognitionSettings, setSpeechRecognitionSettings] = useState<VoiceRecognitionSettings>({
+    enabled: true,
+    language: 'zh-CN',
+    autoStart: false,
+    silenceTimeout: 2000,
+    maxResults: 5,
+    partialResults: true,
+    permissionStatus: 'unknown',
+    provider: 'capacitor', // 默认使用Capacitor
+  });
+
+  // OpenAI Whisper设置
+  const [whisperSettings, setWhisperSettings] = useState<OpenAIWhisperSettings>({
+    apiKey: '',
+    showApiKey: false,
+    model: 'whisper-1',
+    language: 'zh',
+    temperature: 0,
+    responseFormat: 'json',
   });
 
   const [azureSettings, setAzureSettings] = useState<AzureTTSSettings>({
@@ -104,6 +136,16 @@ const VoiceSettings: React.FC = () => {
   const [selectedTTSService, setSelectedTTSService] = useState<'siliconflow' | 'openai' | 'azure'>('siliconflow');
   const [useOpenai, setUseOpenai] = useState(false);
   const [useAzure, setUseAzure] = useState(false);
+
+  // 引入语音识别hook
+  const {
+    isListening,
+    recognitionText,
+    permissionStatus,
+    error,
+    startRecognition,
+    stopRecognition,
+  } = useVoiceRecognition();
 
   // 🚀 性能优化：只在组件挂载时加载设置，避免重复调用
   useEffect(() => {
@@ -142,6 +184,22 @@ const VoiceSettings: React.FC = () => {
         const storedUseAzure = (await getStorageItem<string>('use_azure_tts')) === 'true';
         const storedSelectedTTSService = await getStorageItem<string>('selected_tts_service') || 'siliconflow';
 
+        // 加载语音识别设置
+        const storedSpeechRecognitionEnabled = (await getStorageItem<string>('speech_recognition_enabled')) !== 'false'; // 默认启用
+        const storedSpeechRecognitionLanguage = await getStorageItem<string>('speech_recognition_language') || 'zh-CN';
+        const storedSpeechRecognitionAutoStart = (await getStorageItem<string>('speech_recognition_auto_start')) === 'true';
+        const storedSpeechRecognitionSilenceTimeout = Number(await getStorageItem<string>('speech_recognition_silence_timeout') || '2000');
+        const storedSpeechRecognitionMaxResults = Number(await getStorageItem<string>('speech_recognition_max_results') || '5');
+        const storedSpeechRecognitionPartialResults = (await getStorageItem<string>('speech_recognition_partial_results')) !== 'false'; // 默认启用
+        const storedSpeechRecognitionProvider = await getStorageItem<string>('speech_recognition_provider') || 'capacitor';
+
+        // 加载OpenAI Whisper设置
+        const storedWhisperApiKey = await getStorageItem<string>('whisper_api_key') || '';
+        const storedWhisperModel = await getStorageItem<string>('whisper_model') || 'whisper-1';
+        const storedWhisperLanguage = await getStorageItem<string>('whisper_language') || 'zh';
+        const storedWhisperTemperature = Number(await getStorageItem<string>('whisper_temperature') || '0');
+        const storedWhisperResponseFormat = await getStorageItem<string>('whisper_response_format') || 'json';
+
         // 🚀 性能优化：批量更新状态，减少重新渲染
         setSiliconFlowSettings({
           apiKey: storedApiKey,
@@ -160,14 +218,14 @@ const VoiceSettings: React.FC = () => {
           useStream: storedUseOpenaiStream,
         });
 
-        // 根据选择的服务设置Tab索引
-        let tabIndex = 0;
-        if (storedSelectedTTSService === 'openai') tabIndex = 1;
-        else if (storedSelectedTTSService === 'azure') tabIndex = 2;
+        // 根据选择的服务设置TTS子Tab索引
+        let ttsTabIndex = 0;
+        if (storedSelectedTTSService === 'openai') ttsTabIndex = 1;
+        else if (storedSelectedTTSService === 'azure') ttsTabIndex = 2;
 
         setUIState(prev => ({
           ...prev,
-          tabValue: tabIndex,
+          ttsSubTabValue: ttsTabIndex,
         }));
 
         // 设置Azure状态
@@ -221,6 +279,28 @@ const VoiceSettings: React.FC = () => {
           ttsService.setDefaultVoice(storedModel, `${storedModel}:${storedVoice}`);
         }
 
+        // 更新语音识别设置
+        setSpeechRecognitionSettings({
+          enabled: storedSpeechRecognitionEnabled,
+          language: storedSpeechRecognitionLanguage,
+          autoStart: storedSpeechRecognitionAutoStart,
+          silenceTimeout: storedSpeechRecognitionSilenceTimeout,
+          maxResults: storedSpeechRecognitionMaxResults,
+          partialResults: storedSpeechRecognitionPartialResults,
+          permissionStatus: 'unknown', // 将在组件加载后更新
+          provider: storedSpeechRecognitionProvider as 'capacitor' | 'openai',
+        });
+
+        // 更新OpenAI Whisper设置
+        setWhisperSettings({
+          apiKey: storedWhisperApiKey,
+          showApiKey: false,
+          model: storedWhisperModel,
+          language: storedWhisperLanguage,
+          temperature: storedWhisperTemperature,
+          responseFormat: storedWhisperResponseFormat as any,
+        });
+
         console.log('[VoiceSettings] 设置加载完成');
       } catch (error) {
         console.error('加载语音设置失败:', error);
@@ -268,6 +348,22 @@ const VoiceSettings: React.FC = () => {
       await setStorageItem('azure_tts_use_ssml', azureSettings.useSSML.toString());
       await setStorageItem('use_azure_tts', useAzure.toString());
       await setStorageItem('selected_tts_service', selectedTTSService);
+
+      // 保存语音识别设置
+      await setStorageItem('speech_recognition_enabled', speechRecognitionSettings.enabled.toString());
+      await setStorageItem('speech_recognition_language', speechRecognitionSettings.language);
+      await setStorageItem('speech_recognition_auto_start', speechRecognitionSettings.autoStart.toString());
+      await setStorageItem('speech_recognition_silence_timeout', speechRecognitionSettings.silenceTimeout.toString());
+      await setStorageItem('speech_recognition_max_results', speechRecognitionSettings.maxResults.toString());
+      await setStorageItem('speech_recognition_partial_results', speechRecognitionSettings.partialResults.toString());
+      await setStorageItem('speech_recognition_provider', speechRecognitionSettings.provider);
+
+      // 保存OpenAI Whisper设置
+      await setStorageItem('whisper_api_key', whisperSettings.apiKey);
+      await setStorageItem('whisper_model', whisperSettings.model);
+      await setStorageItem('whisper_language', whisperSettings.language || '');
+      await setStorageItem('whisper_temperature', whisperSettings.temperature?.toString() || '0');
+      await setStorageItem('whisper_response_format', whisperSettings.responseFormat || 'json');
 
       // 更新TTSService
       ttsService.setApiKey(siliconFlowSettings.apiKey);
@@ -323,7 +419,7 @@ const VoiceSettings: React.FC = () => {
         saveError: '保存设置失败，请重试',
       }));
     }
-  }, [siliconFlowSettings, openaiSettings, azureSettings, enableTTS, useOpenai, useAzure, selectedTTSService, ttsService]);
+  }, [siliconFlowSettings, openaiSettings, azureSettings, enableTTS, useOpenai, useAzure, selectedTTSService, ttsService, speechRecognitionSettings, whisperSettings]);
 
   // 🚀 性能优化：使用 useCallback 缓存测试TTS函数
   const handleTestTTS = useCallback(async () => {
@@ -392,9 +488,14 @@ const VoiceSettings: React.FC = () => {
     }, 500);
   }, [uiState.isTestPlaying, selectedTTSService, azureSettings, openaiSettings, siliconFlowSettings, testText, ttsService]);
 
-  // 🚀 性能优化：使用 useCallback 缓存标签变化处理函数
-  const handleTabChange = useCallback((_: React.SyntheticEvent, newValue: number) => {
-    setUIState(prev => ({ ...prev, tabValue: newValue }));
+  // 🚀 性能优化：使用 useCallback 缓存主Tab变化处理函数
+  const handleMainTabChange = useCallback((_: React.SyntheticEvent, newValue: number) => {
+    setUIState(prev => ({ ...prev, mainTabValue: newValue }));
+  }, []);
+
+  // 🚀 性能优化：使用 useCallback 缓存TTS子Tab变化处理函数
+  const handleTTSSubTabChange = useCallback((_: React.SyntheticEvent, newValue: number) => {
+    setUIState(prev => ({ ...prev, ttsSubTabValue: newValue }));
 
     // 根据Tab索引更新服务选择
     let service: 'siliconflow' | 'openai' | 'azure' = 'siliconflow';
@@ -406,7 +507,19 @@ const VoiceSettings: React.FC = () => {
     setUseAzure(service === 'azure');
   }, []);
 
-  // 🚀 新增：服务选择器变化时同步Tab
+  // 新增：STT子Tab变化处理函数
+  const handleSTTSubTabChange = useCallback((_: React.SyntheticEvent, newValue: number) => {
+    setUIState(prev => ({ ...prev, sttSubTabValue: newValue }));
+
+    // 根据Tab索引更新语音识别提供者
+    const provider = newValue === 0 ? 'capacitor' : 'openai';
+    setSpeechRecognitionSettings(prev => ({
+      ...prev,
+      provider
+    }));
+  }, []);
+
+  // 🚀 新增：服务选择器变化时同步TTS子Tab
   const handleServiceChange = useCallback((value: string) => {
     setSelectedTTSService(value as 'siliconflow' | 'openai' | 'azure');
 
@@ -416,15 +529,13 @@ const VoiceSettings: React.FC = () => {
     setUseOpenai(isOpenAI);
     setUseAzure(isAzure);
 
-    // 更新Tab索引
-    let tabIndex = 0;
-    if (value === 'openai') tabIndex = 1;
-    else if (value === 'azure') tabIndex = 2;
+    // 更新TTS子Tab索引
+    let ttsTabIndex = 0;
+    if (value === 'openai') ttsTabIndex = 1;
+    else if (value === 'azure') ttsTabIndex = 2;
 
-    setUIState(prev => ({ ...prev, tabValue: tabIndex }));
+    setUIState(prev => ({ ...prev, ttsSubTabValue: ttsTabIndex }));
   }, []);
-
-
 
   // 🚀 性能优化：组件卸载时清理定时器
   useEffect(() => {
@@ -438,7 +549,15 @@ const VoiceSettings: React.FC = () => {
     };
   }, []);
 
-
+  // 检查并请求麦克风权限函数
+  const checkAndRequestPermissions = async () => {
+    try {
+      const result = await voiceRecognitionService.requestPermissions();
+      console.log('权限状态:', result);
+    } catch (error) {
+      console.error('请求权限失败:', error);
+    }
+  };
 
   return (
     <Box sx={{
@@ -578,601 +697,934 @@ const VoiceSettings: React.FC = () => {
           </Alert>
         )}
 
-        <Paper
-          elevation={0}
+        <Tabs
+          value={uiState.mainTabValue}
+          onChange={handleMainTabChange}
+          variant="fullWidth" // 主Tab使用fullWidth
           sx={{
-            p: { xs: 2, sm: 3, md: 4 }, // 响应式内边距
-            mb: { xs: 2, sm: 3 }, // 响应式外边距
-            borderRadius: { xs: 2, sm: 3 }, // 响应式圆角
-            border: '1px solid',
+            mb: { xs: 2, sm: 3 },
+            borderBottom: 1,
             borderColor: 'divider',
-            background: 'background.paper',
-            boxShadow: {
-              xs: '0 2px 8px rgba(0,0,0,0.04)',
-              sm: '0 4px 12px rgba(0,0,0,0.08)'
-            }, // 响应式阴影
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-              boxShadow: {
-                xs: '0 4px 12px rgba(0,0,0,0.08)',
-                sm: '0 8px 24px rgba(0,0,0,0.12)'
+            '& .MuiTabs-indicator': {
+              height: { xs: 3, sm: 4 },
+              borderRadius: '2px 2px 0 0',
+              background: 'linear-gradient(90deg, #9333EA, #754AB4)',
+            },
+            '& .MuiTab-root': {
+              minHeight: { xs: 56, sm: 64 },
+              fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+              fontWeight: 600,
+              textTransform: 'none',
+              '&.Mui-selected': {
+                color: 'primary.main',
               },
             },
           }}
         >
-          <Typography
-            variant="h6"
-            sx={{
-              mb: { xs: 2, sm: 3 },
-              fontWeight: 600,
-              fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }, // 响应式字体
-              color: 'text.primary',
-            }}
-          >
-            文本转语音 (TTS) 功能
-          </Typography>
+          <Tab label="文本转语音 (TTS)" icon={<VolumeUpIcon />} iconPosition="start" />
+          <Tab label="语音识别 (STT)" icon={<MicIcon />} iconPosition="start" />
+        </Tabs>
 
-          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={enableTTS}
-                  onChange={(e) => setEnableTTS(e.target.checked)}
-                  color="primary"
-                  size="medium"
-                  sx={{
-                    '& .MuiSwitch-thumb': {
-                      width: { xs: 20, sm: 24 },
-                      height: { xs: 20, sm: 24 },
-                    },
-                    '& .MuiSwitch-track': {
-                      borderRadius: { xs: 10, sm: 12 },
-                    },
-                  }}
-                />
-              }
-              label={
-                <Typography
-                  sx={{
-                    fontSize: { xs: '0.9rem', sm: '1rem' },
-                    fontWeight: 500,
-                  }}
-                >
-                  启用语音转换功能
-                </Typography>
-              }
-              sx={{
-                '& .MuiFormControlLabel-label': {
-                  ml: { xs: 1, sm: 1.5 },
+        {uiState.mainTabValue === 0 && (
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, sm: 3, md: 4 }, // 响应式内边距
+              mb: { xs: 2, sm: 3 }, // 响应式外边距
+              borderRadius: { xs: 2, sm: 3 }, // 响应式圆角
+              border: '1px solid',
+              borderColor: 'divider',
+              background: 'background.paper',
+              boxShadow: {
+                xs: '0 2px 8px rgba(0,0,0,0.04)',
+                sm: '0 4px 12px rgba(0,0,0,0.08)'
+              }, // 响应式阴影
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                boxShadow: {
+                  xs: '0 4px 12px rgba(0,0,0,0.08)',
+                  sm: '0 8px 24px rgba(0,0,0,0.12)'
                 },
-              }}
-            />
-          </Box>
-
-          <Typography
-            variant="body2"
-            sx={{
-              mb: { xs: 2, sm: 3 },
-              color: 'text.secondary',
-              fontSize: { xs: '0.875rem', sm: '1rem' },
-              lineHeight: { xs: 1.4, sm: 1.6 },
-              px: { xs: 0, sm: 1 }, // 移动端无内边距，桌面端有内边距
-            }}
-          >
-            启用后，在聊天界面可以将AI回复内容转换为语音播放。本应用支持硅基流动TTS、OpenAI TTS和微软Azure TTS服务，如API无效则会自动降级使用浏览器内置的Web Speech API功能。
-          </Typography>
-
-          {/* TTS服务选择器 */}
-          <FormControl
-            fullWidth
-            sx={{
-              mb: { xs: 2, sm: 3 },
-              '& .MuiInputLabel-root': {
-                fontSize: { xs: '0.9rem', sm: '1rem' },
               },
             }}
           >
-            <InputLabel>选择TTS服务</InputLabel>
-            <Select
-              value={selectedTTSService}
-              onChange={(e) => handleServiceChange(e.target.value)}
-              label="选择TTS服务"
+            <Typography
+              variant="h6"
               sx={{
-                '& .MuiSelect-select': {
-                  py: { xs: 1.5, sm: 2 }, // 响应式内边距
+                mb: { xs: 2, sm: 3 },
+                fontWeight: 600,
+                fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }, // 响应式字体
+                color: 'text.primary',
+              }}
+            >
+              文本转语音 (TTS) 功能
+            </Typography>
+
+            <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={enableTTS}
+                    onChange={(e) => setEnableTTS(e.target.checked)}
+                    color="primary"
+                    size="medium"
+                    sx={{
+                      '& .MuiSwitch-thumb': {
+                        width: { xs: 20, sm: 24 },
+                        height: { xs: 20, sm: 24 },
+                      },
+                      '& .MuiSwitch-track': {
+                        borderRadius: { xs: 10, sm: 12 },
+                      },
+                    }}
+                  />
+                }
+                label={
+                  <Typography
+                    sx={{
+                      fontSize: { xs: '0.9rem', sm: '1rem' },
+                      fontWeight: 500,
+                    }}
+                  >
+                    启用语音转换功能
+                  </Typography>
+                }
+                sx={{
+                  '& .MuiFormControlLabel-label': {
+                    ml: { xs: 1, sm: 1.5 },
+                  },
+                }}
+              />
+            </Box>
+
+            <Typography
+              variant="body2"
+              sx={{
+                mb: { xs: 2, sm: 3 },
+                color: 'text.secondary',
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                lineHeight: { xs: 1.4, sm: 1.6 },
+                px: { xs: 0, sm: 1 }, // 移动端无内边距，桌面端有内边距
+              }}
+            >
+              启用后，在聊天界面可以将AI回复内容转换为语音播放。本应用支持硅基流动TTS、OpenAI TTS和微软Azure TTS服务，如API无效则会自动降级使用浏览器内置的Web Speech API功能。
+            </Typography>
+
+            {/* TTS服务选择器 */}
+            <FormControl
+              fullWidth
+              sx={{
+                mb: { xs: 2, sm: 3 },
+                '& .MuiInputLabel-root': {
                   fontSize: { xs: '0.9rem', sm: '1rem' },
                 },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderRadius: { xs: 1.5, sm: 2 },
-                },
               }}
             >
-              <MenuItem
-                value="siliconflow"
+              <InputLabel>选择TTS服务</InputLabel>
+              <Select
+                value={selectedTTSService}
+                onChange={(e) => handleServiceChange(e.target.value)}
+                label="选择TTS服务"
                 sx={{
-                  py: { xs: 1, sm: 1.5 },
-                  px: { xs: 2, sm: 3 },
+                  '& .MuiSelect-select': {
+                    py: { xs: 1.5, sm: 2 }, // 响应式内边距
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderRadius: { xs: 1.5, sm: 2 },
+                  },
                 }}
               >
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: { xs: 0.5, sm: 1 },
-                  width: '100%',
-                }}>
-                  <Chip
-                    size="small"
-                    label="推荐"
-                    color="primary"
-                    variant="outlined"
-                    sx={{
-                      fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                      height: { xs: 20, sm: 24 },
-                      '& .MuiChip-label': {
-                        px: { xs: 0.5, sm: 1 },
-                      },
-                    }}
-                  />
-                  <Typography sx={{
-                    fontSize: { xs: '0.85rem', sm: '0.95rem' },
-                    ml: { xs: 0.5, sm: 1 },
-                  }}>
-                    硅基流动 TTS (免费额度)
-                  </Typography>
-                </Box>
-              </MenuItem>
-              <MenuItem
-                value="openai"
-                sx={{
-                  py: { xs: 1, sm: 1.5 },
-                  px: { xs: 2, sm: 3 },
-                }}
-              >
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: { xs: 0.5, sm: 1 },
-                  width: '100%',
-                }}>
-                  <Chip
-                    size="small"
-                    label="付费"
-                    color="warning"
-                    variant="outlined"
-                    sx={{
-                      fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                      height: { xs: 20, sm: 24 },
-                      '& .MuiChip-label': {
-                        px: { xs: 0.5, sm: 1 },
-                      },
-                    }}
-                  />
-                  <Typography sx={{
-                    fontSize: { xs: '0.85rem', sm: '0.95rem' },
-                    ml: { xs: 0.5, sm: 1 },
-                  }}>
-                    OpenAI TTS (高音质)
-                  </Typography>
-                </Box>
-              </MenuItem>
-              <MenuItem
-                value="azure"
-                sx={{
-                  py: { xs: 1, sm: 1.5 },
-                  px: { xs: 2, sm: 3 },
-                }}
-              >
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: { xs: 0.5, sm: 1 },
-                  width: '100%',
-                }}>
-                  <Chip
-                    size="small"
-                    label="企业级"
-                    color="info"
-                    variant="outlined"
-                    sx={{
-                      fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                      height: { xs: 20, sm: 24 },
-                      '& .MuiChip-label': {
-                        px: { xs: 0.5, sm: 1 },
-                      },
-                    }}
-                  />
-                  <Typography sx={{
-                    fontSize: { xs: '0.85rem', sm: '0.95rem' },
-                    ml: { xs: 0.5, sm: 1 },
-                  }}>
-                    微软Azure TTS (免费额度+付费)
-                  </Typography>
-                </Box>
-              </MenuItem>
-            </Select>
-            <FormHelperText sx={{
-              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              mt: { xs: 0.5, sm: 1 },
-              px: { xs: 0, sm: 1 },
-            }}>
-              选择您要使用的文本转语音服务。硅基流动提供免费额度，OpenAI音质优秀，Azure提供企业级服务。
-            </FormHelperText>
-          </FormControl>
-
-          <Tabs
-            value={uiState.tabValue}
-            onChange={handleTabChange}
-            variant="scrollable" // 始终使用可滚动模式
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            sx={{
-              mb: { xs: 2, sm: 3 },
-              borderBottom: 1,
-              borderColor: 'divider',
-              // 滑动容器样式
-              '& .MuiTabs-scroller': {
-                overflow: 'auto !important',
-                scrollBehavior: 'smooth',
-                WebkitOverflowScrolling: 'touch', // iOS 滑动优化
-                '&::-webkit-scrollbar': {
-                  display: 'none', // 隐藏滚动条
-                },
-                scrollbarWidth: 'none', // Firefox 隐藏滚动条
-              },
-              '& .MuiTabs-flexContainer': {
-                gap: { xs: 0.5, sm: 1 },
-                minWidth: 'fit-content',
-              },
-              '& .MuiTab-root': {
-                minHeight: { xs: 56, sm: 64 },
-                fontSize: { xs: '0.7rem', sm: '0.875rem', md: '1rem' },
-                fontWeight: 500,
-                textTransform: 'none',
-                px: { xs: 1.5, sm: 2, md: 3 },
-                py: { xs: 1, sm: 1.5 },
-                minWidth: { xs: 'auto', sm: 120, md: 160 }, // 响应式最小宽度
-                maxWidth: { xs: 200, sm: 250, md: 300 },
-                whiteSpace: 'nowrap',
-                '&.Mui-selected': {
-                  fontWeight: 600,
-                  color: 'primary.main',
-                },
-                '&:hover': {
-                  backgroundColor: 'action.hover',
-                  transition: 'background-color 0.2s ease-in-out',
-                },
-              },
-              '& .MuiTabs-indicator': {
-                height: { xs: 3, sm: 4 },
-                borderRadius: '2px 2px 0 0',
-                background: 'linear-gradient(90deg, #9333EA, #754AB4)',
-              },
-              // 滚动按钮样式
-              '& .MuiTabs-scrollButtons': {
-                '&.Mui-disabled': {
-                  opacity: 0.3,
-                },
-                '& .MuiSvgIcon-root': {
-                  fontSize: { xs: '1.2rem', sm: '1.5rem' },
-                },
-              },
-            }}
-          >
-            <Tab
-              label={
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: { xs: 0.5, sm: 1 },
-                  flexDirection: 'row', // 始终水平布局
-                  textAlign: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                }}>
-                  <Typography sx={{
-                    fontSize: 'inherit',
-                    fontWeight: 'inherit',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}>
-                    硅基流动
-                  </Typography>
+                <MenuItem
+                  value="siliconflow"
+                  sx={{
+                    py: { xs: 1, sm: 1.5 },
+                    px: { xs: 2, sm: 3 },
+                  }}
+                >
                   <Box sx={{
                     display: 'flex',
-                    gap: 0.25,
                     alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    width: '100%',
                   }}>
-                    {selectedTTSService === 'siliconflow' && (
-                      <Chip
-                        size="small"
-                        label="使用中"
-                        color="success"
-                        variant="filled"
-                        sx={{
-                          fontSize: { xs: '0.55rem', sm: '0.65rem' },
-                          height: { xs: 16, sm: 20 },
-                          minWidth: 'auto',
-                          '& .MuiChip-label': {
-                            px: { xs: 0.5, sm: 0.75 },
-                            py: 0,
-                          },
-                        }}
-                      />
-                    )}
-                    {siliconFlowSettings.apiKey && selectedTTSService !== 'siliconflow' && (
-                      <Chip
-                        size="small"
-                        label="已配置"
-                        color="info"
-                        variant="outlined"
-                        sx={{
-                          fontSize: { xs: '0.55rem', sm: '0.65rem' },
-                          height: { xs: 16, sm: 20 },
-                          minWidth: 'auto',
-                          '& .MuiChip-label': {
-                            px: { xs: 0.5, sm: 0.75 },
-                            py: 0,
-                          },
-                        }}
-                      />
-                    )}
+                    <Chip
+                      size="small"
+                      label="推荐"
+                      color="primary"
+                      variant="outlined"
+                      sx={{
+                        fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                        height: { xs: 20, sm: 24 },
+                        '& .MuiChip-label': {
+                          px: { xs: 0.5, sm: 1 },
+                        },
+                      }}
+                    />
+                    <Typography sx={{
+                      fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                      ml: { xs: 0.5, sm: 1 },
+                    }}>
+                      硅基流动 TTS (免费额度)
+                    </Typography>
                   </Box>
-                </Box>
-              }
-            />
-            <Tab
-              label={
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: { xs: 0.5, sm: 1 },
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  textAlign: 'center',
-                }}>
-                  <Typography sx={{
-                    fontSize: { xs: '0.7rem', sm: '0.85rem' },
-                    fontWeight: 'inherit',
-                    whiteSpace: { xs: 'normal', sm: 'nowrap' },
-                  }}>
-                    OpenAI TTS
-                  </Typography>
+                </MenuItem>
+                <MenuItem
+                  value="openai"
+                  sx={{
+                    py: { xs: 1, sm: 1.5 },
+                    px: { xs: 2, sm: 3 },
+                  }}
+                >
                   <Box sx={{
                     display: 'flex',
-                    gap: 0.5,
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    width: '100%',
                   }}>
-                    {selectedTTSService === 'openai' && (
-                      <Chip
-                        size="small"
-                        label="当前使用"
-                        color="success"
-                        variant="filled"
-                        sx={{
-                          fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                          height: { xs: 14, sm: 18 },
-                          '& .MuiChip-label': {
-                            px: { xs: 0.5, sm: 0.75 },
-                          },
-                        }}
-                      />
-                    )}
-                    {openaiSettings.apiKey && (
-                      <Chip
-                        size="small"
-                        label="已配置"
-                        color="info"
-                        variant="outlined"
-                        sx={{
-                          fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                          height: { xs: 14, sm: 18 },
-                          '& .MuiChip-label': {
-                            px: { xs: 0.5, sm: 0.75 },
-                          },
-                        }}
-                      />
-                    )}
+                    <Chip
+                      size="small"
+                      label="付费"
+                      color="warning"
+                      variant="outlined"
+                      sx={{
+                        fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                        height: { xs: 20, sm: 24 },
+                        '& .MuiChip-label': {
+                          px: { xs: 0.5, sm: 1 },
+                        },
+                      }}
+                    />
+                    <Typography sx={{
+                      fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                      ml: { xs: 0.5, sm: 1 },
+                    }}>
+                      OpenAI TTS (高音质)
+                    </Typography>
                   </Box>
-                </Box>
-              }
-            />
-            <Tab
-              label={
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: { xs: 0.5, sm: 1 },
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  textAlign: 'center',
-                }}>
-                  <Typography sx={{
-                    fontSize: { xs: '0.7rem', sm: '0.85rem' },
-                    fontWeight: 'inherit',
-                    whiteSpace: { xs: 'normal', sm: 'nowrap' },
-                  }}>
-                    微软Azure TTS
-                  </Typography>
+                </MenuItem>
+                <MenuItem
+                  value="azure"
+                  sx={{
+                    py: { xs: 1, sm: 1.5 },
+                    px: { xs: 2, sm: 3 },
+                  }}
+                >
                   <Box sx={{
                     display: 'flex',
-                    gap: 0.5,
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    width: '100%',
                   }}>
-                    {selectedTTSService === 'azure' && (
-                      <Chip
-                        size="small"
-                        label="当前使用"
-                        color="success"
-                        variant="filled"
-                        sx={{
-                          fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                          height: { xs: 14, sm: 18 },
-                          '& .MuiChip-label': {
-                            px: { xs: 0.5, sm: 0.75 },
-                          },
-                        }}
-                      />
-                    )}
-                    {azureSettings.apiKey && (
-                      <Chip
-                        size="small"
-                        label="已配置"
-                        color="info"
-                        variant="outlined"
-                        sx={{
-                          fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                          height: { xs: 14, sm: 18 },
-                          '& .MuiChip-label': {
-                            px: { xs: 0.5, sm: 0.75 },
-                          },
-                        }}
-                      />
-                    )}
+                    <Chip
+                      size="small"
+                      label="企业级"
+                      color="info"
+                      variant="outlined"
+                      sx={{
+                        fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                        height: { xs: 20, sm: 24 },
+                        '& .MuiChip-label': {
+                          px: { xs: 0.5, sm: 1 },
+                        },
+                      }}
+                    />
+                    <Typography sx={{
+                      fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                      ml: { xs: 0.5, sm: 1 },
+                    }}>
+                      微软Azure TTS (免费额度+付费)
+                    </Typography>
                   </Box>
-                </Box>
-              }
-            />
-          </Tabs>
+                </MenuItem>
+              </Select>
+              <FormHelperText sx={{
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                mt: { xs: 0.5, sm: 1 },
+                px: { xs: 0, sm: 1 },
+              }}>
+                选择您要使用的文本转语音服务。硅基流动提供免费额度，OpenAI音质优秀，Azure提供企业级服务。
+              </FormHelperText>
+            </FormControl>
 
-          {uiState.tabValue === 0 && (
-            <SiliconFlowTTSTab
-              settings={siliconFlowSettings}
-              onSettingsChange={setSiliconFlowSettings}
-            />
-          )}
+            <Tabs
+              value={uiState.ttsSubTabValue}
+              onChange={handleTTSSubTabChange}
+              variant="scrollable" // 始终使用可滚动模式
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                mb: { xs: 2, sm: 3 },
+                borderBottom: 1,
+                borderColor: 'divider',
+                // 滑动容器样式
+                '& .MuiTabs-scroller': {
+                  overflow: 'auto !important',
+                  scrollBehavior: 'smooth',
+                  WebkitOverflowScrolling: 'touch', // iOS 滑动优化
+                  '&::-webkit-scrollbar': {
+                    display: 'none', // 隐藏滚动条
+                  },
+                  scrollbarWidth: 'none', // Firefox 隐藏滚动条
+                },
+                '& .MuiTabs-flexContainer': {
+                  gap: { xs: 0.5, sm: 1 },
+                  minWidth: 'fit-content',
+                },
+                '& .MuiTab-root': {
+                  minHeight: { xs: 56, sm: 64 },
+                  fontSize: { xs: '0.7rem', sm: '0.875rem', md: '1rem' },
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  px: { xs: 1.5, sm: 2, md: 3 },
+                  py: { xs: 1, sm: 1.5 },
+                  minWidth: { xs: 'auto', sm: 120, md: 160 }, // 响应式最小宽度
+                  maxWidth: { xs: 200, sm: 250, md: 300 },
+                  whiteSpace: 'nowrap',
+                  '&.Mui-selected': {
+                    fontWeight: 600,
+                    color: 'primary.main',
+                  },
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    transition: 'background-color 0.2s ease-in-out',
+                  },
+                },
+                '& .MuiTabs-indicator': {
+                  height: { xs: 3, sm: 4 },
+                  borderRadius: '2px 2px 0 0',
+                  background: 'linear-gradient(90deg, #9333EA, #754AB4)',
+                },
+                // 滚动按钮样式
+                '& .MuiTabs-scrollButtons': {
+                  '&.Mui-disabled': {
+                    opacity: 0.3,
+                  },
+                  '& .MuiSvgIcon-root': {
+                    fontSize: { xs: '1.2rem', sm: '1.5rem' },
+                  },
+                },
+              }}
+            >
+              <Tab
+                label={
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    flexDirection: 'row', // 始终水平布局
+                    textAlign: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                  }}>
+                    <Typography sx={{
+                      fontSize: 'inherit',
+                      fontWeight: 'inherit',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      硅基流动
+                    </Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 0.25,
+                      alignItems: 'center',
+                    }}>
+                      {selectedTTSService === 'siliconflow' && (
+                        <Chip
+                          size="small"
+                          label="使用中"
+                          color="success"
+                          variant="filled"
+                          sx={{
+                            fontSize: { xs: '0.55rem', sm: '0.65rem' },
+                            height: { xs: 16, sm: 20 },
+                            minWidth: 'auto',
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                              py: 0,
+                            },
+                          }}
+                        />
+                      )}
+                      {siliconFlowSettings.apiKey && selectedTTSService !== 'siliconflow' && (
+                        <Chip
+                          size="small"
+                          label="已配置"
+                          color="info"
+                          variant="outlined"
+                          sx={{
+                            fontSize: { xs: '0.55rem', sm: '0.65rem' },
+                            height: { xs: 16, sm: 20 },
+                            minWidth: 'auto',
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                              py: 0,
+                            },
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                }
+              />
+              <Tab
+                label={
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    textAlign: 'center',
+                  }}>
+                    <Typography sx={{
+                      fontSize: { xs: '0.7rem', sm: '0.85rem' },
+                      fontWeight: 'inherit',
+                      whiteSpace: { xs: 'normal', sm: 'nowrap' },
+                    }}>
+                      OpenAI TTS
+                    </Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 0.5,
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                    }}>
+                      {selectedTTSService === 'openai' && (
+                        <Chip
+                          size="small"
+                          label="当前使用"
+                          color="success"
+                          variant="filled"
+                          sx={{
+                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                            height: { xs: 14, sm: 18 },
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                            },
+                          }}
+                        />
+                      )}
+                      {openaiSettings.apiKey && (
+                        <Chip
+                          size="small"
+                          label="已配置"
+                          color="info"
+                          variant="outlined"
+                          sx={{
+                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                            height: { xs: 14, sm: 18 },
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                            },
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                }
+              />
+              <Tab
+                label={
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    textAlign: 'center',
+                  }}>
+                    <Typography sx={{
+                      fontSize: { xs: '0.7rem', sm: '0.85rem' },
+                      fontWeight: 'inherit',
+                      whiteSpace: { xs: 'normal', sm: 'nowrap' },
+                    }}>
+                      微软Azure TTS
+                    </Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 0.5,
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                    }}>
+                      {selectedTTSService === 'azure' && (
+                        <Chip
+                          size="small"
+                          label="当前使用"
+                          color="success"
+                          variant="filled"
+                          sx={{
+                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                            height: { xs: 14, sm: 18 },
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                            },
+                          }}
+                        />
+                      )}
+                      {azureSettings.apiKey && (
+                        <Chip
+                          size="small"
+                          label="已配置"
+                          color="info"
+                          variant="outlined"
+                          sx={{
+                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                            height: { xs: 14, sm: 18 },
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                            },
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                }
+              />
+            </Tabs>
 
-          {uiState.tabValue === 1 && (
-            <OpenAITTSTab
-              settings={openaiSettings}
-              onSettingsChange={setOpenaiSettings}
-            />
-          )}
+            {uiState.ttsSubTabValue === 0 && (
+              <SiliconFlowTTSTab
+                settings={siliconFlowSettings}
+                onSettingsChange={setSiliconFlowSettings}
+              />
+            )}
 
-          {uiState.tabValue === 2 && (
-            <AzureTTSTab
-              settings={azureSettings}
-              onSettingsChange={setAzureSettings}
-            />
-          )}
-        </Paper>
+            {uiState.ttsSubTabValue === 1 && (
+              <OpenAITTSTab
+                settings={openaiSettings}
+                onSettingsChange={setOpenaiSettings}
+              />
+            )}
 
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 2, sm: 3, md: 4 },
-            borderRadius: { xs: 2, sm: 3 },
-            border: '1px solid',
-            borderColor: 'divider',
-            background: 'background.paper',
-            boxShadow: {
-              xs: '0 2px 8px rgba(0,0,0,0.04)',
-              sm: '0 4px 12px rgba(0,0,0,0.08)'
-            },
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-              boxShadow: {
-                xs: '0 4px 12px rgba(0,0,0,0.08)',
-                sm: '0 8px 24px rgba(0,0,0,0.12)'
-              },
-            },
-          }}
-        >
-          <Typography
-            variant="h6"
+            {uiState.ttsSubTabValue === 2 && (
+              <AzureTTSTab
+                settings={azureSettings}
+                onSettingsChange={setAzureSettings}
+              />
+            )}
+          </Paper>
+        )}
+
+        {/* TTS测试区域 */}
+        {uiState.mainTabValue === 0 && (
+          <TTSTestSection
+            testText={testText}
+            setTestText={setTestText}
+            handleTestTTS={handleTestTTS}
+            isTestPlaying={uiState.isTestPlaying}
+            enableTTS={enableTTS}
+            selectedTTSService={selectedTTSService}
+            openaiApiKey={openaiSettings.apiKey}
+            azureApiKey={azureSettings.apiKey}
+            siliconFlowApiKey={siliconFlowSettings.apiKey}
+          />
+        )}
+
+        {uiState.mainTabValue === 1 && (
+          <Paper
+            elevation={0}
             sx={{
-              mb: { xs: 2, sm: 3 },
-              fontWeight: 600,
-              fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
-              color: 'text.primary',
+              p: { xs: 2, sm: 3, md: 4 },
+              mb: { xs: 2, sm: 3 }, // 响应式外边距
+              borderRadius: { xs: 2, sm: 3 },
+              border: '1px solid',
+              borderColor: 'divider',
+              background: 'background.paper',
+              boxShadow: {
+                xs: '0 2px 8px rgba(0,0,0,0.04)',
+                sm: '0 4px 12px rgba(0,0,0,0.08)'
+              },
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                boxShadow: {
+                  xs: '0 4px 12px rgba(0,0,0,0.08)',
+                  sm: '0 8px 24px rgba(0,0,0,0.12)'
+                },
+              },
             }}
           >
-            测试语音效果
-          </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: { xs: 2, sm: 3 },
+                fontWeight: 600,
+                fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
+                color: 'text.primary',
+              }}
+            >
+              语音识别 (STT) 功能
+            </Typography>
 
-          <TextField
-            fullWidth
-            multiline
-            rows={3} // 固定行数
-            label="测试文本"
-            value={testText}
-            onChange={(e) => setTestText(e.target.value)}
-            variant="outlined"
+            {/* 基础设置 */}
+            <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={speechRecognitionSettings.enabled}
+                    onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, enabled: e.target.checked }))}
+                    color="primary"
+                    size="medium"
+                    sx={{
+                      '& .MuiSwitch-thumb': {
+                        width: { xs: 20, sm: 24 },
+                        height: { xs: 20, sm: 24 },
+                      },
+                      '& .MuiSwitch-track': {
+                        borderRadius: { xs: 10, sm: 12 },
+                      },
+                    }}
+                  />
+                }
+                label={
+                  <Typography
+                    sx={{
+                      fontSize: { xs: '0.9rem', sm: '1rem' },
+                      fontWeight: 500,
+                    }}
+                  >
+                    启用语音识别功能
+                  </Typography>
+                }
+                sx={{
+                  '& .MuiFormControlLabel-label': {
+                    ml: { xs: 1, sm: 1.5 },
+                  },
+                }}
+              />
+            </Box>
+            
+            {/* 语音识别服务选择 - 添加子Tab */}
+            <Tabs
+              value={uiState.sttSubTabValue}
+              onChange={handleSTTSubTabChange}
+              variant="scrollable" // 始终使用可滚动模式
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                mb: { xs: 2, sm: 3 },
+                borderBottom: 1,
+                borderColor: 'divider',
+                // 滑动容器样式
+                '& .MuiTabs-scroller': {
+                  overflow: 'auto !important',
+                  scrollBehavior: 'smooth',
+                  WebkitOverflowScrolling: 'touch', // iOS 滑动优化
+                  '&::-webkit-scrollbar': {
+                    display: 'none', // 隐藏滚动条
+                  },
+                  scrollbarWidth: 'none', // Firefox 隐藏滚动条
+                },
+                '& .MuiTabs-flexContainer': {
+                  gap: { xs: 0.5, sm: 1 },
+                  minWidth: 'fit-content',
+                },
+                '& .MuiTab-root': {
+                  minHeight: { xs: 56, sm: 64 },
+                  fontSize: { xs: '0.7rem', sm: '0.875rem', md: '1rem' },
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  px: { xs: 1.5, sm: 2, md: 3 },
+                  py: { xs: 1, sm: 1.5 },
+                  minWidth: { xs: 'auto', sm: 120, md: 160 }, // 响应式最小宽度
+                  maxWidth: { xs: 200, sm: 250, md: 300 },
+                  whiteSpace: 'nowrap',
+                  '&.Mui-selected': {
+                    fontWeight: 600,
+                    color: 'primary.main',
+                  },
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    transition: 'background-color 0.2s ease-in-out',
+                  },
+                },
+                '& .MuiTabs-indicator': {
+                  height: { xs: 3, sm: 4 },
+                  borderRadius: '2px 2px 0 0',
+                  background: 'linear-gradient(90deg, #9333EA, #754AB4)',
+                },
+                // 滚动按钮样式
+                '& .MuiTabs-scrollButtons': {
+                  '&.Mui-disabled': {
+                    opacity: 0.3,
+                  },
+                  '& .MuiSvgIcon-root': {
+                    fontSize: { xs: '1.2rem', sm: '1.5rem' },
+                  },
+                },
+              }}
+            >
+              {/* Capacitor Tab */}
+              <Tab
+                label={
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    flexDirection: 'row', // 始终水平布局
+                    textAlign: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                  }}>
+                    <Typography sx={{
+                      fontSize: 'inherit',
+                      fontWeight: 'inherit',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      本地识别
+                    </Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 0.25,
+                      alignItems: 'center',
+                    }}>
+                      {speechRecognitionSettings.provider === 'capacitor' && (
+                        <Chip
+                          size="small"
+                          label="使用中"
+                          color="success"
+                          variant="filled"
+                          sx={{
+                            fontSize: { xs: '0.55rem', sm: '0.65rem' },
+                            height: { xs: 16, sm: 20 },
+                            minWidth: 'auto',
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                              py: 0,
+                            },
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                }
+              />
+              
+              {/* OpenAI Whisper Tab */}
+              <Tab
+                label={
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    flexDirection: 'row', // 始终水平布局
+                    textAlign: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                  }}>
+                    <Typography sx={{
+                      fontSize: 'inherit',
+                      fontWeight: 'inherit',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      OpenAI Whisper
+                    </Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 0.25,
+                      alignItems: 'center',
+                    }}>
+                      {speechRecognitionSettings.provider === 'openai' && (
+                        <Chip
+                          size="small"
+                          label="使用中"
+                          color="success"
+                          variant="filled"
+                          sx={{
+                            fontSize: { xs: '0.55rem', sm: '0.65rem' },
+                            height: { xs: 16, sm: 20 },
+                            minWidth: 'auto',
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                            },
+                          }}
+                        />
+                      )}
+                      {whisperSettings.apiKey && speechRecognitionSettings.provider !== 'openai' && (
+                        <Chip
+                          size="small"
+                          label="已配置"
+                          color="info"
+                          variant="outlined"
+                          sx={{
+                            fontSize: { xs: '0.55rem', sm: '0.65rem' },
+                            height: { xs: 16, sm: 20 },
+                            minWidth: 'auto',
+                            '& .MuiChip-label': {
+                              px: { xs: 0.5, sm: 0.75 },
+                              py: 0,
+                            },
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                }
+              />
+            </Tabs>
+            
+            {/* 根据选中的子Tab显示不同的内容 */}
+            {uiState.sttSubTabValue === 0 && (
+              // Capacitor语音识别设置
+              <>
+                <FormControl fullWidth sx={{ mb: { xs: 2, sm: 3 } }}>
+                  <InputLabel>默认语言</InputLabel>
+                  <Select
+                    value={speechRecognitionSettings.language}
+                    onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, language: e.target.value }))}
+                    label="默认语言"
+                  >
+                    <MenuItem value="zh-CN">中文 (普通话)</MenuItem>
+                    <MenuItem value="en-US">English (US)</MenuItem>
+                    {/* 可以根据需要添加更多语言 */}
+                  </Select>
+                  <FormHelperText>选择语音识别的默认语言。</FormHelperText>
+                </FormControl>
+
+                <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 2, sm: 3 } }}>
+                  权限状态: {permissionStatus}
+                </Typography>
+
+                {/* 识别参数 */}
+                <Typography variant="h6" sx={{ mb: { xs: 2, sm: 3 }, fontWeight: 600 }}>
+                  识别参数
+                </Typography>
+
+                <TextField
+                  fullWidth
+                  label="静音超时时间 (毫秒)"
+                  type="number"
+                  value={speechRecognitionSettings.silenceTimeout}
+                  onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, silenceTimeout: Number(e.target.value) }))}
+                  sx={{ mb: { xs: 2, sm: 3 } }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="最大结果数量"
+                  type="number"
+                  value={speechRecognitionSettings.maxResults}
+                  onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, maxResults: Number(e.target.value) }))}
+                  sx={{ mb: { xs: 2, sm: 3 } }}
+                />
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={speechRecognitionSettings.partialResults}
+                      onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, partialResults: e.target.checked }))}
+                      color="primary"
+                    />
+                  }
+                  label="显示部分结果"
+                  sx={{ mb: { xs: 2, sm: 3 } }}
+                />
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={speechRecognitionSettings.autoStart}
+                      onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, autoStart: e.target.checked }))}
+                      color="primary"
+                    />
+                  }
+                  label="自动开始识别"
+                  sx={{ mb: { xs: 2, sm: 3 } }}
+                />
+
+                {/* 测试区域 */}
+                <Typography variant="h6" sx={{ mb: { xs: 2, sm: 3 }, fontWeight: 600 }}>
+                  测试语音识别
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, mb: { xs: 2, sm: 3 }, flexDirection: { xs: 'column', sm: 'row' } }}>
+                  <Button
+                    variant="outlined"
+                    onClick={checkAndRequestPermissions}
+                    disabled={permissionStatus === 'granted'}
+                    sx={{ flex: 1 }}
+                  >
+                    检查并请求权限
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color={isListening ? "error" : "primary"}
+                    onClick={isListening ? stopRecognition : () => startRecognition({
+                      language: speechRecognitionSettings.language,
+                      maxResults: speechRecognitionSettings.maxResults,
+                      partialResults: speechRecognitionSettings.partialResults,
+                      popup: false,
+                    })}
+                    startIcon={isListening ? <StopIcon /> : <MicIcon />}
+                    sx={{ flex: 1 }}
+                  >
+                    {isListening ? "停止识别" : "开始识别"}
+                  </Button>
+                </Box>
+
+                {recognitionText && (
+                  <Alert severity="info" sx={{ mb: { xs: 2, sm: 3 } }}>
+                    实时识别结果: {recognitionText}
+                  </Alert>
+                )}
+
+                {error && (
+                  <Alert severity="error" sx={{ mb: { xs: 2, sm: 3 } }}>
+                    语音识别错误: {error.message || '未知错误'}
+                  </Alert>
+                )}
+              </>
+            )}
+            
+            {uiState.sttSubTabValue === 1 && (
+              // OpenAI Whisper设置
+              <>
+                <OpenAIWhisperTab 
+                  settings={whisperSettings}
+                  onSettingsChange={setWhisperSettings}
+                />
+                
+                <WhisperTestSection 
+                  settings={whisperSettings}
+                  enabled={speechRecognitionSettings.enabled}
+                />
+              </>
+            )}
+          </Paper>
+        )}
+
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'flex-end', // 按钮靠右
+          mt: { xs: 2, sm: 3 }, // 顶部间距
+        }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSave}
+            size={window.innerWidth < 600 ? "large" : "medium"}
             sx={{
-              mb: { xs: 2, sm: 3 },
-              '& .MuiInputBase-root': {
-                fontSize: { xs: '0.9rem', sm: '1rem' },
-                minHeight: { xs: '80px', sm: '100px' }, // 响应式最小高度
+              minHeight: { xs: 48, sm: 40 },
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              fontWeight: 600,
+              borderRadius: { xs: 2, sm: 1.5 },
+              px: { xs: 3, sm: 2 },
+              background: 'linear-gradient(45deg, #9333EA, #754AB4)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #7C3AED, #6D28D9)',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 4px 12px rgba(147, 51, 234, 0.3)',
               },
-              '& .MuiInputLabel-root': {
-                fontSize: { xs: '0.9rem', sm: '1rem' },
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderRadius: { xs: 1.5, sm: 2 },
-              },
+              transition: 'all 0.2s ease-in-out',
             }}
-          />
-
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            flexDirection: { xs: 'column', sm: 'row' }, // 移动端垂直布局
-            gap: { xs: 2, sm: 0 }, // 移动端按钮间距
-          }}>
-            <Button
-              variant="contained"
-              color={uiState.isTestPlaying ? "error" : "primary"}
-              startIcon={<VolumeUpIcon />}
-              onClick={handleTestTTS}
-              disabled={
-                !enableTTS ||
-                (selectedTTSService === 'openai' && !openaiSettings.apiKey) ||
-                (selectedTTSService === 'azure' && !azureSettings.apiKey) ||
-                (selectedTTSService === 'siliconflow' && !siliconFlowSettings.apiKey)
-              }
-              size={window.innerWidth < 600 ? "large" : "medium"} // 移动端大按钮
-              sx={{
-                minHeight: { xs: 48, sm: 40 }, // 响应式按钮高度
-                fontSize: { xs: '0.9rem', sm: '1rem' },
-                fontWeight: 600,
-                borderRadius: { xs: 2, sm: 1.5 },
-                px: { xs: 3, sm: 2 },
-                order: { xs: 2, sm: 1 }, // 移动端按钮顺序
-                '&:hover': {
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                },
-                transition: 'all 0.2s ease-in-out',
-              }}
-            >
-              {uiState.isTestPlaying ? "停止播放" : "播放测试"}
-            </Button>
-
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSave}
-              size={window.innerWidth < 600 ? "large" : "medium"}
-              sx={{
-                minHeight: { xs: 48, sm: 40 },
-                fontSize: { xs: '0.9rem', sm: '1rem' },
-                fontWeight: 600,
-                borderRadius: { xs: 2, sm: 1.5 },
-                px: { xs: 3, sm: 2 },
-                order: { xs: 1, sm: 2 },
-                background: 'linear-gradient(45deg, #9333EA, #754AB4)',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #7C3AED, #6D28D9)',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(147, 51, 234, 0.3)',
-                },
-                transition: 'all 0.2s ease-in-out',
-              }}
-            >
-              保存设置
-            </Button>
-          </Box>
-        </Paper>
+          >
+            保存设置
+          </Button>
+        </Box>
         </Box>
       </Box>
     </Box>

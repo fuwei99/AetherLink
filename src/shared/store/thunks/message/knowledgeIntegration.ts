@@ -12,14 +12,25 @@ export const processKnowledgeSearch = async (
   dispatch: AppDispatch
 ) => {
   try {
+    console.log('[processKnowledgeSearch] 开始检查知识库选择状态...');
+
     // 检查是否有选中的知识库
     const knowledgeContextData = window.sessionStorage.getItem('selectedKnowledgeBase');
+    console.log('[processKnowledgeSearch] sessionStorage数据:', knowledgeContextData);
+
     if (!knowledgeContextData) {
+      console.log('[processKnowledgeSearch] 没有选中知识库，直接返回');
       return; // 没有选中知识库，直接返回
     }
 
     const contextData = JSON.parse(knowledgeContextData);
+    console.log('[processKnowledgeSearch] 解析后的上下文数据:', contextData);
+
     if (!contextData.isSelected || !contextData.searchOnSend) {
+      console.log('[processKnowledgeSearch] 不需要搜索，直接返回', {
+        isSelected: contextData.isSelected,
+        searchOnSend: contextData.searchOnSend
+      });
       return; // 不需要搜索，直接返回
     }
 
@@ -57,13 +68,14 @@ export const processKnowledgeSearch = async (
       return;
     }
 
-    // 搜索知识库
+    // 搜索知识库 - 使用增强RAG
     const knowledgeService = MobileKnowledgeService.getInstance();
     const searchResults = await knowledgeService.search({
       knowledgeBaseId: contextData.knowledgeBase.id,
       query: userContent.trim(),
       threshold: 0.6,
-      limit: 5
+      limit: 5,
+      useEnhancedRAG: true // 启用增强RAG搜索
     });
 
     console.log(`[processKnowledgeSearch] 搜索到 ${searchResults.length} 个相关内容`);

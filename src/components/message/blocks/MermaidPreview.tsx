@@ -60,7 +60,6 @@ const MermaidPreview: React.FC<MermaidPreviewProps> = ({ children, className }) 
             leftPadding: 75,
             gridLineStartPadding: 35,
             fontSize: 11,
-            fontFamily: 'Arial, sans-serif',
             sectionFontSize: 24,
             numberSectionStyles: 4
           },
@@ -74,7 +73,7 @@ const MermaidPreview: React.FC<MermaidPreviewProps> = ({ children, className }) 
             diagramMarginX: 50,
             diagramMarginY: 10
           },
-          gitgraph: {
+          gitGraph: {
             useMaxWidth: true,
             diagramPadding: 8,
             nodeLabel: {
@@ -108,7 +107,7 @@ const MermaidPreview: React.FC<MermaidPreviewProps> = ({ children, className }) 
         });
 
         // 生成唯一ID
-        const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const id = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
         // 渲染 Mermaid 图表
         const { svg } = await mermaid.render(id, children);

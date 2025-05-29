@@ -3,14 +3,148 @@ import { getMainTextContent, findImageBlocks, findFileBlocks } from '../../../ut
 import { getFileTypeByExtension, readFileContent, FileTypes } from '../../../utils/fileUtils';
 import type { MCPTool, Message } from '../../../types'; // 补充Message类型
 import { REFERENCE_PROMPT } from '../../../config/prompts';
+import { MobileKnowledgeService } from '../../../services/MobileKnowledgeService';
+import { newMessagesActions } from '../../slices/newMessagesSlice';
+import { AssistantMessageStatus } from '../../../types/newMessage';
+import store from '../../index';
+
+/**
+ * 在API调用前检查是否需要进行知识库搜索（风格：新模式）
+ */
+export const performKnowledgeSearchIfNeeded = async (topicId: string, assistantMessageId: string) => {
+  try {
+    console.log('[performKnowledgeSearchIfNeeded] 开始检查知识库选择状态...');
+
+    // 检查是否有选中的知识库
+    const knowledgeContextData = window.sessionStorage.getItem('selectedKnowledgeBase');
+    console.log('[performKnowledgeSearchIfNeeded] sessionStorage数据:', knowledgeContextData);
+
+    if (!knowledgeContextData) {
+      console.log('[performKnowledgeSearchIfNeeded] 没有选中知识库，直接返回');
+      return;
+    }
+
+    const contextData = JSON.parse(knowledgeContextData);
+    console.log('[performKnowledgeSearchIfNeeded] 解析后的上下文数据:', contextData);
+
+    if (!contextData.isSelected || !contextData.searchOnSend) {
+      console.log('[performKnowledgeSearchIfNeeded] 不需要搜索，直接返回', {
+        isSelected: contextData.isSelected,
+        searchOnSend: contextData.searchOnSend
+      });
+      return;
+    }
+
+    console.log('[performKnowledgeSearchIfNeeded] 检测到知识库选择，开始搜索...');
+
+    // 设置助手消息状态为搜索中
+    store.dispatch(newMessagesActions.updateMessage({
+      id: assistantMessageId,
+      changes: {
+        status: AssistantMessageStatus.SEARCHING
+      }
+    }));
+
+    // 获取话题消息
+    const messages = await dexieStorage.getTopicMessages(topicId);
+    if (!messages || messages.length === 0) {
+      console.warn('[performKnowledgeSearchIfNeeded] 无法获取话题消息');
+      return;
+    }
+
+    // 找到最后一条用户消息
+    const userMessage = messages
+      .filter((m: Message) => m.role === 'user')
+      .pop();
+
+    if (!userMessage) {
+      console.warn('[performKnowledgeSearchIfNeeded] 未找到用户消息');
+      return;
+    }
+
+    // 获取用户消息的文本内容
+    const userContent = getMainTextContent(userMessage);
+    if (!userContent) {
+      console.warn('[performKnowledgeSearchIfNeeded] 用户消息内容为空');
+      return;
+    }
+
+    console.log('[performKnowledgeSearchIfNeeded] 用户消息内容:', userContent);
+
+    // 搜索知识库 - 使用增强RAG
+    const knowledgeService = MobileKnowledgeService.getInstance();
+    const searchResults = await knowledgeService.search({
+      knowledgeBaseId: contextData.knowledgeBase.id,
+      query: userContent.trim(),
+      threshold: 0.6,
+      limit: 5,
+      useEnhancedRAG: true // 启用增强RAG搜索
+    });
+
+    console.log(`[performKnowledgeSearchIfNeeded] 搜索到 ${searchResults.length} 个相关内容`);
+
+    if (searchResults.length > 0) {
+      // 转换为KnowledgeReference格式
+      const references = searchResults.map((result, index) => ({
+        id: index + 1,
+        content: result.content,
+        type: 'file' as const,
+        similarity: result.similarity,
+        knowledgeBaseId: contextData.knowledgeBase.id,
+        knowledgeBaseName: contextData.knowledgeBase.name,
+        sourceUrl: `knowledge://${contextData.knowledgeBase.id}/${result.documentId || index}`
+      }));
+
+      // 缓存搜索结果（用于API注入）
+      const cacheKey = `knowledge-search-${userMessage.id}`;
+      window.sessionStorage.setItem(cacheKey, JSON.stringify(references));
+
+      console.log(`[performKnowledgeSearchIfNeeded] 知识库搜索结果已缓存: ${cacheKey}`);
+
+      // 发送知识库搜索事件（借鉴MCP工具块的事件机制）
+      const { EventEmitter, EVENT_NAMES } = await import('../../../services/EventService');
+
+      // 发送知识库搜索完成事件，携带搜索结果
+      EventEmitter.emit(EVENT_NAMES.KNOWLEDGE_SEARCH_COMPLETED, {
+        messageId: assistantMessageId,
+        knowledgeBaseId: contextData.knowledgeBase.id,
+        knowledgeBaseName: contextData.knowledgeBase.name,
+        searchQuery: userContent,
+        searchResults: searchResults,
+        references: references
+      });
+
+      console.log(`[performKnowledgeSearchIfNeeded] 已发送知识库搜索完成事件，结果数量: ${searchResults.length}`);
+    }
+
+    // 清除知识库选择状态
+    window.sessionStorage.removeItem('selectedKnowledgeBase');
+
+  } catch (error) {
+    console.error('[performKnowledgeSearchIfNeeded] 知识库搜索失败:', error);
+    // 清除知识库选择状态
+    window.sessionStorage.removeItem('selectedKnowledgeBase');
+  }
+};
 
 export const prepareMessagesForApi = async (
   topicId: string,
   assistantMessageId: string,
-  _mcpTools?: MCPTool[] // 添加下划线前缀表示未使用的参数
+  _mcpTools?: MCPTool[], // 添加下划线前缀表示未使用的参数
+  options?: { skipKnowledgeSearch?: boolean }
 ) => {
-  // 🔥 关键修复：使用getTopicMessages获取包含content字段的消息
-  // 这样可以获取到多模型对比选择后保存的内容
+  console.log('[prepareMessagesForApi] 开始准备API消息', { topicId, assistantMessageId, options });
+
+  // 1. 首先检查是否需要进行知识库搜索（风格：在API调用前搜索）
+  if (!options?.skipKnowledgeSearch) {
+    console.log('[prepareMessagesForApi] 调用知识库搜索检查...');
+    await performKnowledgeSearchIfNeeded(topicId, assistantMessageId);
+    console.log('[prepareMessagesForApi] 知识库搜索检查完成');
+  } else {
+    console.log('[prepareMessagesForApi] 跳过知识库搜索检查');
+  }
+
+  // 2. 获取包含content字段的消息
   const messages = await dexieStorage.getTopicMessages(topicId);
 
   // 按创建时间排序消息，确保顺序正确
@@ -65,7 +199,7 @@ export const prepareMessagesForApi = async (
     // 获取消息内容 - 检查是否有知识库缓存（风格）
     let content = getMainTextContent(message);
 
-    // 如果是用户消息，检查是否有知识库搜索结果
+    // 如果是用户消息，检查是否有知识库搜索结果或选中的知识库
     if (message.role === 'user') {
       const cacheKey = `knowledge-search-${message.id}`;
       const cachedReferences = window.sessionStorage.getItem(cacheKey);
@@ -87,6 +221,52 @@ export const prepareMessagesForApi = async (
           }
         } catch (error) {
           console.error('[prepareMessagesForApi] 解析知识库缓存失败:', error);
+        }
+      } else {
+        // 检查是否有选中的知识库但没有缓存的搜索结果
+        const knowledgeContextData = window.sessionStorage.getItem('selectedKnowledgeBase');
+        if (knowledgeContextData && content) {
+          try {
+            const contextData = JSON.parse(knowledgeContextData);
+            if (contextData.isSelected && contextData.searchOnSend) {
+              console.log(`[prepareMessagesForApi] 检测到选中的知识库但没有缓存结果，进行实时搜索...`);
+
+              // 动态导入知识库服务
+              const { MobileKnowledgeService } = await import('../../../services/MobileKnowledgeService');
+              const knowledgeService = MobileKnowledgeService.getInstance();
+
+              // 搜索知识库
+              const searchResults = await knowledgeService.search({
+                knowledgeBaseId: contextData.knowledgeBase.id,
+                query: content.trim(),
+                threshold: 0.6,
+                limit: 5
+              });
+
+              if (searchResults.length > 0) {
+                // 转换为引用格式
+                const references = searchResults.map((result: any, index: number) => ({
+                  id: index + 1,
+                  content: result.content,
+                  type: 'file' as const,
+                  similarity: result.similarity,
+                  knowledgeBaseId: contextData.knowledgeBase.id,
+                  knowledgeBaseName: contextData.knowledgeBase.name,
+                  sourceUrl: `knowledge://${contextData.knowledgeBase.id}/${result.documentId}`
+                }));
+
+                // 应用REFERENCE_PROMPT格式
+                const referenceContent = `\`\`\`json\n${JSON.stringify(references, null, 2)}\n\`\`\``;
+                content = REFERENCE_PROMPT
+                  .replace('{question}', content)
+                  .replace('{references}', referenceContent);
+
+                console.log(`[prepareMessagesForApi] 实时搜索并应用了知识库上下文，引用数量: ${references.length}`);
+              }
+            }
+          } catch (error) {
+            console.error('[prepareMessagesForApi] 实时知识库搜索失败:', error);
+          }
         }
       }
     }

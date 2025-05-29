@@ -1235,6 +1235,8 @@ export function createKnowledgeReferenceBlock(
     fileId?: string;
     knowledgeDocumentId?: string;
     searchQuery?: string;
+    // 支持传递完整的metadata对象
+    metadata?: KnowledgeReferenceMessageBlock['metadata'];
   }
 ): KnowledgeReferenceMessageBlock {
   return {
@@ -1247,7 +1249,7 @@ export function createKnowledgeReferenceBlock(
     similarity: options?.similarity,
     createdAt: new Date().toISOString(),
     status: MessageBlockStatus.SUCCESS,
-    metadata: {
+    metadata: options?.metadata || {
       fileName: options?.fileName,
       fileId: options?.fileId,
       knowledgeDocumentId: options?.knowledgeDocumentId,

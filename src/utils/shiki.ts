@@ -35,7 +35,7 @@ export async function highlightCode(
         background-color: ${styles.backgroundColor};
         color: ${styles.color};
         border: 1px solid ${styles.borderColor};
-        padding: 20px;
+        padding: 4px 8px;
         border-radius: 8px;
         overflow: auto;
         font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', Consolas, 'Liberation Mono', Menlo, Courier, monospace;

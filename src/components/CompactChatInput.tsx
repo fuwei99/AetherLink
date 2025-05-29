@@ -8,6 +8,7 @@ import { useFileUpload } from '../shared/hooks/useFileUpload';
 import { useUrlScraper } from '../shared/hooks/useUrlScraper';
 import { useInputStyles } from '../shared/hooks/useInputStyles';
 import { useKnowledgeContext } from '../shared/hooks/useKnowledgeContext';
+import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition'; // 导入 useVoiceRecognition
 import { getBasicIcons, getExpandedIcons } from '../shared/config/inputIcons';
 
 import AddIcon from '@mui/icons-material/Add';
@@ -19,10 +20,11 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../shared/store';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../shared/types';
 import { dexieStorage } from '../shared/services/DexieStorageService';
+import { VoiceButton, VoiceInputArea } from './VoiceRecognition';
 
 
 interface CompactChatInputProps {
-  onSendMessage: (message: string, images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => void;
+  onSendMessage: (message: string, images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[], voiceRecognitionText?: string) => void;
   onSendMultiModelMessage?: (message: string, models: any[], images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => void;
   isLoading?: boolean;
   allowConsecutiveMessages?: boolean;
@@ -67,6 +69,8 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   const [isFullExpanded, setIsFullExpanded] = useState(false); // 是否全展开
   const [isActivated, setIsActivated] = useState(false); // 冷激活状态
   const [isIOS, setIsIOS] = useState(false); // 是否是iOS设备
+  const [isVoiceMode, setIsVoiceMode] = useState(false); // 语音输入模式状态
+
 
   // 文件和图片上传相关状态
   const [images, setImages] = useState<ImageContent[]>([]);
@@ -100,6 +104,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   // 聊天输入逻辑
   const {
     message,
+    setMessage,
     textareaRef,
     canSendMessage,
     handleSubmit,
@@ -119,6 +124,23 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     setFiles,
     resetUrlScraper
   });
+
+  // 语音识别功能
+  const {
+    isListening,
+    recognitionText,
+    error: voiceRecognitionError,
+    startRecognition,
+    stopRecognition,
+  } = useVoiceRecognition();
+
+  // 使用重命名的变量来消除未使用警告
+  useEffect(() => {
+    // 仅用于显示可能的语音识别错误，防止未使用警告
+    if (voiceRecognitionError) {
+      console.error('语音识别错误:', voiceRecognitionError);
+    }
+  }, [voiceRecognitionError]);
 
   // 当话题ID变化时，从数据库获取话题信息
   useEffect(() => {
@@ -170,18 +192,25 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   };
 
   // 处理知识库选择（风格：只选择，不搜索）
-  const handleKnowledgeSelect = (knowledgeBase: any) => {
-    console.log('选择了知识库:', knowledgeBase);
+  const handleKnowledgeSelect = (knowledgeBase: any, searchResults?: any[]) => {
+    console.log('选择了知识库:', knowledgeBase, '搜索结果:', searchResults);
 
     // 存储选中的知识库信息，等待用户输入问题后再搜索
-    window.sessionStorage.setItem('selectedKnowledgeBase', JSON.stringify({
+    const knowledgeData = {
       knowledgeBase: {
         id: knowledgeBase.id,
         name: knowledgeBase.name
       },
       isSelected: true,
       searchOnSend: true // 标记需要在发送时搜索
-    }));
+    };
+
+    console.log('[知识库选择] 准备保存到sessionStorage:', knowledgeData);
+    window.sessionStorage.setItem('selectedKnowledgeBase', JSON.stringify(knowledgeData));
+
+    // 验证保存是否成功
+    const saved = window.sessionStorage.getItem('selectedKnowledgeBase');
+    console.log('[知识库选择] sessionStorage保存验证:', saved);
 
     console.log(`[知识库选择] 已选择知识库: ${knowledgeBase.name}，将在发送消息时自动搜索相关内容`);
 
@@ -329,6 +358,62 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // 语音识别处理函数
+  const handleToggleVoiceMode = () => {
+    setIsVoiceMode(!isVoiceMode);
+    // 如果退出语音模式，停止录音
+    if (isVoiceMode && isListening) {
+      stopRecognition();
+    }
+  };
+
+  const handleStartVoiceRecognition = async () => {
+    await startRecognition({
+      language: 'zh-CN',
+      maxResults: 1,
+      partialResults: true,
+      popup: false,
+    });
+  };
+
+  const handleStopVoiceRecognition = async () => {
+    console.log('CompactChatInput handleStopVoiceRecognition called');
+    try {
+      await stopRecognition();
+      console.log('CompactChatInput stopRecognition completed');
+    } catch (error) {
+      console.error('CompactChatInput Error stopping voice recognition:', error);
+    }
+  };
+
+  const handleVoiceSendMessage = (voiceMessage: string) => {
+    // 发送语音识别的消息
+    if (voiceMessage.trim()) {
+      // 创建正确的图片格式
+      const formattedImages: SiliconFlowImageFormat[] = [...images, ...files.filter(f => f.mimeType.startsWith('image/'))].map(img => ({
+        type: 'image_url',
+        image_url: {
+          url: img.base64Data || img.url
+        }
+      }));
+
+      onSendMessage(
+        voiceMessage.trim(),
+        formattedImages.length > 0 ? formattedImages : undefined,
+        toolsEnabled,
+        files
+      );
+
+      // 重置状态
+      setImages([]);
+      setFiles([]);
+      setUploadingMedia(false);
+      setIsVoiceMode(false); // 发送后退出语音模式
+    }
+  };
+
+
+
   // 使用配置文件获取图标
   const basicIcons = getBasicIcons({
     toolsEnabled,
@@ -397,30 +482,49 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
       )}
 
       {/* 输入框区域 */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'flex-start', // 改为顶部对齐，适应多行文本
-          background: isDarkMode ? '#2A2A2A' : '#FFFFFF', // 不透明背景
-          border: styles.border,
-          borderRadius: isActivated || expanded || message.trim().length > 0
-            ? `${styles.borderRadius} ${styles.borderRadius} 0 0` // 激活时只有上边圆角
-            : styles.borderRadius, // 冷激活时全圆角
-          boxShadow: styles.boxShadow,
-          padding: '8px 12px',
-          marginBottom: '0', // 移除间距，让它们贴合
-          borderBottom: isActivated || expanded || message.trim().length > 0 ? 'none' : styles.border, // 冷激活时保留底部边框
-          minHeight: '40px', // 最小高度
-          height: `${inputHeight}px`, // 动态高度
-          transition: 'all 0.2s ease', // 平滑过渡
-          cursor: !isActivated && !message.trim() ? 'pointer' : 'text', // 冷激活时显示指针
-          '&:hover': !isActivated && !message.trim() ? {
-            borderColor: isDarkMode ? '#555' : '#ddd',
-            boxShadow: `0 2px 8px ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-          } : {}
-        }}
-        onClick={!isActivated ? handleInputClick : undefined} // 冷激活时整个区域可点击
-      >
+      {isVoiceMode ? (
+        /* 语音输入模式 */
+        <VoiceInputArea
+          isListening={isListening}
+          recognitionText={recognitionText}
+          onStartRecording={handleStartVoiceRecognition}
+          onStopRecording={handleStopVoiceRecognition}
+          onSendMessage={handleVoiceSendMessage}
+          onCancel={() => setIsVoiceMode(false)}
+          onInsertText={(text) => {
+            setMessage(prev => prev + text);
+            setIsVoiceMode(false);
+          }}
+          isDarkMode={isDarkMode}
+          silenceTimeout={3000}
+          showVolumeIndicator={true}
+        />
+      ) : (
+        /* 文本输入模式 */
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-start', // 改为顶部对齐，适应多行文本
+            background: isDarkMode ? '#2A2A2A' : '#FFFFFF', // 不透明背景
+            border: styles.border,
+            borderRadius: isActivated || expanded || message.trim().length > 0
+              ? `${styles.borderRadius} ${styles.borderRadius} 0 0` // 激活时只有上边圆角
+              : styles.borderRadius, // 冷激活时全圆角
+            boxShadow: styles.boxShadow,
+            padding: '8px 12px',
+            marginBottom: '0', // 移除间距，让它们贴合
+            borderBottom: isActivated || expanded || message.trim().length > 0 ? 'none' : styles.border, // 冷激活时保留底部边框
+            minHeight: '40px', // 最小高度
+            height: `${inputHeight}px`, // 动态高度
+            transition: 'all 0.2s ease', // 平滑过渡
+            cursor: !isActivated && !message.trim() ? 'pointer' : 'text', // 冷激活时显示指针
+            '&:hover': !isActivated && !message.trim() ? {
+              borderColor: isDarkMode ? '#555' : '#ddd',
+              boxShadow: `0 2px 8px ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            } : {}
+          }}
+          onClick={!isActivated ? handleInputClick : undefined} // 冷激活时整个区域可点击
+        >
         <Box sx={{ flex: 1, marginRight: '8px', paddingTop: '4px' }}>
           <textarea
             ref={textareaRef}
@@ -460,8 +564,19 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
           />
         </Box>
 
-        {/* 发送按钮 */}
-        <Box sx={{ paddingTop: '4px' }}>
+        {/* 语音识别和发送按钮 */}
+        <Box sx={{ paddingTop: '4px', display: 'flex', gap: 1 }}>
+          {/* 语音识别按钮 */}
+          <VoiceButton
+            isVoiceMode={isVoiceMode}
+            isDisabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+            onToggleVoiceMode={handleToggleVoiceMode}
+            size="small"
+            color="default"
+            tooltip={isVoiceMode ? "退出语音输入模式" : "切换到语音输入模式"}
+          />
+
+          {/* 发送按钮 */}
           <IconButton
             onClick={isStreaming && onStopResponse ? onStopResponse : handleSubmit}
             disabled={!isStreaming && (!canSendMessage() || (isLoading && !allowConsecutiveMessages))}
@@ -498,7 +613,8 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
             {isStreaming ? <StopIcon /> : <SendIcon />}
           </IconButton>
         </Box>
-      </Box>
+        </Box>
+      )}
 
       {/* 文件预览和URL状态显示 */}
       {(images.length > 0 || files.length > 0 || urlScraperStatus !== 'idle') && (
@@ -815,6 +931,8 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
         onSelect={handleKnowledgeSelect}
         searchQuery={message}
       />
+
+
     </Box>
   );
 };

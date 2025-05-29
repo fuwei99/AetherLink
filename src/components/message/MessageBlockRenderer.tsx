@@ -232,6 +232,8 @@ const MessageBlockRenderer: React.FC<Props> = ({
                 blockComponent = <SearchResultsBlock key={block.id} block={block as any} />;
                 break;
               case MessageBlockType.KNOWLEDGE_REFERENCE:
+                blockComponent = <KnowledgeReferenceBlock key={block.id} block={block as any} />;
+                break;
               default:
                 console.warn('不支持的块类型:', (block as any).type, block);
                 break;

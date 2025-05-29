@@ -307,8 +307,25 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
   // 处理知识库选择
   const handleKnowledgeSelect = (knowledgeBase: any, searchResults: any[]) => {
     console.log('选择了知识库:', knowledgeBase, '搜索结果:', searchResults);
-    // ChatToolbar只负责显示选择器，实际的知识库处理由CompactChatInput负责
-    // 这里只需要关闭选择器
+
+    // 存储选中的知识库信息到sessionStorage（风格：新模式）
+    const knowledgeData = {
+      knowledgeBase: {
+        id: knowledgeBase.id,
+        name: knowledgeBase.name
+      },
+      isSelected: true,
+      searchOnSend: true // 标记需要在发送时搜索
+    };
+
+    console.log('[ChatToolbar] 保存知识库选择到sessionStorage:', knowledgeData);
+    window.sessionStorage.setItem('selectedKnowledgeBase', JSON.stringify(knowledgeData));
+
+    // 验证保存是否成功
+    const saved = window.sessionStorage.getItem('selectedKnowledgeBase');
+    console.log('[ChatToolbar] sessionStorage保存验证:', saved);
+
+    // 关闭选择器
     setShowKnowledgeSelector(false);
   };
 

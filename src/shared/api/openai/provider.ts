@@ -713,9 +713,6 @@ export class OpenAIProvider extends BaseOpenAIProvider {
       const iterationParams = {
         ...params,
         messages: currentMessages, // 使用当前消息
-        enableReasoning: this.supportsReasoning(),
-        enableTools: enableTools,
-        mcpTools: mcpTools, // 传递 MCP 工具
         signal: abortSignal
       };
 
@@ -871,9 +868,6 @@ export class OpenAIProvider extends BaseOpenAIProvider {
         const iterationParams = {
           ...params,
           messages: currentMessages, // 使用当前消息
-          enableReasoning: this.supportsReasoning(),
-          enableTools: enableTools,
-          mcpTools: mcpTools, // 传递 MCP 工具
           signal: abortSignal
         };
 
@@ -1005,7 +999,6 @@ export class OpenAIProvider extends BaseOpenAIProvider {
           ...params,
           messages: currentMessages,
           stream: false, // 确保是非流式
-          enableReasoning: this.supportsReasoning(), // 添加思考过程支持
           signal: abortSignal // 传递中断信号
         };
 

@@ -30,7 +30,7 @@ interface Props {
  * 显示AI的工具调用过程和结果
  */
 const ToolBlock: React.FC<Props> = ({ block }) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const theme = useTheme();
 

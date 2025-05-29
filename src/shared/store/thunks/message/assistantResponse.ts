@@ -14,7 +14,7 @@ import type { Message, MessageBlock } from '../../../types/newMessage';
 import type { Model, MCPTool } from '../../../types';
 import type { RootState, AppDispatch } from '../../index';
 import { processKnowledgeSearch } from './knowledgeIntegration';
-import { prepareMessagesForApi } from './apiPreparation';
+import { prepareMessagesForApi, performKnowledgeSearchIfNeeded } from './apiPreparation';
 
 export const processAssistantResponse = async (
   dispatch: AppDispatch,
@@ -25,10 +25,7 @@ export const processAssistantResponse = async (
   toolsEnabled?: boolean
 ) => {
   try {
-    // 1. 检查是否有知识库需要搜索（风格）
-    await processKnowledgeSearch(assistantMessage, topicId, dispatch);
-
-    // 2. 获取 MCP 工具（如果启用）
+    // 1. 获取 MCP 工具（如果启用）
     let mcpTools: MCPTool[] = [];
     if (toolsEnabled) {
       try {
@@ -44,7 +41,8 @@ export const processAssistantResponse = async (
       console.log(`[MCP] 工具未启用 (toolsEnabled=${toolsEnabled})`);
     }
 
-    const messages = await prepareMessagesForApi(topicId, assistantMessage.id, mcpTools);
+    // 暂时不进行知识库搜索，等ResponseHandler创建后再搜索
+    const messages = await prepareMessagesForApi(topicId, assistantMessage.id, mcpTools, { skipKnowledgeSearch: true });
 
 // 3. 设置消息状态为处理中，避免显示错误消息
     dispatch(newMessagesActions.updateMessage({
@@ -116,6 +114,9 @@ export const processAssistantResponse = async (
       blockId: placeholderBlock.id,
       topicId
     });
+
+    // 8.1. 现在ResponseHandler已创建，可以进行知识库搜索了
+    await performKnowledgeSearchIfNeeded(topicId, assistantMessage.id);
 
 // 9. 获取API提供者
     const apiProvider = ApiProviderRegistry.get(model);

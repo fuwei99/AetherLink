@@ -26,8 +26,8 @@ export async function fetchModels(provider: any): Promise<any[]> {
       // 如果baseUrl已经包含/v1，直接添加/models
       endpoint = `${baseUrl}/models`;
     } else {
-      // 否则添加完整路径
-      endpoint = `${baseUrl}v1/models`;
+      // 否则添加完整路径，确保在baseUrl和v1之间有斜杠
+      endpoint = `${baseUrl}/v1/models`;
     }
     
     console.log(`[fetchOpenAIModels] 请求端点: ${endpoint}`);

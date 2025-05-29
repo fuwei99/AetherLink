@@ -238,6 +238,11 @@
   resolved "https://registry.npmmirror.com/@capacitor-community/safe-area/-/safe-area-7.0.0-alpha.1.tgz"
   integrity sha512-N6ktkRiofqrt+N/vQzh4jcWY8IzJ4TVw1tKAPssvbddWFTyZzXzSdBeX/l/nracJF0PZqmLdA7JYTBfnOxXQYw==
 
+"@capacitor-community/speech-recognition@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.npmmirror.com/@capacitor-community/speech-recognition/-/speech-recognition-7.0.0.tgz"
+  integrity sha512-GwNaijf0Q2LilNtlnfKL2dJB6voZYOm95D6dbhzPwa1mV+PnzwcGCaeipjbID3oRlAnsDUFEFiakbdZDyxe54w==
+
 "@capacitor/android@^6.0.0", "@capacitor/android@^7.2.0":
   version "7.2.0"
   resolved "https://registry.npmjs.org/@capacitor/android/-/android-7.2.0.tgz"
@@ -1595,6 +1600,11 @@
   integrity sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==
   dependencies:
     "@types/ms" "*"
+
+"@types/dom-speech-recognition@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.npmmirror.com/@types/dom-speech-recognition/-/dom-speech-recognition-0.0.6.tgz"
+  integrity sha512-o7pAVq9UQPJL5RDjO1f/fcpfFHdgiMnR4PoIU2N/ZQrYOS3C5rzdOJMsrpqeBCbii2EE9mERXgqspQqPDdPahw==
 
 "@types/dompurify@^3.0.5":
   version "3.0.5"
@@ -4276,6 +4286,11 @@ lodash-es@^4.17.21, lodash-es@4.17.21:
   resolved "https://registry.npmmirror.com/lodash-es/-/lodash-es-4.17.21.tgz"
   integrity sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==
 
+lodash.debounce@^4.0.8:
+  version "4.0.8"
+  resolved "https://registry.npmmirror.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz"
+  integrity sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==
+
 lodash.merge@^4.6.2:
   version "4.6.2"
   resolved "https://registry.npmmirror.com/lodash.merge/-/lodash.merge-4.6.2.tgz"
@@ -5618,6 +5633,13 @@ react-router@7.6.0:
   dependencies:
     cookie "^1.0.1"
     set-cookie-parser "^2.6.0"
+
+react-speech-recognition@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.npmmirror.com/react-speech-recognition/-/react-speech-recognition-4.0.1.tgz"
+  integrity sha512-0fIqzLtfY8vuYA6AmJVK7qiabZx0oFKOO+rbiBgFI3COWVGREy0A+gdU16hWXmFebeyrI8JsOLYsWk6WaHUXRw==
+  dependencies:
+    lodash.debounce "^4.0.8"
 
 react-syntax-highlighter@^15.6.1:
   version "15.6.1"

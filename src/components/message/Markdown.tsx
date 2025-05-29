@@ -379,6 +379,7 @@ const Markdown: React.FC<MarkdownProps> = ({ content, allowHtml = false, mathEng
           code: ({ node, inline, className, children, ...props }: any) => {
             const match = /language-(\w+)/.exec(className || '');
             const lang = match ? match[1] : 'text';
+            const codeContent = String(children).replace(/\n$/, '');
 
             // 获取代码块ID
             let codeBlockId = null;
@@ -386,8 +387,69 @@ const Markdown: React.FC<MarkdownProps> = ({ content, allowHtml = false, mathEng
               codeBlockId = getCodeBlockId(node.position.start);
             }
 
+            // 🔥 新增：检查是否为LaTeX数学公式，避免被Shiki渲染
+            const isLatexMath = (content: string, language: string): boolean => {
+              // 检查语言是否为latex相关
+              const latexLanguages = ['latex', 'tex', 'math'];
+              if (latexLanguages.includes(language.toLowerCase())) {
+                return true;
+              }
+
+              // 检查内容是否包含LaTeX数学公式特征
+              const latexPatterns = [
+                /\\[a-zA-Z]+\{.*?\}/,  // LaTeX命令，如 \frac{1}{2}
+                /\\\(/,                // 内联数学公式开始
+                /\\\)/,                // 内联数学公式结束
+                /\\\[/,                // 块级数学公式开始
+                /\\\]/,                // 块级数学公式结束
+                /\$\$.*\$\$/,          // 块级数学公式
+                /\$.*\$/,              // 内联数学公式
+                /\\begin\{.*?\}/,      // LaTeX环境开始
+                /\\end\{.*?\}/,        // LaTeX环境结束
+                /\\[a-zA-Z]+/          // 简单LaTeX命令
+              ];
+
+              return latexPatterns.some(pattern => pattern.test(content));
+            };
+
             // 检查是否为代码块
             const isCodeBlock = match || (typeof children === 'string' && children.includes('\n'));
+
+            // 🔥 如果是LaTeX数学公式，不使用Shiki渲染，而是作为普通代码处理
+            if (!inline && isCodeBlock && isLatexMath(codeContent, lang)) {
+              return (
+                <Box
+                  component="pre"
+                  sx={{
+                    backgroundColor: isDarkMode ? '#1e1e1e' : '#f8f8f8',
+                    color: isDarkMode ? '#e6e6e6' : '#2d3748',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: isDarkMode ? '1px solid #404040' : '1px solid #d0d0d0',
+                    overflow: 'auto',
+                    fontFamily: 'monospace',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    margin: '16px 0',
+                    position: 'relative',
+                    '&::before': {
+                      content: '"LaTeX • 数学公式"',
+                      position: 'absolute',
+                      top: '8px',
+                      right: '12px',
+                      fontSize: '12px',
+                      color: isDarkMode ? '#888' : '#666',
+                      backgroundColor: isDarkMode ? '#2d2d2d' : '#e8e8e8',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontWeight: 'bold'
+                    }
+                  }}
+                >
+                  <code>{codeContent}</code>
+                </Box>
+              );
+            }
 
             return inline || !isCodeBlock ? (
               <code className={className} {...props}>
@@ -395,7 +457,7 @@ const Markdown: React.FC<MarkdownProps> = ({ content, allowHtml = false, mathEng
               </code>
             ) : (
               <CodeRenderer
-                code={String(children).replace(/\n$/, '')}
+                code={codeContent}
                 language={lang}
                 codeBlockId={codeBlockId}
                 onUpdate={handleCodeUpdate}

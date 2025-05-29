@@ -39,6 +39,7 @@ import TopicItem from './TopicItem';
 import type { RootState } from '../../../shared/store';
 import store from '../../../shared/store';
 import { TopicService } from '../../../shared/services/TopicService';
+import { TopicNamingService } from '../../../shared/services/TopicNamingService';
 
 interface TopicTabProps {
   currentAssistant: ({
@@ -446,9 +447,6 @@ export default function TopicTab({
     if (!contextTopic) return;
 
     try {
-      // 动态导入TopicNamingService
-      const { TopicNamingService } = await import('../../../shared/services/TopicNamingService');
-
       console.log(`[TopicTab] 手动触发话题自动命名: ${contextTopic.id}`);
 
       // 强制生成话题名称，不检查shouldNameTopic条件

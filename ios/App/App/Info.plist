@@ -45,5 +45,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AetherLink需要您的语音识别权限，以便将您的语音转换为文字。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AetherLink需要访问您的麦克风，以便进行语音输入。</string>
 </dict>
 </plist>

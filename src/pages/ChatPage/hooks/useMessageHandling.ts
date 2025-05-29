@@ -133,12 +133,12 @@ export const useMessageHandling = (
     }
   }, [currentTopic]);
 
-  // 处理重新发送用户消息 - 基于电脑版逻辑
+  // 处理重新发送用户消息 - 基于新逻辑
   const handleResendMessage = useCallback(async (messageId: string) => {
     if (!currentTopic || !selectedModel) return null;
 
     try {
-      // 使用基于电脑版逻辑的重新发送 thunk
+      // 使用基于新逻辑的重新发送 thunk
       // 这个 thunk 不会创建新的用户消息，而是重置关联的助手消息
       dispatch(resendUserMessage(messageId, currentTopic.id, selectedModel));
       return true;

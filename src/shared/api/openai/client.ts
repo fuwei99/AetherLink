@@ -45,6 +45,7 @@ export function createClient(model: Model): OpenAI {
 
     // 确保baseURL包含/v1（特殊情况除外）
     if (!baseURL.includes('/v1') && !shouldUseOriginal) {
+      // 确保在baseURL和/v1之间添加斜杠（避免出现类似http://example.com:3000v1这样的错误）
       baseURL = `${baseURL}/v1`;
     }
 
