@@ -5,8 +5,9 @@
 
 // 导入必要的类型
 import type { Model, Message, ImageGenerationParams } from '../../types';
-import { createProvider, GeminiProvider } from './provider.ts';
+import GeminiProvider from './provider';
 import { generateImage, generateImageByChat } from './image.ts';
+import { isGenerateImageModel } from '../../config/models';
 
 // 导出客户端模块
 export {
@@ -16,10 +17,20 @@ export {
 
 // 导出提供商模块
 export {
-  BaseProvider,
-  GeminiProvider,
-  createProvider
-} from './provider.ts';
+  BaseProvider
+} from './provider';
+export { default as GeminiProvider } from './provider';
+
+// 创建Provider实例的工厂函数
+export function createProvider(model: Model): GeminiProvider {
+  return new GeminiProvider({
+    id: model.id,
+    name: model.name || 'Gemini',
+    apiKey: model.apiKey,
+    apiHost: model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta',
+    models: [{ id: model.id }]
+  });
+}
 
 // 导出图像生成模块
 export {
@@ -32,6 +43,9 @@ export {
   GeminiFileService,
   createGeminiFileService
 } from './fileService.ts';
+
+// 导入文件服务用于内部使用
+import { createGeminiFileService } from './fileService.ts';
 
 /**
  * 创建Gemini API适配器
@@ -52,9 +66,9 @@ export function createGeminiAPI(model: Model) {
 
   return {
     /**
-     * 发送消息并获取响应
+     * 发送消息并获取响应 - 使用电脑版completions方法
      */
-    sendMessage: (
+    sendMessage: async (
       messages: Message[],
       options?: {
         onUpdate?: (content: string) => void;
@@ -69,7 +83,40 @@ export function createGeminiAPI(model: Model) {
       }
     ) => {
       console.log(`[gemini/index.ts] 通过API适配器发送消息 - 模型ID: ${model.id}, 消息数量: ${messages.length}`);
-      return provider.sendChatMessage(messages, options);
+
+      // 转换为电脑版的参数格式
+      const assistant = options?.assistant || {
+        model: model,
+        prompt: options?.systemPrompt || '',
+        settings: {
+          temperature: model.temperature || 0.7,
+          topP: (model as any).topP || 0.95,
+          maxTokens: model.maxTokens || 2048,
+          streamOutput: true
+        },
+        enableWebSearch: options?.enableWebSearch || false,
+        // 对于图像生成模型，默认启用图像生成
+        enableGenerateImage: isGenerateImageModel(model)
+      };
+
+      let result = '';
+      const mcpTools = options?.mcpTools || [];
+
+      await provider.completions({
+        messages,
+        assistant,
+        mcpTools,
+        onChunk: (chunk: any) => {
+          if (chunk.type === 'TEXT_DELTA' && chunk.text) {
+            result += chunk.text;
+            // 传递增量文本给前端，让前端自己累积
+            options?.onUpdate?.(chunk.text);
+          }
+        },
+        onFilterMessages: () => {}
+      });
+
+      return result;
     },
 
     /**
@@ -100,39 +147,65 @@ export function createGeminiAPI(model: Model) {
     /**
      * 上传文件到 Gemini
      */
-    uploadFile: (file: import('../../types').FileType) => {
+    uploadFile: async (file: import('../../types').FileType) => {
       console.log(`[gemini/index.ts] 通过API适配器上传文件 - 模型ID: ${model.id}, 文件: ${file.origin_name}`);
-      return (provider as GeminiProvider).uploadFile(file);
+      try {
+        const fileService = createGeminiFileService(model);
+        return await fileService.uploadFile(file);
+      } catch (error) {
+        console.error(`[gemini/index.ts] 文件上传失败:`, error);
+        throw error;
+      }
     },
 
     /**
      * 获取文件的 base64 编码
      */
-    getBase64File: (file: import('../../types').FileType) => {
-      console.log(`[gemini/index.ts] 通过API适配器获取文件 base64 - 模型ID: ${model.id}, 文件: ${file.origin_name}`);
-      return (provider as GeminiProvider).getBase64File(file);
+    getBase64File: async (file: import('../../types').FileType) => {
+      console.log(`[gemini/index.ts] 通过API适配器获取文件base64 - 模型ID: ${model.id}, 文件: ${file.origin_name}`);
+      try {
+        const fileService = createGeminiFileService(model);
+        const result = await fileService.getBase64File(file);
+        return result.data;
+      } catch (error) {
+        console.error(`[gemini/index.ts] 获取文件base64失败:`, error);
+        throw error;
+      }
     },
 
     /**
      * 列出已上传的文件
      */
-    listFiles: () => {
+    listFiles: async () => {
       console.log(`[gemini/index.ts] 通过API适配器获取文件列表 - 模型ID: ${model.id}`);
-      return (provider as GeminiProvider).listFiles();
+      try {
+        const fileService = createGeminiFileService(model);
+        return await fileService.listFiles();
+      } catch (error) {
+        console.error(`[gemini/index.ts] 获取文件列表失败:`, error);
+        throw error;
+      }
     },
 
     /**
      * 删除已上传的文件
      */
-    deleteFile: (fileId: string) => {
+    deleteFile: async (fileId: string) => {
       console.log(`[gemini/index.ts] 通过API适配器删除文件 - 模型ID: ${model.id}, 文件ID: ${fileId}`);
-      return (provider as GeminiProvider).deleteFile(fileId);
+      try {
+        const fileService = createGeminiFileService(model);
+        await fileService.deleteFile(fileId);
+        return true;
+      } catch (error) {
+        console.error(`[gemini/index.ts] 删除文件失败:`, error);
+        throw error;
+      }
     },
 
     /**
      * 测试API连接
      */
-    testConnection: () => provider.testConnection()
+    testConnection: () => provider.check(model)
   };
 }
 
@@ -147,8 +220,36 @@ export const sendChatRequest = async (
 ): Promise<string> => {
   console.log(`[gemini/index.ts] 发送聊天请求 - 模型ID: ${model.id}, 消息数量: ${messages.length}`);
   const provider = createProvider(model);
-  const result = await provider.sendChatMessage(messages, { onUpdate });
-  return typeof result === 'string' ? result : result.content;
+
+  const assistant = {
+    model: model,
+    prompt: '',
+    settings: {
+      temperature: model.temperature || 0.7,
+      topP: (model as any).topP || 0.95,
+      maxTokens: model.maxTokens || 2048,
+      streamOutput: true
+    },
+    // 对于图像生成模型，默认启用图像生成
+    enableGenerateImage: isGenerateImageModel(model)
+  };
+
+  let result = '';
+  await provider.completions({
+    messages,
+    assistant,
+    mcpTools: [],
+    onChunk: (chunk: any) => {
+      if (chunk.type === 'TEXT_DELTA' && chunk.text) {
+        result += chunk.text;
+        // 传递增量文本给前端，让前端自己累积
+        onUpdate?.(chunk.text);
+      }
+    },
+    onFilterMessages: () => {}
+  });
+
+  return result;
 };
 
 /**
@@ -160,9 +261,9 @@ export const fetchModels = async (provider: any): Promise<any[]> => {
     id: provider.id,
     name: provider.name || 'Gemini',
     apiKey: provider.apiKey,
-    baseUrl: provider.baseUrl || 'https://generativelanguage.googleapis.com',
+    baseUrl: provider.baseUrl || 'https://generativelanguage.googleapis.com/v1beta',
     provider: 'gemini'
   });
 
-  return geminiProvider.getModels();
+  return geminiProvider.models();
 };

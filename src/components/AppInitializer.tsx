@@ -107,7 +107,8 @@ const AppInitializer = () => {
               console.log(`[AppInitializer] 当前话题 ${currentTopicId} 不属于当前助手，自动选择第一个话题: ${currentAssistant.topics[0].name}`);
               dispatch(newMessagesActions.setCurrentTopicId(currentAssistant.topics[0].id));
             } else {
-              console.log(`[AppInitializer] 当前话题 ${currentTopicId} 属于当前助手，无需切换`);
+              // 减少重复日志输出
+              // console.log(`[AppInitializer] 当前话题 ${currentTopicId} 属于当前助手，无需切换`);
             }
           }
         }

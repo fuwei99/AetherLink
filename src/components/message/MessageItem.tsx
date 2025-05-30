@@ -123,14 +123,17 @@ const MessageItem: React.FC<MessageItemProps> = ({
     () => createSelector(
       [
         (state: RootState) => state.messageBlocks.entities,
-        () => message.blocks
+        (state: RootState) => message.blocks // 移除箭头函数，直接访问message.blocks
       ],
       (blockEntities, blockIds) => {
-        // 添加转换逻辑避免直接返回输入
-        const blocks = blockIds
+        // 如果blockIds为空或undefined，返回空数组
+        if (!blockIds || blockIds.length === 0) {
+          return [];
+        }
+        // 直接返回映射结果，createSelector会处理记忆化
+        return blockIds
           .map((blockId: string) => blockEntities[blockId])
           .filter(Boolean) as MessageBlock[];
-        return [...blocks]; // 返回新数组避免直接返回输入
       }
     ),
     [message.blocks] // 只有当 message.blocks 改变时才重新创建 selector

@@ -507,18 +507,18 @@ export function getMainTextContent(message: Message): string {
   }
 
   try {
-    console.log(`[getMainTextContent] 开始获取消息内容:`, {
-      messageId: message.id,
-      role: message.role,
-      hasBlocks: !!message.blocks,
-      blocksCount: message.blocks?.length || 0,
-      hasContent: !!(message as any).content
-    });
+    // 减少日志输出，只在调试时启用
+    // console.log(`[getMainTextContent] 开始获取消息内容:`, {
+    //   messageId: message.id,
+    //   role: message.role,
+    //   hasBlocks: !!message.blocks,
+    //   blocksCount: message.blocks?.length || 0,
+    //   hasContent: !!(message as any).content
+    // });
 
     // 🔥 优先检查是否有保存的content字段（多模型对比选择后的内容或编辑后的内容）
     if (typeof (message as any).content === 'string' && (message as any).content.trim()) {
       const content = (message as any).content.trim();
-      console.log(`[getMainTextContent] 使用保存的content字段，内容长度: ${content.length}`);
       return content;
     }
 
@@ -554,7 +554,6 @@ export function getMainTextContent(message: Message): string {
           const comparisonBlock = block as any;
           if (comparisonBlock.subType === 'comparison' && comparisonBlock.selectedContent) {
             const selectedContent = comparisonBlock.selectedContent.trim();
-            console.log(`[getMainTextContent] 使用对比块选中内容，内容长度: ${selectedContent.length}`);
             return selectedContent;
           }
         }
@@ -599,7 +598,7 @@ export function getMainTextContent(message: Message): string {
       return content && typeof content === 'string' && content.trim();
     });
 
-    console.log(`[getMainTextContent] 过滤后有 ${nonEmptyBlocks.length} 个非空文本块`);
+    // 减少日志输出
 
     if (nonEmptyBlocks.length === 0) {
       console.warn(`[getMainTextContent] 消息 ${message.id} 没有有效的文本内容`);
@@ -608,7 +607,7 @@ export function getMainTextContent(message: Message): string {
 
     // 连接所有文本块的内容
     const result = nonEmptyBlocks.map(block => block.content.trim()).join('\n\n');
-    console.log(`[getMainTextContent] 最终内容长度: ${result.length}`);
+    // 减少日志输出
 
     return result;
   } catch (error) {

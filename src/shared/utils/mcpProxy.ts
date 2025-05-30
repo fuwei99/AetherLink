@@ -2,6 +2,7 @@
  * MCP 代理工具
  * 解决移动端 CORS 跨域问题的通用解决方案
  */
+import { universalFetch } from './universalFetch';
 
 /**
  * 检查是否为开发环境
@@ -60,7 +61,6 @@ export function createProxyFetch() {
     const urlString = url.toString();
 
     // 使用通用 fetch 自动处理 CORS
-    const { universalFetch } = await import('./universalFetch');
     return await universalFetch(urlString, init);
   };
 }
@@ -69,15 +69,7 @@ export function createProxyFetch() {
  * 为 SSE 连接创建代理 URL
  */
 export function createSSEProxyUrl(originalUrl: string): string {
-  // 直接实现平台检测逻辑，避免循环导入
-  const isNative = typeof window !== 'undefined' &&
-                   (window as any).Capacitor &&
-                   typeof (window as any).Capacitor.isNativePlatform === 'function' &&
-                   (window as any).Capacitor.isNativePlatform();
-
-  if (isNative) {
-    // 移动端：直接返回原始 URL
-    console.log(`[MCP SSE Proxy] 移动端直接连接: ${originalUrl}`);
+  if (!needsProxy(originalUrl)) {
     return originalUrl;
   }
 
@@ -88,47 +80,45 @@ export function createSSEProxyUrl(originalUrl: string): string {
   const separator = proxyUrl.includes('?') ? '&' : '?';
   proxyUrl += `${separator}force_sse=true`;
 
-  // 转换为完整 URL
-  let finalUrl = proxyUrl;
+  // 转换为完整URL
   if (proxyUrl.startsWith('/')) {
-    const currentOrigin = window.location.origin;
-    finalUrl = `${currentOrigin}${proxyUrl}`;
+    proxyUrl = `${window.location.origin}${proxyUrl}`;
   }
 
-  console.log(`[MCP SSE Proxy] ${originalUrl} -> ${finalUrl}`);
-  return finalUrl;
+  console.log(`[MCP SSE Proxy] ${originalUrl} -> ${proxyUrl}`);
+  return proxyUrl;
 }
 
 /**
  * 为 HTTP 连接创建代理 URL
  */
 export function createHTTPProxyUrl(originalUrl: string): string {
-  // 更准确的平台检测
-  const isNative = typeof window !== 'undefined' &&
-                   (window as any).Capacitor &&
-                   typeof (window as any).Capacitor.isNativePlatform === 'function' &&
-                   (window as any).Capacitor.isNativePlatform();
-
-  console.log(`[MCP HTTP Proxy] 平台检测: isNative=${isNative}, Capacitor=${!!(window as any).Capacitor}`);
-
-  if (isNative) {
-    // 移动端：直接返回原始 URL
-    console.log(`[MCP HTTP Proxy] 移动端直接连接: ${originalUrl}`);
+  if (!needsProxy(originalUrl)) {
     return originalUrl;
   }
 
   // Web 端：使用代理
   let proxyUrl = getProxyUrl(originalUrl);
 
-  // 如果是相对路径，转换为完整的 URL
+  // 转换为完整URL
   if (proxyUrl.startsWith('/')) {
-    const currentOrigin = window.location.origin;
-    proxyUrl = `${currentOrigin}${proxyUrl}`;
+    proxyUrl = `${window.location.origin}${proxyUrl}`;
   }
 
-  console.log(`[MCP HTTP Proxy] Web 端代理连接: ${originalUrl} -> ${proxyUrl}`);
+  console.log(`[MCP HTTP Proxy] ${originalUrl} -> ${proxyUrl}`);
   return proxyUrl;
 }
+
+/**
+ * 日志记录函数
+ */
+export function logProxyUsage(originalUrl: string, proxyUrl: string, method: string = 'GET') {
+  if (isDevelopment()) {
+    console.log(`[MCP Proxy] ${method} ${originalUrl} -> ${proxyUrl}`);
+  }
+}
+
+
 
 /**
  * 为 WebSocket 连接创建代理 URL
@@ -176,26 +166,4 @@ export async function checkProxyHealth(): Promise<boolean> {
   }
 }
 
-/**
- * 获取代理状态信息
- */
-export function getProxyStatus() {
-  return {
-    isDevelopment: isDevelopment(),
-    proxyEnabled: isDevelopment(),
-    proxyEndpoints: {
-      universal: '/api/cors-proxy',
-      modelscope: '/api/mcp',
-      fetch: '/api/fetch-proxy'
-    }
-  };
-}
 
-/**
- * 日志记录函数
- */
-export function logProxyUsage(originalUrl: string, proxyUrl: string, method: string = 'GET') {
-  if (isDevelopment()) {
-    console.log(`[MCP Proxy] ${method} ${originalUrl} -> ${proxyUrl}`);
-  }
-}

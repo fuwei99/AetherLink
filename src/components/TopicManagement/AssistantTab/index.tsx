@@ -20,7 +20,7 @@ import AddIcon from '@mui/icons-material/Add';
 import type { Assistant } from '../../../shared/types/Assistant';
 import VirtualizedAssistantGroups from './VirtualizedAssistantGroups';
 import VirtualizedAssistantList from './VirtualizedAssistantList';
-import AssistantItem from './AssistantItem';
+
 import PresetAssistantItem from './PresetAssistantItem';
 import GroupDialog from '../GroupDialog';
 import { COMMON_EMOJIS } from './AssistantIconPicker';

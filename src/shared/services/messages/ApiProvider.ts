@@ -2,7 +2,7 @@ import type { Model } from '../../types';
 import { getActualProviderType, testConnection } from '../ProviderFactory';
 import { OpenAIProvider } from '../../api/openai';
 import { AnthropicProvider } from '../../api/anthropic';
-import { GeminiProvider } from '../../api/gemini';
+import GeminiProvider from '../../api/gemini/provider';
 import { ModelComboProvider } from './ModelComboProvider';
 
 /**
@@ -26,7 +26,13 @@ export const ApiProviderRegistry = {
       case 'anthropic':
         return new AnthropicProvider(model);
       case 'gemini':
-        return new GeminiProvider(model);
+        return new GeminiProvider({
+          id: model.id,
+          name: model.name || 'Gemini',
+          apiKey: model.apiKey,
+          apiHost: model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta',
+          models: [{ id: model.id }]
+        });
       case 'azure-openai':
       case 'openai':
       case 'deepseek':

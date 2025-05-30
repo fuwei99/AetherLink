@@ -1,58 +1,114 @@
 /**
- * Gemini 文件服务
- * 提供类似最佳实例的文件上传和管理功能
- * 注意：移动端暂时不支持真正的文件上传到 Gemini，这里提供兼容接口
+ * Gemini 文件服务 - 移动端适配版
+ * 提供类似电脑版的文件上传和管理功能，适配移动端环境
+ * 支持真正的文件上传到 Gemini 服务器
  */
+import { GoogleGenAI, FileState } from '@google/genai';
+import type { File as GeminiFile } from '@google/genai';
 import type { Model, FileType } from '../../types';
-import { logApiRequest, logApiResponse } from '../../services/LoggerService';
+import { logApiRequest, logApiResponse, log } from '../../services/LoggerService';
 import { mobileFileStorage } from '../../services/MobileFileStorageService';
+import { withRetry } from '../../utils/retryUtils';
 
 // 文件大小常量
 const MB = 1024 * 1024;
-const MAX_FILE_SIZE = 20 * MB; // 20MB 限制，与最佳实例保持一致
+const MAX_FILE_SIZE = 20 * MB; // 20MB 限制，与电脑版保持一致
 
 /**
  * Gemini 文件缓存
  */
 interface GeminiFileCache {
-  files: any[];
+  files: GeminiFile[];
   timestamp: number;
 }
 
-const FILE_CACHE_DURATION = 3000; // 3秒缓存
+const FILE_CACHE_DURATION = 3000; // 3秒缓存，与电脑版保持一致
 let fileCache: GeminiFileCache | null = null;
 
 /**
+ * 缓存服务 - 模拟电脑版的 CacheService
+ */
+class MobileCacheService {
+  private static cache = new Map<string, { data: any; timestamp: number; duration: number }>();
+
+  static get<T>(key: string): T | null {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+
+    if (Date.now() - cached.timestamp > cached.duration) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return cached.data as T;
+  }
+
+  static set<T>(key: string, data: T, duration: number): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      duration
+    });
+  }
+
+  static clear(key?: string): void {
+    if (key) {
+      this.cache.delete(key);
+    } else {
+      this.cache.clear();
+    }
+  }
+}
+
+/**
  * Gemini 文件服务类
- * 移动端兼容版本，提供基础文件处理功能
+ * 移动端适配版本，支持真正的文件上传到 Gemini 服务器
  */
 export class GeminiFileService {
   private model: Model;
+  private sdk: GoogleGenAI;
 
   constructor(model: Model) {
     this.model = model;
     if (!model.apiKey) {
       throw new Error('API密钥未设置');
     }
-    // 移动端暂时不需要实际的客户端连接
-    console.log(`[GeminiFileService] 初始化文件服务，模型: ${this.model.id}`);
+
+    // 创建 Gemini SDK 实例
+    this.sdk = new GoogleGenAI({
+      vertexai: false,
+      apiKey: model.apiKey,
+      httpOptions: {
+        baseUrl: this.getBaseURL()
+      }
+    });
+
+    console.log(`[GeminiFileService] 初始化文件服务，模型: ${this.model.id}, baseURL: ${this.getBaseURL()}`);
   }
 
   /**
-   * 上传文件到 Gemini
+   * 获取基础 URL
+   */
+  private getBaseURL(): string {
+    const baseUrl = this.model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+    return baseUrl.replace(/\/v1beta\/?$/, '');
+  }
+
+  /**
+   * 上传文件到 Gemini 服务器
    * @param file 文件对象
    * @returns Gemini 文件对象
    */
-  async uploadFile(file: FileType): Promise<any> {
+  async uploadFile(file: FileType): Promise<GeminiFile> {
     try {
-      console.log(`[GeminiFileService] 开始上传文件: ${file.origin_name}`);
+      console.log(`[GeminiFileService] 开始上传文件到 Gemini: ${file.origin_name}`);
 
       // 检查文件大小
       if (file.size > MAX_FILE_SIZE) {
         throw new Error(`文件太大，最大允许 ${MAX_FILE_SIZE / MB}MB`);
       }
 
-      // 检查是否为 PDF 文件
+      // 检查是否为支持的文件类型
       if (file.ext !== '.pdf') {
         throw new Error('Gemini 目前只支持 PDF 文件上传');
       }
@@ -62,31 +118,81 @@ export class GeminiFileService {
         method: 'POST',
         fileName: file.origin_name,
         fileSize: file.size,
-        fileType: file.ext
+        fileType: file.ext,
+        baseUrl: this.getBaseURL()
       });
 
-      // 移动端暂时返回模拟的上传结果
-      const mockResult = {
-        uri: `files/${file.id}`,
-        name: file.id,
-        displayName: file.origin_name,
-        mimeType: 'application/pdf',
-        sizeBytes: file.size.toString(),
-        state: 'ACTIVE'
-      };
+      // 获取文件的 base64 数据
+      const fileContent = await this.getFileContent(file);
+
+      // 使用 Gemini SDK 上传文件
+      const uploadResult = await withRetry(
+        async () => {
+          // 创建 Blob 对象用于上传
+          const base64Data = fileContent.includes(',') ? fileContent.split(',')[1] : fileContent;
+          const binaryData = this.base64ToArrayBuffer(base64Data);
+          const blob = new Blob([binaryData], { type: 'application/pdf' });
+
+          // 使用 SDK 上传文件
+          return await this.sdk.files.upload({
+            file: blob,
+            config: {
+              mimeType: 'application/pdf',
+              name: file.id,
+              displayName: file.origin_name
+            }
+          });
+        },
+        'Gemini File Upload',
+        3
+      );
 
       // 记录 API 响应
       logApiResponse('Gemini File Upload', 200, {
-        fileUri: mockResult.uri,
-        fileName: mockResult.name,
-        displayName: mockResult.displayName
+        fileName: file.origin_name,
+        fileUri: uploadResult.uri,
+        fileState: uploadResult.state
       });
 
-      console.log(`[GeminiFileService] 文件上传成功: ${mockResult.uri}`);
-      return mockResult;
-    } catch (error) {
-      console.error('[GeminiFileService] 文件上传失败:', error);
+      console.log(`[GeminiFileService] 文件上传成功: ${uploadResult.uri}`);
+      return uploadResult;
+    } catch (error: any) {
+      log('ERROR', `Gemini 文件上传失败: ${error.message || '未知错误'}`, {
+        fileName: file.origin_name,
+        fileSize: file.size,
+        error
+      });
       throw error;
+    }
+  }
+
+  /**
+   * 将 base64 转换为 ArrayBuffer
+   */
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  /**
+   * 获取文件内容
+   */
+  private async getFileContent(file: FileType): Promise<string> {
+    // 优先使用文件的 base64Data
+    if (file.base64Data) {
+      return file.base64Data;
+    }
+
+    // 从移动端文件存储读取
+    try {
+      return await mobileFileStorage.readFile(file.id);
+    } catch (error) {
+      console.error('[GeminiFileService] 读取文件内容失败:', error);
+      throw new Error('无法读取文件内容');
     }
   }
 
@@ -122,34 +228,34 @@ export class GeminiFileService {
   }
 
   /**
-   * 检索已上传的文件
+   * 检索已上传的文件 - 模拟电脑版实现
    * @param file 文件对象
    * @returns Gemini 文件对象或 undefined
    */
-  async retrieveFile(file: FileType): Promise<any | undefined> {
+  async retrieveFile(file: FileType): Promise<GeminiFile | undefined> {
     try {
       console.log(`[GeminiFileService] 检索文件: ${file.origin_name}`);
 
-      // 检查缓存
-      if (fileCache && Date.now() - fileCache.timestamp < FILE_CACHE_DURATION) {
-        const cachedFile = this.findFileInList(fileCache.files, file);
+      const FILE_LIST_CACHE_KEY = 'gemini_file_list';
+
+      // 使用缓存服务检查缓存 - 模拟电脑版的 CacheService
+      const cachedResponse = MobileCacheService.get<GeminiFile[]>(FILE_LIST_CACHE_KEY);
+      if (cachedResponse) {
+        const cachedFile = this.processFileList(cachedResponse, file);
         if (cachedFile) {
           console.log(`[GeminiFileService] 从缓存中找到文件: ${cachedFile.uri}`);
           return cachedFile;
         }
       }
 
-      // 移动端暂时返回空文件列表
-      const files: any[] = [];
+      // 从 Gemini 服务器获取文件列表
+      const files = await this.listFiles();
 
-      // 更新缓存
-      fileCache = {
-        files,
-        timestamp: Date.now()
-      };
+      // 设置缓存 - 模拟电脑版的缓存策略
+      MobileCacheService.set(FILE_LIST_CACHE_KEY, files, FILE_CACHE_DURATION);
 
       // 查找匹配的文件
-      const foundFile = this.findFileInList(files, file);
+      const foundFile = this.processFileList(files, file);
       if (foundFile) {
         console.log(`[GeminiFileService] 找到已上传的文件: ${foundFile.uri}`);
       } else {
@@ -164,15 +270,42 @@ export class GeminiFileService {
   }
 
   /**
+   * 处理文件列表 - 模拟电脑版的 processResponse 方法
+   * @param files 文件列表
+   * @param targetFile 目标文件
+   * @returns 匹配的文件或 undefined
+   */
+  private processFileList(files: GeminiFile[], targetFile: FileType): GeminiFile | undefined {
+    for (const file of files) {
+      if (file.state === FileState.ACTIVE) {
+        if (file.displayName === targetFile.origin_name && Number(file.sizeBytes) === targetFile.size) {
+          return file;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
    * 列出所有已上传的文件
    * @returns 文件列表
    */
-  async listFiles(): Promise<any[]> {
+  async listFiles(): Promise<GeminiFile[]> {
     try {
       console.log(`[GeminiFileService] 获取文件列表`);
 
-      // 移动端暂时返回空列表
-      const files: any[] = [];
+      // 使用 Gemini SDK 获取文件列表
+      const files: GeminiFile[] = [];
+      const fileList = await withRetry(
+        () => this.sdk.files.list(),
+        'Gemini List Files',
+        3
+      );
+
+      // 遍历文件列表
+      for await (const file of fileList) {
+        files.push(file);
+      }
 
       console.log(`[GeminiFileService] 获取到 ${files.length} 个文件`);
       return files;
@@ -190,7 +323,12 @@ export class GeminiFileService {
     try {
       console.log(`[GeminiFileService] 删除文件: ${fileId}`);
 
-      // 移动端暂时不执行实际删除操作
+      // 使用 Gemini SDK 删除文件
+      await withRetry(
+        () => this.sdk.files.delete({ name: fileId }),
+        'Gemini Delete File',
+        3
+      );
 
       // 清除缓存
       fileCache = null;
@@ -200,25 +338,6 @@ export class GeminiFileService {
       console.error('[GeminiFileService] 删除文件失败:', error);
       throw error;
     }
-  }
-
-  /**
-   * 在文件列表中查找匹配的文件
-   * @param files 文件列表
-   * @param targetFile 目标文件
-   * @returns 匹配的文件或 undefined
-   */
-  private findFileInList(files: any[], targetFile: FileType): any | undefined {
-    return files.find(f => {
-      // 检查文件状态
-      if (f.state !== 'ACTIVE') {
-        return false;
-      }
-
-      // 按显示名称和大小匹配
-      return f.displayName === targetFile.origin_name &&
-             Number(f.sizeBytes) === targetFile.size;
-    });
   }
 
 

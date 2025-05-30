@@ -7,7 +7,9 @@ const config: CapacitorConfig = {
   android: {
     initialFocus: true,
     captureInput: false,
-    webContentsDebuggingEnabled: true
+    webContentsDebuggingEnabled: true,
+    // 🔥 Android WebView 允许混合内容
+    allowMixedContent: true
   },
   ios: {
     scheme: 'AetherLink',
@@ -16,13 +18,13 @@ const config: CapacitorConfig = {
     handleApplicationNotifications: false
   },
   server: {
-    androidScheme: 'https',
+    androidScheme: 'https',  // 保持https以避免数据丢失
     allowNavigation: [],
     cleartext: true  // 允许HTTP明文传输
   },
   plugins: {
     CapacitorHttp: {
-      enabled: false  // 🔥 禁用CapacitorHttp，使用标准fetch支持流式输出
+      enabled: true  // 🔥 启用CapacitorHttp，用于绕过CORS
     },
     WebView: {
       scrollEnabled: true,

@@ -14,12 +14,12 @@ export const selectMessageBlocksState = (state: RootState) => state.messageBlock
 // 选择特定主题的消息 - 使用 newMessagesSlice 中的选择器
 export const selectMessagesForTopic = selectMessagesByTopicId;
 
-// 选择消息块实体 - 添加转换逻辑避免直接返回输入
+// 选择消息块实体 - 使用记忆化避免不必要的重新渲染
 export const selectMessageBlockEntities = createSelector(
   [selectMessageBlocksState],
   (messageBlocksState) => {
-    // 确保返回的是一个新的对象引用，避免直接返回输入
-    return messageBlocksState?.entities ? { ...messageBlocksState.entities } : {};
+    // 直接返回entities，createSelector会处理记忆化
+    return messageBlocksState?.entities || {};
   }
 );
 
@@ -52,21 +52,24 @@ export const selectTopicStreaming = selectNormalizedTopicStreaming;
 // 选择当前主题ID
 export const selectCurrentTopicId = selectNormalizedCurrentTopicId;
 
-// 选择当前主题
-export const selectCurrentTopic = (state: RootState) => {
-  // 从 messages 状态中获取当前主题ID
-  const currentTopicId = selectCurrentTopicId(state);
-  if (!currentTopicId) return null;
+// 选择当前主题 - 使用 createSelector 进行记忆化
+export const selectCurrentTopic = createSelector(
+  [selectCurrentTopicId],
+  (currentTopicId) => {
+    if (!currentTopicId) return null;
+    // 从数据库获取主题 - 这里只返回ID，实际获取需要在组件中处理
+    return { id: currentTopicId };
+  }
+);
 
-  // 从数据库获取主题 - 这里只返回ID，实际获取需要在组件中处理
-  return { id: currentTopicId };
-};
-
-// 选择所有主题 - 这个函数需要在组件中通过数据库获取
-export const selectTopics = (_state: RootState) => {
-  // 返回空数组，实际获取需要在组件中处理
-  return [];
-};
+// 选择所有主题 - 使用 createSelector 进行记忆化
+export const selectTopics = createSelector(
+  [() => null], // 不依赖任何状态
+  () => {
+    // 返回空数组，实际获取需要在组件中处理
+    return [];
+  }
+);
 
 // 选择当前主题的消息 - 使用 createSelector 进行记忆化
 export const selectMessagesForCurrentTopic = createSelector(
@@ -110,14 +113,20 @@ export const selectIsCurrentTopicStreaming = createSelector(
   }
 );
 
-// 选择系统提示词
-export const selectSystemPrompt = (_state: RootState) => {
-  // 返回空字符串，实际获取需要在组件中处理
-  return '';
-};
+// 选择系统提示词 - 使用 createSelector 进行记忆化
+export const selectSystemPrompt = createSelector(
+  [() => null], // 不依赖任何状态
+  () => {
+    // 返回空字符串，实际获取需要在组件中处理
+    return '';
+  }
+);
 
-// 选择是否显示系统提示词
-export const selectShowSystemPrompt = (_state: RootState) => {
-  // 返回默认值，实际获取需要在组件中处理
-  return false;
-};
+// 选择是否显示系统提示词 - 使用 createSelector 进行记忆化
+export const selectShowSystemPrompt = createSelector(
+  [() => null], // 不依赖任何状态
+  () => {
+    // 返回默认值，实际获取需要在组件中处理
+    return false;
+  }
+);

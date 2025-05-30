@@ -56,7 +56,7 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
     color: '#4285f4',
     isEnabled: true,
     apiKey: '',
-    baseUrl: 'https://generativelanguage.googleapis.com/v1',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     providerType: 'gemini',
     models: [
       { id: 'gemini-2.5-pro-preview-05-06', name: 'Gemini 2.5 Pro Preview', provider: 'gemini', enabled: true, isDefault: false },

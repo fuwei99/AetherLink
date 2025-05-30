@@ -4,6 +4,7 @@
  */
 import type { Message } from '../../types';
 import { TopicStatsService } from '../../services/TopicStatsService';
+import { getMainTextContent } from '../messageUtils';
 
 /**
  * 按照askId分组消息 - 参考最佳实例实现
@@ -138,8 +139,30 @@ export function filterEmptyMessages(messages: Message[]): Message[] {
       return true;
     }
 
+    // 检查是否有文本内容
+    const textContent = getMainTextContent(message);
+    if (textContent && textContent.trim()) {
+      return true;
+    }
+
     return false;
   });
+}
+
+/**
+ * 过滤消息以确保从第一个用户消息开始 - 参考电脑版实现
+ * @param messages 消息数组
+ * @returns 过滤后的消息数组
+ */
+export function filterUserRoleStartMessages(messages: Message[]): Message[] {
+  const firstUserMessageIndex = messages.findIndex((message) => message.role === 'user');
+
+  if (firstUserMessageIndex === -1) {
+    // 如果没有找到用户消息，返回原数组
+    return messages;
+  }
+
+  return messages.slice(firstUserMessageIndex);
 }
 
 /**

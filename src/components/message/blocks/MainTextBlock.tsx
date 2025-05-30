@@ -60,14 +60,14 @@ const MainTextBlock: React.FC<Props> = ({ block, role, messageId }) => {
     // 🔥 使用修复后的内容进行工具标签处理
     const fixedContent = fixBrokenToolTags(content);
 
-    // 统计XML中的工具调用数量
+    // 检测工具标签和工具块的匹配情况
     const toolUseMatches = fixedContent.match(/<tool_use[\s\S]*?<\/tool_use>/gi) || [];
-    console.log(`[MainTextBlock] 检测到 ${toolUseMatches.length} 个工具标签，${toolBlocks.length} 个工具块`);
-
-
 
     if (toolBlocks.length === 0) {
       // 没有工具块，移除工具标签
+      if (toolUseMatches.length > 0) {
+        console.warn(`[MainTextBlock] 工具块缺失：检测到 ${toolUseMatches.length} 个工具标签但没有工具块`);
+      }
       const cleanContent = fixedContent.replace(/<tool_use[\s\S]*?<\/tool_use>/gi, '');
       return <Markdown content={cleanContent} allowHtml={false} />;
     }

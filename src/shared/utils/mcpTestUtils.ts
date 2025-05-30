@@ -107,52 +107,7 @@ export async function testMultipleMCPConnections(urls: string[]): Promise<Array<
   });
 }
 
-/**
- * 检查 CORS 绕过是否工作
- */
-export async function testCORSBypass(): Promise<{
-  success: boolean;
-  message: string;
-  details: any;
-}> {
-  const testUrl = 'https://httpbin.org/get';
 
-  try {
-    console.log(`[CORS Test] 测试 CORS 绕过: ${testUrl}`);
-
-    const response = await universalFetch(testUrl, {
-      method: 'GET',
-      timeout: 10000
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-
-      return {
-        success: true,
-        message: 'CORS 绕过测试成功',
-        details: {
-          platform: Capacitor.isNativePlatform() ? 'mobile' : 'web',
-          method: Capacitor.isNativePlatform() ? 'Capacitor HTTP' : 'Standard Fetch',
-          userAgent: data.headers?.['User-Agent'] || 'unknown',
-          origin: data.origin || 'unknown'
-        }
-      };
-    } else {
-      return {
-        success: false,
-        message: `HTTP 错误: ${response.status}`,
-        details: { status: response.status, statusText: response.statusText }
-      };
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: `CORS 测试失败: ${error instanceof Error ? error.message : '未知错误'}`,
-      details: { error: error instanceof Error ? error.message : error }
-    };
-  }
-}
 
 /**
  * 生成测试报告
@@ -166,12 +121,7 @@ export async function generateMCPTestReport(mcpUrls: string[] = []): Promise<str
   report += `**时间**: ${timestamp}\n`;
   report += `**Capacitor 版本**: ${Capacitor.getPlatform()}\n\n`;
 
-  // CORS 绕过测试
-  report += `## CORS 绕过测试\n\n`;
-  const corsResult = await testCORSBypass();
-  report += `**结果**: ${corsResult.success ? '✅ 成功' : '❌ 失败'}\n`;
-  report += `**消息**: ${corsResult.message}\n`;
-  report += `**详情**: \`${JSON.stringify(corsResult.details, null, 2)}\`\n\n`;
+
 
   // MCP 服务器连接测试
   if (mcpUrls.length > 0) {
@@ -187,8 +137,7 @@ export async function generateMCPTestReport(mcpUrls: string[] = []): Promise<str
   }
 
   report += `## 总结\n\n`;
-  report += `此测试验证了移动端 MCP HTTP 连接的 CORS 绕过功能。\n`;
-  report += `如果测试成功，说明 Capacitor HTTP 插件正常工作，可以绕过 CORS 限制。\n`;
+  report += `此测试验证了 MCP 服务器连接功能。\n`;
 
   return report;
 }

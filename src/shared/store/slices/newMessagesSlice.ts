@@ -4,6 +4,7 @@ import type { Message, AssistantMessageStatus } from '../../types/newMessage.ts'
 import type { RootState } from '../index';
 import { dexieStorage } from '../../services/DexieStorageService';
 import { upsertManyBlocks } from './messageBlocksSlice';
+import { deduplicateMessages } from '../../utils/messageUtils/filters';
 
 // 1. 创建实体适配器
 const messagesAdapter = createEntityAdapter<Message>();
@@ -297,19 +298,20 @@ const newMessagesSlice = createSlice({
 export const newMessagesActions = newMessagesSlice.actions;
 
 // 6. 导出 Selectors
-// 由于TypeScript类型问题，我们需要使用any类型绕过类型检查
-// 在实际使用中，这些选择器会正常工作
+// 创建一个稳定的选择器函数，避免每次调用都返回新引用
+const selectMessagesState = (state: RootState) => {
+  if (!state.messages) {
+    // 返回一个稳定的初始状态
+    return messagesAdapter.getInitialState();
+  }
+  return state.messages;
+};
+
 export const {
   selectAll: selectAllMessages,
   selectById: selectMessageById,
   selectIds: selectMessageIds
-} = messagesAdapter.getSelectors<RootState>((state: any) => {
-  if (!state.messages) {
-    // 如果状态中还没有messages，返回一个空状态
-    return messagesAdapter.getInitialState();
-  }
-  return state.messages;
-});
+} = messagesAdapter.getSelectors<RootState>(selectMessagesState);
 
 // 自定义选择器 - 使用 createSelector 进行记忆化
 export const selectMessagesByTopicId = createSelector(
@@ -339,17 +341,16 @@ export const selectTopicStreaming = (state: RootState, topicId: string) =>
 export const selectErrors = createSelector(
   [(state: RootState) => state.messages],
   (messagesState) => {
-    // 添加转换逻辑避免直接返回输入
-    const errors = messagesState ? messagesState.errors : [];
-    return [...errors]; // 返回新数组避免直接返回输入
+    // 直接返回errors数组，createSelector会处理记忆化
+    return messagesState ? messagesState.errors : [];
   }
 );
 
 export const selectLastError = createSelector(
   [selectErrors],
   (errors) => {
-    // 添加转换逻辑避免直接返回输入
-    return errors.length > 0 ? { ...errors[errors.length - 1] } : null;
+    // 直接返回最后一个错误，createSelector会处理记忆化
+    return errors.length > 0 ? errors[errors.length - 1] : null;
   }
 );
 
@@ -359,11 +360,10 @@ export const selectErrorsByTopic = createSelector(
     (_state: RootState, topicId: string) => topicId
   ],
   (messagesState, topicId) => {
-    // 添加转换逻辑避免直接返回输入
-    const errors = messagesState && messagesState.errorsByTopic[topicId]
+    // 直接返回错误数组，createSelector会处理记忆化
+    return messagesState && messagesState.errorsByTopic[topicId]
       ? messagesState.errorsByTopic[topicId]
       : [];
-    return [...errors]; // 返回新数组避免直接返回输入
   }
 );
 
@@ -374,11 +374,10 @@ export const selectApiKeyError = createSelector(
     (_state: RootState, topicId: string) => topicId
   ],
   (messagesState, topicId) => {
-    // 添加转换逻辑避免直接返回输入
-    const error = messagesState && messagesState.apiKeyErrors[topicId]
+    // 直接返回错误对象，createSelector会处理记忆化
+    return messagesState && messagesState.apiKeyErrors[topicId]
       ? messagesState.apiKeyErrors[topicId]
       : null;
-    return error ? { ...error } : null; // 返回新对象避免直接返回输入
   }
 );
 
@@ -397,6 +396,9 @@ export const selectHasApiKeyError = createSelector(
 export const selectOrderedMessagesByTopicId = createSelector(
   [selectMessagesByTopicId],
   (messages) => {
+    // 只有当消息数组不为空时才进行排序，避免不必要的数组创建
+    if (messages.length === 0) return messages;
+
     return [...messages].sort((a, b) => {
       const aTime = new Date(a.createdAt).getTime();
       const bTime = new Date(b.createdAt).getTime();
@@ -422,7 +424,6 @@ export const loadTopicMessagesThunk = createAsyncThunk(
       const messages = await dexieStorage.getMessagesByTopicId(topicId);
 
       // 去重处理 - 使用统一的去重逻辑
-      const { deduplicateMessages } = await import('../../services/MessageFilters');
       const sortedMessages = deduplicateMessages(messages);
 
       // 加载消息块

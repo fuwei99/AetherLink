@@ -160,7 +160,22 @@ const MCPServerSettings: React.FC = () => {
     }
   };
 
+  // 检查内置服务器是否已添加
+  const isBuiltinServerAdded = (builtinServerName: string): boolean => {
+    return servers.some(server => server.name === builtinServerName);
+  };
+
   const handleAddBuiltinServer = async (builtinServer: MCPServer) => {
+    // 检查是否已添加
+    if (isBuiltinServerAdded(builtinServer.name)) {
+      setSnackbar({
+        open: true,
+        message: `服务器 ${builtinServer.name} 已存在`,
+        severity: 'warning'
+      });
+      return;
+    }
+
     try {
       await mcpService.addBuiltinServer(builtinServer.name, {
         description: builtinServer.description,
@@ -171,7 +186,6 @@ const MCPServerSettings: React.FC = () => {
       });
 
       loadServers();
-      setBuiltinDialogOpen(false);
       setSnackbar({
         open: true,
         message: `内置服务器 ${builtinServer.name} 添加成功`,
@@ -704,79 +718,94 @@ const MCPServerSettings: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: { xs: 1.5, sm: 2 },
-            maxHeight: { xs: '60vh', sm: '70vh', md: '80vh' },
+            maxHeight: { xs: 'calc(100vh - 200px)', sm: '70vh', md: '80vh' },
             overflow: 'auto',
-            pr: { xs: 0.5, sm: 1 }
+            pr: { xs: 0.5, sm: 1 },
+            // 移动端滚动优化
+            WebkitOverflowScrolling: 'touch',
+            '&::-webkit-scrollbar': {
+              width: { xs: '2px', sm: '4px' }
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent'
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(0, 0, 0, 0.2)',
+              borderRadius: '2px'
+            }
           }}>
-            {builtinServers.map((builtinServer) => (
-              <Paper
-                key={builtinServer.id}
-                elevation={1}
-                sx={{
-                  overflow: 'hidden',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: { xs: 2, sm: 1 },
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    boxShadow: { xs: 2, sm: 3 },
-                    borderColor: 'primary.main'
-                  }
-                }}
-              >
+            {builtinServers.map((builtinServer) => {
+              const isAdded = isBuiltinServerAdded(builtinServer.name);
+              return (
+                <Paper
+                  key={builtinServer.id}
+                  elevation={0}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: isAdded ? '#d1fae5' : '#e5e7eb',
+                    borderRadius: { xs: 2, sm: 2 },
+                    transition: 'all 0.2s ease-in-out',
+                    backgroundColor: isAdded ? '#f0fdf4' : '#ffffff',
+                    cursor: 'pointer',
+                    // 移动端触摸优化
+                    touchAction: 'manipulation',
+                    '&:hover': {
+                      borderColor: isAdded ? '#a7f3d0' : '#10b981',
+                      boxShadow: { xs: '0 2px 8px rgba(0,0,0,0.06)', sm: '0 4px 12px rgba(0,0,0,0.08)' }
+                    },
+                    '&:active': {
+                      transform: { xs: 'scale(0.98)', sm: 'none' }
+                    }
+                  }}
+                >
                 <Box
                   sx={{
                     p: { xs: 2, sm: 2.5, md: 3 },
                     display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: { xs: 2, sm: 3 }
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'flex-start' },
+                    gap: { xs: 2, sm: 2.5 }
                   }}
                 >
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    {/* 服务器名称和标签 */}
-                    <Box sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: { xs: 1, sm: 1.5 },
-                      mb: { xs: 1, sm: 1.5 },
-                      flexWrap: 'wrap'
-                    }}>
+                    {/* 服务器名称 */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 0.75, sm: 1 } }}>
                       <Typography
-                        variant="subtitle1"
+                        variant="h6"
                         fontWeight={600}
                         sx={{
-                          fontSize: { xs: '1rem', sm: '1.1rem' },
+                          fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
                           color: 'text.primary',
+                          lineHeight: 1.3,
                           wordBreak: 'break-word'
                         }}
                       >
                         {builtinServer.name}
                       </Typography>
-                      {builtinServer.tags && builtinServer.tags.map((tag) => (
+                      {isAdded && (
                         <Chip
-                          key={tag}
-                          label={tag}
+                          label="已添加"
                           size="small"
-                          variant="outlined"
                           sx={{
-                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                            height: { xs: 20, sm: 24 },
-                            '& .MuiChip-label': {
-                              px: { xs: 1, sm: 1.5 }
-                            }
+                            height: 20,
+                            fontSize: '0.7rem',
+                            backgroundColor: '#dcfce7',
+                            color: '#166534',
+                            border: '1px solid #bbf7d0',
+                            fontWeight: 500
                           }}
                         />
-                      ))}
+                      )}
                     </Box>
-                    
+
                     {/* 描述 */}
                     <Typography
                       variant="body2"
-                      color="text.secondary"
                       sx={{
-                        mb: { xs: 0.5, sm: 1 },
-                        fontSize: { xs: '0.875rem', sm: '0.875rem' },
-                        lineHeight: 1.4,
+                        color: 'text.secondary',
+                        mb: { xs: 1.5, sm: 2 },
+                        lineHeight: 1.6,
+                        fontSize: { xs: '0.8rem', sm: '0.875rem', md: '0.9rem' },
                         display: '-webkit-box',
                         WebkitLineClamp: { xs: 3, sm: 2 },
                         WebkitBoxOrient: 'vertical',
@@ -785,53 +814,102 @@ const MCPServerSettings: React.FC = () => {
                     >
                       {builtinServer.description}
                     </Typography>
-                    
-                    {/* 提供者信息 */}
-                    {builtinServer.provider && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{
-                          fontSize: { xs: '0.75rem', sm: '0.75rem' },
-                          opacity: 0.8
-                        }}
-                      >
-                        提供者: {builtinServer.provider}
-                      </Typography>
-                    )}
+
+                    {/* 标签 */}
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: { xs: 0.75, sm: 1 },
+                      flexWrap: 'wrap'
+                    }}>
+                      {builtinServer.tags && builtinServer.tags.map((tag) => (
+                        <Chip
+                          key={tag}
+                          label={tag}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                            height: { xs: 22, sm: 24 },
+                            borderColor: '#e5e7eb',
+                            color: '#6b7280',
+                            backgroundColor: '#f9fafb',
+                            fontWeight: 500,
+                            '& .MuiChip-label': {
+                              px: { xs: 1, sm: 1.5 }
+                            },
+                            '&:hover': {
+                              borderColor: '#10b981',
+                              backgroundColor: alpha('#10b981', 0.05)
+                            }
+                          }}
+                        />
+                      ))}
+                    </Box>
                   </Box>
-                  
+
                   {/* 添加按钮 */}
                   <Box sx={{
                     display: 'flex',
-                    alignItems: 'center',
-                    flexShrink: 0
+                    alignItems: { xs: 'stretch', sm: 'center' },
+                    flexShrink: 0,
+                    mt: { xs: 1, sm: 0 }
                   }}>
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddBuiltinServer(builtinServer);
-                      }}
-                      color="primary"
-                      size={window.innerWidth < 600 ? 'small' : 'medium'}
-                      sx={{
-                        bgcolor: alpha('#10b981', 0.1),
-                        border: '1px solid',
-                        borderColor: alpha('#10b981', 0.3),
-                        '&:hover': {
-                          bgcolor: alpha('#10b981', 0.2),
-                          borderColor: '#10b981'
-                        },
-                        width: { xs: 36, sm: 40 },
-                        height: { xs: 36, sm: 40 }
-                      }}
-                    >
-                      <AddIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
-                    </IconButton>
+                    {isBuiltinServerAdded(builtinServer.name) ? (
+                      <Button
+                        variant="outlined"
+                        size={window.innerWidth < 600 ? 'medium' : 'small'}
+                        fullWidth={window.innerWidth < 600}
+                        disabled
+                        sx={{
+                          borderColor: '#d1d5db',
+                          color: '#6b7280',
+                          borderRadius: { xs: 2, sm: 1.5 },
+                          px: { xs: 3, sm: 2 },
+                          py: { xs: 1, sm: 0.75 },
+                          fontWeight: 500,
+                          fontSize: { xs: '0.9rem', sm: '0.875rem' },
+                          textTransform: 'none',
+                          minWidth: { xs: 'auto', sm: 'auto' },
+                          minHeight: { xs: 44, sm: 'auto' },
+                          cursor: 'default'
+                        }}
+                      >
+                        已添加
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddBuiltinServer(builtinServer);
+                        }}
+                        variant="contained"
+                        size={window.innerWidth < 600 ? 'medium' : 'small'}
+                        fullWidth={window.innerWidth < 600}
+                        sx={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          borderRadius: { xs: 2, sm: 1.5 },
+                          px: { xs: 3, sm: 2 },
+                          py: { xs: 1, sm: 0.75 },
+                          fontWeight: 500,
+                          fontSize: { xs: '0.9rem', sm: '0.875rem' },
+                          textTransform: 'none',
+                          minWidth: { xs: 'auto', sm: 'auto' },
+                          minHeight: { xs: 44, sm: 'auto' },
+                          '&:hover': {
+                            backgroundColor: '#059669'
+                          }
+                        }}
+                      >
+                        添加
+                      </Button>
+                    )}
                   </Box>
                 </Box>
               </Paper>
-            ))}
+              );
+            })}
           </Box>
         </DialogContent>
         <DialogActions sx={{

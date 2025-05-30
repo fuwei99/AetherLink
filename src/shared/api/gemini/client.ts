@@ -1,17 +1,17 @@
 /**
- * Gemini客户端模块
+ * Gemini客户端模块 - 电脑版实现
  * 负责创建和配置Gemini客户端实例
  */
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import type { Model } from '../../types';
 import { logApiRequest } from '../../services/LoggerService';
 
 /**
- * 创建Gemini客户端 - 简化版本，参考旧版本实现
+ * 创建Gemini客户端 - 电脑版实现
  * @param model 模型配置
  * @returns Gemini客户端实例
  */
-export function createClient(model: Model): GoogleGenerativeAI {
+export function createClient(model: Model): GoogleGenAI {
   try {
     const apiKey = model.apiKey;
     if (!apiKey) {
@@ -19,10 +19,17 @@ export function createClient(model: Model): GoogleGenerativeAI {
       throw new Error('未提供Gemini API密钥，请在设置中配置');
     }
 
-    console.log(`[Gemini createClient] 创建客户端, 模型ID: ${model.id}, baseURL: ${model.baseUrl || 'https://generativelanguage.googleapis.com'}`);
+    const baseUrl = model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+    // 确保 baseUrl 不以 /v1beta 结尾，避免重复
+    const cleanBaseUrl = baseUrl.replace(/\/v1beta\/?$/, '');
+    console.log(`[Gemini createClient] 创建客户端, 模型ID: ${model.id}, baseURL: ${cleanBaseUrl}`);
 
-    // 直接创建客户端，就像旧版本一样
-    const client = new GoogleGenerativeAI(apiKey);
+    // 使用电脑版的SDK创建客户端
+    const client = new GoogleGenAI({
+      vertexai: false,
+      apiKey: apiKey,
+      httpOptions: { baseUrl: cleanBaseUrl }
+    });
     console.log(`[Gemini createClient] 客户端创建成功`);
     return client;
 
@@ -40,7 +47,8 @@ export function createClient(model: Model): GoogleGenerativeAI {
 export async function testConnection(model: Model): Promise<boolean> {
   try {
     const apiKey = model.apiKey;
-    const baseUrl = model.baseUrl || 'https://generativelanguage.googleapis.com';
+    const baseUrl = model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+    const cleanBaseUrl = baseUrl.replace(/\/v1beta\/?$/, '');
     const modelId = model.id;
 
     if (!apiKey) {
@@ -54,14 +62,17 @@ export async function testConnection(model: Model): Promise<boolean> {
     logApiRequest('Gemini Connection Test', 'INFO', {
       method: 'POST',
       model: modelId,
-      baseUrl
+      baseUrl: cleanBaseUrl
     });
 
-    // 发送简单的测试请求
-    const geminiModel = genAI.getGenerativeModel({ model: modelId });
-    const result = await geminiModel.generateContent('Hello');
+    // 发送简单的测试请求 - 使用电脑版SDK
+    const result = await genAI.models.generateContent({
+      model: modelId,
+      contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+      config: { maxOutputTokens: 1 }
+    });
 
-    return result.response !== undefined;
+    return result.text !== undefined;
   } catch (error) {
     console.error('Gemini API连接测试失败:', error);
     return false;

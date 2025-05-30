@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -23,10 +23,12 @@ import type { ThinkingOption } from '../../../shared/config/reasoningConfig';
 interface ContextSettingsProps {
   contextLength: number;
   contextCount: number;
+  maxOutputTokens: number;
   mathRenderer: MathRendererType;
   thinkingEffort: ThinkingOption;
   onContextLengthChange: (value: number) => void;
   onContextCountChange: (value: number) => void;
+  onMaxOutputTokensChange: (value: number) => void;
   onMathRendererChange: (value: MathRendererType) => void;
   onThinkingEffortChange: (value: ThinkingOption) => void;
 }
@@ -37,14 +39,29 @@ interface ContextSettingsProps {
 export default function ContextSettings({
   contextLength,
   contextCount,
+  maxOutputTokens,
   mathRenderer,
   thinkingEffort,
   onContextLengthChange,
   onContextCountChange,
+  onMaxOutputTokensChange,
   onMathRendererChange,
   onThinkingEffortChange
 }: ContextSettingsProps) {
   const [expanded, setExpanded] = useState(false);
+
+  // 监听maxOutputTokens变化，实现双向同步
+  useEffect(() => {
+    const handleMaxOutputTokensChange = (e: CustomEvent) => {
+      const newValue = e.detail;
+      if (newValue && newValue !== maxOutputTokens) {
+        onMaxOutputTokensChange(newValue);
+      }
+    };
+
+    window.addEventListener('maxOutputTokensChanged', handleMaxOutputTokensChange as EventListener);
+    return () => window.removeEventListener('maxOutputTokensChanged', handleMaxOutputTokensChange as EventListener);
+  }, [maxOutputTokens, onMaxOutputTokensChange]);
 
   // 处理上下文长度变化
   const handleContextLengthChange = (_event: Event, newValue: number | number[]) => {
@@ -56,6 +73,14 @@ export default function ContextSettings({
   const handleContextCountChange = (_event: Event, newValue: number | number[]) => {
     const value = newValue as number;
     onContextCountChange(value);
+  };
+
+  // 处理最大输出Token变化
+  const handleMaxOutputTokensChange = (_event: Event, newValue: number | number[]) => {
+    const value = newValue as number;
+    onMaxOutputTokensChange(value);
+    // 触发自定义事件通知其他组件
+    window.dispatchEvent(new CustomEvent('maxOutputTokensChanged', { detail: value }));
   };
 
   // 处理数学渲染器变化
@@ -112,7 +137,7 @@ export default function ContextSettings({
         <TuneOutlinedIcon sx={{ mr: 1.5, color: 'primary.main' }} />
         <ListItemText
           primary="上下文设置"
-          secondary={`长度: ${contextLength === 64000 ? '不限' : contextLength} 字符 | 消息数: ${contextCount === 100 ? '最大' : contextCount} 条`}
+          secondary={`长度: ${contextLength === 64000 ? '不限' : contextLength} 字符 | 消息数: ${contextCount === 100 ? '最大' : contextCount} 条 | 输出: ${maxOutputTokens} tokens`}
           primaryTypographyProps={{
             fontWeight: 'medium',
             sx: { mt: 1, mb: 0.25 } // 增加上边距，添加下边距
@@ -200,6 +225,76 @@ export default function ContextSettings({
                 { value: 100, label: '最大' }
               ]}
             />
+          </Box>
+
+          {/* 最大输出Token控制 */}
+          <Box sx={{ mb: 3 }}>
+            {/* 标题和当前值 */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" fontWeight="medium" sx={{ mb: 0.5 }}>
+                最大输出Token: {maxOutputTokens} tokens
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                限制AI生成回复的最大长度，不同模型支持的范围不同
+              </Typography>
+            </Box>
+
+            {/* 滑块控制 */}
+            <Box sx={{ mb: 2 }}>
+              <Slider
+                value={Math.min(maxOutputTokens, 65536)}
+                onChange={handleMaxOutputTokensChange}
+                min={256}
+                max={65536}
+                step={256}
+                marks={[
+                  { value: 2048, label: '2K' },
+                  { value: 8192, label: '8K' },
+                  { value: 32768, label: '32K' }
+                ]}
+                sx={{
+                  '& .MuiSlider-markLabel': {
+                    fontSize: '0.65rem',
+                    whiteSpace: 'nowrap'
+                  },
+                  '& .MuiSlider-mark': {
+                    height: 8
+                  }
+                }}
+              />
+            </Box>
+
+            {/* 精确输入 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 'fit-content' }}>
+                精确值:
+              </Typography>
+              <TextField
+                type="number"
+                value={maxOutputTokens}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  if (!isNaN(value) && value >= 256 && value <= 2000000) {
+                    onMaxOutputTokensChange(value);
+                    // 触发自定义事件通知其他组件
+                    window.dispatchEvent(new CustomEvent('maxOutputTokensChanged', { detail: value }));
+                  }
+                }}
+                size="small"
+                sx={{ width: 120 }}
+                slotProps={{
+                  htmlInput: { min: 256, max: 2000000 }
+                }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                tokens
+              </Typography>
+            </Box>
+
+            {/* 说明文字 */}
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}>
+              滑块范围: 256-64K tokens，输入框支持最大2M tokens。系统会根据模型自动应用限制。
+            </Typography>
           </Box>
 
           {/* 思维链长度选择 */}

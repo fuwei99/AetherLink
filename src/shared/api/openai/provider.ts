@@ -114,16 +114,91 @@ export abstract class BaseOpenAIProvider extends AbstractBaseProvider {
 
   /**
    * 获取温度参数
+   * @param assistant 助手配置（可选）
    */
-  protected getTemperature(): number {
-    return this.model.temperature || 1.0;
+  protected getTemperature(assistant?: any): number {
+    // 优先使用助手设置，然后是模型设置，最后是默认值
+    return assistant?.temperature ?? this.model.temperature ?? 1.0;
   }
 
   /**
    * 获取top_p参数
+   * @param assistant 助手配置（可选）
    */
-  protected getTopP(): number {
-    return (this.model as any).top_p || 1.0;
+  protected getTopP(assistant?: any): number {
+    // 优先使用助手设置，然后是模型设置，最后是默认值
+    return assistant?.topP ?? (this.model as any).top_p ?? 1.0;
+  }
+
+  /**
+   * 获取max_tokens参数
+   * @param assistant 助手配置（可选）
+   */
+  protected getMaxTokens(assistant?: any): number {
+    // 优先使用助手设置，然后是模型设置，最后是默认值
+    const maxTokens = assistant?.maxTokens ?? this.model.maxTokens ?? 4096;
+
+    // 确保值在合理范围内（最小1，最大不限制，让API自己处理）
+    const finalTokens = Math.max(maxTokens, 1);
+
+    console.log(`[OpenAIProvider] maxTokens参数 - 助手设置: ${assistant?.maxTokens}, 模型设置: ${this.model.maxTokens}, 最终值: ${finalTokens}`);
+
+    return finalTokens;
+  }
+
+  /**
+   * 获取OpenAI专属参数
+   * @param assistant 助手配置（可选）
+   */
+  protected getOpenAISpecificParameters(assistant?: any): any {
+    const params: any = {};
+
+    // Frequency Penalty
+    if (assistant?.frequencyPenalty !== undefined && assistant.frequencyPenalty !== 0) {
+      params.frequency_penalty = assistant.frequencyPenalty;
+    }
+
+    // Presence Penalty
+    if (assistant?.presencePenalty !== undefined && assistant.presencePenalty !== 0) {
+      params.presence_penalty = assistant.presencePenalty;
+    }
+
+    // Top-K (某些OpenAI兼容API支持)
+    if (assistant?.topK !== undefined && assistant.topK !== 40) {
+      params.top_k = assistant.topK;
+    }
+
+    // Seed
+    if (assistant?.seed !== undefined && assistant.seed !== null) {
+      params.seed = assistant.seed;
+    }
+
+    // Stop Sequences
+    if (assistant?.stopSequences && Array.isArray(assistant.stopSequences) && assistant.stopSequences.length > 0) {
+      params.stop = assistant.stopSequences;
+    }
+
+    // Logit Bias
+    if (assistant?.logitBias && Object.keys(assistant.logitBias).length > 0) {
+      params.logit_bias = assistant.logitBias;
+    }
+
+    // Response Format
+    if (assistant?.responseFormat && assistant.responseFormat !== 'text') {
+      params.response_format = { type: assistant.responseFormat };
+    }
+
+    // Tool Choice
+    if (assistant?.toolChoice && assistant.toolChoice !== 'auto') {
+      params.tool_choice = assistant.toolChoice;
+    }
+
+    // Parallel Tool Calls
+    if (assistant?.parallelToolCalls !== undefined && assistant.parallelToolCalls !== true) {
+      params.parallel_tool_calls = assistant.parallelToolCalls;
+    }
+
+    return params;
   }
 
   /**
@@ -428,7 +503,7 @@ export abstract class BaseOpenAIProvider extends AbstractBaseProvider {
     console.log(`[OpenAI] 解析到的工具响应数量: ${toolResponses.length}`);
 
     if (toolResponses.length === 0) {
-      console.log(`[OpenAI] 未检测到工具调用`);
+      console.warn(`[OpenAI] 未检测到工具调用，内容包含工具标签但解析失败`);
       return [];
     }
 
@@ -491,6 +566,7 @@ export class OpenAIProvider extends BaseOpenAIProvider {
       mcpTools?: import('../../types').MCPTool[]; // 添加 MCP 工具参数
       mcpMode?: 'prompt' | 'function'; // 添加 MCP 模式参数
       abortSignal?: AbortSignal; // 添加中断信号参数
+      assistant?: any; // 添加助手参数
     }
   ): Promise<string | { content: string; reasoning?: string; reasoningTime?: number }> {
     console.log(`[OpenAIProvider.sendChatMessage] 开始处理聊天请求, 模型: ${this.model.id}`);
@@ -503,7 +579,8 @@ export class OpenAIProvider extends BaseOpenAIProvider {
       enableTools = true, // 默认启用工具
       mcpTools = [], // MCP 工具列表
       mcpMode = 'function', // 默认使用函数调用模式
-      abortSignal
+      abortSignal,
+      assistant // 助手参数
     } = options || {};
 
     // 调试日志：显示当前的 MCP 配置
@@ -562,8 +639,23 @@ export class OpenAIProvider extends BaseOpenAIProvider {
       }
     }
 
+    // 调试：显示处理后的消息数组
+    console.log(`[OpenAIProvider] 处理后的消息数组:`, {
+      总数量: apiMessages.length,
+      消息详情: apiMessages.map((msg, index) => ({
+        索引: index,
+        角色: msg.role,
+        内容长度: typeof msg.content === 'string' ? msg.content.length : '非字符串',
+        内容预览: typeof msg.content === 'string' ? msg.content.substring(0, 50) : '非字符串内容'
+      }))
+    });
+
     // 确保至少有一条用户消息
-    if (apiMessages.length <= 1 && !apiMessages.some(msg => msg.role === 'user')) {
+    const hasUserMessage = apiMessages.some(msg => msg.role === 'user');
+    console.log(`[OpenAIProvider] 消息检查 - 总数量: ${apiMessages.length}, 有用户消息: ${hasUserMessage}`);
+
+    if (apiMessages.length <= 1 && !hasUserMessage) {
+      console.warn(`[OpenAIProvider] 触发兜底逻辑1: 消息数量<=1且无用户消息`);
       apiMessages.push({
         role: 'user',
         content: '你好'
@@ -572,6 +664,7 @@ export class OpenAIProvider extends BaseOpenAIProvider {
 
     // 强制检查：确保messages数组不为空
     if (apiMessages.length === 0) {
+      console.error(`[OpenAIProvider] 触发兜底逻辑2: 消息数组为空`);
       apiMessages.push({
         role: 'user',
         content: '你好'
@@ -583,11 +676,29 @@ export class OpenAIProvider extends BaseOpenAIProvider {
     const requestParams: any = {
       model: this.model.id,
       messages: apiMessages,
-      temperature: this.getTemperature(),
-      top_p: this.getTopP(),
-      max_tokens: this.model.maxTokens,
-      stream: streamEnabled // 从设置中读取流式输出配置
+      temperature: this.getTemperature(assistant), // 传递助手参数
+      top_p: this.getTopP(assistant), // 传递助手参数
+      max_tokens: this.getMaxTokens(assistant), // 从助手配置中读取maxTokens
+      stream: streamEnabled, // 从设置中读取流式输出配置
+      ...this.getOpenAISpecificParameters(assistant) // 添加OpenAI专属参数
     };
+
+    // 添加调试日志显示使用的参数
+    console.log(`[OpenAIProvider] API请求参数:`, {
+      model: requestParams.model,
+      temperature: requestParams.temperature,
+      top_p: requestParams.top_p,
+      max_tokens: requestParams.max_tokens,
+      stream: requestParams.stream,
+      openaiSpecificParams: this.getOpenAISpecificParameters(assistant),
+      assistantInfo: assistant ? {
+        id: assistant.id,
+        name: assistant.name,
+        temperature: assistant.temperature,
+        topP: assistant.topP,
+        maxTokens: assistant.maxTokens
+      } : '无助手信息'
+    });
 
     // 添加 MCP 工具支持（参考最佳实例逻辑）
     // 只有在函数调用模式且有工具时才添加 tools 参数
@@ -640,6 +751,14 @@ export class OpenAIProvider extends BaseOpenAIProvider {
       if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
         console.log('[OpenAIProvider.sendChatMessage] 请求被用户中断');
         throw new DOMException('Operation aborted', 'AbortError');
+      }
+
+      // 检查是否为参数错误，提供友好的错误信息
+      if (error?.status === 400 && error?.message?.includes('max_tokens')) {
+        const modelName = this.model.name || this.model.id;
+        const currentMaxTokens = requestParams.max_tokens;
+        console.error(`[OpenAIProvider] ${modelName} 模型的 max_tokens 参数超出限制: ${currentMaxTokens}`);
+        throw new Error(`模型 ${modelName} 不支持当前的最大输出token设置 (${currentMaxTokens})。请在模型设置中降低最大输出token数量。`);
       }
 
       console.error('[OpenAIProvider.sendChatMessage] API请求失败:', error);
@@ -727,31 +846,25 @@ export class OpenAIProvider extends BaseOpenAIProvider {
       // 1. 如果有 onChunk 回调，说明是普通消息处理，使用 OpenAIStreamProcessor 分离思考标签
       // 2. 如果只有 onUpdate 回调，说明可能是组合模型调用，使用 streamCompletion 保持推理内容
       let result;
-      if (onChunk) {
-        console.log('[OpenAIProvider] 检测到 onChunk 回调，使用 OpenAIStreamProcessor 处理思考标签分离');
+      // 🔥 关键修复：确保工具参数传递给 streamCompletion
+      const streamParams = {
+        ...iterationParams,
+        enableTools,
+        mcpTools
+      };
 
-        const { OpenAIStreamProcessor } = await import('./streamProcessor');
+      // 统一使用 streamCompletion 处理流式响应
+      result = await streamCompletion(
+        this.client,
+        this.model.id,
+        currentMessages,
+        params.temperature,
+        params.max_tokens || params.max_completion_tokens,
+        enhancedCallback,
+        streamParams
+      );
 
-        // 创建流式响应
-        const stream = await this.client.chat.completions.create({
-          ...iterationParams,
-          stream: true
-        });
-
-        // 使用 OpenAIStreamProcessor 处理流式响应
-        const processor = new OpenAIStreamProcessor({
-          model: this.model,
-          messageId: 'temp-message-id', // 临时ID，实际应该从上层传递
-          blockId: 'temp-block-id', // 临时ID，实际应该从上层传递
-          topicId: 'temp-topic-id', // 临时ID，实际应该从上层传递
-          enableReasoning: this.supportsReasoning(),
-          onUpdate: enhancedCallback,
-          onChunk: onChunk, // 🔥 传递onChunk回调，恢复流式输出
-          abortSignal: abortSignal
-        });
-
-        result = await processor.processStream(stream);
-      } else {
+      if (false) { // 保留原有逻辑结构
         console.log('[OpenAIProvider] 未检测到 onChunk 回调，使用 streamCompletion 保持推理内容（组合模型兼容）');
 
         // 调用流式完成函数（保持原有逻辑，用于组合模型）
@@ -817,7 +930,7 @@ export class OpenAIProvider extends BaseOpenAIProvider {
    */
   private async handleStreamResponseWithoutCallback(
     params: any,
-    enableTools: boolean = true,
+    _enableTools: boolean = true,
     mcpTools: import('../../types').MCPTool[] = [],
     abortSignal?: AbortSignal,
     onChunk?: (chunk: import('../../types/chunk').Chunk) => void
@@ -878,48 +991,23 @@ export class OpenAIProvider extends BaseOpenAIProvider {
           console.log(`[OpenAIProvider] 无回调提示词模式：移除 API 中的 tools 参数`);
         }
 
-        // 🔥 智能选择处理方式（无回调版本）：
-        // 1. 如果有 onChunk 回调，使用 OpenAIStreamProcessor 分离思考标签
-        // 2. 否则使用 streamCompletion 保持推理内容（组合模型兼容）
-        let result;
-        if (onChunk) {
-          console.log('[OpenAIProvider] 无回调模式：检测到 onChunk 回调，使用 OpenAIStreamProcessor');
+        // 🔥 关键修复：确保工具参数传递给 streamCompletion
+        const streamParams = {
+          ...iterationParams,
+          enableTools: _enableTools,
+          mcpTools
+        };
 
-          const { OpenAIStreamProcessor } = await import('./streamProcessor');
-
-          // 创建流式响应
-          const stream = await this.client.chat.completions.create({
-            ...iterationParams,
-            stream: true
-          });
-
-          // 使用 OpenAIStreamProcessor 处理流式响应
-          const processor = new OpenAIStreamProcessor({
-            model: this.model,
-            messageId: 'temp-message-id', // 临时ID，实际应该从上层传递
-            blockId: 'temp-block-id', // 临时ID，实际应该从上层传递
-            topicId: 'temp-topic-id', // 临时ID，实际应该从上层传递
-            enableReasoning: this.supportsReasoning(),
-            onUpdate: virtualCallback,
-            onChunk: onChunk, // 🔥 传递onChunk回调，恢复流式输出
-            abortSignal: abortSignal
-          });
-
-          result = await processor.processStream(stream);
-        } else {
-          console.log('[OpenAIProvider] 无回调模式：使用 streamCompletion 保持推理内容（组合模型兼容）');
-
-          // 使用streamCompletion函数处理流式响应
-          result = await streamCompletion(
-            this.client,
-            this.model.id,
-            currentMessages,
-            params.temperature,
-            params.max_tokens || params.max_completion_tokens,
-            virtualCallback,
-            iterationParams
-          );
-        }
+        // 统一使用 streamCompletion 处理流式响应
+        const result = await streamCompletion(
+          this.client,
+          this.model.id,
+          currentMessages,
+          params.temperature,
+          params.max_tokens || params.max_completion_tokens,
+          virtualCallback,
+          streamParams
+        );
 
         // 检查是否有工具调用标记
         if (typeof result === 'object' && (result as any).hasToolCalls) {

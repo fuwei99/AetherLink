@@ -40,8 +40,8 @@ interface SettingGroupsProps {
 export default function SettingGroups({ groups, onSettingChange }: SettingGroupsProps) {
   // 每个分组的展开状态
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    general: true,  // 常规设置默认展开
-    context: false  // 上下文设置默认收起
+    general: false,  // 常规设置默认收起
+    context: false   // 上下文设置默认收起
   });
 
   // 切换分组展开状态

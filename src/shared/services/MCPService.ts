@@ -4,8 +4,10 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createInMemoryMCPServer } from './MCPServerFactory';
+import { getBuiltinMCPServers } from '../config/builtinMCPServers';
 import { createSSEProxyUrl, createHTTPProxyUrl, logProxyUsage } from '../utils/mcpProxy';
-import { CustomHTTPTransport } from '../utils/CustomHTTPTransport';
+import { universalFetch } from '../utils/universalFetch';
+
 import { Capacitor } from '@capacitor/core';
 
 /**
@@ -54,6 +56,7 @@ export class MCPService {
   private static instance: MCPService;
   private servers: MCPServer[] = [];
   private clients: Map<string, Client> = new Map();
+  private pendingClients: Map<string, Promise<Client>> = new Map();
 
   private constructor() {
     this.loadServers();
@@ -177,7 +180,14 @@ export class MCPService {
    * 获取服务器的唯一键
    */
   private getServerKey(server: MCPServer): string {
-    return `${server.name}-${server.type}-${server.baseUrl || 'local'}`;
+    return JSON.stringify({
+      baseUrl: server.baseUrl,
+      command: server.command,
+      args: server.args,
+      env: server.env,
+      type: server.type,
+      id: server.id
+    });
   }
 
   /**
@@ -186,20 +196,38 @@ export class MCPService {
   private async initClient(server: MCPServer): Promise<Client> {
     const serverKey = this.getServerKey(server);
 
+    // 如果有正在初始化的客户端，等待它完成
+    const pendingClient = this.pendingClients.get(serverKey);
+    if (pendingClient) {
+      console.log(`[MCP] 等待正在初始化的连接: ${server.name}`);
+      return pendingClient;
+    }
+
     // 检查是否已有客户端连接
     const existingClient = this.clients.get(serverKey);
     if (existingClient) {
-      console.log(`[MCP] 复用现有连接: ${server.name}`);
-      return existingClient;
+      try {
+        // 检查现有客户端是否还活着
+        console.log(`[MCP] 检查现有连接健康状态: ${server.name}`);
+        await existingClient.ping();
+        console.log(`[MCP] 复用现有连接: ${server.name}`);
+        return existingClient;
+      } catch (error) {
+        console.warn(`[MCP] 现有连接已失效，重新创建: ${server.name}`, error);
+        // 清理失效的连接
+        this.clients.delete(serverKey);
+      }
     }
 
-    // 创建新的客户端
-    const client = new Client(
-      { name: 'AetherLink Mobile', version: '1.0.0' },
-      { capabilities: {} }
-    );
+    // 创建初始化 Promise 并缓存
+    const initPromise = (async (): Promise<Client> => {
+      // 创建新的客户端
+      const client = new Client(
+        { name: 'AetherLink Mobile', version: '1.0.0' },
+        { capabilities: {} }
+      );
 
-    try {
+      try {
       let transport;
 
       // 根据服务器类型创建传输层
@@ -217,76 +245,76 @@ export class MCPService {
           throw new Error('SSE 服务器需要提供 baseUrl');
         }
 
-        if (Capacitor.isNativePlatform()) {
-          // 移动端：使用自定义 SSE 传输，直接连接原始 URL，绕过 CORS
-          console.log(`[MCP] 创建原生 SSE 传输: ${server.baseUrl}`);
-          const { CustomSSETransport } = await import('../utils/CustomSSETransport');
-          transport = new CustomSSETransport(new URL(server.baseUrl), {
-            headers: server.headers || {},
-            heartbeatTimeout: (server.timeout || 60) * 1000
-          });
-        } else {
-          // Web 端：使用代理解决 CORS 问题
-          const finalUrl = createSSEProxyUrl(server.baseUrl);
-          logProxyUsage(server.baseUrl, finalUrl, 'SSE');
+        // 在Web端使用代理解决CORS问题
+        const finalUrl = createSSEProxyUrl(server.baseUrl);
+        logProxyUsage(server.baseUrl, finalUrl, 'SSE');
 
-          console.log(`[MCP] 创建 SSE 传输: ${finalUrl}`);
+        console.log(`[MCP] 创建 SSE 传输: ${finalUrl}`);
+        const { SSEClientTransport } = await import('@modelcontextprotocol/sdk/client/sse.js');
 
-          const { SSEClientTransport } = await import('@modelcontextprotocol/sdk/client/sse.js');
-          transport = new SSEClientTransport(new URL(finalUrl));
-        }
+        // 为SSE传输提供自定义fetch函数来处理CORS
+        // 注意：由于浏览器原生EventSource不支持CORS代理，我们需要使用polyfill
+
+        transport = new SSEClientTransport(new URL(finalUrl), {
+          eventSourceInit: {
+            fetch: async (url: string | URL, init?: RequestInit) => {
+              console.log(`[MCP SSE] 使用自定义fetch: ${url}`);
+              return await universalFetch(url.toString(), init);
+            }
+          },
+          requestInit: {
+            headers: server.headers || {}
+          }
+        });
       } else if (server.type === 'streamableHttp') {
         if (!server.baseUrl) {
           throw new Error('HTTP 流服务器需要提供 baseUrl');
         }
 
-        const isNative = Capacitor.isNativePlatform();
-        console.log(`[MCP] 平台检测结果: isNative=${isNative}, platform=${Capacitor.getPlatform()}`);
+        // 在Web端使用代理解决CORS问题
+        const finalUrl = createHTTPProxyUrl(server.baseUrl);
+        logProxyUsage(server.baseUrl, finalUrl, 'HTTP');
 
-        if (isNative) {
-          // 移动端：使用自定义 HTTP 传输，直接连接原始 URL，绕过 CORS
-          console.log(`[MCP] 创建原生 HTTP 流传输: ${server.baseUrl}`);
-          transport = new CustomHTTPTransport(new URL(server.baseUrl), {
-            headers: server.headers || {},
-            timeout: (server.timeout || 60) * 1000
-          });
-        } else {
-          // Web 端：使用代理解决 CORS 问题
-          const finalUrl = createHTTPProxyUrl(server.baseUrl);
-          logProxyUsage(server.baseUrl, finalUrl, 'HTTP');
-
-          console.log(`[MCP] 创建 HTTP 流传输: ${finalUrl}`);
-          transport = new StreamableHTTPClientTransport(new URL(finalUrl), {
-            requestInit: {
-              headers: server.headers || {}
-            }
-          });
-        }
+        console.log(`[MCP] 创建 HTTP 流传输: ${finalUrl}`);
+        transport = new StreamableHTTPClientTransport(new URL(finalUrl), {
+          requestInit: {
+            headers: server.headers || {}
+          }
+        });
       } else {
         throw new Error(`不支持的服务器类型: ${server.type}`);
       }
 
-      // 连接客户端
-      await client.connect(transport);
+        // 连接客户端
+        await client.connect(transport);
 
-      // 缓存客户端
-      this.clients.set(serverKey, client);
+        // 缓存客户端
+        this.clients.set(serverKey, client);
 
-      console.log(`[MCP] 成功连接到服务器: ${server.name}`);
-      return client;
-    } catch (error) {
-      console.error(`[MCP] 连接服务器失败: ${server.name}`, error);
+        console.log(`[MCP] 成功连接到服务器: ${server.name}`);
+        return client;
+      } catch (error) {
+        console.error(`[MCP] 连接服务器失败: ${server.name}`, error);
 
-      // 在移动端，为CORS错误提供更友好的错误信息
-      if (Capacitor.isNativePlatform() && error instanceof Error) {
-        if (error.message.includes('CORS') || error.message.includes('Access to fetch')) {
-          console.log(`[MCP] 移动端CORS错误，这通常表示服务器配置问题或网络问题`);
-          throw new Error(`连接MCP服务器失败: ${server.name} - 网络连接问题或服务器不可用`);
+        // 在移动端，为CORS错误提供更友好的错误信息
+        if (Capacitor.isNativePlatform() && error instanceof Error) {
+          if (error.message.includes('CORS') || error.message.includes('Access to fetch')) {
+            console.log(`[MCP] 移动端CORS错误，这通常表示服务器配置问题或网络问题`);
+            throw new Error(`连接MCP服务器失败: ${server.name} - 网络连接问题或服务器不可用`);
+          }
         }
-      }
 
-      throw error;
-    }
+        throw error;
+      } finally {
+        // 清理 pending 状态
+        this.pendingClients.delete(serverKey);
+      }
+    })();
+
+    // 缓存初始化 Promise
+    this.pendingClients.set(serverKey, initPromise);
+
+    return initPromise;
   }
 
   /**
@@ -297,11 +325,15 @@ export class MCPService {
     if (client) {
       try {
         await client.close();
+        console.log(`[MCP] 已关闭连接: ${serverKey}`);
       } catch (error) {
         console.error(`[MCP] 关闭客户端连接失败:`, error);
       }
       this.clients.delete(serverKey);
     }
+
+    // 同时清理 pending 状态
+    this.pendingClients.delete(serverKey);
   }
 
   /**
@@ -490,78 +522,7 @@ export class MCPService {
    * 获取内置服务器列表
    */
   public getBuiltinServers(): MCPServer[] {
-    // 直接返回硬编码列表，避免动态导入问题
-    return [
-      {
-        id: 'builtin-fetch',
-        name: '@aether/fetch',
-        type: 'inMemory' as const,
-        description: '用于获取 URL 网页内容的 MCP 服务器',
-        isActive: false,
-        provider: 'AetherAI',
-        logoUrl: '',
-        tags: ['网页', '抓取']
-      },
-      {
-        id: 'builtin-thinking',
-        name: '@aether/sequentialthinking',
-        type: 'inMemory' as const,
-        description: '一个 MCP 服务器实现，提供了通过结构化思维过程进行动态和反思性问题解决的工具',
-        isActive: false,
-        provider: 'AetherAI',
-        logoUrl: '',
-        tags: ['思维', '推理']
-      },
-      {
-        id: 'builtin-memory',
-        name: '@aether/memory',
-        type: 'inMemory' as const,
-        description: '基于本地知识图谱的持久性记忆基础实现。这使得模型能够在不同对话间记住用户的相关信息。需要配置 MEMORY_FILE_PATH 环境变量。',
-        isActive: false,
-        env: {
-          MEMORY_FILE_PATH: 'memory.json'
-        },
-        provider: 'AetherAI',
-        logoUrl: '',
-        tags: ['记忆', '知识图谱']
-      },
-      {
-        id: 'builtin-brave-search',
-        name: '@aether/brave-search',
-        type: 'inMemory' as const,
-        description: '一个集成了 Brave 搜索 API 的 MCP 服务器实现，提供网页与本地搜索双重功能。需要配置 BRAVE_API_KEY 环境变量',
-        isActive: false,
-        env: {
-          BRAVE_API_KEY: 'YOUR_API_KEY'
-        },
-        provider: 'AetherAI',
-        logoUrl: '',
-        tags: ['搜索', 'Brave']
-      },
-      {
-        id: 'builtin-filesystem',
-        name: '@aether/filesystem',
-        type: 'inMemory' as const,
-        description: '实现文件系统操作的模型上下文协议（MCP）的 Node.js 服务器',
-        isActive: false,
-        provider: 'AetherAI',
-        logoUrl: '',
-        tags: ['文件系统', '文件操作']
-      },
-      {
-        id: 'builtin-dify-knowledge',
-        name: '@aether/dify-knowledge',
-        type: 'inMemory' as const,
-        description: 'Dify 知识库集成服务器，提供知识库搜索功能。需要配置 DIFY_KEY 环境变量',
-        isActive: false,
-        env: {
-          DIFY_KEY: 'YOUR_DIFY_KEY'
-        },
-        provider: 'AetherAI',
-        logoUrl: '',
-        tags: ['Dify', '知识库']
-      }
-    ];
+    return getBuiltinMCPServers();
   }
 
   /**
@@ -644,11 +605,63 @@ export class MCPService {
   }
 
   /**
+   * 检查连接健康状态
+   */
+  public async checkConnectionHealth(server: MCPServer): Promise<boolean> {
+    const serverKey = this.getServerKey(server);
+    const client = this.clients.get(serverKey);
+
+    if (!client) {
+      return false;
+    }
+
+    try {
+      await client.ping();
+      return true;
+    } catch (error) {
+      console.warn(`[MCP] 连接健康检查失败: ${server.name}`, error);
+      // 清理失效的连接
+      this.clients.delete(serverKey);
+      return false;
+    }
+  }
+
+  /**
+   * 获取连接状态信息
+   */
+  public getConnectionStatus(): {
+    activeConnections: number;
+    pendingConnections: number;
+    connections: Array<{ serverKey: string; status: 'active' | 'pending' }>;
+  } {
+    const connections: Array<{ serverKey: string; status: 'active' | 'pending' }> = [];
+
+    // 活跃连接
+    for (const serverKey of this.clients.keys()) {
+      connections.push({ serverKey, status: 'active' });
+    }
+
+    // 待连接
+    for (const serverKey of this.pendingClients.keys()) {
+      if (!this.clients.has(serverKey)) {
+        connections.push({ serverKey, status: 'pending' });
+      }
+    }
+
+    return {
+      activeConnections: this.clients.size,
+      pendingConnections: this.pendingClients.size,
+      connections
+    };
+  }
+
+  /**
    * 清理所有连接
    */
   public async cleanup(): Promise<void> {
     const promises = Array.from(this.clients.keys()).map(key => this.closeClient(key));
     await Promise.all(promises);
+    this.pendingClients.clear();
     console.log('[MCP] 所有连接已清理');
   }
 }

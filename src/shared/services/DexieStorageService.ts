@@ -258,6 +258,42 @@ class DexieStorageService extends Dexie {
     }
   }
 
+  async updateAssistant(id: string, updates: Partial<Assistant>): Promise<void> {
+    try {
+      const existingAssistant = await this.getAssistant(id);
+      if (!existingAssistant) {
+        throw new Error(`助手 ${id} 不存在`);
+      }
+
+      const updatedAssistant = {
+        ...existingAssistant,
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+
+      // 处理icon字段
+      if (updatedAssistant.icon && typeof updatedAssistant.icon === 'object') {
+        updatedAssistant.icon = null;
+      }
+
+      if (updatedAssistant.topics) {
+        updatedAssistant.topics = updatedAssistant.topics.map(topic => ({
+          ...topic,
+          icon: null
+        }));
+      }
+
+      await this.assistants.put(updatedAssistant);
+      console.log(`[DexieStorageService] 已更新助手 ${id}:`, updates);
+    } catch (error) {
+      const errorMessage = error instanceof Error
+        ? `${error.name}: ${error.message}`
+        : String(error);
+      console.error(`更新助手 ${id} 失败: ${errorMessage}`);
+      throw error;
+    }
+  }
+
   async deleteAssistant(id: string): Promise<void> {
     const assistant = await this.getAssistant(id);
     if (assistant && assistant.topicIds && assistant.topicIds.length > 0) {

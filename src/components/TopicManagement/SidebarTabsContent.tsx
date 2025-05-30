@@ -112,7 +112,6 @@ export default function SidebarTabsContent() {
                 sx={{
                   minHeight: '32px',
                   borderRadius: '8px',
-                  color: value === 2 ? 'primary.main' : 'inherit'
                 }}
               />
             </Tabs>

@@ -15,7 +15,7 @@ import { newMessagesActions } from '../../shared/store/slices/newMessagesSlice';
 import useScrollPosition from '../../hooks/useScrollPosition';
 import { getGroupedMessages, MessageGroupingType } from '../../shared/utils/messageGrouping';
 import { EventEmitter, EVENT_NAMES } from '../../shared/services/EventEmitter';
-import { deduplicateMessages } from '../../shared/services/MessageFilters';
+import { deduplicateMessages } from '../../shared/utils/messageUtils/filters';
 import { generateBlockId } from '../../shared/utils';
 
 interface MessageListProps {

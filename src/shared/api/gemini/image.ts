@@ -2,11 +2,12 @@
  * Gemini 图像生成 API
  * 基于 Google Generative AI SDK 实现，支持真正的图像生成功能
  */
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import type { Part } from '@google/generative-ai';
 import type { Model, ImageGenerationParams } from '../../types';
 import { logApiRequest, logApiResponse, log } from '../../services/LoggerService';
 import { isGenerateImageModel } from '../../config/models';
+import { withRetry } from '../../utils/retryUtils';
 
 /**
  * 处理Gemini图像响应
@@ -68,10 +69,25 @@ export async function generateImage(
     const genAI = new GoogleGenerativeAI(apiKey);
     const geminiModel = genAI.getGenerativeModel({
       model: model.id,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 8192
-      }
+      // 添加安全设置
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+          threshold: HarmBlockThreshold.BLOCK_NONE
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+          threshold: HarmBlockThreshold.BLOCK_NONE
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_NONE
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+          threshold: HarmBlockThreshold.BLOCK_NONE
+        }
+      ]
     });
 
     // 记录API请求
@@ -85,8 +101,20 @@ export async function generateImage(
     // 构建图像生成提示词
     const imagePrompt = `Generate an image based on this description: ${params.prompt}`;
 
-    // 发送请求
-    const result = await geminiModel.generateContent(imagePrompt);
+    // 发送请求，在这里传递图像生成配置，并添加重试机制
+    const result = await withRetry(
+      () => geminiModel.generateContent({
+        contents: [{ role: 'user', parts: [{ text: imagePrompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+          responseMimeType: 'text/plain',
+          responseModalities: ['TEXT', 'IMAGE']
+        } as any // 使用 any 类型来支持 responseModalities
+      }),
+      'Gemini Image Generation API',
+      3 // 最多重试3次
+    );
     const response = result.response;
 
     // 处理图像响应

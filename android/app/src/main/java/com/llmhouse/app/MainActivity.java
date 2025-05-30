@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.webkit.WebSettings;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
@@ -27,6 +28,9 @@ public class MainActivity extends BridgeActivity {
         // 添加明显的启动日志
         Log.i(TAG, "=== MainActivity onCreate 开始 ===");
         System.out.println("=== MainActivity onCreate 开始 ===");
+
+        // 🔥 配置WebView允许混合内容（HTTP + HTTPS）
+        configureMixedContent();
 
         // 初始化现代WebView管理
         initializeModernWebView();
@@ -57,6 +61,92 @@ public class MainActivity extends BridgeActivity {
                 return insets;
             });
         }
+    }
+
+    /**
+     * 配置WebView允许混合内容（HTTP + HTTPS）
+     * 解决移动端混合内容安全策略问题，同时保持流式输出功能
+     */
+    private void configureMixedContent() {
+        try {
+            Log.d(TAG, "🔧 开始配置WebView混合内容支持");
+
+            // 延迟执行，确保Capacitor WebView已经初始化
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        android.webkit.WebView webView = getBridge().getWebView();
+                        WebSettings settings = webView.getSettings();
+
+                        // 🔥 关键设置：允许混合内容
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                            Log.d(TAG, "✅ 已启用混合内容支持 (MIXED_CONTENT_ALWAYS_ALLOW)");
+                        }
+
+                        // 🔥 禁用 CORS 和安全限制
+                        settings.setAllowFileAccess(true);
+                        settings.setAllowContentAccess(true);
+                        settings.setAllowFileAccessFromFileURLs(true);
+                        settings.setAllowUniversalAccessFromFileURLs(true);
+
+                        // 额外的网络相关设置
+                        settings.setDomStorageEnabled(true);
+                        settings.setDatabaseEnabled(true);
+
+                        Log.d(TAG, "🔥 已禁用 CORS 和安全限制");
+
+                        Log.d(TAG, "🎉 WebView混合内容配置完成");
+                    } else {
+                        Log.w(TAG, "⚠️ 无法获取Capacitor WebView，将稍后重试");
+                        // 如果WebView还没准备好，再次延迟重试
+                        configureMixedContentRetry(1);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "❌ 配置WebView混合内容时发生错误: " + e.getMessage(), e);
+                }
+            }, 500); // 延迟500ms执行
+
+        } catch (Exception e) {
+            Log.e(TAG, "❌ 初始化混合内容配置时发生错误: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 重试配置混合内容（最多重试3次）
+     */
+    private void configureMixedContentRetry(int retryCount) {
+        if (retryCount > 3) {
+            Log.w(TAG, "⚠️ 混合内容配置重试次数已达上限，放弃配置");
+            return;
+        }
+
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    android.webkit.WebView webView = getBridge().getWebView();
+                    WebSettings settings = webView.getSettings();
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                        Log.d(TAG, "✅ 混合内容配置成功 (重试第" + retryCount + "次)");
+                    }
+
+                    // 🔥 禁用 CORS 和安全限制
+                    settings.setAllowFileAccess(true);
+                    settings.setAllowContentAccess(true);
+                    settings.setAllowFileAccessFromFileURLs(true);
+                    settings.setAllowUniversalAccessFromFileURLs(true);
+                    Log.d(TAG, "🔥 已禁用 CORS 和安全限制 (重试第" + retryCount + "次)");
+                } else {
+                    Log.d(TAG, "🔄 WebView仍未准备好，继续重试 (第" + retryCount + "次)");
+                    configureMixedContentRetry(retryCount + 1);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "❌ 重试配置混合内容时发生错误: " + e.getMessage(), e);
+                configureMixedContentRetry(retryCount + 1);
+            }
+        }, 1000 * retryCount); // 递增延迟时间
     }
 
     /**

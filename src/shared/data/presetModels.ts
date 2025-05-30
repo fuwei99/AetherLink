@@ -117,7 +117,7 @@ export const presetModels: PresetModel[] = [
     description: 'Google的高性能大语言模型，具有强大的推理和生成能力。',
     capabilities: ['复杂推理', '内容生成', '代码辅助', '多语言支持'],
     requiresApiKey: true,
-    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1',
+    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
   },
   {
     id: 'gemini-2.0-flash',
@@ -126,7 +126,7 @@ export const presetModels: PresetModel[] = [
     description: 'Google的快速大模型，具有良好的响应速度和质量的平衡。',
     capabilities: ['快速响应', '内容生成', '代码辅助'],
     requiresApiKey: true,
-    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1',
+    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
   },
   {
     id: 'gemini-2.5-flash-preview-04-17',

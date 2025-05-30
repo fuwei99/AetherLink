@@ -14,7 +14,7 @@ export interface UniversalFetchOptions extends RequestInit {
  * 通用 fetch 函数，自动选择最佳的网络请求方式
  */
 export async function universalFetch(
-  url: string | URL, 
+  url: string | URL,
   options: UniversalFetchOptions = {}
 ): Promise<Response> {
   const urlString = url.toString();
@@ -26,10 +26,14 @@ export async function universalFetch(
 
   console.log(`[Universal Fetch] 请求: ${urlString}`);
 
-  // 🔥 修复移动端流式输出问题：统一使用Web端方式，通过SDK连接
-  // 移动端也使用标准fetch，避免CapacitorHttp导致的流式输出问题
+  // 检查是否需要使用CORS代理
+  const finalUrl = getPlatformUrl(urlString);
+  if (finalUrl !== urlString) {
+    console.log(`[Universal Fetch] 使用CORS代理: ${urlString} -> ${finalUrl}`);
+  }
+
   console.log(`[Universal Fetch] 使用标准 fetch 请求`);
-  return await webFetch(urlString, fetchOptions, timeout);
+  return await webFetch(finalUrl, fetchOptions, timeout);
 }
 
 // 移除不再使用的nativeFetch和createStreamingResponse函数
@@ -61,18 +65,7 @@ async function webFetch(
   }
 }
 
-/**
- * 专门用于 MCP 服务器的请求函数
- * 自动处理 CORS 代理逻辑
- */
-export async function mcpFetch(
-  originalUrl: string,
-  options: UniversalFetchOptions = {}
-): Promise<Response> {
-  // 🔥 统一使用标准fetch方式
-  console.log(`[MCP Fetch] 统一请求: ${originalUrl}`);
-  return await universalFetch(originalUrl, options);
-}
+
 
 /**
  * 创建支持 CORS 绕过的 fetch 函数

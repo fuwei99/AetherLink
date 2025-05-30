@@ -49,5 +49,15 @@
 	<string>AetherLink需要您的语音识别权限，以便将您的语音转换为文字。</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>AetherLink需要访问您的麦克风，以便进行语音输入。</string>
+	<!-- 🔥 禁用 iOS WebView 的 CORS 检查 -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

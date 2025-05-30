@@ -17,8 +17,8 @@ export function parseToolUse(content: string, tools: Tool[]): ToolResponse[] {
     return [];
   }
 
-  // 工具使用模式：<tool_use><n>工具名</name><arguments>参数</arguments></tool_use>
-  const toolUsePattern = /<tool_use>([\s\S]*?)<n>([\s\S]*?)<\/name>([\s\S]*?)<arguments>([\s\S]*?)<\/arguments>([\s\S]*?)<\/tool_use>/g;
+  // 工具使用模式：<tool_use><name>工具名</name><arguments>参数</arguments></tool_use>
+  const toolUsePattern = /<tool_use>([\s\S]*?)<name>([\s\S]*?)<\/name>([\s\S]*?)<arguments>([\s\S]*?)<\/arguments>([\s\S]*?)<\/tool_use>/g;
   const toolResponses: ToolResponse[] = [];
   let match;
   let idx = 0;

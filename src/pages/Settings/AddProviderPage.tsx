@@ -83,7 +83,7 @@ const AddProviderPage: React.FC = () => {
       case 'anthropic':
         return 'https://api.anthropic.com/v1';
       case 'gemini':
-        return 'https://generativelanguage.googleapis.com/v1';
+        return 'https://generativelanguage.googleapis.com/v1beta';
       case 'grok':
         return 'https://api.x.ai/v1';
       case 'deepseek':

@@ -13,7 +13,6 @@ import { dexieStorage } from '../../../services/DexieStorageService';
 import type { Message, MessageBlock } from '../../../types/newMessage';
 import type { Model, MCPTool } from '../../../types';
 import type { RootState, AppDispatch } from '../../index';
-import { processKnowledgeSearch } from './knowledgeIntegration';
 import { prepareMessagesForApi, performKnowledgeSearchIfNeeded } from './apiPreparation';
 
 export const processAssistantResponse = async (
@@ -25,6 +24,26 @@ export const processAssistantResponse = async (
   toolsEnabled?: boolean
 ) => {
   try {
+    // 0. 获取助手信息（强制刷新，避免缓存问题）
+    let assistant: any = null;
+    try {
+      const topic = await dexieStorage.getTopic(topicId);
+      if (topic?.assistantId) {
+        // 强制从数据库重新获取最新的助手信息
+        assistant = await dexieStorage.getAssistant(topic.assistantId);
+        console.log(`[processAssistantResponse] 获取到助手信息:`, {
+          id: assistant?.id,
+          name: assistant?.name,
+          temperature: assistant?.temperature,
+          topP: assistant?.topP,
+          maxTokens: assistant?.maxTokens,
+          model: assistant?.model
+        });
+      }
+    } catch (error) {
+      console.error('[processAssistantResponse] 获取助手信息失败:', error);
+    }
+
     // 1. 获取 MCP 工具（如果启用）
     let mcpTools: MCPTool[] = [];
     if (toolsEnabled) {
@@ -42,7 +61,27 @@ export const processAssistantResponse = async (
     }
 
     // 暂时不进行知识库搜索，等ResponseHandler创建后再搜索
-    const messages = await prepareMessagesForApi(topicId, assistantMessage.id, mcpTools, { skipKnowledgeSearch: true });
+    const apiMessages = await prepareMessagesForApi(topicId, assistantMessage.id, mcpTools, { skipKnowledgeSearch: true });
+
+    // 获取原始消息对象用于Gemini provider
+    const originalMessages = await dexieStorage.getTopicMessages(topicId);
+    const sortedOriginalMessages = [...originalMessages].sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return timeA - timeB;
+    });
+
+    // 过滤出需要的消息（与prepareMessagesForApi相同的逻辑）
+    const assistantMessageTime = new Date(assistantMessage.createdAt).getTime();
+    const filteredOriginalMessages = sortedOriginalMessages.filter(message => {
+      // 跳过当前正在处理的助手消息和所有system消息
+      if (message.id === assistantMessage.id || message.role === 'system') {
+        return false;
+      }
+      // 只包含创建时间早于当前助手消息的消息
+      const messageTime = new Date(message.createdAt).getTime();
+      return messageTime < assistantMessageTime;
+    });
 
 // 3. 设置消息状态为处理中，避免显示错误消息
     dispatch(newMessagesActions.updateMessage({
@@ -152,7 +191,7 @@ export const processAssistantResponse = async (
 
       if (isImageGenerationModel) {
         // 获取最后一条用户消息作为图像生成提示词
-        const lastUserMessage = messages.filter((msg: { role: string; content: any }) => msg.role === 'user').pop();
+        const lastUserMessage = apiMessages.filter((msg: { role: string; content: any }) => msg.role === 'user').pop();
         let prompt = '生成一张图片';
 
         // 处理不同类型的content
@@ -272,18 +311,36 @@ export const processAssistantResponse = async (
         }
       } else {
 
-        // 将简化的消息对象转换为Message类型，但保持content的原始格式
-        const convertedMessages = messages.map((msg: any) => ({
-          id: `temp-${Date.now()}-${Math.random()}`,
-          role: msg.role,
-          content: msg.content, // 保持原始content格式（可能是字符串或数组）
-          assistantId: '',
-          topicId: topicId,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          status: 'success' as any,
-          blocks: []
-        }));
+        // 修复：根据实际provider类型选择合适的消息格式
+        // 只有真正的Google Gemini provider才需要原始Message对象，其他都用API格式
+        const isActualGeminiProvider = model.provider === 'google';
+        const messagesToSend = isActualGeminiProvider ? filteredOriginalMessages : apiMessages;
+
+        console.log(`[processAssistantResponse] Provider类型: ${model.provider}, 使用${isActualGeminiProvider ? '原始' : 'API'}格式消息，消息数量: ${messagesToSend.length}`);
+
+        // 调试：打印消息内容以确认文件块信息
+        if (isActualGeminiProvider) {
+          console.log(`[processAssistantResponse] Gemini使用原始消息，包含完整的blocks信息`);
+          filteredOriginalMessages.forEach((msg: any, index: number) => {
+            console.log(`[processAssistantResponse] 原始消息 ${index}:`, {
+              role: msg.role,
+              hasBlocks: !!(msg.blocks && msg.blocks.length > 0),
+              blocksCount: msg.blocks?.length || 0,
+              messageId: msg.id
+            });
+          });
+        } else {
+          console.log(`[processAssistantResponse] OpenAI使用API格式消息`);
+          apiMessages.forEach((msg: any, index: number) => {
+            console.log(`[processAssistantResponse] API消息 ${index}:`, {
+              role: msg.role,
+              contentType: typeof msg.content,
+              isArray: Array.isArray(msg.content),
+              contentLength: typeof msg.content === 'string' ? msg.content.length :
+                            Array.isArray(msg.content) ? msg.content.length : 0
+            });
+          });
+        }
 
         // 获取 MCP 模式设置
         const mcpMode = localStorage.getItem('mcp-mode') as 'prompt' | 'function' || 'function';
@@ -291,8 +348,9 @@ export const processAssistantResponse = async (
 
         // 使用Provider的sendChatMessage方法，避免重复调用
         // 🔥 修复组合模型推理显示问题：同时使用onUpdate和onChunk
+        // 🔥 修复文件上传问题：根据provider类型使用合适的消息格式
         response = await apiProvider.sendChatMessage(
-          convertedMessages,
+          messagesToSend as any, // 根据provider类型传递合适的消息格式
           {
             onUpdate: (content: string, reasoning?: string) => {
               // 组合模型的推理内容通过onUpdate传递
@@ -305,7 +363,8 @@ export const processAssistantResponse = async (
             enableTools: toolsEnabled !== false,
             mcpTools: mcpTools,
             mcpMode: mcpMode,
-            abortSignal: abortController.signal
+            abortSignal: abortController.signal,
+            assistant: assistant // 传递助手信息给Provider
           }
         );
       }

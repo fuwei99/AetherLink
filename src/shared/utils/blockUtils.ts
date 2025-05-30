@@ -172,7 +172,6 @@ export function getMainTextContent(message: Message): string {
   try {
     // 🔥 优先检查是否有保存的content字段（多模型对比选择后的内容）
     if (typeof (message as any).content === 'string' && (message as any).content.trim()) {
-      console.log(`[blockUtils.getMainTextContent] 使用保存的content字段，内容长度: ${(message as any).content.length}`);
       return (message as any).content;
     }
 
@@ -191,7 +190,6 @@ export function getMainTextContent(message: Message): string {
           // 检查是否是对比块且有选中内容
           const comparisonBlock = block as any;
           if (comparisonBlock.subType === 'comparison' && comparisonBlock.selectedContent) {
-            console.log(`[blockUtils.getMainTextContent] 使用对比块选中内容，内容长度: ${comparisonBlock.selectedContent.length}`);
             return comparisonBlock.selectedContent;
           }
         }

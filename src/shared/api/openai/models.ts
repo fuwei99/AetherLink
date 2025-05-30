@@ -50,7 +50,7 @@ export async function fetchModels(provider: any): Promise<any[]> {
       provider: provider.id
     });
     
-    // 发送请求
+    // 发送请求 - WebView混合内容设置已允许HTTP请求
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: headers

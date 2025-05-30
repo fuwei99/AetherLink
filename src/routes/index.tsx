@@ -36,6 +36,9 @@ const ModelComboSettings = lazy(() => import('../pages/Settings/ModelComboSettin
 // 导入AI辩论设置页面
 const AIDebateSettings = lazy(() => import('../pages/Settings/AIDebateSettings'));
 import MessageBubbleSettings from "../pages/Settings/MessageBubbleSettings";
+// 导入助手设置页面
+const AssistantSettings = lazy(() => import('../components/TopicManagement/SettingsTab/AssistantSettings'));
+const AssistantModelSettings = lazy(() => import('../components/TopicManagement/SettingsTab/AssistantModelSettings'));
 
 // 加载中组件
 const LoadingFallback = () => (
@@ -102,6 +105,8 @@ const AppRouter: React.FC = () => {
         <Route path="/settings/mcp-server/:serverId" element={<MCPServerDetail />} />
         <Route path="/settings/model-combo" element={<ModelComboSettings />} />
         <Route path="/settings/knowledge" element={<KnowledgeSettings />} />
+        <Route path="/settings/assistant-settings" element={<AssistantSettings />} />
+        <Route path="/settings/assistant-model-settings" element={<AssistantModelSettings />} />
         <Route path="/devtools" element={<DevToolsPage />} />
         <Route path="/vue-demo" element={<VueDemoPage />} />
         <Route path="/knowledge/*" element={<KnowledgeBasePage />} />

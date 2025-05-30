@@ -3,6 +3,7 @@
     <!-- 允许明文HTTP连接到特定域名 -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">8.138.108.72</domain>
+        <domain includeSubdomains="false">3.1.204.207</domain>
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>

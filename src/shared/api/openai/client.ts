@@ -223,7 +223,7 @@ export async function testConnection(model: Model): Promise<boolean> {
       baseUrl
     });
 
-    // 发送简单的测试请求
+    // 发送简单的测试请求 - WebView混合内容设置已允许HTTP请求
     const response = await openai.chat.completions.create({
       model: modelId,
       messages: [{ role: 'user', content: 'Hello' }],

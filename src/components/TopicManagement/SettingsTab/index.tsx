@@ -40,10 +40,12 @@ interface SettingsTabProps {
   onSettingChange?: (settingId: string, value: boolean | string) => void;
   onContextLengthChange?: (value: number) => void;
   onContextCountChange?: (value: number) => void;
+  onMaxOutputTokensChange?: (value: number) => void;
   onMathRendererChange?: (value: MathRendererType) => void;
   onThinkingEffortChange?: (value: ThinkingOption) => void;
   initialContextLength?: number;
   initialContextCount?: number;
+  initialMaxOutputTokens?: number;
   initialMathRenderer?: MathRendererType;
   initialThinkingEffort?: ThinkingOption;
   mcpMode?: 'prompt' | 'function';
@@ -60,10 +62,12 @@ export default function SettingsTab({
   onSettingChange,
   onContextLengthChange,
   onContextCountChange,
+  onMaxOutputTokensChange,
   onMathRendererChange,
   onThinkingEffortChange,
   initialContextLength = 16000,
   initialContextCount = 5,
+  initialMaxOutputTokens = 4096,
   initialMathRenderer = 'KaTeX',
   initialThinkingEffort = 'medium',
   mcpMode = 'function',
@@ -76,6 +80,7 @@ export default function SettingsTab({
   // 本地状态
   const [contextLength, setContextLength] = useState<number>(initialContextLength);
   const [contextCount, setContextCount] = useState<number>(initialContextCount);
+  const [maxOutputTokens, setMaxOutputTokens] = useState<number>(initialMaxOutputTokens);
   const [mathRenderer, setMathRenderer] = useState<MathRendererType>(initialMathRenderer);
   const [thinkingEffort, setThinkingEffort] = useState<ThinkingOption>(initialThinkingEffort);
   const [userAvatar, setUserAvatar] = useState<string>("");
@@ -89,6 +94,7 @@ export default function SettingsTab({
         const appSettings = JSON.parse(appSettingsJSON);
         if (appSettings.contextLength) setContextLength(appSettings.contextLength);
         if (appSettings.contextCount) setContextCount(appSettings.contextCount);
+        if (appSettings.maxOutputTokens) setMaxOutputTokens(appSettings.maxOutputTokens);
         if (appSettings.mathRenderer) setMathRenderer(appSettings.mathRenderer);
         if (appSettings.defaultThinkingEffort) setThinkingEffort(appSettings.defaultThinkingEffort);
 
@@ -194,16 +200,17 @@ export default function SettingsTab({
           secondaryTypographyProps={{ fontSize: '0.75rem', lineHeight: 1.2 }}
         />
         <ListItemSecondaryAction>
-          <Tooltip title="应用设置">
+          <Tooltip title="模型设置">
             <IconButton
               size="small"
               color="primary"
-              onClick={() => navigate('/settings')}
+              onClick={() => navigate('/settings/assistant-settings')}
               sx={{
-                bgcolor: 'rgba(25, 118, 210, 0.08)',
-                border: '1px solid rgba(25, 118, 210, 0.2)',
+                bgcolor: 'rgba(255, 193, 7, 0.1)',
+                border: '2px solid #ffc107',
+                borderRadius: '50%',
                 '&:hover': {
-                  bgcolor: 'rgba(25, 118, 210, 0.12)',
+                  bgcolor: 'rgba(255, 193, 7, 0.2)',
                 }
               }}
             >
@@ -275,6 +282,7 @@ export default function SettingsTab({
       <ContextSettings
         contextLength={contextLength}
         contextCount={contextCount}
+        maxOutputTokens={maxOutputTokens}
         mathRenderer={mathRenderer}
         thinkingEffort={thinkingEffort}
         onContextLengthChange={(value) => {
@@ -309,6 +317,39 @@ export default function SettingsTab({
             }));
           } catch (error) {
             console.error('保存设置失败', error);
+          }
+        }}
+        onMaxOutputTokensChange={async (value) => {
+          setMaxOutputTokens(value);
+          if (onMaxOutputTokensChange) {
+            onMaxOutputTokensChange(value);
+          }
+          // 保存到localStorage
+          try {
+            const appSettingsJSON = localStorage.getItem('appSettings');
+            const appSettings = appSettingsJSON ? JSON.parse(appSettingsJSON) : {};
+            localStorage.setItem('appSettings', JSON.stringify({
+              ...appSettings,
+              maxOutputTokens: value
+            }));
+          } catch (error) {
+            console.error('保存最大输出Token设置失败', error);
+          }
+
+          // 同步更新所有助手的maxTokens
+          try {
+            const { dexieStorage } = await import('../../../shared/services/DexieStorageService');
+            const assistants = await dexieStorage.getAllAssistants();
+
+            for (const assistant of assistants) {
+              // 使用saveAssistant方法更新助手
+              const updatedAssistant = { ...assistant, maxTokens: value };
+              await dexieStorage.saveAssistant(updatedAssistant);
+            }
+
+            console.log(`[ContextSettings] 已同步更新 ${assistants.length} 个助手的maxTokens为 ${value}`);
+          } catch (error) {
+            console.error('同步助手maxTokens失败:', error);
           }
         }}
         onMathRendererChange={(value) => {

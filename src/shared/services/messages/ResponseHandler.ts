@@ -230,7 +230,6 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
 
           case 'thinking.complete':
             const thinkingComplete = chunk as import('../../types/chunk').ThinkingCompleteChunk;
-            console.log(`[ResponseHandler] 处理思考完成，总长度: ${thinkingComplete.text.length}`);
             // 对于完成事件，直接设置完整的思考内容，不调用增量回调
             accumulatedThinking = thinkingComplete.text;
 
@@ -583,7 +582,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
                 }
               });
 
-              console.log(`[ResponseHandler] 创建工具块: blockId=${toolBlock.id}, toolId=${toolResponse.id}, toolName=${(toolBlock as ToolMessageBlock).toolName}`);
+              console.log(`[ResponseHandler] 创建工具块: ${toolBlock.id} (${(toolBlock as ToolMessageBlock).toolName})`);
 
               // 🔥 修复：简化操作，避免复杂事务
               // 1. 更新映射
@@ -989,7 +988,41 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
             status: MessageBlockStatus.SUCCESS,
             updatedAt: now
           });
+
+          console.log(`[ResponseHandler] 更新思考块 ${thinkingBlockId} 状态为 SUCCESS`);
+          console.log(`[ResponseHandler] 保存思考块 ${thinkingBlockId} 到数据库，内容长度: ${thinkingBlock.content?.length || 0}`);
         }
+      }
+
+      // 🔥 修复：如果有finalContent但没有主文本块，需要创建主文本块
+      if (finalContent && finalContent.trim() && !mainTextBlockId) {
+        console.log(`[ResponseHandler] 检测到finalContent但没有主文本块，创建新的主文本块`);
+
+        // 创建新的主文本块
+        const newMainTextBlock: MessageBlock = {
+          id: uuid(),
+          messageId,
+          type: MessageBlockType.MAIN_TEXT,
+          content: finalContent,
+          createdAt: new Date().toISOString(),
+          status: MessageBlockStatus.SUCCESS
+        };
+
+        mainTextBlockId = newMainTextBlock.id;
+
+        console.log(`[ResponseHandler] 创建主文本块 ${mainTextBlockId}，内容: "${finalContent}"`);
+
+        // 添加到Redux状态
+        store.dispatch(addOneBlock(newMainTextBlock));
+        // 保存到数据库
+        await dexieStorage.saveMessageBlock(newMainTextBlock);
+
+        // 将新块添加到消息的blocks数组
+        store.dispatch(newMessagesActions.upsertBlockReference({
+          messageId,
+          blockId: mainTextBlockId,
+          status: MessageBlockStatus.SUCCESS
+        }));
       }
 
       // 发送完成事件
