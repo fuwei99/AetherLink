@@ -1,6 +1,15 @@
 import React from 'react';
 import { IconButton, Box, CircularProgress, Tooltip } from '@mui/material';
-import { Mic as MicIcon, MicOff as MicOffIcon } from '@mui/icons-material';
+import { Mic, MicOff } from 'lucide-react';
+
+// CSS动画样式
+const shakeAnimation = `
+  @keyframes shake {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+  }
+`;
 
 interface VoiceButtonProps {
   isVoiceMode: boolean;
@@ -86,27 +95,24 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
         />
       )}
       
+      {/* 添加动画样式 */}
+      <style>{shakeAnimation}</style>
+
       {/* 麦克风图标 */}
       {isVoiceMode ? (
-        <MicOffIcon
-          sx={{
-            fontSize: getIconSize(),
+        <MicOff
+          size={getIconSize()}
+          color="#f44336"
+          style={{
             transition: 'color 0.2s ease-in-out, transform 0.2s ease-in-out',
-            color: 'error.main',
             animation: 'shake 1s ease-in-out',
-            '@keyframes shake': {
-              '0%, 100%': { transform: 'rotate(0)' },
-              '25%': { transform: 'rotate(-10deg)' },
-              '75%': { transform: 'rotate(10deg)' },
-            },
           }}
         />
       ) : (
-        <MicIcon
-          sx={{
-            fontSize: getIconSize(),
+        <Mic
+          size={getIconSize()}
+          style={{
             transition: 'color 0.2s ease-in-out',
-            color: 'inherit',
           }}
         />
       )}

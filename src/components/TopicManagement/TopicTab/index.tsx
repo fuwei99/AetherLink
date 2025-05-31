@@ -16,15 +16,19 @@ import {
   DialogActions,
   Divider
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import EditIcon from '@mui/icons-material/Edit';
-import PushPinIcon from '@mui/icons-material/PushPin';
-import ClearIcon from '@mui/icons-material/Clear';
-import FolderIcon from '@mui/icons-material/Folder';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import {
+  Plus,
+  Search,
+  X,
+  Edit3,
+  Pin,
+  Trash2,
+  FolderPlus,
+  Trash,
+  Sparkles,
+  MessageSquare,
+  ArrowRight
+} from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addItemToGroup } from '../../../shared/store/slices/groupsSlice';
 import GroupDialog from '../GroupDialog';
@@ -600,13 +604,13 @@ export default function TopicTab({
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <Search size={18} />
                 </InputAdornment>
               ),
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton size="small" onClick={handleCloseSearch}>
-                    <CloseIcon fontSize="small" />
+                    <X size={18} />
                   </IconButton>
                 </InputAdornment>
               )
@@ -619,12 +623,12 @@ export default function TopicTab({
             </Typography>
             <Box>
               <IconButton size="small" onClick={handleSearchClick} sx={{ mr: 1 }}>
-                <SearchIcon fontSize="small" />
+                <Search size={18} />
               </IconButton>
               <Button
                 variant="outlined"
                 size="small"
-                startIcon={<AddIcon />}
+                startIcon={<Plus size={16} />}
                 onClick={onCreateTopic}
               >
                 新建话题
@@ -717,32 +721,32 @@ export default function TopicTab({
           if (contextTopic) handleAddToGroupMenu(e, contextTopic);
           handleCloseMenu();
         }}>
-          <FolderIcon sx={{ mr: 1, fontSize: 18 }} />
+          <FolderPlus size={18} style={{ marginRight: 8 }} />
           添加到分组...
         </MenuItem>
         <MenuItem onClick={handleEditTopicName}>
-          <EditIcon sx={{ mr: 1, fontSize: 18 }} />
+          <Edit3 size={18} style={{ marginRight: 8 }} />
           编辑话题名称
         </MenuItem>
         <MenuItem onClick={handleAutoRenameTopic}>
-          <AutoAwesomeIcon sx={{ mr: 1, fontSize: 18 }} />
+          <Sparkles size={18} style={{ marginRight: 8 }} />
           自动命名话题
         </MenuItem>
         <MenuItem onClick={handleEditPrompt}>
-          <EditIcon sx={{ mr: 1, fontSize: 18 }} />
+          <MessageSquare size={18} style={{ marginRight: 8 }} />
           编辑提示词
         </MenuItem>
         <MenuItem onClick={handleTogglePin}>
-          <PushPinIcon sx={{ mr: 1, fontSize: 18 }} />
+          <Pin size={18} style={{ marginRight: 8 }} />
           {contextTopic?.pinned ? '取消固定' : '固定话题'}
         </MenuItem>
         <MenuItem onClick={handleClearMessages}>
-          <ClearIcon sx={{ mr: 1, fontSize: 18 }} />
+          <Trash2 size={18} style={{ marginRight: 8 }} />
           清空消息
         </MenuItem>
         {allAssistants.length > 1 && currentAssistant && (
           <MenuItem onClick={handleOpenMoveToMenu}>
-            <FolderIcon sx={{ mr: 1, fontSize: 18 }} />
+            <ArrowRight size={18} style={{ marginRight: 8 }} />
             移动到...
           </MenuItem>
         )}
@@ -780,7 +784,7 @@ export default function TopicTab({
           }
           handleCloseMenu();
         }}>
-          <DeleteIcon sx={{ mr: 1, fontSize: 18 }} />
+          <Trash size={18} style={{ marginRight: 8 }} />
           删除话题
         </MenuItem>
       </Menu>

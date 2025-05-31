@@ -14,9 +14,7 @@ import {
   ListItemText,
   ListItemSecondaryAction
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
+import { ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import type { MathRendererType } from '../../../shared/types';
 import type { ThinkingOption } from '../../../shared/config/reasoningConfig';
 
@@ -134,7 +132,7 @@ export default function ContextSettings({
           }
         }}
       >
-        <TuneOutlinedIcon sx={{ mr: 1.5, color: 'primary.main' }} />
+        <Settings size={20} color="#1976d2" style={{ marginRight: 12 }} />
         <ListItemText
           primary="上下文设置"
           secondary={`长度: ${contextLength === 64000 ? '不限' : contextLength} 字符 | 消息数: ${contextCount === 100 ? '最大' : contextCount} 条 | 输出: ${maxOutputTokens} tokens`}
@@ -149,7 +147,7 @@ export default function ContextSettings({
         />
         <ListItemSecondaryAction>
           <IconButton edge="end" size="small" sx={{ padding: '4px' }}>
-            {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </IconButton>
         </ListItemSecondaryAction>
       </ListItem>

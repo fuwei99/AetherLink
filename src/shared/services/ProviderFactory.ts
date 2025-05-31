@@ -255,6 +255,25 @@ export async function fetchModels(provider: any): Promise<any[]> {
           ];
         }
         break;
+      case 'zhipu':
+        // 智谱AI不支持标准的 /v1/models 接口，返回预设列表
+        console.log(`[fetchModels] 智谱AI使用预设模型列表`);
+        rawModels = [
+          { id: 'glm-5-plus', name: 'GLM-5-Plus', description: 'GLM-5增强版，最新一代大模型', owned_by: 'zhipu' },
+          { id: 'glm-5-air', name: 'GLM-5-Air', description: 'GLM-5轻量版，平衡性能与速度', owned_by: 'zhipu' },
+          { id: 'glm-4-0520', name: 'GLM-4-0520', description: 'GLM-4最新版本，性能优化', owned_by: 'zhipu' },
+          { id: 'glm-4-plus', name: 'GLM-4-Plus', description: 'GLM-4增强版，更强推理能力', owned_by: 'zhipu' },
+          { id: 'glm-4-long', name: 'GLM-4-Long', description: 'GLM-4长文本版，支持超长上下文', owned_by: 'zhipu' },
+          { id: 'glm-4-air', name: 'GLM-4-Air', description: 'GLM-4轻量版，快速响应', owned_by: 'zhipu' },
+          { id: 'glm-4-airx', name: 'GLM-4-AirX', description: 'GLM-4轻量增强版', owned_by: 'zhipu' },
+          { id: 'glm-4-flash', name: 'GLM-4-Flash', description: 'GLM-4极速版，超快响应', owned_by: 'zhipu' },
+          { id: 'glm-4-flashx', name: 'GLM-4-FlashX', description: 'GLM-4极速增强版', owned_by: 'zhipu' },
+          { id: 'glm-4v', name: 'GLM-4V', description: 'GLM-4视觉版，支持图像理解', owned_by: 'zhipu' },
+          { id: 'glm-4v-flash', name: 'GLM-4V-Flash', description: 'GLM-4V极速版', owned_by: 'zhipu' },
+          { id: 'glm-4v-plus', name: 'GLM-4V-Plus', description: 'GLM-4V增强版', owned_by: 'zhipu' },
+          { id: 'glm-4-alltools', name: 'GLM-4-AllTools', description: 'GLM-4全工具版，支持网络搜索等工具', owned_by: 'zhipu' }
+        ];
+        break;
       case 'openai':
       case 'google':
       default:

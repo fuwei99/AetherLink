@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Message } from '.'; // 从当前目录的 index.ts 导入 Message
+import type { Message, QuickPhrase } from '.'; // 从当前目录的 index.ts 导入 Message 和 QuickPhrase
 import type { Message as NewMessage } from './newMessage.ts'; // 从 newMessage.ts 导入 NewMessage
 
 export interface Assistant {
@@ -42,6 +42,7 @@ export interface Assistant {
   localModelType?: string;
   file_ids?: string[];
   type?: string; // 添加type字段，与最佳实例保持一致
+  regularPhrases?: QuickPhrase[]; // 助手专属快捷短语
 }
 
 export interface ChatTopic {

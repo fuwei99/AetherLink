@@ -1,13 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Box, Typography, useTheme, IconButton } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
-import WarningIcon from '@mui/icons-material/Warning';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import SearchIcon from '@mui/icons-material/Search';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+// Lucide Icons - 按需导入，高端简约设计
+import { Plus, Trash2, AlertTriangle, Camera, Search, ChevronLeft, BookOpen } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../shared/store';
 import { TopicService } from '../shared/services/TopicService';
@@ -62,11 +56,6 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     (state.settings as any).toolbarDisplayStyle || 'both'
   );
 
-  // 获取输入框风格设置
-  const inputBoxStyle = useSelector((state: RootState) =>
-    (state.settings as any).inputBoxStyle || 'default'
-  );
-
   // 获取工具栏折叠状态
   const toolbarCollapsedFromStore = useSelector((state: RootState) =>
     (state.settings as any).toolbarCollapsed || false
@@ -78,51 +67,52 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
   // 防抖保存的引用
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 根据风格获取工具栏样式
-  const getToolbarStyles = () => {
-    const baseStyles = {
-      buttonBg: isDarkMode ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-      buttonBorder: isDarkMode ? 'rgba(60, 60, 60, 0.8)' : 'rgba(230, 230, 230, 0.8)',
-      buttonShadow: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.07)',
-      hoverBg: isDarkMode ? 'rgba(40, 40, 40, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-      hoverShadow: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)',
-      borderRadius: '50px',
-      backdropFilter: 'blur(5px)'
+  // 简约小巧的工具栏样式
+  const getSimpleToolbarStyles = () => {
+    return {
+      // 容器样式 - 极简设计
+      container: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '24px',
+        padding: '4px 8px'
+      },
+      // 按钮样式 - 小巧圆润
+      button: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '20px',
+        padding: '6px 12px',
+        transition: 'all 0.15s ease',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        minHeight: '32px'
+      },
+      // 按钮悬停效果 - 轻微
+      buttonHover: {
+        background: isDarkMode
+          ? 'rgba(255, 255, 255, 0.06)'
+          : 'rgba(0, 0, 0, 0.04)'
+      },
+      // 按钮激活效果 - 简单
+      buttonActive: {
+        background: isDarkMode
+          ? 'rgba(255, 255, 255, 0.1)'
+          : 'rgba(0, 0, 0, 0.06)',
+        transform: 'scale(0.96)'
+      },
+      // 文字样式 - 小字体
+      text: {
+        fontSize: '13px',
+        fontWeight: 500,
+        color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)'
+      }
     };
-
-    switch (inputBoxStyle) {
-      case 'modern':
-        return {
-          ...baseStyles,
-          buttonBg: isDarkMode
-            ? 'linear-gradient(135deg, rgba(45, 45, 45, 0.9) 0%, rgba(35, 35, 35, 0.9) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
-          buttonBorder: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-          buttonShadow: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)',
-          hoverBg: isDarkMode
-            ? 'linear-gradient(135deg, rgba(55, 55, 55, 0.95) 0%, rgba(45, 45, 45, 0.95) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%)',
-          hoverShadow: isDarkMode ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)'
-        };
-      case 'minimal':
-        return {
-          ...baseStyles,
-          buttonBg: isDarkMode ? 'rgba(40, 40, 40, 0.6)' : 'rgba(255, 255, 255, 0.7)',
-          buttonBorder: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-          buttonShadow: 'none',
-          hoverBg: isDarkMode ? 'rgba(50, 50, 50, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-          hoverShadow: 'none',
-          borderRadius: '12px',
-          backdropFilter: 'none'
-        };
-      default:
-        return baseStyles;
-    }
   };
 
-  const toolbarStyles = getToolbarStyles();
+  const simpleStyles = getSimpleToolbarStyles();
 
   // 处理清空内容的二次确认
   const handleClearTopic = () => {
@@ -146,11 +136,17 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     }
   }, [clearConfirmMode]);
 
-  // 统一图标样式
-  const getIconStyle = (isActive: boolean, defaultColor: string, activeColor?: string) => ({
-    fontSize: '18px',
-    color: isActive && activeColor ? activeColor : isDarkMode ? '#9E9E9E' : defaultColor
-  });
+  // 获取按钮的简约样式
+  const getButtonSimpleStyle = (isActive: boolean) => {
+    const baseStyle = {
+      ...simpleStyles.button,
+      background: isActive
+        ? (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)')
+        : 'transparent'
+    };
+
+    return baseStyle;
+  };
 
   // 同步本地状态与store状态
   useEffect(() => {
@@ -329,43 +325,55 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     setShowKnowledgeSelector(false);
   };
 
-  // 气泡按钮数据
+  // 简约小巧按钮数据 - 使用Lucide Icons
   const buttons = [
     {
       id: 'new-topic',
-      icon: <AddIcon sx={getIconStyle(false, '#4CAF50')} />,
+      icon: <Plus
+        size={16}
+        color={isDarkMode ? 'rgba(76, 175, 80, 0.8)' : 'rgba(76, 175, 80, 0.7)'}
+      />,
       label: '新建话题',
       onClick: handleCreateTopic,
-      color: '#FFFFFF',
-      bgColor: isDarkMode ? '#1E1E1E' : '#FFFFFF'
+      isActive: false
     },
     {
       id: 'clear-topic',
       icon: clearConfirmMode
-        ? <WarningIcon sx={getIconStyle(true, '#f44336', '#FFFFFF')} />
-        : <ClearAllIcon sx={getIconStyle(false, '#2196F3')} />,
+        ? <AlertTriangle
+            size={16}
+            color={isDarkMode ? 'rgba(244, 67, 54, 0.8)' : 'rgba(244, 67, 54, 0.7)'}
+          />
+        : <Trash2
+            size={16}
+            color={isDarkMode ? 'rgba(33, 150, 243, 0.8)' : 'rgba(33, 150, 243, 0.7)'}
+          />,
       label: clearConfirmMode ? '确认清空' : '清空内容',
       onClick: handleClearTopic,
-      color: '#FFFFFF',
-      bgColor: clearConfirmMode
-        ? (isDarkMode ? '#d32f2f' : '#f44336')
-        : (isDarkMode ? '#1E1E1E' : '#FFFFFF')
+      isActive: clearConfirmMode
     },
     {
       id: 'generate-image',
-      icon: <PhotoCameraIcon sx={getIconStyle(imageGenerationMode, '#9C27B0', '#FFFFFF')} />,
+      icon: <Camera
+        size={16}
+        color={imageGenerationMode
+          ? (isDarkMode ? 'rgba(156, 39, 176, 0.9)' : 'rgba(156, 39, 176, 0.8)')
+          : (isDarkMode ? 'rgba(156, 39, 176, 0.6)' : 'rgba(156, 39, 176, 0.5)')
+        }
+      />,
       label: imageGenerationMode ? '取消生成' : '生成图片',
       onClick: toggleImageGenerationMode,
-      color: '#FFFFFF',
-      bgColor: imageGenerationMode ? (isDarkMode ? '#424242' : '#9C27B0') : isDarkMode ? '#1E1E1E' : '#FFFFFF'
+      isActive: imageGenerationMode
     },
     {
       id: 'knowledge',
-      icon: <MenuBookIcon sx={getIconStyle(false, '#059669')} />,
+      icon: <BookOpen
+        size={16}
+        color={isDarkMode ? 'rgba(5, 150, 105, 0.8)' : 'rgba(5, 150, 105, 0.7)'}
+      />,
       label: '知识库',
       onClick: handleKnowledgeClick,
-      color: '#FFFFFF',
-      bgColor: isDarkMode ? '#1E1E1E' : '#FFFFFF'
+      isActive: false
     }
   ];
 
@@ -394,27 +402,28 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
 
     buttons.push({
       id: 'web-search',
-      icon: <SearchIcon sx={getIconStyle(webSearchActive, '#3b82f6', '#FFFFFF')} />,
+      icon: <Search
+        size={16}
+        color={webSearchActive
+          ? (isDarkMode ? 'rgba(59, 130, 246, 0.9)' : 'rgba(59, 130, 246, 0.8)')
+          : (isDarkMode ? 'rgba(59, 130, 246, 0.6)' : 'rgba(59, 130, 246, 0.5)')
+        }
+      />,
       label: webSearchActive ? '关闭搜索' : providerName,
       onClick: handleWebSearchClick,
-      color: '#FFFFFF',
-      bgColor: webSearchActive ? (isDarkMode ? '#424242' : '#3b82f6') : isDarkMode ? '#1E1E1E' : '#FFFFFF'
+      isActive: webSearchActive
     });
   }
 
   return (
     <Box
       sx={{
-        padding: '0 0 2px 0',
+        padding: '8px 0',
         backgroundColor: 'transparent',
-        borderBottom: 'none',
         width: '100%',
         position: 'relative',
         overflow: 'visible',
         zIndex: 1,
-        marginBottom: '0',
-        boxShadow: 'none',
-        backdropFilter: 'none',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center'
@@ -426,55 +435,36 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
           alignItems: 'center',
           width: '100%',
           maxWidth: '800px',
-          position: 'relative'
+          position: 'relative',
+          ...simpleStyles.container
         }}
       >
-        {/* 折叠按钮 - 左侧 */}
+        {/* 简约折叠按钮 */}
         <IconButton
           onClick={toggleToolbarCollapse}
           size="small"
           sx={{
-            background: 'transparent', // 透明背景
-            backdropFilter: 'none',
-            WebkitBackdropFilter: 'none',
-            border: 'none', // 无边框
-            borderRadius: '50%',
-            width: 32,
-            height: 32,
-            color: isDarkMode ? '#9E9E9E' : '#666',
-            boxShadow: 'none', // 无阴影
-            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', // 优化过渡动画
-            marginRight: 0.5, // 固定较小的间距
-            flexShrink: 0, // 防止按钮被压缩
-            willChange: 'transform, background-color, box-shadow', // 性能优化
-            transform: 'translateZ(0)', // 启用硬件加速
+            background: 'transparent',
+            borderRadius: '16px',
+            width: 28,
+            height: 28,
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+            transition: 'all 0.15s ease',
+            marginRight: 0.5,
+            flexShrink: 0,
             '&:hover': {
-              background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)', // 悬停时轻微背景
-              boxShadow: 'none',
-              transform: 'translateZ(0)'
-            },
-            '&:active': {
-              transform: 'scale(0.95) translateZ(0)',
-              transition: 'all 0.1s cubic-bezier(0.4, 0, 0.2, 1)' // 更快的点击反馈
+              background: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
             }
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: localToolbarCollapsed ? 'rotate(0deg)' : 'rotate(0deg)', // 可以添加旋转动画
-              willChange: 'transform'
+          <ChevronLeft
+            size={16}
+            style={{
+              transition: 'transform 0.2s ease',
+              transform: localToolbarCollapsed ? 'rotate(180deg)' : 'rotate(0deg)'
             }}
-          >
-            {localToolbarCollapsed ? (
-              <ChevronRightIcon sx={{ fontSize: 18 }} />
-            ) : (
-              <ChevronLeftIcon sx={{ fontSize: 18 }} />
-            )}
-          </Box>
+          />
         </IconButton>
 
         {/* 工具栏内容 */}
@@ -518,61 +508,45 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
           >
           {/* MCP 按钮 - 合并工具开关和MCP工具功能 */}
           {onToolsEnabledChange && (
-            <MCPToolsButton />
-          )}
-          {buttons.map((button) => (
-            <Box
-              key={button.id}
-              onClick={button.onClick}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                background: button.bgColor || toolbarStyles.buttonBg,
-                backdropFilter: toolbarStyles.backdropFilter,
-                WebkitBackdropFilter: toolbarStyles.backdropFilter,
-                color: isDarkMode ? '#FFFFFF' : button.id === 'new-topic' ? '#4CAF50' : button.id === 'clear-topic' ? (clearConfirmMode ? '#FFFFFF' : '#2196F3') : button.id === 'generate-image' ? (imageGenerationMode ? '#FFFFFF' : '#9C27B0') : button.id === 'web-search' ? (webSearchActive ? '#FFFFFF' : '#3b82f6') : button.id === 'knowledge' ? '#059669' : button.color,
-                border: `1px solid ${toolbarStyles.buttonBorder}`,
-                borderRadius: toolbarStyles.borderRadius,
-                padding: '6px 12px',
-                margin: '0 4px',
-                cursor: 'pointer',
-                boxShadow: toolbarStyles.buttonShadow ? `0 1px 3px ${toolbarStyles.buttonShadow}` : 'none',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', // 更流畅的过渡
-                minWidth: 'max-content',
-                userSelect: 'none',
-                transform: 'translateZ(0)', // 启用硬件加速
-                willChange: 'transform, background-color, box-shadow', // 性能优化
-                '&:hover': {
-                  boxShadow: toolbarStyles.hoverShadow ? `0 2px 4px ${toolbarStyles.hoverShadow}` : 'none',
-                  background: button.id === 'web-search' && webSearchActive
-                    ? button.bgColor
-                    : button.id === 'generate-image' && imageGenerationMode
-                      ? button.bgColor
-                      : button.id === 'clear-topic' && clearConfirmMode
-                        ? (isDarkMode ? '#b71c1c' : '#d32f2f')
-                        : toolbarStyles.hoverBg,
-                  transform: inputBoxStyle === 'modern' ? 'translateY(-1px) translateZ(0)' : 'translateZ(0)'
-                },
-                '&:active': {
-                  transform: 'scale(0.98) translateZ(0)'
-                }
-              }}
-            >
-              {toolbarDisplayStyle !== 'text' && button.icon}
-              {toolbarDisplayStyle !== 'icon' && (
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 500,
-                    fontSize: '13px',
-                    ml: toolbarDisplayStyle === 'both' ? 0.5 : 0
-                  }}
-                >
-                  {button.label}
-                </Typography>
-              )}
+            <Box sx={{ mr: 1 }}>
+              <MCPToolsButton />
             </Box>
-          ))}
+          )}
+
+          {/* 简约小巧按钮渲染 */}
+          {buttons.map((button) => {
+            const buttonStyle = getButtonSimpleStyle(button.isActive);
+
+            return (
+              <Box
+                key={button.id}
+                onClick={button.onClick}
+                sx={{
+                  ...buttonStyle,
+                  margin: '0 2px',
+                  '&:hover': {
+                    ...simpleStyles.buttonHover
+                  },
+                  '&:active': {
+                    ...simpleStyles.buttonActive
+                  }
+                }}
+              >
+                {toolbarDisplayStyle !== 'text' && button.icon}
+                {toolbarDisplayStyle !== 'icon' && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      ...simpleStyles.text,
+                      ml: toolbarDisplayStyle === 'both' ? 0.5 : 0
+                    }}
+                  >
+                    {button.label}
+                  </Typography>
+                )}
+              </Box>
+            );
+          })}
           </Box>
         </Box>
       </Box>

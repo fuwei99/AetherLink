@@ -13,9 +13,7 @@ import {
   ListItemText,
   ListItemSecondaryAction
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
+import { ChevronDown, ChevronUp, Sliders } from 'lucide-react';
 import {
   getThrottleLevel,
   setThrottleLevel,
@@ -111,7 +109,7 @@ export default function ThrottleLevelSelector() {
           }
         }}
       >
-        <TuneOutlinedIcon sx={{ mr: 1.5, color: 'primary.main' }} />
+        <Sliders size={20} color="#1976d2" style={{ marginRight: 12 }} />
         <ListItemText
           primary="性能节流强度"
           secondary={currentConfig ? `当前: ${currentConfig.label}` : '优化流式输出性能'}
@@ -120,7 +118,7 @@ export default function ThrottleLevelSelector() {
         />
         <ListItemSecondaryAction>
           <IconButton edge="end" size="small" sx={{ padding: '4px' }}>
-            {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </IconButton>
         </ListItemSecondaryAction>
       </ListItem>

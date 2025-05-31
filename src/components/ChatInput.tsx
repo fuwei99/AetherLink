@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { IconButton, CircularProgress, Badge, Tooltip } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import LinkIcon from '@mui/icons-material/Link';
-import StopIcon from '@mui/icons-material/Stop';
+import { Send, Plus, Link, Square } from 'lucide-react';
 
 import { useChatInputLogic } from '../shared/hooks/useChatInputLogic';
 import { useFileUpload } from '../shared/hooks/useFileUpload';
@@ -11,8 +8,7 @@ import { useUrlScraper } from '../shared/hooks/useUrlScraper';
 import { useInputStyles } from '../shared/hooks/useInputStyles';
 import MultiModelSelector from './MultiModelSelector';
 import type { ImageContent, SiliconFlowImageFormat, FileContent } from '../shared/types';
-import ImageIcon from '@mui/icons-material/Image';
-import SearchIcon from '@mui/icons-material/Search';
+import { Image, Search } from 'lucide-react';
 import UrlScraperStatus from './UrlScraperStatus';
 import type { FileStatus } from './FilePreview';
 import IntegratedFilePreview from './IntegratedFilePreview';
@@ -23,10 +19,11 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../shared/store';
 import AIDebateButton from './AIDebateButton';
 import type { DebateConfig } from '../shared/services/AIDebateService';
+import QuickPhraseButton from './QuickPhraseButton';
 import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition';
-import { VoiceButton, VoiceInputArea } from './VoiceRecognition';
+import { VoiceButton } from './VoiceRecognition';
 import EnhancedVoiceInput from './VoiceRecognition/EnhancedVoiceInput';
-import { getThemeColors, getButtonStyles } from '../shared/utils/themeUtils';
+import { getThemeColors } from '../shared/utils/themeUtils';
 import { useTheme } from '@mui/material/styles';
 
 interface ChatInputProps {
@@ -71,6 +68,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [isIOS, setIsIOS] = useState(false); // 新增: 是否是iOS设备
   const [isVoiceMode, setIsVoiceMode] = useState(false); // 语音输入模式状态
 
+  // 拖拽状态
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragCounter, setDragCounter] = useState(0);
+
 
   // 文件和图片状态
   const [images, setImages] = useState<ImageContent[]>([]);
@@ -86,6 +87,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   // 获取当前话题状态
   const currentTopicId = useSelector((state: RootState) => state.messages.currentTopicId);
   const [currentTopicState, setCurrentTopicState] = useState<any>(null);
+
+  // 获取当前助手状态
+  const currentAssistant = useSelector((state: RootState) => state.assistants.currentAssistant);
 
   // 使用共享的 hooks
   const { styles, isDarkMode, inputBoxStyle } = useInputStyles();
@@ -149,8 +153,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   // 语音识别功能
   const {
     isListening,
-    recognitionText,
-    startRecognition,
     stopRecognition,
   } = useVoiceRecognition();
 
@@ -179,7 +181,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   }, []);
 
   // 从 useInputStyles hook 获取样式
-  const { inputBg: inputBgColor, border, borderRadius, boxShadow } = styles;
+  const { border, borderRadius, boxShadow } = styles;
   const iconColor = themeColors.iconColor;
   const textColor = themeColors.textPrimary;
   const disabledColor = themeColors.isDark ? '#555' : '#ccc';
@@ -367,6 +369,29 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // 快捷短语插入处理函数
+  const handleInsertPhrase = useCallback((content: string) => {
+    if (!textareaRef.current) return;
+
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentValue = message;
+
+    // 在光标位置插入内容
+    const newValue = currentValue.slice(0, start) + content + currentValue.slice(end);
+    setMessage(newValue);
+
+    // 设置新的光标位置（在插入内容的末尾）
+    setTimeout(() => {
+      if (textarea) {
+        const newCursorPosition = start + content.length;
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      }
+    }, 10);
+  }, [message, setMessage]);
+
   // 语音识别处理函数
   const handleToggleVoiceMode = () => {
     // 如果当前在语音模式，退出前确保停止录音
@@ -381,40 +406,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
-  const handleStartVoiceRecognition = async () => {
-    try {
-      await startRecognition({
-        language: 'zh-CN',
-        maxResults: 1,
-        partialResults: true,
-        popup: false,
-      });
-    } catch (error) {
-      console.error('启动语音识别失败:', error);
-      // 打印更详细的错误信息，便于调试
-      if (error instanceof Error) {
-        console.error('错误详情:', error.message, error.stack);
-      }
-    }
-  };
-
-  const handleStopVoiceRecognition = async () => {
-    try {
-      await stopRecognition();
-    } catch (error) {
-      console.error('停止语音识别失败:', error);
-      if (error instanceof Error) {
-        console.error('错误详情:', error.message, error.stack);
-      }
-    }
-  };
-
   const handleVoiceSendMessage = (voiceMessage: string) => {
     // 确保有内容才发送
     if (voiceMessage && voiceMessage.trim()) {
       // 创建正确的图片格式
       const formattedImages: SiliconFlowImageFormat[] = [
-        ...images, 
+        ...images,
         ...files.filter(f => f.mimeType.startsWith('image/'))
       ].map(img => ({
         type: 'image_url',
@@ -435,7 +432,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       setFiles([]);
       setUploadingMedia(false);
       setIsVoiceMode(false); // 发送后退出语音模式
-      
+
       // 添加触觉反馈 (如果支持)
       if ('navigator' in window && 'vibrate' in navigator) {
         try {
@@ -447,7 +444,147 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
+  // 拖拽事件处理函数
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragCounter(prev => prev + 1);
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
 
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragCounter(prev => prev - 1);
+    if (dragCounter <= 1) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    setDragCounter(0);
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length === 0) return;
+
+    try {
+      setUploadingMedia(true);
+
+      for (const file of droppedFiles) {
+        if (file.type.startsWith('image/')) {
+          // 处理图片文件
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64Data = event.target?.result as string;
+            const newImage: ImageContent = {
+              id: `${Date.now()}-${Math.random()}`,
+              url: base64Data,
+              base64Data: base64Data,
+              mimeType: file.type,
+              name: file.name,
+              size: file.size
+            };
+            setImages(prev => [...prev, newImage]);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          // 处理其他文件
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64Data = event.target?.result as string;
+            const newFile: FileContent = {
+              id: `${Date.now()}-${Math.random()}`,
+              name: file.name,
+              mimeType: file.type,
+              extension: file.name.split('.').pop() || '',
+              size: file.size,
+              base64Data: base64Data,
+              url: ''
+            };
+            setFiles(prev => [...prev, newFile]);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      toastManager.show({
+        message: `成功添加 ${droppedFiles.length} 个文件`,
+        type: 'success',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('拖拽文件处理失败:', error);
+      toastManager.show({
+        message: '文件处理失败，请重试',
+        type: 'error',
+        duration: 3000
+      });
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
+  // 剪贴板粘贴事件处理函数
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    const items = Array.from(clipboardData.items);
+    const imageItems = items.filter(item => item.type.startsWith('image/'));
+
+    if (imageItems.length === 0) return;
+
+    e.preventDefault(); // 阻止默认粘贴行为
+
+    try {
+      setUploadingMedia(true);
+
+      for (const item of imageItems) {
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64Data = event.target?.result as string;
+            const newImage: ImageContent = {
+              id: `${Date.now()}-${Math.random()}`,
+              url: base64Data,
+              base64Data: base64Data,
+              mimeType: file.type,
+              name: `粘贴的图片_${Date.now()}.${file.type.split('/')[1]}`,
+              size: file.size
+            };
+            setImages(prev => [...prev, newImage]);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      toastManager.show({
+        message: `成功粘贴 ${imageItems.length} 张图片`,
+        type: 'success',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('粘贴图片处理失败:', error);
+      toastManager.show({
+        message: '粘贴图片失败，请重试',
+        type: 'error',
+        duration: 3000
+      });
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
 
   // 显示正在加载的指示器，但不禁用输入框
   const showLoadingIndicator = isLoading && !allowConsecutiveMessages;
@@ -487,36 +624,30 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const responsiveStyles = getResponsiveStyles();
 
   return (
-    <div style={{
-      backgroundColor: 'transparent',
-      ...responsiveStyles,
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      boxShadow: 'none',
-      transition: 'all 0.3s ease',
-      marginBottom: isKeyboardVisible ? '0' : (isMobile ? '0' : isTablet ? '0' : '0'),
-      paddingBottom: isKeyboardVisible && isMobile ? 'env(safe-area-inset-bottom)' : (isIOS ? '34px' : '0'), // 为iOS设备增加底部安全区域
-      // 确保没有任何背景色或边框
-      border: 'none',
-      outline: 'none',
-      // 添加安全区域支持，确保不被刘海屏等遮挡
-      paddingLeft: `max(env(safe-area-inset-left), ${isMobile ? '8px' : isTablet ? '12px' : '10px'})`,
-      paddingRight: `max(env(safe-area-inset-right), ${isMobile ? '8px' : isTablet ? '12px' : '10px'})`,
-      // 确保在所有设备上正确显示和居中
-      minHeight: 'auto',
-      maxHeight: '50vh', // 限制最大高度，避免遮挡过多内容
-      overflow: 'visible',
-      boxSizing: 'border-box', // 确保padding计算正确
-      // 为iOS设备添加额外样式
-      ...(isIOS ? {
-        position: 'relative',
-        zIndex: 1001, // 确保输入框在较高层级
-      } : {})
-    }}>
+    <div
+      style={{
+        backgroundColor: 'transparent',
+        ...responsiveStyles,
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        boxShadow: 'none',
+        transition: 'all 0.3s ease',
+        marginBottom: isKeyboardVisible ? '0' : (isMobile ? '0' : isTablet ? '0' : '0'),
+        paddingBottom: isKeyboardVisible && isMobile ? 'env(safe-area-inset-bottom)' : (isIOS ? '34px' : '0'), // 为iOS设备增加底部安全区域
+        // 确保没有任何背景色或边框
+        border: 'none',
+        // 拖拽时的视觉反馈
+        position: 'relative'
+      }}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {/* URL解析状态显示 */}
       {urlScraperStatus !== 'idle' && (
         <UrlScraperStatus
@@ -538,6 +669,35 @@ const ChatInput: React.FC<ChatInputProps> = ({
         maxVisibleItems={isMobile ? 2 : 3}
       />
 
+      {/* 拖拽覆盖层 */}
+      {isDragging && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.1)' : 'rgba(33, 150, 243, 0.05)',
+          border: `2px dashed ${isDarkMode ? '#2196F3' : '#1976D2'}`,
+          borderRadius: borderRadius,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1002,
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            color: isDarkMode ? '#2196F3' : '#1976D2',
+            fontSize: '16px',
+            fontWeight: 500,
+            textAlign: 'center',
+            padding: '20px'
+          }}>
+            📁 拖拽文件到这里上传
+          </div>
+        </div>
+      )}
+
       <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -545,9 +705,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
         borderRadius: borderRadius,
         /* 使用主题颜色作为背景，防止输入框与底部消息重叠或产生视觉干扰 */
         background: themeColors.paper,
-          border: border,
+          border: isDragging ? `2px solid ${isDarkMode ? '#2196F3' : '#1976D2'}` : border,
         minHeight: isTablet ? '56px' : isMobile ? '48px' : '50px', // 增加容器最小高度以适应新的textarea高度
-        boxShadow: boxShadow,
+        boxShadow: isDragging ? `0 0 20px ${isDarkMode ? 'rgba(33, 150, 243, 0.3)' : 'rgba(33, 150, 243, 0.2)'}` : boxShadow,
         width: '100%',
         maxWidth: '100%', // 使用100%宽度，与外部容器一致
         backdropFilter: inputBoxStyle === 'modern' ? 'blur(10px)' : 'none',
@@ -612,6 +772,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 onKeyDown={handleKeyDown}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
+                onPaste={handlePaste}
                 disabled={isLoading && !allowConsecutiveMessages}
                 rows={1}
               />
@@ -656,7 +817,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   <CircularProgress size={isTablet ? 28 : 24} />
                 ) : (
                   <Badge badgeContent={images.length + files.length} color="primary" max={9} invisible={images.length + files.length === 0}>
-                    <AddCircleIcon />
+                    <Plus size={isTablet ? 28 : 24} />
                   </Badge>
                 )}
               </IconButton>
@@ -671,6 +832,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
               question={message}
             />
 
+            {/* 快捷短语按钮 */}
+            <QuickPhraseButton
+              onInsertPhrase={handleInsertPhrase}
+              assistant={currentAssistant}
+              disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+              size={isTablet ? "large" : "medium"}
+            />
+
             {/* 发送按钮或停止按钮 */}
             <IconButton
               onClick={isStreaming && onStopResponse ? onStopResponse : handleSubmit}
@@ -683,24 +852,24 @@ const ChatInput: React.FC<ChatInputProps> = ({
             >
               {isStreaming ? (
                 <Tooltip title="停止生成">
-                  <StopIcon fontSize={isTablet ? "medium" : "small"} />
+                  <Square size={isTablet ? 20 : 18} />
                 </Tooltip>
               ) : showLoadingIndicator ? (
                 <CircularProgress size={isTablet ? 28 : 24} color="inherit" />
               ) : imageGenerationMode ? (
                 <Tooltip title="生成图像">
-                  <ImageIcon fontSize={isTablet ? "medium" : "small"} />
+                  <Image size={isTablet ? 20 : 18} />
                 </Tooltip>
               ) : webSearchActive ? (
                 <Tooltip title="搜索网络">
-                  <SearchIcon fontSize={isTablet ? "medium" : "small"} />
+                  <Search size={isTablet ? 20 : 18} />
                 </Tooltip>
               ) : urlScraperStatus === 'success' ? (
                 <Tooltip title="发送解析的网页内容">
-                  <LinkIcon fontSize={isTablet ? "medium" : "small"} />
+                  <Link size={isTablet ? 20 : 18} />
                 </Tooltip>
               ) : (
-                <SendIcon fontSize={isTablet ? "medium" : "small"} />
+                <Send size={isTablet ? 20 : 18} />
               )}
             </IconButton>
           </>

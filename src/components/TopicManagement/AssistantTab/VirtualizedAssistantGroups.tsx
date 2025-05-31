@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useCallback } from 'react';
 import { Box, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ChevronDown } from 'lucide-react';
 import VirtualScroller from '../../common/VirtualScroller';
 import AssistantItem from './AssistantItem';
 import type { Assistant } from '../../../shared/types/Assistant';
@@ -87,7 +87,7 @@ const VirtualizedAssistantGroups = memo(function VirtualizedAssistantGroups({
         }}
       >
         <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
+          expandIcon={<ChevronDown size={20} />}
           sx={{
             minHeight: '48px',
             '& .MuiAccordionSummary-content': {

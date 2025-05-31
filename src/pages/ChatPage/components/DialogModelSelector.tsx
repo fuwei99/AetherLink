@@ -20,16 +20,12 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
 import type { Model } from '../../../shared/types';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../shared/store';
 
 // 样式常量 - 提取重复的样式对象以提升性能
 const DIALOG_STYLES = {
-  iconButton: {
-    color: (isDark: boolean) => isDark ? 'text.primary' : 'black',
-  },
   button: (isDark: boolean) => ({
     textTransform: 'none',
     color: isDark ? 'text.primary' : 'black',
@@ -116,8 +112,6 @@ interface DialogModelSelectorProps {
   handleMenuClick: () => void;
   handleMenuClose: () => void;
   menuOpen: boolean;
-  iconMode?: boolean; // 是否使用图标模式
-  useDropdownStyle?: boolean; // 是否使用下拉样式
 }
 
 export const DialogModelSelector: React.FC<DialogModelSelectorProps> = ({
@@ -126,9 +120,7 @@ export const DialogModelSelector: React.FC<DialogModelSelectorProps> = ({
   handleModelSelect,
   handleMenuClick,
   handleMenuClose,
-  menuOpen,
-  iconMode = false,
-  useDropdownStyle = false
+  menuOpen
 }) => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -192,26 +184,14 @@ export const DialogModelSelector: React.FC<DialogModelSelectorProps> = ({
 
   return (
     <>
-      {iconMode ? (
-        // 图标模式：只显示图标按钮
-        <IconButton
-          onClick={handleMenuClick}
-          color="inherit"
-          size="small"
-          sx={DIALOG_STYLES.iconButton}
-        >
-          <SmartToyIcon />
-        </IconButton>
-      ) : (
-        // 完整模式：显示带文字的按钮
-        <Button
-          onClick={handleMenuClick}
-          endIcon={<KeyboardArrowDownIcon />}
-          sx={DIALOG_STYLES.button(isDark)}
-        >
-          {selectedModel?.name || '选择模型'}
-        </Button>
-      )}
+      {/* 显示带文字的按钮 */}
+      <Button
+        onClick={handleMenuClick}
+        endIcon={<KeyboardArrowDownIcon />}
+        sx={DIALOG_STYLES.button(isDark)}
+      >
+        {selectedModel?.name || '选择模型'}
+      </Button>
 
       <Dialog
         open={menuOpen}

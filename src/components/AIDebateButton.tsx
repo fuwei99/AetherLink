@@ -14,15 +14,22 @@ import {
   FormControlLabel,
   Switch,
   TextField,
-  Divider
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Collapse
 } from '@mui/material';
-import {
-  Forum as ForumIcon,
-  Settings as SettingsIcon,
-  PlayArrow as PlayArrowIcon,
-  Stop as StopIcon
-} from '@mui/icons-material';
+import { MessageSquare, Play, Square, FolderOpen, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+// AI辩论配置默认值常量
+const DEFAULT_CONFIG = {
+  MAX_ROUNDS: 5,
+  MODERATOR_ENABLED: true,
+  SUMMARY_ENABLED: true
+} as const;
 
 // AI辩论角色接口
 interface DebateRole {
@@ -49,6 +56,16 @@ interface DebateConfig {
   summaryEnabled: boolean;
 }
 
+// 辩论配置分组接口
+interface DebateConfigGroup {
+  id: string;
+  name: string;
+  description: string;
+  config: DebateConfig;
+  createdAt: number;
+  updatedAt: number;
+}
+
 interface AIDebateButtonProps {
   onStartDebate?: (question: string, config: DebateConfig) => void;
   onStopDebate?: () => void;
@@ -68,11 +85,22 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [config, setConfig] = useState<DebateConfig | null>(null);
   const [debateQuestion, setDebateQuestion] = useState('');
-  const [customSettings, setCustomSettings] = useState({
-    maxRounds: 5,
-    enableModerator: true,
-    enableSummary: true
+  const [customSettings, setCustomSettings] = useState<{
+    maxRounds: number;
+    enableModerator: boolean;
+    enableSummary: boolean;
+  }>({
+    maxRounds: DEFAULT_CONFIG.MAX_ROUNDS,
+    enableModerator: DEFAULT_CONFIG.MODERATOR_ENABLED,
+    enableSummary: DEFAULT_CONFIG.SUMMARY_ENABLED
   });
+
+  // 分组相关状态
+  const [configGroups, setConfigGroups] = useState<DebateConfigGroup[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
+
+  // 预设主题折叠状态
+  const [topicsExpanded, setTopicsExpanded] = useState(false);
 
   // 预设辩论主题
   const debateTopics = [
@@ -138,19 +166,27 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
     }
   ];
 
-  // 加载配置
+  // 加载配置和分组
   useEffect(() => {
     const loadConfig = () => {
       try {
+        // 加载当前配置
         const saved = localStorage.getItem('aiDebateConfig');
         if (saved) {
           const parsedConfig = JSON.parse(saved);
           setConfig(parsedConfig);
           setCustomSettings({
-            maxRounds: parsedConfig.maxRounds || 5,
-            enableModerator: parsedConfig.moderatorEnabled ?? true,
-            enableSummary: parsedConfig.summaryEnabled ?? true
+            maxRounds: parsedConfig.maxRounds || DEFAULT_CONFIG.MAX_ROUNDS,
+            enableModerator: parsedConfig.moderatorEnabled ?? DEFAULT_CONFIG.MODERATOR_ENABLED,
+            enableSummary: parsedConfig.summaryEnabled ?? DEFAULT_CONFIG.SUMMARY_ENABLED
           });
+        }
+
+        // 加载分组配置
+        const savedGroups = localStorage.getItem('aiDebateConfigGroups');
+        if (savedGroups) {
+          const parsedGroups = JSON.parse(savedGroups);
+          setConfigGroups(parsedGroups);
         }
       } catch (error) {
         console.error('加载AI辩论配置失败:', error);
@@ -204,6 +240,34 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
     navigate('/settings/ai-debate');
   };
 
+  // 处理分组选择
+  const handleGroupSelect = (groupId: string) => {
+    setSelectedGroupId(groupId);
+    if (groupId) {
+      const selectedGroup = configGroups.find(group => group.id === groupId);
+      if (selectedGroup) {
+        setConfig(selectedGroup.config);
+        setCustomSettings({
+          maxRounds: selectedGroup.config.maxRounds || DEFAULT_CONFIG.MAX_ROUNDS,
+          enableModerator: selectedGroup.config.moderatorEnabled ?? DEFAULT_CONFIG.MODERATOR_ENABLED,
+          enableSummary: selectedGroup.config.summaryEnabled ?? DEFAULT_CONFIG.SUMMARY_ENABLED
+        });
+      }
+    } else {
+      // 如果选择"当前配置"，重新加载当前配置
+      const saved = localStorage.getItem('aiDebateConfig');
+      if (saved) {
+        const parsedConfig = JSON.parse(saved);
+        setConfig(parsedConfig);
+        setCustomSettings({
+          maxRounds: parsedConfig.maxRounds || DEFAULT_CONFIG.MAX_ROUNDS,
+          enableModerator: parsedConfig.moderatorEnabled ?? DEFAULT_CONFIG.MODERATOR_ENABLED,
+          enableSummary: parsedConfig.summaryEnabled ?? DEFAULT_CONFIG.SUMMARY_ENABLED
+        });
+      }
+    }
+  };
+
   // 检查配置是否有效
   const isConfigValid = config && config.enabled && config.roles.length >= 2;
 
@@ -212,13 +276,13 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
     if (isDebating) {
       return {
         color: 'error' as const,
-        icon: <StopIcon />,
+        icon: <Square size={20} />,
         tooltip: '停止AI辩论'
       };
     } else {
       return {
         color: isConfigValid ? 'primary' as const : 'default' as const,
-        icon: <ForumIcon />,
+        icon: <MessageSquare size={20} />,
         tooltip: isConfigValid ? '开始AI辩论' : 'AI辩论功能未配置'
       };
     }
@@ -244,7 +308,7 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
       {/* 辩论配置对话框 */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center' }}>
-          <ForumIcon sx={{ mr: 1 }} />
+          <MessageSquare size={20} style={{ marginRight: 8 }} />
           AI辩论设置
         </DialogTitle>
 
@@ -276,41 +340,88 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
 
             {/* 预设主题选择 */}
             <Box sx={{ mt: 2 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                💡 快速选择预设主题：
-              </Typography>
-              <Box sx={{ maxHeight: 200, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
-                {debateTopics.map((category, categoryIndex) => (
-                  <Box key={categoryIndex} sx={{ mb: 1 }}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main', display: 'block', mb: 0.5 }}>
-                      {category.category}
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {category.topics.map((topic, topicIndex) => (
-                        <Chip
-                          key={topicIndex}
-                          label={topic}
-                          size="small"
-                          variant="outlined"
-                          onClick={() => setDebateQuestion(topic)}
-                          sx={{
-                            fontSize: '0.7rem',
-                            height: 24,
-                            cursor: 'pointer',
-                            '&:hover': {
-                              bgcolor: 'primary.main',
-                              color: 'white'
-                            }
-                          }}
-                          disabled={!isConfigValid}
-                        />
-                      ))}
+              <Button
+                onClick={() => setTopicsExpanded(!topicsExpanded)}
+                startIcon={topicsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                sx={{
+                  textTransform: 'none',
+                  color: 'text.secondary',
+                  fontSize: '0.875rem',
+                  p: 0.5,
+                  minWidth: 'auto',
+                  '&:hover': {
+                    bgcolor: 'action.hover'
+                  }
+                }}
+              >
+                💡 快速选择预设主题
+              </Button>
+              <Collapse in={topicsExpanded}>
+                <Box sx={{ mt: 1, maxHeight: 200, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
+                  {debateTopics.map((category, categoryIndex) => (
+                    <Box key={categoryIndex} sx={{ mb: 1 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main', display: 'block', mb: 0.5 }}>
+                        {category.category}
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {category.topics.map((topic, topicIndex) => (
+                          <Chip
+                            key={topicIndex}
+                            label={topic}
+                            size="small"
+                            variant="outlined"
+                            onClick={() => setDebateQuestion(topic)}
+                            sx={{
+                              fontSize: '0.7rem',
+                              height: 24,
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: 'primary.main',
+                                color: 'white'
+                              }
+                            }}
+                            disabled={!isConfigValid}
+                          />
+                        ))}
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
-              </Box>
+                  ))}
+                </Box>
+              </Collapse>
             </Box>
           </Box>
+
+          {/* 分组选择 */}
+          {configGroups.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>选择配置分组</InputLabel>
+                <Select
+                  value={selectedGroupId}
+                  onChange={(e) => handleGroupSelect(e.target.value)}
+                  label="选择配置分组"
+                >
+                  <MenuItem value="">
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <FolderOpen size={16} style={{ marginRight: 8 }} />
+                      当前配置
+                    </Box>
+                  </MenuItem>
+                  {configGroups.map((group) => (
+                    <MenuItem key={group.id} value={group.id}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <FolderOpen size={16} style={{ marginRight: 8 }} />
+                        {group.name}
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                          ({group.config.roles.length} 个角色)
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
 
           {/* 当前配置的角色 */}
           {isConfigValid && (
@@ -345,15 +456,28 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
           <Box sx={{ display: 'grid', gap: 2 }}>
             <TextField
               label="最大辩论轮数"
-              type="number"
               value={customSettings.maxRounds}
-              onChange={(e) => setCustomSettings({
-                ...customSettings,
-                maxRounds: parseInt(e.target.value) || 5
-              })}
-              inputProps={{ min: 1, max: 20 }}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 直接更新，允许任何输入包括空值
+                if (value === '') {
+                  setCustomSettings({
+                    ...customSettings,
+                    maxRounds: 0
+                  });
+                } else {
+                  const num = parseInt(value);
+                  if (!isNaN(num)) {
+                    setCustomSettings({
+                      ...customSettings,
+                      maxRounds: num
+                    });
+                  }
+                }
+              }}
               size="small"
               disabled={!isConfigValid}
+              helperText="输入数字，建议1-20轮"
             />
 
             <FormControlLabel
@@ -387,7 +511,7 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={handleGoToSettings} startIcon={<SettingsIcon />}>
+          <Button onClick={handleGoToSettings} startIcon={<Settings size={16} />}>
             配置角色
           </Button>
           <Button onClick={() => setDialogOpen(false)}>
@@ -396,7 +520,7 @@ const AIDebateButton: React.FC<AIDebateButtonProps> = ({
           <Button
             onClick={handleStartDebate}
             variant="contained"
-            startIcon={<PlayArrowIcon />}
+            startIcon={<Play size={16} />}
             disabled={!isConfigValid || !debateQuestion.trim()}
           >
             开始辩论

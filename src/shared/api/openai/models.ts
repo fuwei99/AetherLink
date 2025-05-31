@@ -22,12 +22,15 @@ export async function fetchModels(provider: any): Promise<any[]> {
     
     // 构建API端点
     let endpoint = '';
-    if (baseUrl.includes('/v1')) {
+    // 确保baseUrl不以斜杠结尾，避免双斜杠问题
+    const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
+
+    if (cleanBaseUrl.includes('/v1')) {
       // 如果baseUrl已经包含/v1，直接添加/models
-      endpoint = `${baseUrl}/models`;
+      endpoint = `${cleanBaseUrl}/models`;
     } else {
-      // 否则添加完整路径，确保在baseUrl和v1之间有斜杠
-      endpoint = `${baseUrl}/v1/models`;
+      // 否则添加完整路径
+      endpoint = `${cleanBaseUrl}/v1/models`;
     }
     
     console.log(`[fetchOpenAIModels] 请求端点: ${endpoint}`);

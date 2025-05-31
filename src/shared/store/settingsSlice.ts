@@ -39,7 +39,7 @@ interface SettingsState {
   topToolbar: {
     showSettingsButton: boolean; // 是否显示设置按钮
     showModelSelector: boolean; // 是否显示模型选择器
-    modelSelectorStyle: 'full' | 'icon'; // 模型选择器样式：完整显示或图标
+    modelSelectorStyle: 'dialog' | 'dropdown'; // 模型选择器样式：弹窗式或下拉式
     showChatTitle: boolean; // 是否显示"对话"标题
     showTopicName: boolean; // 是否显示话题名称
     showNewTopicButton: boolean; // 是否显示新建话题按钮
@@ -119,7 +119,7 @@ const getInitialState = (): SettingsState => {
     topToolbar: {
       showSettingsButton: true, // 默认显示设置按钮
       showModelSelector: true, // 默认显示模型选择器
-      modelSelectorStyle: 'full', // 默认完整显示模型选择器
+      modelSelectorStyle: 'dialog', // 默认弹窗式模型选择器
       showChatTitle: true, // 默认显示"对话"标题
       showTopicName: false, // 默认不显示话题名称
       showNewTopicButton: false, // 默认不显示新建话题按钮

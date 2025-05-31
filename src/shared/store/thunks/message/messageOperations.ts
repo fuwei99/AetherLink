@@ -210,11 +210,27 @@ export const resendUserMessage = (userMessageId: string, topicId: string, model:
 export const regenerateMessage = (messageId: string, topicId: string, model: Model) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
   try {
+    console.log(`[regenerateMessage] 开始重新生成消息: ${messageId}`, {
+      topicId,
+      newModel: {
+        id: model.id,
+        name: model.name,
+        provider: model.provider
+      }
+    });
+
     // 1. 获取消息
     const message = await dexieStorage.getMessage(messageId);
     if (!message) {
       throw new Error(`消息 ${messageId} 不存在`);
     }
+
+    console.log(`[regenerateMessage] 原始消息模型信息:`, {
+      originalModelId: message.modelId,
+      originalModel: message.model,
+      newModelId: model.id,
+      newModelName: model.name
+    });
 
     // 只能重新生成助手消息
     if (message.role !== 'assistant') {
@@ -284,17 +300,25 @@ export const regenerateMessage = (messageId: string, topicId: string, model: Mod
     //   }))
     // });
 
-    // 创建更新对象 - 使用包含最新版本信息的消息
+    // 创建更新对象 - 使用包含最新版本信息的消息，并更新为新的模型
     const resetMessage = {
       ...updatedMessage, // 使用包含最新版本信息的消息
       status: AssistantMessageStatus.PENDING,
       updatedAt: new Date().toISOString(),
-      model: model,
-      modelId: model.id,
+      model: model, // 使用顶部模型选择器的新模型
+      modelId: model.id, // 更新模型ID
       blocks: [], // 清空块，等待processAssistantResponse创建新的块
       // 保持版本信息，包括新保存的版本
       versions: updatedMessage.versions || []
     };
+
+    console.log(`[regenerateMessage] 重置消息完成，模型已更新:`, {
+      messageId: resetMessage.id,
+      originalModelId: updatedMessage.modelId,
+      newModelId: resetMessage.modelId,
+      newModelName: resetMessage.model?.name,
+      newModelProvider: resetMessage.model?.provider
+    });
 
     // 7. 更新Redux状态
     dispatch(newMessagesActions.updateMessage({

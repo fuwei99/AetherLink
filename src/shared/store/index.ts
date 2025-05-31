@@ -7,7 +7,7 @@ import settingsReducer, { settingsMiddleware, loadSettings } from './settingsSli
 import { initSettingsAsync } from './slices/settingsSlice';
 import groupsReducer from './slices/groupsSlice';
 import webSearchReducer, { initializeWebSearchSettings } from './slices/webSearchSlice';
-import systemPromptsReducer from './slices/systemPromptsSlice';
+
 import assistantsReducer from './slices/assistantsSlice';
 import messageBlocksReducer from './slices/messageBlocksSlice';
 import uiReducer from './slices/uiSlice';
@@ -23,7 +23,6 @@ const rootReducer = combineReducers({
 
   groups: groupsReducer,
   webSearch: webSearchReducer,
-  systemPrompts: systemPromptsReducer,
   assistants: assistantsReducer,
   messageBlocks: messageBlocksReducer,
   ui: uiReducer,

@@ -209,10 +209,19 @@ const AppContent = () => {
       };
     }, 100);
 
+    return () => {
+      cleanup(); // 只清理定时器，不清理Capacitor监听器
+    };
+  }, [theme, mode]); // 只依赖主题变化
+
+  // 单独的useEffect处理Capacitor监听器，避免主题切换时重置
+  useEffect(() => {
+    let appListener: any = null;
+
     // 禁用Capacitor的默认返回键行为
     const setupListener = async () => {
       try {
-        await CapApp.addListener('backButton', () => {
+        appListener = await CapApp.addListener('backButton', () => {
           // 这里不做任何处理，让我们的BackButtonHandler组件来处理
           console.log('[App] 返回键被按下，由BackButtonHandler处理');
         });
@@ -224,19 +233,12 @@ const AppContent = () => {
     setupListener();
 
     return () => {
-      // 清理监听器
-      const cleanupListeners = async () => {
-        try {
-          await CapApp.removeAllListeners();
-          cleanup(); // 调用清理函数
-        } catch (error) {
-          console.error('[App] 清理监听器失败:', error);
-        }
-      };
-
-      cleanupListeners();
+      // 只清理这个特定的监听器
+      if (appListener) {
+        appListener.remove();
+      }
     };
-  }, [theme, mode]); // 只依赖主题变化
+  }, []); // 空依赖数组，只在组件挂载时执行一次
 
   // 监听主题变化并更新状态栏
   useEffect(() => {

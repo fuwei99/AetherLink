@@ -6,13 +6,15 @@ import { uuid } from '../../utils';
 import { getDefaultTopic } from './types';
 import { AssistantManager } from './AssistantManager';
 import { DEFAULT_SYSTEM_PROMPT, WEB_ANALYSIS_PROMPT } from '../../config/prompts';
-import { SystemPromptService } from '../SystemPromptService';
+// 移除旧的SystemPromptService引用
+// import { SystemPromptService } from '../SystemPromptService';
 import { dexieStorage } from '../DexieStorageService';
 
 // 移除DataService引用
 // import { DataService } from '../DataService';
 // const dataService = DataService.getInstance();
-const promptService = SystemPromptService.getInstance();
+// 移除promptService引用，直接使用默认提示词
+// const promptService = SystemPromptService.getInstance();
 
 /**
  * 助手工厂服务 - 负责创建默认助手和初始化数据
@@ -22,8 +24,8 @@ export class AssistantFactory {
    * 初始化默认助手
    */
   static async initializeDefaultAssistants(): Promise<Assistant[]> {
-    // 获取当前系统提示词，如果没有使用默认值
-    const systemPrompt = promptService.getActiveSystemPrompt() || DEFAULT_SYSTEM_PROMPT;
+    // 使用默认系统提示词
+    const systemPrompt = DEFAULT_SYSTEM_PROMPT;
 
     const defaultAssistants: Assistant[] = [
       {
@@ -87,9 +89,8 @@ export class AssistantFactory {
    */
   static createAssistant(name: string, description = '', systemPrompt = ''): Assistant {
     try {
-      // 如果没有提供系统提示词，使用当前系统提示词或默认值
-      const activePrompt = promptService.getActiveSystemPrompt() || DEFAULT_SYSTEM_PROMPT;
-      const finalPrompt = systemPrompt || activePrompt;
+      // 如果没有提供系统提示词，使用默认值
+      const finalPrompt = systemPrompt || DEFAULT_SYSTEM_PROMPT;
       
       // 创建助手ID
       const assistantId = uuid();

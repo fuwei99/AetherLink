@@ -11,11 +11,7 @@ import { useKnowledgeContext } from '../shared/hooks/useKnowledgeContext';
 import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition'; // 导入 useVoiceRecognition
 import { getBasicIcons, getExpandedIcons } from '../shared/config/inputIcons';
 
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
-import SendIcon from '@mui/icons-material/Send';
-import StopIcon from '@mui/icons-material/Stop';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { Plus, X, Send, Square, Paperclip } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../shared/store';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../shared/types';
@@ -658,7 +654,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
               }
             }}
           >
-            {isStreaming ? <StopIcon /> : <SendIcon />}
+            {isStreaming ? <Square size={18} /> : <Send size={18} />}
           </IconButton>
         </Box>
         </Box>

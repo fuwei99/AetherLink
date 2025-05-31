@@ -44,7 +44,7 @@ const TopToolbarSettings: React.FC = () => {
   const topToolbar = settings.topToolbar || {
     showSettingsButton: true,
     showModelSelector: true,
-    modelSelectorStyle: 'full',
+    modelSelectorStyle: 'dialog',
     showChatTitle: true,
     showTopicName: false,
     showNewTopicButton: false,
@@ -192,11 +192,7 @@ const TopToolbarSettings: React.FC = () => {
           </IconButton>
         );
       case 'modelSelector':
-        return topToolbar.modelSelectorStyle === 'icon' ? (
-          <IconButton key={componentId} color="inherit" size="small">
-            <SmartToyIcon />
-          </IconButton>
-        ) : (
+        return (
           <Chip
             key={componentId}
             label="GPT-4"
@@ -461,14 +457,14 @@ const TopToolbarSettings: React.FC = () => {
               onChange={(e) => updateTopToolbarSetting('modelSelectorStyle', e.target.value)}
             >
               <FormControlLabel
-                value="full"
+                value="dialog"
                 control={<Radio size="small" />}
-                label="完整显示（显示模型名称和供应商）"
+                label="弹窗式选择器（点击按钮弹出对话框）"
               />
               <FormControlLabel
-                value="icon"
+                value="dropdown"
                 control={<Radio size="small" />}
-                label="图标模式（仅显示模型图标）"
+                label="下拉式选择器（直接下拉选择）"
               />
             </RadioGroup>
 
@@ -708,7 +704,7 @@ const TopToolbarSettings: React.FC = () => {
                   topToolbar: {
                     showSettingsButton: true,
                     showModelSelector: true,
-                    modelSelectorStyle: 'full',
+                    modelSelectorStyle: 'dialog',
                     showChatTitle: true,
                     showTopicName: false,
                     showNewTopicButton: false,
@@ -739,7 +735,7 @@ const TopToolbarSettings: React.FC = () => {
                   topToolbar: {
                     showSettingsButton: false,
                     showModelSelector: true,
-                    modelSelectorStyle: 'icon',
+                    modelSelectorStyle: 'dialog',
                     showChatTitle: false,
                     showTopicName: true,
                     showNewTopicButton: true,

@@ -5,14 +5,14 @@ import {
   Card,
   CardContent,
   CardActionArea,
-  Grid,
   Chip,
   alpha,
   useTheme,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { setThemeStyle } from '../../shared/store/settingsSlice';
-import { themeConfigs, getThemePreviewColors, ThemeStyle } from '../../shared/config/themes';
+import { themeConfigs, getThemePreviewColors } from '../../shared/config/themes';
+import type { ThemeStyle } from '../../shared/config/themes';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PaletteIcon from '@mui/icons-material/Palette';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -55,6 +55,9 @@ const ThemeStyleSelector: React.FC<ThemeStyleSelectorProps> = ({ compact = false
           borderRadius: 2,
           overflow: 'hidden',
           transition: 'all 0.2s ease-in-out',
+          aspectRatio: compact ? '1.2/1' : '1.1/1', // 设置宽高比
+          minHeight: compact ? '120px' : '140px', // 设置最小高度
+          maxWidth: '200px', // 限制最大宽度
           '&:hover': {
             borderColor: isSelected ? currentTheme.palette.primary.main : alpha(currentTheme.palette.primary.main, 0.5),
             transform: 'translateY(-2px)',
@@ -277,13 +280,25 @@ const ThemeStyleSelector: React.FC<ThemeStyleSelectorProps> = ({ compact = false
         选择您喜欢的界面设计风格，每种风格都有独特的色彩搭配和视觉效果
       </Typography>
 
-      <Grid container spacing={compact ? 1 : 2}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: compact ? 1 : 2,
+          justifyContent: compact ? 'flex-start' : 'center',
+          '& > *': {
+            flex: compact ? '1 1 calc(50% - 8px)' : '0 0 auto',
+            minWidth: compact ? '140px' : '160px',
+            maxWidth: compact ? '180px' : '200px',
+          }
+        }}
+      >
         {(Object.keys(themeConfigs) as ThemeStyle[]).map((themeStyle) => (
-          <Grid item xs={6} sm={compact ? 6 : 3} key={themeStyle}>
+          <Box key={themeStyle}>
             <ThemePreviewCard themeStyle={themeStyle} />
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
 
       {/* 主题特性说明 */}
       <Box sx={{ mt: 3, p: 2, bgcolor: alpha(currentTheme.palette.primary.main, 0.05), borderRadius: 2 }}>

@@ -1066,30 +1066,59 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         }));
       }
 
-      // 🔥 关键修复：确保消息的 blocks 数组包含所有相关的块ID，不覆盖现有的工具块
+      // 🔥 关键修复：正确处理占位符块替换和块ID管理
       const currentMessage = store.getState().messages.entities[messageId];
       const existingBlocks = currentMessage?.blocks || [];
 
-      // 收集当前响应处理器创建的块ID
-      const newBlockIds = [];
-      if (lastBlockType === MessageBlockType.THINKING) {
-        newBlockIds.push(blockId); // 思考块
-        if (mainTextBlockId && mainTextBlockId !== blockId) {
-          newBlockIds.push(mainTextBlockId); // 主文本块
+      // 🔥 修复：正确处理块ID顺序，思考块在前，主文本块在后
+      let finalBlockIds: string[] = [];
+
+      if (mainTextBlockId && mainTextBlockId !== blockId) {
+        // 情况1：创建了新的主文本块，需要替换占位符块
+        console.log(`[ResponseHandler] 替换占位符块 ${blockId} 为主文本块 ${mainTextBlockId}`);
+
+        // 遍历现有块，按正确顺序构建新数组
+        for (const existingBlockId of existingBlocks) {
+          if (existingBlockId === blockId) {
+            // 如果是思考块转换，按正确顺序添加
+            if (lastBlockType === MessageBlockType.THINKING) {
+              // 思考块在前，主文本块在后
+              if (!finalBlockIds.includes(blockId)) {
+                finalBlockIds.push(blockId);
+              }
+              if (!finalBlockIds.includes(mainTextBlockId)) {
+                finalBlockIds.push(mainTextBlockId);
+              }
+            } else {
+              // 普通情况，只替换为主文本块
+              if (!finalBlockIds.includes(mainTextBlockId)) {
+                finalBlockIds.push(mainTextBlockId);
+              }
+            }
+          } else {
+            // 保留其他块（避免重复）
+            if (!finalBlockIds.includes(existingBlockId)) {
+              finalBlockIds.push(existingBlockId);
+            }
+          }
+        }
+
+        // 确保主文本块存在（防止遗漏）
+        if (!finalBlockIds.includes(mainTextBlockId)) {
+          finalBlockIds.push(mainTextBlockId);
         }
       } else {
-        newBlockIds.push(blockId); // 主文本块
-      }
-
-      // 合并现有块和新块，避免重复
-      const allBlockIds = [...existingBlocks];
-      for (const newBlockId of newBlockIds) {
-        if (!allBlockIds.includes(newBlockId)) {
-          allBlockIds.push(newBlockId);
+        // 情况2：使用原始块ID（没有创建新块）
+        console.log(`[ResponseHandler] 使用原始块ID ${blockId}`);
+        finalBlockIds = [...existingBlocks];
+        if (!finalBlockIds.includes(blockId)) {
+          finalBlockIds.push(blockId);
         }
       }
 
-      console.log(`[ResponseHandler] 完成时的所有块ID: [${allBlockIds.join(', ')}]，现有块: [${existingBlocks.join(', ')}]，新块: [${newBlockIds.join(', ')}]`);
+      const allBlockIds = finalBlockIds;
+
+      console.log(`[ResponseHandler] 完成时的所有块ID: [${allBlockIds.join(', ')}]，现有块: [${existingBlocks.join(', ')}]，主文本块: ${mainTextBlockId || blockId}`);
 
       // 更新消息的 blocks 数组（保留现有的工具块等）
       store.dispatch(newMessagesActions.updateMessage({
@@ -1308,11 +1337,8 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
       console.error(`[ResponseHandler] 响应失败 - 消息ID: ${messageId}, 错误: ${error.message}`);
 
       // 🔥 新增：检测 API Key 问题并提供重试机制
-      const isApiKeyError = await checkAndHandleApiKeyError(error, messageId, topicId);
-      if (isApiKeyError) {
-        // API Key 错误已被处理，不需要继续执行错误处理流程
-        return;
-      }
+      // 注意：现在 checkAndHandleApiKeyError 返回 false，让我们继续创建错误块
+      await checkAndHandleApiKeyError(error, messageId, topicId);
 
       // 获取错误消息
       const errorMessage = error.message || '响应处理失败';
@@ -1384,12 +1410,16 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
             topicId
           }));
 
-          // 更新Redux状态中的消息块
+          // 更新Redux状态中的消息块，确保错误信息完整传递
           store.dispatch(updateOneBlock({
             id: blockId,
             changes: {
+              type: MessageBlockType.ERROR,
               status: MessageBlockStatus.ERROR,
-              error: errorRecord
+              content: errorMessage,
+              error: errorRecord,
+              message: errorMessage,
+              details: errorDetails
             }
           }));
         }
@@ -1406,11 +1436,15 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         topicId
       });
 
-      // 保存错误状态到数据库
+      // 保存错误状态到数据库，确保错误信息完整保存
       await Promise.all([
         dexieStorage.updateMessageBlock(blockId, {
+          type: MessageBlockType.ERROR,
           status: MessageBlockStatus.ERROR,
-          error: errorRecord
+          content: errorMessage,
+          error: errorRecord,
+          message: errorMessage,
+          details: errorDetails
         }),
         dexieStorage.updateMessage(messageId, {
           status: AssistantMessageStatus.ERROR

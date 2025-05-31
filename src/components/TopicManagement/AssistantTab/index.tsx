@@ -16,16 +16,28 @@ import {
   Snackbar,
   Alert
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Plus,
+  Sparkles,
+  FolderPlus,
+  Edit3,
+  Image,
+  Copy,
+  Trash2,
+  ArrowUpAZ,
+  ArrowDownAZ,
+  Trash
+} from 'lucide-react';
 import type { Assistant } from '../../../shared/types/Assistant';
 import VirtualizedAssistantGroups from './VirtualizedAssistantGroups';
 import VirtualizedAssistantList from './VirtualizedAssistantList';
 
 import PresetAssistantItem from './PresetAssistantItem';
 import GroupDialog from '../GroupDialog';
-import { COMMON_EMOJIS } from './AssistantIconPicker';
+import AssistantIconPicker from './AssistantIconPicker';
 import { useAssistantTabLogic } from './useAssistantTabLogic';
 import type { Group } from '../../../shared/types';
+import AgentPromptSelector from '../../AgentPromptSelector';
 
 // 组件属性定义
 interface AssistantTabProps {
@@ -64,6 +76,8 @@ export default function AssistantTab({
     editDialogOpen,
     editAssistantName,
     editAssistantPrompt,
+    promptSelectorOpen,
+    iconPickerOpen,
 
     // 处理函数
     handleCloseNotification,
@@ -91,6 +105,11 @@ export default function AssistantTab({
     handleAddToGroup,
     handleEditNameChange,
     handleEditPromptChange,
+    handleOpenPromptSelector,
+    handleClosePromptSelector,
+    handleSelectPrompt,
+    handleOpenIconPicker,
+    handleCloseIconPicker,
 
     // 数据
     predefinedAssistantsData
@@ -113,7 +132,7 @@ export default function AssistantTab({
             <Button
               variant="outlined"
               size="small"
-              startIcon={<AddIcon />}
+              startIcon={<FolderPlus size={16} />}
               onClick={handleOpenGroupDialog}
             >
               创建分组
@@ -123,7 +142,7 @@ export default function AssistantTab({
             <Button
               variant="outlined"
               size="small"
-              startIcon={<AddIcon />}
+              startIcon={<Plus size={16} />}
               onClick={handleOpenAssistantDialog}
             >
               添加助手
@@ -198,78 +217,40 @@ export default function AssistantTab({
         open={Boolean(assistantMenuAnchorEl)}
         onClose={handleCloseAssistantMenu}
       >
-        <MenuItem onClick={handleOpenAddToGroupMenu}>添加到分组...</MenuItem>
-        <MenuItem onClick={handleOpenEditDialog}>编辑助手</MenuItem>
-        <MenuItem onClick={() => {
-          handleCloseAssistantMenu();
-          // 直接打开一个Dialog形式的图标选择器，而不是依赖于Popover
-          const tempAssistant = selectedMenuAssistant;
-          if (tempAssistant) {
-            // 使用Dialog来显示图标选择器，这种方式更可靠
-            const dialog = document.createElement('dialog');
-            dialog.style.padding = '20px';
-            dialog.style.borderRadius = '8px';
-            dialog.style.border = '1px solid #ccc';
-            dialog.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-            dialog.style.maxWidth = '400px';
-
-            const title = document.createElement('h3');
-            title.textContent = '选择助手图标';
-            title.style.marginTop = '0';
-            title.style.marginBottom = '16px';
-
-            const container = document.createElement('div');
-            container.style.display = 'grid';
-            container.style.gridTemplateColumns = 'repeat(8, 1fr)';
-            container.style.gap = '8px';
-
-            COMMON_EMOJIS.forEach((emoji: string) => {
-              const button = document.createElement('button');
-              button.textContent = emoji;
-              button.style.fontSize = '20px';
-              button.style.padding = '8px';
-              button.style.cursor = 'pointer';
-              button.style.border = emoji === tempAssistant.emoji ? '2px solid #1976d2' : '1px solid #ddd';
-              button.style.borderRadius = '4px';
-              button.style.background = 'none';
-
-              button.onclick = () => {
-                handleSelectEmoji(emoji);
-                dialog.close();
-              };
-
-              container.appendChild(button);
-            });
-
-            const closeBtn = document.createElement('button');
-            closeBtn.textContent = '关闭';
-            closeBtn.style.marginTop = '16px';
-            closeBtn.style.padding = '8px 12px';
-            closeBtn.style.float = 'right';
-            closeBtn.onclick = () => dialog.close();
-
-            dialog.appendChild(title);
-            dialog.appendChild(container);
-            dialog.appendChild(document.createElement('br'));
-            dialog.appendChild(closeBtn);
-
-            document.body.appendChild(dialog);
-            dialog.showModal();
-
-            dialog.addEventListener('close', () => {
-              document.body.removeChild(dialog);
-            });
-          }
-        }}>修改图标</MenuItem>
-        <MenuItem onClick={handleCopyAssistant}>复制助手</MenuItem>
-        <MenuItem onClick={handleClearTopics}>清空话题</MenuItem>
+        <MenuItem onClick={handleOpenAddToGroupMenu}>
+          <FolderPlus size={18} style={{ marginRight: 8 }} />
+          添加到分组...
+        </MenuItem>
+        <MenuItem onClick={handleOpenEditDialog}>
+          <Edit3 size={18} style={{ marginRight: 8 }} />
+          编辑助手
+        </MenuItem>
+        <MenuItem onClick={handleOpenIconPicker}>
+          <Image size={18} style={{ marginRight: 8 }} />
+          修改图标
+        </MenuItem>
+        <MenuItem onClick={handleCopyAssistant}>
+          <Copy size={18} style={{ marginRight: 8 }} />
+          复制助手
+        </MenuItem>
+        <MenuItem onClick={handleClearTopics}>
+          <Trash2 size={18} style={{ marginRight: 8 }} />
+          清空话题
+        </MenuItem>
         <Divider />
-        <MenuItem onClick={handleSortByPinyinAsc}>按拼音升序排列</MenuItem>
-        <MenuItem onClick={handleSortByPinyinDesc}>按拼音降序排列</MenuItem>
+        <MenuItem onClick={handleSortByPinyinAsc}>
+          <ArrowUpAZ size={18} style={{ marginRight: 8 }} />
+          按拼音升序排列
+        </MenuItem>
+        <MenuItem onClick={handleSortByPinyinDesc}>
+          <ArrowDownAZ size={18} style={{ marginRight: 8 }} />
+          按拼音降序排列
+        </MenuItem>
         <Divider />
         <MenuItem onClick={() => {
           if (selectedMenuAssistant) handleDeleteAssistantAction(selectedMenuAssistant.id);
         }}>
+          <Trash size={18} style={{ marginRight: 8 }} />
           删除助手
         </MenuItem>
       </Menu>
@@ -306,22 +287,57 @@ export default function AssistantTab({
             onChange={handleEditNameChange}
             sx={{ mb: 2 }}
           />
-          <TextField
-            margin="dense"
-            label="系统提示词"
-            multiline
-            rows={6}
-            fullWidth
-            variant="outlined"
-            value={editAssistantPrompt}
-            onChange={handleEditPromptChange}
-          />
+          <Box sx={{ position: 'relative' }}>
+            <TextField
+              margin="dense"
+              label="系统提示词"
+              multiline
+              rows={6}
+              fullWidth
+              variant="outlined"
+              value={editAssistantPrompt}
+              onChange={handleEditPromptChange}
+            />
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Sparkles size={16} />}
+              onClick={handleOpenPromptSelector}
+              sx={{
+                mt: 1,
+                borderColor: 'primary.main',
+                color: 'primary.main',
+                '&:hover': {
+                  borderColor: 'primary.dark',
+                  backgroundColor: 'primary.50'
+                }
+              }}
+            >
+              选择预设提示词
+            </Button>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEditDialog}>取消</Button>
           <Button onClick={handleSaveAssistant} color="primary">保存</Button>
         </DialogActions>
       </Dialog>
+
+      {/* 智能体提示词选择器 */}
+      <AgentPromptSelector
+        open={promptSelectorOpen}
+        onClose={handleClosePromptSelector}
+        onSelect={handleSelectPrompt}
+        currentPrompt={editAssistantPrompt}
+      />
+
+      {/* 助手图标选择器 */}
+      <AssistantIconPicker
+        open={iconPickerOpen}
+        onClose={handleCloseIconPicker}
+        onSelectEmoji={handleSelectEmoji}
+        currentEmoji={selectedMenuAssistant?.emoji}
+      />
 
       {/* 通知提示 */}
       <Snackbar

@@ -14,11 +14,7 @@ import {
   Collapse,
   IconButton
 } from '@mui/material';
-import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import EditIcon from '@mui/icons-material/Edit';
-import PaletteIcon from '@mui/icons-material/Palette';
+import { Code, ChevronDown, ChevronUp, Edit, Palette } from 'lucide-react';
 
 // 代码风格选项
 const CODE_STYLES = [
@@ -156,7 +152,7 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = ({ onSettingChange }
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          <CodeOutlinedIcon sx={{ color: 'primary.main', mr: 1.5 }} />
+          <Code size={20} color="#1976d2" style={{ marginRight: 12 }} />
           <Box>
             <Typography variant="body2" fontWeight="medium">
               代码块设置
@@ -167,7 +163,7 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = ({ onSettingChange }
           </Box>
         </Box>
         <IconButton size="small" sx={{ padding: '4px', ml: '4px' }}>
-          {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </IconButton>
       </ListItem>
 
@@ -178,7 +174,7 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = ({ onSettingChange }
           {/* 代码风格选择 */}
           <ListItem sx={{ px: 1, py: 1.5, flexDirection: 'column', alignItems: 'flex-start' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, width: '100%' }}>
-              <PaletteIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+              <Palette size={20} color="#666" style={{ marginRight: 8 }} />
               <Typography variant="body2" fontWeight="medium">
                 代码风格
               </Typography>
@@ -215,7 +211,7 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = ({ onSettingChange }
           {/* 开启编辑器 */}
           <ListItem sx={{ px: 1, py: 1 }}>
             <ListItemIcon sx={{ minWidth: '36px' }}>
-              <EditIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+              <Edit size={20} color="#666" />
             </ListItemIcon>
             <ListItemText
               primary="开启编辑器"

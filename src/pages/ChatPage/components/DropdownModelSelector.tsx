@@ -166,7 +166,8 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
         MenuProps={{
           PaperProps: {
             sx: {
-              maxHeight: 400,
+              maxHeight: '70vh', // 增加最大高度到视口高度的70%
+              minHeight: 300, // 设置最小高度
               mt: 0.5,
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
               bgcolor: theme.palette.mode === 'dark' ? '#2A2A2A' : '#FFFFFF', // 不透明背景
@@ -196,12 +197,13 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
               sx={{
                 bgcolor: theme.palette.mode === 'dark' ? '#3A3A3A' : '#F5F5F5', // 更明显的背景色
                 fontWeight: 600,
-                fontSize: '0.875rem',
-                py: 1.5,
+                fontSize: '0.8rem', // 减小字体大小
+                py: 0.75, // 减少垂直内边距
                 px: 2,
+                minHeight: 32, // 设置最小高度
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1,
+                gap: 0.75, // 减少间距
                 position: 'sticky', // 粘性定位
                 top: 0, // 固定在顶部
                 zIndex: 10, // 确保在其他元素之上
@@ -213,10 +215,10 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
             >
               <Avatar
                 sx={{
-                  width: 20,
-                  height: 20,
+                  width: 16, // 减小头像大小
+                  height: 16,
                   bgcolor: providerInfo?.color || theme.palette.primary.main,
-                  fontSize: '0.75rem'
+                  fontSize: '0.65rem' // 减小字体大小
                 }}
               >
                 {providerInfo?.avatar || providerName[0]}
@@ -232,9 +234,10 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
                   key={compositeValue}
                   value={compositeValue}
                   sx={{
-                    py: 1.5,
-                    pl: 4, // 增加左边距以显示层级关系
+                    py: 1, // 减少垂直内边距
+                    pl: 3, // 减少左边距
                     pr: 2,
+                    minHeight: 40, // 设置最小高度
                     bgcolor: 'transparent',
                     '&:hover': {
                       bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'
@@ -249,11 +252,27 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 500,
+                          fontSize: '0.875rem', // 稍微减小字体
+                          lineHeight: 1.3 // 减少行高
+                        }}
+                      >
                         {model.name}
                       </Typography>
                       {model.description && (
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{
+                            display: 'block',
+                            fontSize: '0.75rem', // 减小描述字体
+                            lineHeight: 1.2,
+                            mt: 0.25 // 减少上边距
+                          }}
+                        >
                           {model.description}
                         </Typography>
                       )}

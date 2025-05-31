@@ -41,16 +41,19 @@ export interface ModelTypeRule {
 
 // 图片内容类型
 export interface ImageContent {
+  id?: string; // 可选的唯一标识符
   url: string;
   base64Data?: string; // 可选的base64数据，用于本地预览
   mimeType: string;
   width?: number;
   height?: number;
   size?: number; // 文件大小（字节）
+  name?: string; // 可选的文件名
 }
 
 // 文件内容类型
 export interface FileContent {
+  id?: string; // 可选的唯一标识符
   name: string; // 文件名
   mimeType: string; // MIME类型
   extension: string; // 文件扩展名
@@ -328,6 +331,16 @@ export interface PresetModel {
 
 // 确保从newMessage导出所有类型
 export * from './newMessage.ts';
+
+// 快捷短语类型定义
+export interface QuickPhrase {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+  order?: number;
+}
 
 // MCP 相关类型定义
 export type MCPServerType = 'sse' | 'streamableHttp' | 'inMemory';

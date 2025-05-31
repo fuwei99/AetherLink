@@ -67,49 +67,14 @@ const Markdown: React.FC<MarkdownProps> = ({ content, allowHtml = false, mathEng
     return plugins;
   }, [mathEngine]);
 
-  // 🔥 修复：内容预处理 - 保护表格和代码块
+  // 🔥 简化内容预处理 - 最小化干预
   const messageContent = useMemo(() => {
     if (!content) return '';
 
+    // 只进行必要的预处理，避免过度干预
     let processedContent = removeSvgEmptyLines(escapeBrackets(content));
 
-    // 🔥 修复：保护代码块和表格，避免被换行处理影响
-    const protectedBlocks: string[] = [];
-    let blockIndex = 0;
-
-    // 保护代码块
-    processedContent = processedContent.replace(/```[\s\S]*?```/g, (match) => {
-      protectedBlocks.push(match);
-      return `__PROTECTED_BLOCK_${blockIndex++}__`;
-    });
-
-    // 🔥 新增：保护表格（以 | 开头的行）
-    processedContent = processedContent.replace(/^(\|.*\|.*\n)+/gm, (match) => {
-      protectedBlocks.push(match);
-      return `__PROTECTED_BLOCK_${blockIndex++}__`;
-    });
-
-    // 🔥 新增：保护表格分隔行（如 |:-----|:----:|-----:|）
-    processedContent = processedContent.replace(/^\|[\s\-:]+\|.*\n/gm, (match) => {
-      protectedBlocks.push(match);
-      return `__PROTECTED_BLOCK_${blockIndex++}__`;
-    });
-
-    // 对非保护内容进行换行处理（但要更谨慎）
-    // 只在确实需要的地方添加换行，避免破坏表格
-    processedContent = processedContent.replace(/([^\n|])\n([^\n|])/g, (match, p1, p2) => {
-      // 如果前后都不是表格相关字符，才添加换行
-      if (!p1.includes('|') && !p2.includes('|')) {
-        return `${p1}\n\n${p2}`;
-      }
-      return match;
-    });
-
-    // 恢复保护的内容
-    protectedBlocks.forEach((block, index) => {
-      processedContent = processedContent.replace(`__PROTECTED_BLOCK_${index}__`, block);
-    });
-
+    // 移除所有复杂的保护逻辑，让 react-markdown 自然处理
     return processedContent;
   }, [content]);
 
@@ -177,10 +142,12 @@ const Markdown: React.FC<MarkdownProps> = ({ content, allowHtml = false, mathEng
       '& h5': { fontSize: '0.9em' },
       '& h6': { fontSize: '0.8em' },
 
-      // 段落样式 - 关键的 white-space: pre-wrap
+      // 段落样式 - 优化换行处理
       '& p': {
         my: 1,
-        whiteSpace: 'pre-wrap',
+        whiteSpace: 'pre-wrap', // 保持换行符和空格
+        wordBreak: 'break-word', // 长单词换行
+        lineHeight: 1.6,
         '&:last-child': { mb: 0.5 },
         '&:first-of-type': { mt: 0 }
       },
@@ -464,73 +431,8 @@ const Markdown: React.FC<MarkdownProps> = ({ content, allowHtml = false, mathEng
               />
             );
           },
-          // 自定义段落渲染，避免嵌套问题
-          p: ({ children, ...props }: any) => {
-            // 递归检查子元素中是否包含块级元素
-            const hasBlockElement = (elements: any): boolean => {
-              return React.Children.toArray(elements).some((child: any) => {
-                // 检查是否是代码块
-                if (child?.props?.className?.includes('language-') ||
-                    (typeof child === 'object' && child?.type?.name === 'ShikiCodeRenderer')) {
-                  return true;
-                }
-
-                // 检查是否是 Box 组件（我们的代码块容器）
-                if (typeof child === 'object' && child?.type?.name === 'Box') {
-                  return true;
-                }
-
-                // 检查是否是其他块级元素
-                if (typeof child === 'object' && child?.type) {
-                  const tagName = child.type?.name || child.type;
-                  if (['div', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
-                    return true;
-                  }
-                }
-
-                // 递归检查子元素
-                if (child?.props?.children) {
-                  return hasBlockElement(child.props.children);
-                }
-
-                return false;
-              });
-            };
-
-            if (hasBlockElement(children)) {
-              // 如果包含块级元素，使用div而不是p
-              return (
-                <Box
-                  component="div"
-                  sx={{
-                    mb: 2,
-                    lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap', // 保持换行符和空格
-                    wordBreak: 'break-word' // 长单词换行
-                  }}
-                  {...props}
-                >
-                  {children}
-                </Box>
-              );
-            }
-
-            // 🔥 修复换行问题：普通段落，保持换行符
-            return (
-              <Box
-                component="p"
-                sx={{
-                  mb: 2,
-                  lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap', // 保持换行符和空格
-                  wordBreak: 'break-word' // 长单词换行
-                }}
-                {...props}
-              >
-                {children}
-              </Box>
-            );
-          },
+          // 简化段落渲染，使用默认行为
+          // p: 使用默认的段落渲染，通过CSS控制样式
         }}
       >
         {messageContent}

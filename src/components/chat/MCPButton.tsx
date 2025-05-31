@@ -18,14 +18,7 @@ import {
   alpha,
   useTheme
 } from '@mui/material';
-import {
-  Extension as ExtensionIcon,
-  Settings as SettingsIcon,
-  Cloud as CloudIcon,
-  Storage as StorageIcon,
-  Http as HttpIcon,
-  Add as AddIcon
-} from '@mui/icons-material';
+import { Wrench, Settings, Cloud, Database, Globe, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
@@ -87,13 +80,13 @@ const MCPButton: React.FC<MCPButtonProps> = ({
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
       case 'sse':
-        return <CloudIcon fontSize="small" />;
+        return <Cloud size={16} />;
       case 'streamableHttp':
-        return <HttpIcon fontSize="small" />;
+        return <Globe size={16} />;
       case 'inMemory':
-        return <StorageIcon fontSize="small" />;
+        return <Database size={16} />;
       default:
-        return <ExtensionIcon fontSize="small" />;
+        return <Settings size={16} />;
     }
   };
 
@@ -138,12 +131,10 @@ const MCPButton: React.FC<MCPButtonProps> = ({
           }
         }}
       >
-        <ExtensionIcon
-          sx={{
-            fontSize: '18px',
-            marginRight: '6px',
-            color: toolsEnabled ? (isDarkMode ? '#90caf9' : '#1976d2') : (isDarkMode ? '#9E9E9E' : '#757575')
-          }}
+        <Wrench
+          size={18}
+          color={toolsEnabled ? (isDarkMode ? '#90caf9' : '#1976d2') : (isDarkMode ? '#9E9E9E' : '#757575')}
+          style={{ marginRight: '6px' }}
         />
         <Typography
           variant="body2"
@@ -189,7 +180,7 @@ const MCPButton: React.FC<MCPButtonProps> = ({
         <DialogTitle sx={{ pb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ExtensionIcon sx={{ color: '#10b981' }} />
+              <Wrench size={20} color="#10b981" />
               <Typography variant="h6" fontWeight={600}>
                 MCP 工具服务器
               </Typography>
@@ -213,7 +204,7 @@ const MCPButton: React.FC<MCPButtonProps> = ({
         <DialogContent sx={{ pt: 1 }}>
           {servers.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <ExtensionIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+              <Wrench size={48} color="rgba(0,0,0,0.4)" style={{ marginBottom: 16 }} />
               <Typography variant="body1" color="text.secondary" gutterBottom>
                 暂无 MCP 服务器
               </Typography>
@@ -222,7 +213,7 @@ const MCPButton: React.FC<MCPButtonProps> = ({
               </Typography>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
+                startIcon={<Plus size={16} />}
                 onClick={handleManageServers}
                 sx={{ borderRadius: '8px' }}
               >

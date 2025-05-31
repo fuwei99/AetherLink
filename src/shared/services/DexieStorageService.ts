@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
 import { v4 as uuid } from 'uuid';
 import type { Assistant } from '../types/Assistant';
-import type { ChatTopic } from '../types';
+import type { ChatTopic, QuickPhrase } from '../types';
 import type { MessageBlock } from '../types';
 import type { Message } from '../types/newMessage.ts';
 import { DB_CONFIG } from '../types/DatabaseSchema';
@@ -25,6 +25,7 @@ class DexieStorageService extends Dexie {
   files!: Dexie.Table<any, string>;
   knowledge_bases!: Dexie.Table<any, string>;
   knowledge_documents!: Dexie.Table<any, string>;
+  quick_phrases!: Dexie.Table<QuickPhrase, string>;
 
   private static instance: DexieStorageService;
 
@@ -54,7 +55,7 @@ class DexieStorageService extends Dexie {
       [DB_CONFIG.STORES.MESSAGES]: 'id, topicId, assistantId',
     }).upgrade(() => this.upgradeToV5());
 
-    // 添加版本6，增加文件存储表和知识库相关表
+    // 添加版本6，增加文件存储表、知识库相关表和快捷短语表
     this.version(6).stores({
       [DB_CONFIG.STORES.ASSISTANTS]: 'id',
       [DB_CONFIG.STORES.TOPICS]: 'id, _lastMessageTimeNum, messages',
@@ -67,15 +68,16 @@ class DexieStorageService extends Dexie {
       files: 'id, name, origin_name, size, ext, type, created_at, count, hash',
       knowledge_bases: 'id, name, model, dimensions, created_at, updated_at',
       knowledge_documents: 'id, knowledgeBaseId, content, metadata.source, metadata.timestamp',
+      quick_phrases: 'id, title, content, createdAt, updatedAt, order',
     }).upgrade(() => this.upgradeToV6());
   }
 
   /**
-   * 升级到数据库版本6：添加文件存储表和知识库相关表
+   * 升级到数据库版本6：添加文件存储表、知识库相关表和快捷短语表
    */
   private async upgradeToV6(): Promise<void> {
-    console.log('开始升级到数据库版本6: 添加文件存储表和知识库相关表...');
-    // 文件表和知识库表会自动创建，无需特殊处理
+    console.log('开始升级到数据库版本6: 添加文件存储表、知识库相关表和快捷短语表...');
+    // 文件表、知识库表和快捷短语表会自动创建，无需特殊处理
     console.log('数据库升级到版本6完成');
   }
 
@@ -1167,6 +1169,114 @@ class DexieStorageService extends Dexie {
       await this.saveMetadata('model_combos', filteredCombos);
     } catch (error) {
       console.error('[DexieStorageService] 删除模型组合失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 快捷短语相关方法
+   */
+
+  // 获取所有快捷短语
+  async getAllQuickPhrases(): Promise<QuickPhrase[]> {
+    try {
+      const phrases = await this.quick_phrases.toArray();
+      return phrases.sort((a, b) => (b.order ?? 0) - (a.order ?? 0));
+    } catch (error) {
+      console.error('[DexieStorageService] 获取快捷短语失败:', error);
+      return [];
+    }
+  }
+
+  // 获取单个快捷短语
+  async getQuickPhrase(id: string): Promise<QuickPhrase | null> {
+    try {
+      return await this.quick_phrases.get(id) || null;
+    } catch (error) {
+      console.error('[DexieStorageService] 获取快捷短语失败:', error);
+      return null;
+    }
+  }
+
+  // 添加快捷短语
+  async addQuickPhrase(data: Pick<QuickPhrase, 'title' | 'content'>): Promise<QuickPhrase> {
+    try {
+      const now = Date.now();
+      const phrases = await this.getAllQuickPhrases();
+
+      // 更新现有短语的顺序
+      await Promise.all(
+        phrases.map((phrase) =>
+          this.quick_phrases.update(phrase.id, {
+            order: (phrase.order ?? 0) + 1
+          })
+        )
+      );
+
+      const phrase: QuickPhrase = {
+        id: uuid(),
+        title: data.title,
+        content: data.content,
+        createdAt: now,
+        updatedAt: now,
+        order: 0
+      };
+
+      await this.quick_phrases.add(phrase);
+      return phrase;
+    } catch (error) {
+      console.error('[DexieStorageService] 添加快捷短语失败:', error);
+      throw error;
+    }
+  }
+
+  // 更新快捷短语
+  async updateQuickPhrase(id: string, data: Pick<QuickPhrase, 'title' | 'content'>): Promise<void> {
+    try {
+      await this.quick_phrases.update(id, {
+        ...data,
+        updatedAt: Date.now()
+      });
+    } catch (error) {
+      console.error('[DexieStorageService] 更新快捷短语失败:', error);
+      throw error;
+    }
+  }
+
+  // 删除快捷短语
+  async deleteQuickPhrase(id: string): Promise<void> {
+    try {
+      await this.quick_phrases.delete(id);
+      const phrases = await this.getAllQuickPhrases();
+
+      // 重新排序剩余的短语
+      await Promise.all(
+        phrases.map((phrase, index) =>
+          this.quick_phrases.update(phrase.id, {
+            order: phrases.length - 1 - index
+          })
+        )
+      );
+    } catch (error) {
+      console.error('[DexieStorageService] 删除快捷短语失败:', error);
+      throw error;
+    }
+  }
+
+  // 更新快捷短语顺序
+  async updateQuickPhrasesOrder(phrases: QuickPhrase[]): Promise<void> {
+    try {
+      const now = Date.now();
+      await Promise.all(
+        phrases.map((phrase, index) =>
+          this.quick_phrases.update(phrase.id, {
+            order: phrases.length - 1 - index,
+            updatedAt: now
+          })
+        )
+      );
+    } catch (error) {
+      console.error('[DexieStorageService] 更新快捷短语顺序失败:', error);
       throw error;
     }
   }

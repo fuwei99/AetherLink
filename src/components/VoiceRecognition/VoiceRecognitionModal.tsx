@@ -12,12 +12,7 @@ import {
   Chip,
   IconButton,
 } from '@mui/material';
-import {
-  Mic as MicIcon,
-  MicOff as MicOffIcon,
-  Close as CloseIcon,
-  VolumeUp as VolumeUpIcon,
-} from '@mui/icons-material';
+import { Mic, MicOff, X, Volume2 } from 'lucide-react';
 
 interface VoiceRecognitionModalProps {
   open: boolean;
@@ -98,7 +93,7 @@ const VoiceRecognitionModal: React.FC<VoiceRecognitionModalProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <VolumeUpIcon color="primary" />
+          <Volume2 size={20} color="#1976d2" />
           <Typography variant="h6" component="div">
             语音识别
           </Typography>
@@ -108,7 +103,7 @@ const VoiceRecognitionModal: React.FC<VoiceRecognitionModalProps> = ({
           size="small"
           sx={{ color: 'text.secondary' }}
         >
-          <CloseIcon />
+          <X size={18} />
         </IconButton>
       </DialogTitle>
 
@@ -191,12 +186,10 @@ const VoiceRecognitionModal: React.FC<VoiceRecognitionModalProps> = ({
                     marginLeft: '-40px',
                   }}
                 />
-                <MicIcon
-                  sx={{
-                    fontSize: 48,
-                    color: 'secondary.main',
-                    zIndex: 1,
-                  }}
+                <Mic
+                  size={48}
+                  color="#9c27b0"
+                  style={{ zIndex: 1 }}
                 />
               </Box>
               <Typography variant="h6" color="secondary" sx={{ mb: 1 }}>
@@ -208,12 +201,10 @@ const VoiceRecognitionModal: React.FC<VoiceRecognitionModalProps> = ({
             </>
           ) : (
             <>
-              <MicOffIcon
-                sx={{
-                  fontSize: 48,
-                  color: 'text.disabled',
-                  mb: 2,
-                }}
+              <MicOff
+                size={48}
+                color="#9e9e9e"
+                style={{ marginBottom: 16 }}
               />
               <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
                 语音识别已停止
@@ -256,7 +247,7 @@ const VoiceRecognitionModal: React.FC<VoiceRecognitionModalProps> = ({
             variant="contained"
             color={isListening ? "error" : "primary"}
             onClick={isListening ? onStopRecognition : onStartRecognition}
-            startIcon={isListening ? <MicOffIcon /> : <MicIcon />}
+            startIcon={isListening ? <MicOff size={16} /> : <Mic size={16} />}
           >
             {isListening ? "停止识别" : "开始识别"}
           </Button>

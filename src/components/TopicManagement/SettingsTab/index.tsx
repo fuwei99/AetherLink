@@ -12,9 +12,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import FaceIcon from '@mui/icons-material/Face';
-import TuneIcon from '@mui/icons-material/Tune';
+import { Settings, User, Sliders, Cog } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { MathRendererType } from '../../../shared/types';
 import type { ThinkingOption } from '../../../shared/config/reasoningConfig';
@@ -189,13 +187,24 @@ export default function SettingsTab({
         }
       }}
     >
-      <ListItem sx={{ px: 2, py: 0.75 }}>
+      <ListItem
+        button
+        onClick={() => navigate('/settings')}
+        sx={{
+          px: 2,
+          py: 0.75,
+          cursor: 'pointer',
+          '&:hover': {
+            backgroundColor: 'rgba(25, 118, 210, 0.04)',
+          },
+        }}
+      >
         <ListItemIcon sx={{ minWidth: '40px' }}>
-          <SettingsIcon sx={{ color: 'primary.main' }} />
+          <Cog size={20} color="#1976d2" />
         </ListItemIcon>
         <ListItemText
-          primary="助手设置"
-          secondary="设置助手行为和外观"
+          primary="设置"
+          secondary="进入完整设置页面"
           primaryTypographyProps={{ fontWeight: 'medium', fontSize: '0.95rem', lineHeight: 1.2 }}
           secondaryTypographyProps={{ fontSize: '0.75rem', lineHeight: 1.2 }}
         />
@@ -204,7 +213,10 @@ export default function SettingsTab({
             <IconButton
               size="small"
               color="primary"
-              onClick={() => navigate('/settings/assistant-settings')}
+              onClick={(e) => {
+                e.stopPropagation(); // 防止触发父级的点击事件
+                navigate('/settings/assistant-settings');
+              }}
               sx={{
                 bgcolor: 'rgba(255, 193, 7, 0.1)',
                 border: '2px solid #ffc107',
@@ -214,7 +226,7 @@ export default function SettingsTab({
                 }
               }}
             >
-              <TuneIcon />
+              <Sliders size={16} />
             </IconButton>
           </Tooltip>
         </ListItemSecondaryAction>
@@ -262,7 +274,7 @@ export default function SettingsTab({
               '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.1)' }
             }}
           >
-            <FaceIcon />
+            <User size={16} />
           </IconButton>
         </Tooltip>
       </ListItem>

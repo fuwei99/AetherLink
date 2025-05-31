@@ -507,18 +507,18 @@ const TopToolbarDIYSettings: React.FC = () => {
                 control={
                   <Switch
                     size="small"
-                    checked={topToolbar.modelSelectorStyle === 'full'}
+                    checked={topToolbar.modelSelectorStyle === 'dialog'}
                     onChange={(e) => {
                       dispatch(updateSettings({
                         topToolbar: {
                           ...topToolbar,
-                          modelSelectorStyle: e.target.checked ? 'full' : 'icon'
+                          modelSelectorStyle: e.target.checked ? 'dialog' : 'dropdown'
                         }
                       }));
                     }}
                   />
                 }
-                label={topToolbar.modelSelectorStyle === 'full' ? '完整显示' : '图标模式'}
+                label={topToolbar.modelSelectorStyle === 'dialog' ? '弹窗式' : '下拉式'}
               />
             </FormGroup>
 

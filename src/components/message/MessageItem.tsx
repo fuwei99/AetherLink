@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import type { Message, MessageBlock } from '../../shared/types/newMessage.ts';
-import { messageBlocksSelectors } from '../../shared/store/slices/messageBlocksSlice';
+
 import { dexieStorage } from '../../shared/services/DexieStorageService';
 import { upsertManyBlocks } from '../../shared/store/slices/messageBlocksSlice';
 // import { EventEmitter, EVENT_NAMES } from '../../shared/services/EventEmitter';
@@ -19,7 +19,7 @@ import MessageActions from './MessageActions';
 import MessageBlockRenderer from './MessageBlockRenderer';
 import type { RootState } from '../../shared/store';
 import { getMessageDividerSetting } from '../../shared/utils/settingsUtils';
-import { getThemeColors, getMessageStyles } from '../../shared/utils/themeUtils';
+import { getThemeColors } from '../../shared/utils/themeUtils';
 
 interface MessageItemProps {
   message: Message;
@@ -128,7 +128,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     () => createSelector(
       [
         (state: RootState) => state.messageBlocks.entities,
-        (state: RootState) => message.blocks // 移除箭头函数，直接访问message.blocks
+        (_state: RootState) => message.blocks // 移除箭头函数，直接访问message.blocks
       ],
       (blockEntities, blockIds) => {
         // 如果blockIds为空或undefined，返回空数组
@@ -210,34 +210,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
     }
   }, [message.status]); // 只依赖message.status，避免无限循环
 
-  // 🔥 新增：监听消息编辑更新事件，确保UI重新渲染
-  useEffect(() => {
-    const handleMessageUpdated = (event: CustomEvent) => {
-      const { messageId } = event.detail;
-      if (messageId === message.id) {
-        console.log('[MessageItem] 收到消息更新事件，强制重新渲染:', messageId);
-        if (forceUpdateRef.current) {
-          forceUpdateRef.current();
-        }
-      }
-    };
-
-    const handleForceRefresh = () => {
-      console.log('[MessageItem] 收到强制刷新事件');
-      if (forceUpdateRef.current) {
-        forceUpdateRef.current();
-      }
-    };
-
-    // 监听自定义事件
-    window.addEventListener('messageUpdated', handleMessageUpdated as EventListener);
-    window.addEventListener('forceRefresh', handleForceRefresh as EventListener);
-
-    return () => {
-      window.removeEventListener('messageUpdated', handleMessageUpdated as EventListener);
-      window.removeEventListener('forceRefresh', handleForceRefresh as EventListener);
-    };
-  }, [message.id]); // 依赖message.id，确保监听正确的消息
+  // 🚀 清理：移除不再需要的消息编辑事件监听器
+  // 现在编辑功能通过正确的块ID管理工作，不需要额外的事件通知
 
   // 版本恢复逻辑已移至TopicService.loadTopicMessages中统一处理
   // 这里不再需要重复的版本恢复逻辑

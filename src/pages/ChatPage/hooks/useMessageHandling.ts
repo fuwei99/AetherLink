@@ -61,12 +61,18 @@ export const useMessageHandling = (
     }
   }, [dispatch, currentTopic]);
 
-  // 处理重新生成消息
+  // 处理重新生成消息 - 使用顶部模型选择器最新的模型
   const handleRegenerateMessage = useCallback(async (messageId: string) => {
     if (!currentTopic || !selectedModel) return null;
 
     try {
-      // 使用Redux Thunk重新生成消息
+      console.log(`[handleRegenerateMessage] 使用顶部选择器的模型重新生成消息: ${messageId}`, {
+        modelId: selectedModel.id,
+        modelName: selectedModel.name,
+        provider: selectedModel.provider
+      });
+
+      // 使用Redux Thunk重新生成消息，传入顶部模型选择器当前选择的模型
       dispatch(regenerateMessage(messageId, currentTopic.id, selectedModel));
       return true;
     } catch (error) {

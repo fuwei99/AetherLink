@@ -8,10 +8,10 @@ import {
   Typography,
   Box,
 } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { MoreVertical, Trash } from 'lucide-react';
 import type { Assistant } from '../../../shared/types/Assistant';
 import { EventEmitter, EVENT_NAMES } from '../../../shared/services/EventService';
+import LucideIconRenderer, { isLucideIcon } from './LucideIconRenderer';
 
 interface AssistantItemProps {
   assistant: Assistant;
@@ -58,10 +58,24 @@ const AssistantItem = memo(function AssistantItem({
     return assistant.topics?.length || assistant.topicIds?.length || 0;
   }, [assistant.topics?.length, assistant.topicIds?.length]);
 
-  // 缓存头像显示内容
+  // 缓存头像显示内容 - 支持Lucide图标
   const avatarContent = useMemo(() => {
-    return assistant.emoji || assistant.name.charAt(0);
-  }, [assistant.emoji, assistant.name]);
+    const iconOrEmoji = assistant.emoji || assistant.name.charAt(0);
+
+    // 如果是Lucide图标名称，渲染Lucide图标
+    if (isLucideIcon(iconOrEmoji)) {
+      return (
+        <LucideIconRenderer
+          iconName={iconOrEmoji}
+          size={18}
+          color={isSelected ? 'white' : 'inherit'}
+        />
+      );
+    }
+
+    // 否则显示emoji或首字母
+    return iconOrEmoji;
+  }, [assistant.emoji, assistant.name, isSelected]);
 
   // 缓存样式对象，避免每次渲染都创建新对象
   const avatarSx = useMemo(() => ({
@@ -126,14 +140,14 @@ const AssistantItem = memo(function AssistantItem({
           onClick={handleOpenMenu}
           sx={{ opacity: 0.6 }}
         >
-          <MoreVertIcon fontSize="small" />
+          <MoreVertical size={16} />
         </IconButton>
         <IconButton
           size="small"
           onClick={handleDeleteClick}
           sx={{ opacity: 0.6, '&:hover': { color: 'error.main' } }}
         >
-          <DeleteIcon fontSize="small" />
+          <Trash size={16} />
         </IconButton>
       </Box>
     </ListItemButton>

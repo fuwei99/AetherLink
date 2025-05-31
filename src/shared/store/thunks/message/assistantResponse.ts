@@ -312,11 +312,13 @@ export const processAssistantResponse = async (
       } else {
 
         // 修复：根据实际provider类型选择合适的消息格式
-        // 只有真正的Google Gemini provider才需要原始Message对象，其他都用API格式
-        const isActualGeminiProvider = model.provider === 'google';
+        // 🔥 关键修复：使用getActualProviderType来正确判断Gemini provider
+        const { getActualProviderType } = await import('../../../services/ProviderFactory');
+        const actualProviderType = getActualProviderType(model);
+        const isActualGeminiProvider = actualProviderType === 'gemini';
         const messagesToSend = isActualGeminiProvider ? filteredOriginalMessages : apiMessages;
 
-        console.log(`[processAssistantResponse] Provider类型: ${model.provider}, 使用${isActualGeminiProvider ? '原始' : 'API'}格式消息，消息数量: ${messagesToSend.length}`);
+        console.log(`[processAssistantResponse] Provider类型: ${model.provider} -> 实际类型: ${actualProviderType}, 使用${isActualGeminiProvider ? '原始' : 'API'}格式消息，消息数量: ${messagesToSend.length}`);
 
         // 调试：打印消息内容以确认文件块信息
         if (isActualGeminiProvider) {
@@ -346,6 +348,20 @@ export const processAssistantResponse = async (
         const mcpMode = localStorage.getItem('mcp-mode') as 'prompt' | 'function' || 'function';
         console.log(`[MCP] 当前模式: ${mcpMode}`);
 
+        // 🔥 修复Gemini系统提示词传递问题：从API消息中提取系统提示词
+        let systemPromptForProvider = '';
+        if (isActualGeminiProvider) {
+          // 对于Gemini provider，从apiMessages中提取系统提示词
+          const systemMessage = apiMessages.find((msg: any) => msg.role === 'system');
+          systemPromptForProvider = systemMessage?.content || '';
+          console.log(`[processAssistantResponse] Gemini提取到系统提示词:`, {
+            hasSystemMessage: !!systemMessage,
+            systemPromptLength: systemPromptForProvider.length,
+            systemPromptPreview: systemPromptForProvider.substring(0, 50) + (systemPromptForProvider.length > 50 ? '...' : ''),
+            apiMessagesCount: apiMessages.length
+          });
+        }
+
         // 使用Provider的sendChatMessage方法，避免重复调用
         // 🔥 修复组合模型推理显示问题：同时使用onUpdate和onChunk
         // 🔥 修复文件上传问题：根据provider类型使用合适的消息格式
@@ -364,7 +380,9 @@ export const processAssistantResponse = async (
             mcpTools: mcpTools,
             mcpMode: mcpMode,
             abortSignal: abortController.signal,
-            assistant: assistant // 传递助手信息给Provider
+            assistant: assistant, // 传递助手信息给Provider
+            // 🔥 关键修复：为Gemini provider传递系统提示词
+            systemPrompt: isActualGeminiProvider ? systemPromptForProvider : undefined
           }
         );
       }

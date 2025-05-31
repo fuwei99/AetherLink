@@ -18,14 +18,8 @@ import {
   Divider,
   useTheme
 } from '@mui/material';
-import {
-  Build as BuildIcon,
-  Settings as SettingsIcon,
-  Cloud as CloudIcon,
-  Storage as StorageIcon,
-  Http as HttpIcon,
-  Add as AddIcon
-} from '@mui/icons-material';
+// Lucide Icons - 按需导入，高端简约设计
+import { Wrench, Cloud, Database, Globe, Plus, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
@@ -45,61 +39,41 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [activeServers, setActiveServers] = useState<MCPServer[]>([]);
 
-  // 获取输入框风格设置
-  const inputBoxStyle = useSelector((state: RootState) =>
-    (state.settings as any).inputBoxStyle || 'default'
-  );
-
   // 获取工具栏显示样式设置
   const toolbarDisplayStyle = useSelector((state: RootState) =>
     (state.settings as any).toolbarDisplayStyle || 'both'
   );
 
-  // 根据风格获取工具栏样式
-  const getToolbarStyles = () => {
-    const baseStyles = {
-      buttonBg: isDarkMode ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-      buttonBorder: isDarkMode ? 'rgba(60, 60, 60, 0.8)' : 'rgba(230, 230, 230, 0.8)',
-      buttonShadow: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.07)',
-      hoverBg: isDarkMode ? 'rgba(40, 40, 40, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-      hoverShadow: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)',
-      borderRadius: '50px',
-      backdropFilter: 'blur(5px)'
+  // 简约小巧的按钮样式 - 与主工具栏保持一致
+  const getSimpleButtonStyles = () => {
+    return {
+      button: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '20px',
+        padding: '6px 12px',
+        transition: 'all 0.15s ease',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        minHeight: '32px'
+      },
+      buttonHover: {
+        background: isDarkMode
+          ? 'rgba(255, 255, 255, 0.06)'
+          : 'rgba(0, 0, 0, 0.04)'
+      },
+      buttonActive: {
+        background: isDarkMode
+          ? 'rgba(255, 255, 255, 0.1)'
+          : 'rgba(0, 0, 0, 0.06)',
+        transform: 'scale(0.96)'
+      }
     };
-
-    switch (inputBoxStyle) {
-      case 'modern':
-        return {
-          ...baseStyles,
-          buttonBg: isDarkMode
-            ? 'linear-gradient(135deg, rgba(45, 45, 45, 0.9) 0%, rgba(35, 35, 35, 0.9) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
-          buttonBorder: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-          buttonShadow: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)',
-          hoverBg: isDarkMode
-            ? 'linear-gradient(135deg, rgba(55, 55, 55, 0.95) 0%, rgba(45, 45, 45, 0.95) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%)',
-          hoverShadow: isDarkMode ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)'
-        };
-      case 'minimal':
-        return {
-          ...baseStyles,
-          buttonBg: isDarkMode ? 'rgba(40, 40, 40, 0.6)' : 'rgba(255, 255, 255, 0.7)',
-          buttonBorder: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-          buttonShadow: 'none',
-          hoverBg: isDarkMode ? 'rgba(50, 50, 50, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-          hoverShadow: 'none',
-          borderRadius: '12px',
-          backdropFilter: 'none'
-        };
-      default:
-        return baseStyles;
-    }
   };
 
-  const toolbarStyles = getToolbarStyles();
+  const simpleStyles = getSimpleButtonStyles();
 
   useEffect(() => {
     loadServers();
@@ -138,13 +112,13 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
       case 'sse':
-        return <CloudIcon />;
+        return <Cloud size={16} />;
       case 'streamableHttp':
-        return <HttpIcon />;
+        return <Globe size={16} />;
       case 'inMemory':
-        return <StorageIcon />;
+        return <Database size={16} />;
       default:
-        return <SettingsIcon />;
+        return <Settings size={16} />;
     }
   };
 
@@ -168,43 +142,43 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
       <Box
         onClick={handleOpen}
         sx={{
-          display: 'flex',
-          alignItems: 'center',
+          ...simpleStyles.button,
           background: hasActiveServers
-            ? (isDarkMode ? '#424242' : '#10b981')
-            : toolbarStyles.buttonBg,
-          backdropFilter: toolbarStyles.backdropFilter,
-          WebkitBackdropFilter: toolbarStyles.backdropFilter,
-          color: hasActiveServers ? '#FFFFFF' : (isDarkMode ? '#9E9E9E' : '#10b981'),
-          border: `1px solid ${toolbarStyles.buttonBorder}`,
-          borderRadius: toolbarStyles.borderRadius,
-          padding: '6px 12px',
-          margin: '0 4px',
-          cursor: 'pointer',
-          boxShadow: toolbarStyles.buttonShadow ? `0 1px 3px ${toolbarStyles.buttonShadow}` : 'none',
-          transition: 'all 0.3s ease',
-          minWidth: 'max-content',
-          userSelect: 'none',
+            ? (isDarkMode ? 'rgba(16, 185, 129, 0.08)' : 'rgba(16, 185, 129, 0.05)')
+            : 'transparent',
+          margin: '0 2px',
           '&:hover': {
-            boxShadow: toolbarStyles.hoverShadow ? `0 2px 4px ${toolbarStyles.hoverShadow}` : 'none',
-            background: hasActiveServers
-              ? (isDarkMode ? '#525252' : '#059669')
-              : toolbarStyles.hoverBg,
-            transform: inputBoxStyle === 'modern' ? 'translateY(-1px)' : 'none'
+            ...simpleStyles.buttonHover,
+            ...(hasActiveServers && {
+              background: isDarkMode
+                ? 'rgba(16, 185, 129, 0.12)'
+                : 'rgba(16, 185, 129, 0.08)'
+            })
           },
           '&:active': {
-            transform: 'scale(0.98)'
+            ...simpleStyles.buttonActive
           }
         }}
         title="MCP 工具"
       >
-        {toolbarDisplayStyle !== 'text' && <BuildIcon sx={{ fontSize: '18px' }} />}
+        {toolbarDisplayStyle !== 'text' && (
+          <Wrench
+            size={16}
+            color={hasActiveServers
+              ? (isDarkMode ? 'rgba(16, 185, 129, 0.9)' : 'rgba(16, 185, 129, 0.8)')
+              : (isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)')
+            }
+          />
+        )}
         {toolbarDisplayStyle !== 'icon' && (
           <Typography
             variant="body2"
             sx={{
               fontWeight: 500,
               fontSize: '13px',
+              color: hasActiveServers
+                ? (isDarkMode ? 'rgba(16, 185, 129, 0.9)' : 'rgba(16, 185, 129, 0.8)')
+                : (isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)'),
               ml: toolbarDisplayStyle === 'both' ? 0.5 : 0
             }}
           >
@@ -231,7 +205,7 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
           gap: 1,
           pb: 1
         }}>
-          <BuildIcon sx={{ color: '#10b981' }} />
+          <Wrench size={20} color="#10b981" />
           MCP 工具服务器
           {hasActiveServers && (
             <Chip
@@ -246,7 +220,7 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
         <DialogContent sx={{ p: 0 }}>
           {servers.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center' }}>
-              <BuildIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+              <Wrench size={48} color="rgba(0,0,0,0.4)" style={{ marginBottom: 16 }} />
               <Typography variant="h6" gutterBottom>
                 还没有配置 MCP 服务器
               </Typography>
@@ -255,7 +229,7 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
               </Typography>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
+                startIcon={<Plus size={16} />}
                 onClick={handleNavigateToSettings}
                 sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}
               >
@@ -330,7 +304,7 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
                 <Button
                   fullWidth
                   variant="outlined"
-                  startIcon={<SettingsIcon />}
+                  startIcon={<Settings size={16} />}
                   onClick={handleNavigateToSettings}
                   size="small"
                 >

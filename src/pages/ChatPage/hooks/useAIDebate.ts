@@ -1,19 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { v4 as uuid } from 'uuid';
-import AIDebateService from '../../../shared/services/AIDebateService';
 import type { DebateConfig, DebateRole } from '../../../shared/services/AIDebateService';
-
-// 本地类型定义，确保包含summary立场
-interface LocalDebateRole {
-  id: string;
-  name: string;
-  description: string;
-  systemPrompt: string;
-  modelId?: string;
-  color: string;
-  stance: 'pro' | 'con' | 'neutral' | 'moderator' | 'summary';
-}
 import { createAssistantMessage } from '../../../shared/utils/messageUtils';
 import { newMessagesActions } from '../../../shared/store/slices/newMessagesSlice';
 import { upsertManyBlocks } from '../../../shared/store/slices/messageBlocksSlice';
@@ -28,7 +15,6 @@ export const useAIDebate = ({ onSendMessage, currentTopic }: UseAIDebateProps) =
   const dispatch = useDispatch();
   const [isDebating, setIsDebating] = useState(false);
   const [currentDebateConfig, setCurrentDebateConfig] = useState<DebateConfig | null>(null);
-  const debateServiceRef = useRef(AIDebateService.getInstance());
   const debateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 发送AI消息（作为助手消息）
@@ -82,10 +68,10 @@ export const useAIDebate = ({ onSendMessage, currentTopic }: UseAIDebateProps) =
       // 初始化timeout ref为非null值，表示辩论正在进行
       debateTimeoutRef.current = setTimeout(() => {}, 0);
 
-      // 发送辩论开始消息
+      // 发送辩论开始消息（使用系统消息，不使用当前选择的模型）
       const startMessage = `🎯 **AI辩论开始**\n\n**辩论主题：** ${question}\n\n**参与角色：**\n${config.roles.map(role => `• **${role.name}** (${role.stance === 'pro' ? '正方' : role.stance === 'con' ? '反方' : role.stance === 'neutral' ? '中立' : '主持人'})`).join('\n')}\n\n**最大轮数：** ${config.maxRounds}\n\n---\n\n让我们开始辩论！`;
 
-      onSendMessage(startMessage);
+      await sendAIMessage(startMessage, '系统');
 
       // 等待一下再开始辩论流程，让开始消息先显示
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -160,8 +146,8 @@ export const useAIDebate = ({ onSendMessage, currentTopic }: UseAIDebateProps) =
             console.log(`💬 ${role.name} 发言完成，发送AI消息到界面`);
             await sendAIMessage(formattedMessage, role.name, role.modelId);
 
-            // 检查主持人是否建议结束
-            if (role.stance === 'moderator' && checkEndSuggestion(response)) {
+            // 检查主持人是否建议结束（但至少要进行2轮完整辩论）
+            if (role.stance === 'moderator' && currentRound >= 2 && checkEndSuggestion(response)) {
               console.log('🏁 主持人建议结束辩论');
               await new Promise(resolve => setTimeout(resolve, 2000));
               await endDebateWithSummary(question, conversationHistory, config);
@@ -211,6 +197,24 @@ export const useAIDebate = ({ onSendMessage, currentTopic }: UseAIDebateProps) =
         context += `${item}\n`;
       });
       context += '\n';
+    }
+
+    // 为主持人添加特殊指导
+    if (role.stance === 'moderator') {
+      context += `\n📊 **辩论进度提醒**：\n`;
+      context += `- 当前轮数：第${round}轮\n`;
+      context += `- 总发言数：${history.length - 1}条\n`;
+      if (round < 2) {
+        context += `- 状态：辩论刚开始，请推动讨论深入，不要急于结束\n`;
+      } else if (round < 3) {
+        context += `- 状态：辩论进行中，继续引导各方深入交流\n`;
+      } else {
+        context += `- 状态：可以考虑是否已充分讨论，必要时可建议结束\n`;
+      }
+      context += '\n';
+
+      context += `🔚 **重要提醒**：如果你认为辩论已经充分进行，各方观点都得到了充分表达，可以在回应的最后添加专属停止指令：\n`;
+      context += `**[DEBATE_END]** - 这是系统识别的结束指令，添加此指令后辩论将立即结束并进入总结阶段。\n\n`;
     }
 
     context += '请基于你的角色立场和以上内容进行回应，保持专业和理性。回应应该简洁明了，不超过200字。';
@@ -284,7 +288,7 @@ export const useAIDebate = ({ onSendMessage, currentTopic }: UseAIDebateProps) =
       ]
     };
 
-    const roleResponses = responses[stance] || responses.neutral;
+    const roleResponses = responses[stance as keyof typeof responses] || responses.neutral;
     return roleResponses[Math.floor(Math.random() * roleResponses.length)];
   };
 
@@ -302,8 +306,12 @@ export const useAIDebate = ({ onSendMessage, currentTopic }: UseAIDebateProps) =
 
   // 检查是否建议结束
   const checkEndSuggestion = (response: string): boolean => {
-    const endKeywords = ['结束', '总结', '共识', '充分讨论', '可以结束', '准备结束'];
-    return endKeywords.some(keyword => response.includes(keyword));
+    // 只检查专属停止指令
+    if (response.includes('[DEBATE_END]')) {
+      console.log('🔚 检测到专属停止指令 [DEBATE_END]');
+      return true;
+    }
+    return false;
   };
 
   // 结束辩论并生成总结

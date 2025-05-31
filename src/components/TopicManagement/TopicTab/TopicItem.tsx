@@ -5,8 +5,7 @@ import {
   IconButton,
   Typography
 } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { MoreVertical, Trash } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { createSelector } from '@reduxjs/toolkit';
 import { getMainTextContent } from '../../../shared/utils/blockUtils';
@@ -185,14 +184,14 @@ export default function TopicItem({
             onClick={handleOpenMenu}
             sx={{ opacity: 0.6, padding: '2px' }}
           >
-            <MoreVertIcon fontSize="small" />
+            <MoreVertical size={16} />
           </IconButton>
           <IconButton
             size="small"
             onClick={handleDeleteClick}
             sx={{ opacity: 0.6, padding: '2px', '&:hover': { color: 'error.main' } }}
           >
-            <DeleteIcon fontSize="small" />
+            <Trash size={16} />
           </IconButton>
         </div>
       </div>

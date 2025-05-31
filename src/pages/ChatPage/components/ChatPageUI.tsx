@@ -365,8 +365,6 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
             handleMenuClick={handleModelMenuClick}
             handleMenuClose={handleModelMenuClose}
             menuOpen={menuOpen}
-            // 传递图标模式标志
-            iconMode={mergedTopToolbarSettings.modelSelectorStyle === 'icon'}
           />
         ) : null;
 

@@ -25,16 +25,8 @@ import {
   IconButton
 } from '@mui/material';
 import {
-  ExtensionOutlined as ExtensionOutlinedIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  SettingsOutlined as SettingsOutlinedIcon,
-  CloudOutlined as CloudOutlinedIcon,
-  StorageOutlined as StorageOutlinedIcon,
-  HttpOutlined as HttpOutlinedIcon,
-  PsychologyOutlined as PsychologyOutlinedIcon,
-  CodeOutlined as CodeOutlinedIcon
-} from '@mui/icons-material';
+  Wrench, ChevronDown, ChevronUp, Settings, Cloud, Database, Globe, Brain, Code
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
@@ -96,13 +88,13 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
       case 'sse':
-        return <CloudOutlinedIcon />;
+        return <Cloud size={16} />;
       case 'streamableHttp':
-        return <HttpOutlinedIcon />;
+        return <Globe size={16} />;
       case 'inMemory':
-        return <StorageOutlinedIcon />;
+        return <Database size={16} />;
       default:
-        return <SettingsOutlinedIcon />;
+        return <Settings size={16} />;
     }
   };
 
@@ -167,7 +159,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
           }
         }}
       >
-        <ExtensionOutlinedIcon sx={{ mr: 1.5, color: 'primary.main' }} />
+        <Wrench size={20} color="#1976d2" style={{ marginRight: 12 }} />
         <ListItemText
           primary="MCP 工具"
           secondary={
@@ -195,7 +187,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
             />
           )}
           <IconButton edge="end" size="small" sx={{ padding: '4px' }}>
-            {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </IconButton>
         </ListItemSecondaryAction>
       </ListItem>
@@ -237,78 +229,78 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
             />
           </Box>
 
-          {toolsEnabled && (
-            <>
-              <Divider sx={{ mb: 2 }} />
+          <>
+            <Divider sx={{ mb: 2 }} />
 
-              {/* 工具调用模式选择 */}
-              <Box sx={{ mb: 2 }}>
-                <FormControl component="fieldset">
-                  <FormLabel component="legend" sx={{ fontSize: '0.875rem', fontWeight: 600, mb: 1 }}>
-                    工具调用模式
-                  </FormLabel>
-                  <RadioGroup
-                    value={mcpMode}
-                    onChange={handleModeChange}
-                    sx={{ gap: 0.5 }}
-                  >
-                    <FormControlLabel
-                      value="function"
-                      control={<Radio size="small" />}
-                      label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CodeOutlinedIcon sx={{ fontSize: 16 }} />
-                          <Box>
-                            <Typography variant="body2" fontWeight={500}>
-                              函数调用
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              模型自动调用工具（推荐）
-                            </Typography>
-                          </Box>
+            {/* 工具调用模式选择 */}
+            <Box sx={{ mb: 2, opacity: toolsEnabled ? 1 : 0.6 }}>
+              <FormControl component="fieldset" disabled={!toolsEnabled}>
+                <FormLabel component="legend" sx={{ fontSize: '0.875rem', fontWeight: 600, mb: 1 }}>
+                  工具调用模式
+                </FormLabel>
+                <RadioGroup
+                  value={mcpMode}
+                  onChange={handleModeChange}
+                  sx={{ gap: 0.5 }}
+                >
+                  <FormControlLabel
+                    value="function"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Code size={16} />
+                        <Box>
+                          <Typography variant="body2" fontWeight={500}>
+                            函数调用
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            模型自动调用工具（推荐）
+                          </Typography>
                         </Box>
-                      }
-                      sx={{
-                        m: 0,
-                        p: 1,
-                        borderRadius: 1,
-                        border: '1px solid',
-                        borderColor: mcpMode === 'function' ? 'primary.main' : 'divider',
-                        bgcolor: mcpMode === 'function' ? alpha('#1976d2', 0.05) : 'transparent'
-                      }}
-                    />
-                    <FormControlLabel
-                      value="prompt"
-                      control={<Radio size="small" />}
-                      label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <PsychologyOutlinedIcon sx={{ fontSize: 16 }} />
-                          <Box>
-                            <Typography variant="body2" fontWeight={500}>
-                              提示词注入
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              通过提示词指导 AI 使用工具
-                            </Typography>
-                          </Box>
+                      </Box>
+                    }
+                    sx={{
+                      m: 0,
+                      p: 1,
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: mcpMode === 'function' ? 'primary.main' : 'divider',
+                      bgcolor: mcpMode === 'function' ? alpha('#1976d2', 0.05) : 'transparent'
+                    }}
+                  />
+                  <FormControlLabel
+                    value="prompt"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Brain size={16} />
+                        <Box>
+                          <Typography variant="body2" fontWeight={500}>
+                            提示词注入
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            通过提示词指导 AI 使用工具
+                          </Typography>
                         </Box>
-                      }
-                      sx={{
-                        m: 0,
-                        p: 1,
-                        borderRadius: 1,
-                        border: '1px solid',
-                        borderColor: mcpMode === 'prompt' ? 'primary.main' : 'divider',
-                        bgcolor: mcpMode === 'prompt' ? alpha('#1976d2', 0.05) : 'transparent'
-                      }}
-                    />
-                  </RadioGroup>
-                </FormControl>
-              </Box>
+                      </Box>
+                    }
+                    sx={{
+                      m: 0,
+                      p: 1,
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: mcpMode === 'prompt' ? 'primary.main' : 'divider',
+                      bgcolor: mcpMode === 'prompt' ? alpha('#1976d2', 0.05) : 'transparent'
+                    }}
+                  />
+                </RadioGroup>
+              </FormControl>
+            </Box>
 
-              <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2 }} />
 
-              {/* MCP 服务器列表 */}
+            {/* MCP 服务器列表 */}
+            <Box sx={{ opacity: toolsEnabled ? 1 : 0.6 }}>
               <Accordion
                 defaultExpanded
                 sx={{
@@ -332,7 +324,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
                 }}
               >
                 <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
+                  expandIcon={<ChevronDown size={16} />}
                   onClick={(e) => e.stopPropagation()} // 防止事件冒泡
                 >
                   <Typography variant="subtitle2" fontWeight={600}>
@@ -349,7 +341,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
                         size="small"
                         variant="outlined"
                         onClick={handleNavigateToSettings}
-                        startIcon={<SettingsOutlinedIcon />}
+                        startIcon={<Settings size={16} />}
                       >
                         添加服务器
                       </Button>
@@ -400,6 +392,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
                               color="primary"
                               size="small"
                               sx={switchOptimization}
+                              disabled={!toolsEnabled}
                             />
                           </ListItemSecondaryAction>
                         </ListItem>
@@ -414,7 +407,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
                         size="small"
                         variant="text"
                         onClick={handleNavigateToSettings}
-                        startIcon={<SettingsOutlinedIcon />}
+                        startIcon={<Settings size={16} />}
                       >
                         管理服务器
                       </Button>
@@ -422,8 +415,8 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
                   )}
                 </AccordionDetails>
               </Accordion>
-            </>
-          )}
+            </Box>
+          </>
         </Box>
       </Collapse>
     </Box>

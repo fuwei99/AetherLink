@@ -118,10 +118,8 @@ export const sendChatRequest = async (options: ChatRequest): Promise<{ success: 
       hasOnChunk: !!options.onChunk
     });
 
-    return {
-      success: false,
-      error: errorMessage
-    };
+    // 🔥 重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
+    throw error;
   }
 }
 
@@ -320,10 +318,8 @@ async function processModelRequest(model: Model, options: ChatRequest): Promise<
         baseUrl: model.baseUrl || '未设置'
       });
 
-      return {
-        success: false,
-        error: errorMessage
-      };
+      // 🔥 重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
+      throw error;
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -339,10 +335,8 @@ async function processModelRequest(model: Model, options: ChatRequest): Promise<
       hasOnChunk: !!options.onChunk
     });
 
-    return {
-      success: false,
-      error: errorMessage
-    };
+    // 🔥 重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
+    throw error;
   }
 }
 

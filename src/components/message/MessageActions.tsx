@@ -41,6 +41,9 @@ import { zhCN } from 'date-fns/locale';
 import { EventEmitter, EVENT_NAMES } from '../../shared/services/EventService';
 import { getStorageItem } from '../../shared/utils/storage';
 import { useAppSelector } from '../../shared/store';
+import { Clipboard } from '@capacitor/clipboard';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
 
 interface MessageActionsProps {
   message: Message;
@@ -217,20 +220,27 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
   }, []);
 
   // 复制消息内容到剪贴板 - 优化：使用useCallback
-  const handleCopyContent = useCallback(() => {
+  const handleCopyContent = useCallback(async () => {
     if (!message) return;
 
     try {
       // 使用工具函数获取主文本内容
       const textContent = getMainTextContent(message);
 
-      navigator.clipboard.writeText(textContent);
-      // 使用快照通知
+      // 优先使用Capacitor Clipboard插件（移动端）
+      try {
+        await Clipboard.write({
+          string: textContent
+        });
+      } catch (capacitorError) {
+        // 如果Capacitor失败，回退到Web API
+        await navigator.clipboard.writeText(textContent);
+      }
+
       handleMenuClose();
-      // 可以使用alert替代snackbar
-      alert('内容已复制到剪贴板');
     } catch (error) {
       console.error('复制内容失败:', error);
+      alert('复制失败');
     }
   }, [message, handleMenuClose]);
 
@@ -273,24 +283,40 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
   }, [onResend, message.id, handleMenuClose]);
 
   // 保存消息内容 - 优化：使用useCallback
-  const handleSaveContent = useCallback(() => {
+  const handleSaveContent = useCallback(async () => {
     try {
       const textContent = getMainTextContent(message);
       const timestamp = new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', '-');
       const fileName = `message_${timestamp}.txt`;
 
-      // 创建下载链接
-      const blob = new Blob([textContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      alert('消息内容已保存');
+      // 移动端使用Capacitor Filesystem
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await Filesystem.writeFile({
+            path: `Download/${fileName}`,
+            data: textContent,
+            directory: Directory.External,
+            encoding: Encoding.UTF8
+          });
+          alert('消息内容已保存到下载目录');
+        } catch (capacitorError) {
+          console.error('Capacitor保存失败:', capacitorError);
+          // 回退到Web方式
+          throw capacitorError;
+        }
+      } else {
+        // Web端使用下载链接
+        const blob = new Blob([textContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        alert('消息内容已保存');
+      }
     } catch (error) {
       console.error('保存消息内容失败:', error);
       alert('保存失败');

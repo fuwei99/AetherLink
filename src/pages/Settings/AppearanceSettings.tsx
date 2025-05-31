@@ -31,7 +31,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
 import { setTheme, setFontSize } from '../../shared/store/settingsSlice';
-import ThemeStyleSelector from '../../components/settings/ThemeStyleSelector';
+import ThemeStyleSelector from '../../components/Settings/ThemeStyleSelector';
 
 const AppearanceSettings: React.FC = () => {
   const navigate = useNavigate();

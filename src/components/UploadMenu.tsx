@@ -1,9 +1,6 @@
 import React from 'react';
 import { Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
-import PhotoIcon from '@mui/icons-material/Photo';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import { Image, Camera, FileText, ArrowLeftRight } from 'lucide-react';
 
 interface UploadMenuProps {
   anchorEl: HTMLElement | null;
@@ -53,7 +50,7 @@ const UploadMenu: React.FC<UploadMenuProps> = ({
         sx={{ py: 1.5 }}
       >
         <ListItemIcon>
-          <PhotoIcon color="primary" />
+          <Image size={20} color="#1976d2" />
         </ListItemIcon>
         <ListItemText primary="从相册选择图片" />
       </MenuItem>
@@ -66,7 +63,7 @@ const UploadMenu: React.FC<UploadMenuProps> = ({
         sx={{ py: 1.5 }}
       >
         <ListItemIcon>
-          <CameraAltIcon color="secondary" />
+          <Camera size={20} color="#9c27b0" />
         </ListItemIcon>
         <ListItemText primary="拍摄照片" />
       </MenuItem>
@@ -79,7 +76,7 @@ const UploadMenu: React.FC<UploadMenuProps> = ({
         sx={{ py: 1.5 }}
       >
         <ListItemIcon>
-          <InsertDriveFileIcon sx={{ color: '#4caf50' }} />
+          <FileText size={20} color="#4caf50" />
         </ListItemIcon>
         <ListItemText primary="上传文件" />
       </MenuItem>
@@ -96,7 +93,7 @@ const UploadMenu: React.FC<UploadMenuProps> = ({
           sx={{ py: 1.5 }}
         >
           <ListItemIcon>
-            <CompareArrowsIcon sx={{ color: '#FF9800' }} />
+            <ArrowLeftRight size={20} color="#FF9800" />
           </ListItemIcon>
           <ListItemText
             primary="发送到多个模型"

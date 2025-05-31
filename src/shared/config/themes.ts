@@ -1,4 +1,5 @@
-import { createTheme, Theme, alpha } from '@mui/material/styles';
+import { createTheme, alpha } from '@mui/material/styles';
+import type { Theme } from '@mui/material/styles';
 
 // 主题风格类型
 export type ThemeStyle = 'default' | 'claude' | 'minimal' | 'vibrant';

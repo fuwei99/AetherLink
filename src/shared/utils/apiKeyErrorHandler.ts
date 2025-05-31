@@ -105,7 +105,9 @@ export async function checkAndHandleApiKeyError(
     showConfigButton: true
   });
 
-  return true;
+  // 🔥 重要：返回 false，让 ResponseHandler 继续创建错误块显示给用户
+  // 这样用户既能看到错误信息，又能使用重试功能
+  return false;
 }
 
 /**
@@ -117,16 +119,56 @@ export async function retryApiKeyError(messageId: string, topicId: string): Prom
   try {
     console.log(`[ApiKeyErrorHandler] 重试消息: ${messageId}`);
 
-    // 获取当前消息的模型信息
+    // 获取当前状态
     const state = store.getState();
     const message = state.messages.entities[messageId];
 
-    if (!message || !message.model) {
-      throw new Error('找不到消息或模型信息');
+    if (!message) {
+      throw new Error('找不到消息');
     }
 
-    // 使用 regenerateMessage 重新生成消息
-    await store.dispatch(regenerateMessage(messageId, topicId, message.model) as any);
+    // 获取当前选择的模型（从设置中获取）
+    const currentModelId = state.settings.currentModelId;
+    if (!currentModelId) {
+      throw new Error('未选择当前模型');
+    }
+
+    // 从可用模型中找到当前选择的模型
+    let currentModel = null;
+    if (state.settings.providers) {
+      for (const provider of state.settings.providers) {
+        if (provider.isEnabled) {
+          const model = provider.models.find(m => m.id === currentModelId && m.enabled);
+          if (model) {
+            currentModel = {
+              ...model,
+              apiKey: model.apiKey || provider.apiKey,
+              baseUrl: model.baseUrl || provider.baseUrl,
+              providerType: model.providerType || provider.providerType || provider.id,
+            };
+            break;
+          }
+        }
+      }
+    }
+
+    if (!currentModel) {
+      // 如果找不到当前模型，回退到消息原始模型
+      console.warn(`[ApiKeyErrorHandler] 找不到当前选择的模型 ${currentModelId}，使用消息原始模型`);
+      if (!message.model) {
+        throw new Error('找不到消息模型信息');
+      }
+      currentModel = message.model;
+    }
+
+    console.log(`[ApiKeyErrorHandler] 使用模型重试:`, {
+      modelId: currentModel.id,
+      modelName: currentModel.name,
+      provider: currentModel.provider
+    });
+
+    // 使用当前选择的模型重新生成消息
+    await store.dispatch(regenerateMessage(messageId, topicId, currentModel) as any);
 
     console.log(`[ApiKeyErrorHandler] 消息重试成功: ${messageId}`);
   } catch (error) {

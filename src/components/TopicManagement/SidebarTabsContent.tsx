@@ -8,6 +8,7 @@ import SettingsTab from './SettingsTab/index';
 import { getThemeColors } from '../../shared/utils/themeUtils';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
+import { Bot, MessageSquare, Settings } from 'lucide-react';
 
 /**
  * 侧边栏标签页内容组件
@@ -102,27 +103,39 @@ export default function SidebarTabsContent() {
               }}
             >
               <Tab
+                icon={<Bot size={18} />}
                 label="助手"
                 {...a11yProps(0)}
                 sx={{
                   minHeight: '32px',
                   borderRadius: '8px',
+                  '& .MuiTab-iconWrapper': {
+                    marginBottom: '2px',
+                  },
                 }}
               />
               <Tab
+                icon={<MessageSquare size={18} />}
                 label="话题"
                 {...a11yProps(1)}
                 sx={{
                   minHeight: '32px',
                   borderRadius: '8px',
+                  '& .MuiTab-iconWrapper': {
+                    marginBottom: '2px',
+                  },
                 }}
               />
               <Tab
+                icon={<Settings size={18} />}
                 label="设置"
                 {...a11yProps(2)}
                 sx={{
                   minHeight: '32px',
                   borderRadius: '8px',
+                  '& .MuiTab-iconWrapper': {
+                    marginBottom: '2px',
+                  },
                 }}
               />
             </Tabs>

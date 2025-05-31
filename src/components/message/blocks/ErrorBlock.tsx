@@ -32,11 +32,17 @@ const ErrorBlock: React.FC<Props> = ({ block, messageId, topicId, onRegenerate }
   // 获取错误状态码
   const errorStatus = block.error?.status || block.error?.code;
 
-  // 获取错误消息
-  const errorMessage = block.error?.message || block.message || '发生错误，请重试';
+  // 获取错误消息 - 支持多种错误格式
+  const errorMessage = block.error?.message ||
+                      block.message ||
+                      (block as any).content ||
+                      '发生错误，请重试';
 
-  // 获取错误详情
-  const errorDetails = block.error?.details || block.details || '';
+  // 获取错误详情 - 支持多种详情格式
+  const errorDetails = block.error?.details ||
+                      block.details ||
+                      (block.error && typeof block.error === 'object' ? JSON.stringify(block.error, null, 2) : '') ||
+                      '';
 
   // 检测是否为 API Key 错误
   const isApiKeyErr = block.error ? isApiKeyError(block.error) : false;

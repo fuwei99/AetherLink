@@ -37,7 +37,13 @@ export function createStreamProcessor(callbacks: StreamProcessorCallbacks = {}) 
         return;
       }
 
-      // 2. 处理数据块 - 简化逻辑，参考最佳实例
+      // 2. 处理错误块
+      if (chunk.type === 'error') {
+        callbacks.onError?.(chunk.error);
+        return;
+      }
+
+      // 3. 处理数据块 - 简化逻辑，参考最佳实例
       if (chunk.type === 'text.delta' && callbacks.onTextChunk) {
         callbacks.onTextChunk((chunk as TextDeltaChunk).text);
       }

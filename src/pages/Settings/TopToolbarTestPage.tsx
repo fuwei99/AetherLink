@@ -32,7 +32,7 @@ const TopToolbarTestPage: React.FC = () => {
   const topToolbar = settings.topToolbar || {
     showSettingsButton: true,
     showModelSelector: true,
-    modelSelectorStyle: 'full',
+    modelSelectorStyle: 'dialog',
     showChatTitle: true,
     showTopicName: false,
     showNewTopicButton: false,
@@ -163,7 +163,6 @@ const TopToolbarTestPage: React.FC = () => {
                   handleMenuClick={handleModelMenuClick}
                   handleMenuClose={handleModelMenuClose}
                   menuOpen={menuOpen}
-                  iconMode={topToolbar.modelSelectorStyle === 'icon'}
                 />
                 
                 <IconButton color="inherit" onClick={() => navigate('/settings')}>

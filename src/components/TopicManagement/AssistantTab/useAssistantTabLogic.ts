@@ -59,6 +59,13 @@ export function useAssistantTabLogic(
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editAssistantName, setEditAssistantName] = useState('');
   const [editAssistantPrompt, setEditAssistantPrompt] = useState('');
+  const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null); // 🔥 新增：保存正在编辑的助手
+
+  // 提示词选择器状态
+  const [promptSelectorOpen, setPromptSelectorOpen] = useState(false);
+
+  // 图标选择器状态
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
 
 
 
@@ -170,6 +177,7 @@ export function useAssistantTabLogic(
   const handleOpenEditDialog = () => {
     if (!selectedMenuAssistant) return;
 
+    setEditingAssistant(selectedMenuAssistant);
     setEditAssistantName(selectedMenuAssistant.name);
     setEditAssistantPrompt(selectedMenuAssistant.systemPrompt || '');
     setEditDialogOpen(true);
@@ -179,21 +187,16 @@ export function useAssistantTabLogic(
   // 关闭编辑助手对话框
   const handleCloseEditDialog = () => {
     setEditDialogOpen(false);
+    setEditingAssistant(null); // 清理编辑状态
   };
 
-  // 保存编辑后的助手 - 简化版，不再同步更新话题提示词
+  // 保存编辑后的助手
   const handleSaveAssistant = async () => {
-    if (!selectedMenuAssistant) return;
+    if (!editingAssistant) return;
 
     try {
-      console.log('[useAssistantTabLogic] 保存助手:', {
-        id: selectedMenuAssistant.id,
-        name: editAssistantName,
-        systemPrompt: editAssistantPrompt
-      });
-
       const updatedAssistant = {
-        ...selectedMenuAssistant,
+        ...editingAssistant,
         name: editAssistantName,
         systemPrompt: editAssistantPrompt
       };
@@ -207,6 +210,12 @@ export function useAssistantTabLogic(
         onUpdateAssistant(updatedAssistant);
         console.log('[useAssistantTabLogic] 已通过回调更新助手');
       }
+
+      // 🔥 添加：派发事件通知其他组件更新，确保提示词气泡同步
+      window.dispatchEvent(new CustomEvent('assistantUpdated', {
+        detail: { assistant: updatedAssistant }
+      }));
+      console.log('[useAssistantTabLogic] 已派发助手更新事件');
 
       // 显示成功通知
       showNotification('助手已更新');
@@ -361,6 +370,33 @@ export function useAssistantTabLogic(
     setEditAssistantPrompt(e.target.value);
   };
 
+  // 打开提示词选择器
+  const handleOpenPromptSelector = () => {
+    setPromptSelectorOpen(true);
+  };
+
+  // 关闭提示词选择器
+  const handleClosePromptSelector = () => {
+    setPromptSelectorOpen(false);
+  };
+
+  // 选择提示词
+  const handleSelectPrompt = (prompt: string) => {
+    setEditAssistantPrompt(prompt);
+    setPromptSelectorOpen(false);
+  };
+
+  // 打开图标选择器
+  const handleOpenIconPicker = () => {
+    setIconPickerOpen(true);
+    handleCloseAssistantMenu();
+  };
+
+  // 关闭图标选择器
+  const handleCloseIconPicker = () => {
+    setIconPickerOpen(false);
+  };
+
   return {
     // 状态
     assistantDialogOpen,
@@ -377,6 +413,9 @@ export function useAssistantTabLogic(
     editDialogOpen,
     editAssistantName,
     editAssistantPrompt,
+    editingAssistant,
+    promptSelectorOpen,
+    iconPickerOpen,
 
     // 处理函数
     showNotification,
@@ -405,6 +444,11 @@ export function useAssistantTabLogic(
     handleAddToGroup,
     handleEditNameChange,
     handleEditPromptChange,
+    handleOpenPromptSelector,
+    handleClosePromptSelector,
+    handleSelectPrompt,
+    handleOpenIconPicker,
+    handleCloseIconPicker,
 
     // 数据
     predefinedAssistantsData

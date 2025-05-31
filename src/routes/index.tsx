@@ -22,7 +22,7 @@ const AddProviderPage = lazy(() => import('../pages/Settings/AddProviderPage'));
 const AboutPage = lazy(() => import('../pages/Settings/AboutPage'));
 const VoiceSettings = lazy(() => import('../pages/Settings/VoiceSettings'));
 const WebSearchSettings = lazy(() => import('../pages/Settings/WebSearchSettings'));
-const SystemPromptSettings = lazy(() => import('../pages/Settings/SystemPrompt'));
+const AgentPromptsSettings = lazy(() => import('../pages/Settings/AgentPrompts'));
 const DevToolsPage = lazy(() => import('../pages/DevToolsPage'));
 const VueDemoPage = lazy(() => import('../pages/VueDemo'));
 import DataSettingsPage from '../pages/Settings/DataSettings';
@@ -36,6 +36,8 @@ const ModelComboSettings = lazy(() => import('../pages/Settings/ModelComboSettin
 // 导入AI辩论设置页面
 const AIDebateSettings = lazy(() => import('../pages/Settings/AIDebateSettings'));
 import MessageBubbleSettings from "../pages/Settings/MessageBubbleSettings";
+// 导入快捷短语设置页面
+const QuickPhraseSettings = lazy(() => import('../components/QuickPhraseSettings'));
 // 导入助手设置页面
 const AssistantSettings = lazy(() => import('../components/TopicManagement/SettingsTab/AssistantSettings'));
 const AssistantModelSettings = lazy(() => import('../components/TopicManagement/SettingsTab/AssistantModelSettings'));
@@ -92,8 +94,9 @@ const AppRouter: React.FC = () => {
         <Route path="/settings/behavior" element={<BehaviorSettings />} />
         <Route path="/settings/default-model" element={<DefaultModelSettings />} />
         <Route path="/settings/default-model-settings" element={<DefaultModelSettingsPage />} />
-        <Route path="/settings/system-prompts" element={<SystemPromptSettings />} />
+        <Route path="/settings/agent-prompts" element={<AgentPromptsSettings />} />
         <Route path="/settings/ai-debate" element={<AIDebateSettings />} />
+        <Route path="/settings/quick-phrases" element={<QuickPhraseSettings />} />
         <Route path="/settings/model-provider/:providerId" element={<ModelProviderSettings />} />
         <Route path="/settings/add-provider" element={<AddProviderPage />} />
         <Route path="/settings/about" element={<AboutPage />} />

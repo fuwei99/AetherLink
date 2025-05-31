@@ -5,7 +5,8 @@ import './index.css';
 import { initStorageService, dexieStorage } from './shared/services/storageService';
 import { initializeServices } from './shared/services';
 import store from './shared/store';
-import { loadSystemPrompts } from './shared/store/slices/systemPromptsSlice';
+// 移除旧的系统提示词slice引用
+// import { loadSystemPrompts } from './shared/store/slices/systemPromptsSlice';
 
 // 导入 EventSource polyfill 以支持移动端 SSE
 import { EventSourcePolyfill } from 'event-source-polyfill';
@@ -48,9 +49,9 @@ async function initializeApp() {
     await initializeServices();
     console.log('所有服务初始化完成');
 
-    // 加载系统提示词数据
-    store.dispatch(loadSystemPrompts());
-    console.log('系统提示词加载已启动');
+    // 移除旧的系统提示词加载
+    // store.dispatch(loadSystemPrompts());
+    // console.log('系统提示词加载已启动');
 
     // 记录应用启动信息
     console.log('[App] 应用已启动');

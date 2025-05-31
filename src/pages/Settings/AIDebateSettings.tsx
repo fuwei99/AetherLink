@@ -8,9 +8,7 @@ import {
   TextField,
   Button,
   IconButton,
-  Card,
-  CardContent,
-  CardActions,
+
   Chip,
   Dialog,
   DialogTitle,
@@ -32,12 +30,24 @@ import {
   Edit as EditIcon,
   ArrowBack as ArrowBackIcon,
   Forum as ForumIcon,
-  SmartToy as SmartToyIcon
+  SmartToy as SmartToyIcon,
+  Save as SaveIcon,
+  FolderOpen as FolderOpenIcon,
+  ContentCopy as ContentCopyIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { DropdownModelSelector } from '../ChatPage/components/DropdownModelSelector';
+
+// AI辩论配置默认值常量
+const DEFAULT_CONFIG = {
+  MAX_ROUNDS: 5,
+  MAX_TOKENS_PER_ROUND: 1000,
+  TIMEOUT_MINUTES: 10,
+  MODERATOR_ENABLED: true,
+  SUMMARY_ENABLED: true
+} as const;
 
 // AI辩论角色接口
 interface DebateRole {
@@ -64,6 +74,16 @@ interface DebateConfig {
   summaryEnabled: boolean;
 }
 
+// 辩论配置分组接口
+interface DebateConfigGroup {
+  id: string;
+  name: string;
+  description: string;
+  config: DebateConfig;
+  createdAt: number;
+  updatedAt: number;
+}
+
 const AIDebateSettings: React.FC = () => {
   const navigate = useNavigate();
 
@@ -81,16 +101,29 @@ const AIDebateSettings: React.FC = () => {
   // 辩论配置状态
   const [config, setConfig] = useState<DebateConfig>({
     enabled: false,
-    maxRounds: 5,
+    maxRounds: DEFAULT_CONFIG.MAX_ROUNDS,
     autoEndConditions: {
       consensusReached: true,
-      maxTokensPerRound: 1000,
-      timeoutMinutes: 10
+      maxTokensPerRound: DEFAULT_CONFIG.MAX_TOKENS_PER_ROUND,
+      timeoutMinutes: DEFAULT_CONFIG.TIMEOUT_MINUTES
     },
     roles: [],
-    moderatorEnabled: true,
-    summaryEnabled: true
+    moderatorEnabled: DEFAULT_CONFIG.MODERATOR_ENABLED,
+    summaryEnabled: DEFAULT_CONFIG.SUMMARY_ENABLED
   });
+
+  // 临时输入状态，用于允许完全清空输入框
+  const [tempInputs, setTempInputs] = useState({
+    maxRounds: '',
+    maxTokensPerRound: ''
+  });
+
+  // 分组相关状态
+  const [configGroups, setConfigGroups] = useState<DebateConfigGroup[]>([]);
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<DebateConfigGroup | null>(null);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupDescription, setNewGroupDescription] = useState('');
 
   // 对话框状态
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -208,9 +241,16 @@ const AIDebateSettings: React.FC = () => {
 - 每次发言控制在150-200字
 - 总结前面的主要观点
 - 指出需要进一步讨论的问题
-- 当讨论充分时建议结束
+- 推动辩论深入进行
 
-当你认为各方观点已经充分表达，或出现重复论点时，请明确建议结束辩论！`,
+⚠️ **重要：结束辩论的条件**
+只有在以下情况下才明确说"建议结束辩论"：
+1. 已经进行了至少3轮完整辩论
+2. 各方观点出现明显重复
+3. 讨论已经非常充分，没有新的观点
+4. 达成了某种程度的共识
+
+在前几轮中，请专注于推动讨论深入，而不是急于结束！`,
       stance: 'moderator' as const,
       color: '#9c27b0'
     },
@@ -408,14 +448,22 @@ const AIDebateSettings: React.FC = () => {
     }
   ];
 
-  // 加载保存的配置
+  // 加载保存的配置和分组
   useEffect(() => {
     const loadConfig = () => {
       try {
+        // 加载当前配置
         const saved = localStorage.getItem('aiDebateConfig');
         if (saved) {
           const parsedConfig = JSON.parse(saved);
           setConfig(parsedConfig);
+        }
+
+        // 加载分组配置
+        const savedGroups = localStorage.getItem('aiDebateConfigGroups');
+        if (savedGroups) {
+          const parsedGroups = JSON.parse(savedGroups);
+          setConfigGroups(parsedGroups);
         }
       } catch (error) {
         console.error('加载AI辩论配置失败:', error);
@@ -424,7 +472,7 @@ const AIDebateSettings: React.FC = () => {
     loadConfig();
   }, []);
 
-  // 保存配置
+  // 简化的保存配置
   const saveConfig = (newConfig: DebateConfig) => {
     try {
       localStorage.setItem('aiDebateConfig', JSON.stringify(newConfig));
@@ -432,6 +480,88 @@ const AIDebateSettings: React.FC = () => {
     } catch (error) {
       console.error('保存AI辩论配置失败:', error);
     }
+  };
+
+  // 保存分组配置到localStorage
+  const saveConfigGroups = (groups: DebateConfigGroup[]) => {
+    try {
+      localStorage.setItem('aiDebateConfigGroups', JSON.stringify(groups));
+      setConfigGroups(groups);
+    } catch (error) {
+      console.error('保存分组配置失败:', error);
+    }
+  };
+
+  // 新建分组
+  const handleCreateGroup = () => {
+    setEditingGroup(null);
+    setNewGroupName('');
+    setNewGroupDescription('');
+    setGroupDialogOpen(true);
+  };
+
+  // 编辑分组信息（只编辑名称和描述）
+  const handleEditGroup = (group: DebateConfigGroup) => {
+    setEditingGroup(group);
+    setNewGroupName(group.name);
+    setNewGroupDescription(group.description);
+    setGroupDialogOpen(true);
+  };
+
+  // 保存分组（新建或编辑）
+  const handleSaveGroup = () => {
+    if (!newGroupName.trim()) return;
+
+    const now = Date.now();
+    let updatedGroups: DebateConfigGroup[];
+
+    if (editingGroup) {
+      // 编辑现有分组（只更新名称和描述）
+      updatedGroups = configGroups.map(group =>
+        group.id === editingGroup.id
+          ? { ...group, name: newGroupName.trim(), description: newGroupDescription.trim(), updatedAt: now }
+          : group
+      );
+    } else {
+      // 创建新分组（使用当前配置）
+      const newGroup: DebateConfigGroup = {
+        id: `group_${now}`,
+        name: newGroupName.trim(),
+        description: newGroupDescription.trim(),
+        config: JSON.parse(JSON.stringify(config)), // 深拷贝当前配置
+        createdAt: now,
+        updatedAt: now
+      };
+      updatedGroups = [...configGroups, newGroup];
+    }
+
+    saveConfigGroups(updatedGroups);
+    setGroupDialogOpen(false);
+  };
+
+  // 删除分组
+  const handleDeleteGroup = (groupId: string) => {
+    if (window.confirm('确定要删除这个配置分组吗？此操作不可撤销。')) {
+      const updatedGroups = configGroups.filter(group => group.id !== groupId);
+      saveConfigGroups(updatedGroups);
+    }
+  };
+
+  // 加载分组配置
+  const handleLoadGroup = (group: DebateConfigGroup) => {
+    setConfig(JSON.parse(JSON.stringify(group.config))); // 深拷贝配置
+    saveConfig(group.config); // 同时保存到localStorage
+  };
+
+  // 更新分组配置（用当前配置覆盖分组）
+  const handleUpdateGroup = (groupId: string) => {
+    const updatedGroups = configGroups.map(group =>
+      group.id === groupId
+        ? { ...group, config: JSON.parse(JSON.stringify(config)), updatedAt: Date.now() }
+        : group
+    );
+    saveConfigGroups(updatedGroups);
+    alert('分组配置已更新！');
   };
 
   // 处理返回
@@ -648,6 +778,8 @@ const AIDebateSettings: React.FC = () => {
           },
         }}
       >
+
+
         {/* 基本设置 */}
         <Paper
           elevation={0}
@@ -700,23 +832,49 @@ const AIDebateSettings: React.FC = () => {
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
             <TextField
               label="最大辩论轮数"
-              type="number"
               value={config.maxRounds}
-              onChange={(e) => saveConfig({ ...config, maxRounds: parseInt(e.target.value) || 5 })}
-              inputProps={{ min: 1, max: 20 }}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 直接更新，允许任何输入包括空值
+                if (value === '') {
+                  saveConfig({ ...config, maxRounds: 0 });
+                } else {
+                  const num = parseInt(value);
+                  if (!isNaN(num)) {
+                    saveConfig({ ...config, maxRounds: num });
+                  }
+                }
+              }}
+              helperText="输入数字，建议1-20轮"
             />
             <TextField
               label="每轮最大Token数"
-              type="number"
               value={config.autoEndConditions.maxTokensPerRound}
-              onChange={(e) => saveConfig({
-                ...config,
-                autoEndConditions: {
-                  ...config.autoEndConditions,
-                  maxTokensPerRound: parseInt(e.target.value) || 1000
+              onChange={(e) => {
+                const value = e.target.value;
+                // 直接更新，允许任何输入包括空值
+                if (value === '') {
+                  saveConfig({
+                    ...config,
+                    autoEndConditions: {
+                      ...config.autoEndConditions,
+                      maxTokensPerRound: 0
+                    }
+                  });
+                } else {
+                  const num = parseInt(value);
+                  if (!isNaN(num)) {
+                    saveConfig({
+                      ...config,
+                      autoEndConditions: {
+                        ...config.autoEndConditions,
+                        maxTokensPerRound: num
+                      }
+                    });
+                  }
                 }
-              })}
-              inputProps={{ min: 100, max: 4000 }}
+              }}
+              helperText="输入数字，建议100-4000"
             />
           </Box>
 
@@ -897,63 +1055,203 @@ const AIDebateSettings: React.FC = () => {
               还没有配置任何辩论角色。点击"添加角色"开始配置。
             </Alert>
           ) : (
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {config.roles.map((role) => (
-                <Card key={role.id} sx={{ border: 1, borderColor: 'divider' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <Box
-                        sx={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: '50%',
-                          bgcolor: role.color,
-                          mr: 1
-                        }}
-                      />
-                      <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                        {role.name}
+                <Box
+                  key={role.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    p: 1.5,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderLeft: `4px solid ${role.color || '#2196f3'}`,
+                    borderRadius: 1,
+                    bgcolor: 'background.paper',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                      borderColor: 'primary.main'
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, minWidth: 0 }}>
+                    <SmartToyIcon sx={{ mr: 1, color: role.color || '#2196f3', fontSize: '1rem' }} />
+                    <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {role.name}
+                        </Typography>
+                        <Chip
+                          label={
+                            role.stance === 'pro' ? '正方' :
+                            role.stance === 'con' ? '反方' :
+                            role.stance === 'neutral' ? '中立' :
+                            role.stance === 'moderator' ? '主持人' : '总结'
+                          }
+                          size="small"
+                          sx={{
+                            bgcolor: role.color || '#2196f3',
+                            color: 'white',
+                            fontWeight: 600,
+                            height: '20px',
+                            fontSize: '0.7rem'
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        {role.description} • {role.modelId ? availableModels.find(m => m.id === role.modelId)?.name || '未知模型' : '默认模型'}
                       </Typography>
-                      <Chip
-                        label={role.stance}
-                        size="small"
-                        color={
-                          role.stance === 'pro' ? 'success' :
-                          role.stance === 'con' ? 'error' :
-                          role.stance === 'moderator' ? 'secondary' :
-                          role.stance === 'summary' ? 'info' : 'default'
-                        }
-                      />
                     </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {role.description}
-                    </Typography>
-                    {role.modelId && (
-                      <Typography variant="caption" color="primary" sx={{ mb: 1, display: 'block' }}>
-                        🤖 模型: {availableModels.find(m => m.id === role.modelId)?.name || role.modelId}
-                      </Typography>
-                    )}
-                    <Typography variant="caption" sx={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
-                    }}>
-                      {role.systemPrompt}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button size="small" startIcon={<EditIcon />} onClick={() => handleEditRole(role)}>
-                      编辑
-                    </Button>
-                    <Button size="small" startIcon={<DeleteIcon />} onClick={() => handleDeleteRole(role.id)} color="error">
-                      删除
-                    </Button>
-                  </CardActions>
-                </Card>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 2 }}>
+                    <IconButton size="small" onClick={() => handleEditRole(role)} title="编辑角色">
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => handleDeleteRole(role.id)} color="error" title="删除角色">
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
               ))}
             </Box>
           )}
+          </Box>
+        </Paper>
+
+        {/* 配置分组管理 */}
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', sm: '1.1rem' }
+                  }}
+                >
+                  配置分组管理
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                >
+                  保存和管理不同用途的辩论配置
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateGroup}
+                sx={{
+                  background: 'linear-gradient(90deg, #f59e0b, #d97706)',
+                  fontWeight: 600,
+                  '&:hover': {
+                    background: 'linear-gradient(90deg, #d97706, #b45309)',
+                  },
+                }}
+              >
+                新建分组
+              </Button>
+            </Box>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            {configGroups.length === 0 ? (
+              <Alert severity="info">
+                还没有保存任何配置分组。点击"新建分组"开始创建。
+              </Alert>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {configGroups.map((group) => (
+                  <Box
+                    key={group.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      p: 1.5,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      bgcolor: 'background.paper',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                        borderColor: 'primary.main'
+                      }
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, minWidth: 0 }}>
+                      <FolderOpenIcon sx={{ mr: 1, color: 'text.secondary', fontSize: '1rem' }} />
+                      <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          {group.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                          {group.config.roles.length} 个角色 • {new Date(group.updatedAt).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 2 }}>
+                      <Button
+                        size="small"
+                        onClick={() => handleLoadGroup(group)}
+                        variant="outlined"
+                        sx={{ minWidth: 'auto', px: 1 }}
+                      >
+                        加载
+                      </Button>
+                      <IconButton size="small" onClick={() => handleEditGroup(group)} title="编辑">
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleUpdateGroup(group.id)}
+                        title="保存当前配置到此分组"
+                        color="primary"
+                      >
+                        <SaveIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => {
+                        setEditingGroup(null);
+                        setNewGroupName(`${group.name} - 副本`);
+                        setNewGroupDescription(`基于 ${group.name} 创建的副本`);
+                        setGroupDialogOpen(true);
+                      }} title="复制">
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDeleteGroup(group.id)}
+                        color="error"
+                        title="删除"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Box>
         </Paper>
       </Box>
@@ -1057,6 +1355,52 @@ const AIDebateSettings: React.FC = () => {
           </Button>
           <Button onClick={handleSaveRole} variant="contained" disabled={!newRole.name || !newRole.systemPrompt}>
             保存
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 分组编辑对话框 */}
+      <Dialog open={groupDialogOpen} onClose={() => setGroupDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingGroup ? '编辑配置分组' : '新建配置分组'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'grid', gap: 2, mt: 1 }}>
+            <TextField
+              label="分组名称"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              required
+              placeholder="例如：学术辩论、商业分析、技术讨论"
+            />
+
+            <TextField
+              label="分组描述"
+              value={newGroupDescription}
+              onChange={(e) => setNewGroupDescription(e.target.value)}
+              multiline
+              rows={3}
+              placeholder="描述这个配置分组的用途和特点"
+            />
+
+            {!editingGroup && (
+              <Alert severity="info">
+                将保存当前的所有配置（包括角色设置、轮数限制等）到这个分组中。
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setGroupDialogOpen(false)}>
+            取消
+          </Button>
+          <Button
+            onClick={handleSaveGroup}
+            variant="contained"
+            disabled={!newGroupName.trim()}
+            startIcon={<SaveIcon />}
+          >
+            {editingGroup ? '保存修改' : '创建分组'}
           </Button>
         </DialogActions>
       </Dialog>

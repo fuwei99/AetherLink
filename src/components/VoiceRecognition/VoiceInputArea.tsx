@@ -9,15 +9,7 @@ import {
   Tooltip,
   Fade
 } from '@mui/material';
-import {
-  Mic as MicIcon,
-  Send as SendIcon,
-  Close as CloseIcon,
-  Edit as EditIcon,
-  MicOff as MicOffIcon,
-  Add as AddIcon,
-  VolumeUp as VolumeUpIcon
-} from '@mui/icons-material';
+import { Mic, Send, X, Edit, MicOff, Plus, Volume2 } from 'lucide-react';
 
 interface VoiceInputAreaProps {
   isListening: boolean;
@@ -278,12 +270,10 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
                 },
               }}
             />
-            <MicIcon 
-              color="error" 
-              sx={{ 
-                fontSize: 28,
-                ...getMicAnimation()
-              }} 
+            <Mic
+              size={28}
+              color="#f44336"
+              style={getMicAnimation()}
             />
           </Box>
           <Typography variant="body2" sx={{ color: '#ff4444', fontWeight: 600 }}>
@@ -326,7 +316,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
             variant="contained"
             color="error"
             onClick={handleToggleRecording}
-            startIcon={<MicOffIcon />}
+            startIcon={<MicOff size={16} />}
             sx={{
               borderRadius: '20px',
               px: 3,
@@ -339,12 +329,12 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
           >
             停止录音
           </Button>
-          
+
           <Button
             variant="outlined"
             color="inherit"
             onClick={onCancel}
-            startIcon={<CloseIcon />}
+            startIcon={<X size={16} />}
             sx={{
               borderRadius: '20px',
               px: 3,
@@ -394,7 +384,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
         {/* 标题 */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <VolumeUpIcon sx={{ mr: 1, color: isDarkMode ? 'primary.light' : 'primary.main', fontSize: 20 }} />
+            <Volume2 size={20} color={isDarkMode ? '#90caf9' : '#1976d2'} style={{ marginRight: 8 }} />
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
               语音识别结果
             </Typography>
@@ -463,7 +453,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
             variant="contained"
             color="primary"
             size="medium"
-            startIcon={<AddIcon />}
+            startIcon={<Plus size={16} />}
             onClick={handleInsertToInput}
             sx={{ 
               borderRadius: '8px',
@@ -478,7 +468,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
             variant="contained"
             color="success"
             size="medium"
-            startIcon={<SendIcon />}
+            startIcon={<Send size={16} />}
             onClick={handleSendDirectly}
             sx={{ 
               borderRadius: '8px',
@@ -492,7 +482,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
           <Button
             variant="outlined"
             size="medium"
-            startIcon={<EditIcon />}
+            startIcon={<Edit size={16} />}
             onClick={handleEdit}
             sx={{ 
               borderRadius: '8px',
@@ -533,7 +523,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
         variant="contained"
         color="primary"
         onClick={handleToggleRecording}
-        startIcon={<MicIcon />}
+        startIcon={<Mic size={16} />}
         sx={{
           borderRadius: '20px',
           px: 3,
@@ -547,7 +537,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
       >
         开始语音识别
       </Button>
-      
+
       <IconButton
         size="small"
         onClick={onCancel}
@@ -561,7 +551,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
           },
         }}
       >
-        <CloseIcon fontSize="small" />
+        <X size={16} />
       </IconButton>
     </Box>
   );

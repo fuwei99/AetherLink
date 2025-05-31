@@ -81,6 +81,27 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
     loadTopicAndAssistant();
   }, [currentTopicId]);
 
+  // 🔥 优化：监听助手更新事件，使用ref避免重复渲染
+  const currentAssistantRef = useRef(currentAssistant);
+  currentAssistantRef.current = currentAssistant;
+
+  useEffect(() => {
+    const handleAssistantUpdated = (event: CustomEvent) => {
+      const updatedAssistant = event.detail.assistant;
+
+      // 如果更新的助手是当前助手，直接更新状态
+      if (currentAssistantRef.current && updatedAssistant.id === currentAssistantRef.current.id) {
+        setCurrentAssistant(updatedAssistant);
+      }
+    };
+
+    window.addEventListener('assistantUpdated', handleAssistantUpdated as EventListener);
+
+    return () => {
+      window.removeEventListener('assistantUpdated', handleAssistantUpdated as EventListener);
+    };
+  }, []); // 空依赖数组，只在组件挂载时创建一次
+
   // 获取系统提示词气泡显示设置
   const showSystemPromptBubble = useSelector((state: RootState) =>
     state.settings.showSystemPromptBubble !== false
@@ -377,7 +398,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
         flexGrow: 1,
         overflowY: 'auto',
         px: 0,
-        py: 2,
+        pt: 0, // 顶部无padding，让提示词气泡紧贴顶部
+        pb: 2, // 保持底部padding
         width: '100%', // 确保容器占满可用宽度
         maxWidth: '100%', // 确保不超出父容器
         bgcolor: theme.palette.mode === 'dark'
@@ -407,7 +429,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
           topic={currentTopic}
           assistant={currentAssistant}
           onClick={handlePromptBubbleClick}
-          key={`prompt-bubble-${currentTopic?.id}-${currentTopic?.prompt?.substring(0, 10) || 'default'}`}
+          key={`prompt-bubble-${currentTopic?.id || 'no-topic'}-${currentAssistant?.id || 'no-assistant'}`}
         />
       )}
 

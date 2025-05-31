@@ -3,8 +3,10 @@ import { Box, Typography, Paper, useTheme } from '@mui/material';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import type { ChatTopic, Assistant } from '../shared/types/Assistant';
-import { useAppSelector } from '../shared/store';
-import { selectActiveSystemPrompt } from '../shared/store/slices/systemPromptsSlice';
+// 移除不再使用的useAppSelector导入
+// import { useAppSelector } from '../shared/store';
+// 移除旧的系统提示词选择器，使用默认提示词
+// import { selectActiveSystemPrompt } from '../shared/store/slices/systemPromptsSlice';
 
 interface SystemPromptBubbleProps {
   topic: ChatTopic | null;
@@ -15,12 +17,13 @@ interface SystemPromptBubbleProps {
 /**
  * 系统提示词气泡组件
  * 显示在消息列表顶部，点击可以编辑系统提示词
+ * 🔥 优化：使用React.memo避免不必要的重新渲染
  */
-const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = ({ topic, assistant, onClick }) => {
+const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = React.memo(({ topic, assistant, onClick }) => {
   const theme = useTheme();
   
-  // 获取全局默认系统提示词
-  const activeSystemPrompt = useAppSelector(selectActiveSystemPrompt);
+  // 使用默认提示词替代旧的系统提示词
+  const activeSystemPrompt = '';
 
   // 获取系统提示词 - 优先显示助手的系统提示词，与编辑对话框保持一致
   // 如果没有助手提示词，则显示话题提示词或默认提示词
@@ -36,7 +39,7 @@ const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = ({ topic, assistan
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '10px 16px',
-        margin: '4px 8px 16px 8px',
+        margin: '0 8px 16px 8px',
         borderRadius: '8px',
         cursor: 'pointer',
         backgroundColor: theme.palette.mode === 'dark'
@@ -97,6 +100,9 @@ const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = ({ topic, assistan
       />
     </Paper>
   );
-};
+});
+
+// 设置displayName便于调试
+SystemPromptBubble.displayName = 'SystemPromptBubble';
 
 export default SystemPromptBubble;

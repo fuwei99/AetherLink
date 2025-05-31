@@ -1,5 +1,6 @@
-import { Theme, alpha } from '@mui/material/styles';
-import { ThemeStyle } from '../config/themes';
+import { alpha } from '@mui/material/styles';
+import type { Theme } from '@mui/material/styles';
+import type { ThemeStyle } from '../config/themes';
 
 /**
  * 主题工具函数，帮助组件获取主题相关的颜色和样式

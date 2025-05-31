@@ -9,15 +9,7 @@ import {
   Tooltip,
   Slide
 } from '@mui/material';
-import {
-  Mic as MicIcon,
-  MicOff as MicOffIcon,
-  Send as SendIcon,
-  Edit as EditIcon,
-  Close as CloseIcon,
-  Add as AddIcon,
-  VolumeUp as VolumeUpIcon
-} from '@mui/icons-material';
+import { Mic, MicOff, Send, Edit, X, Plus, Volume2 } from 'lucide-react';
 import { useVoiceRecognition } from '../../shared/hooks/useVoiceRecognition';
 
 interface EnhancedVoiceInputProps {
@@ -293,7 +285,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
               color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
             }}
           >
-            <CloseIcon fontSize="small" />
+            <X size={16} />
           </IconButton>
           
           <Typography
@@ -306,7 +298,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
               color: isDarkMode ? '#fff' : '#333',
             }}
           >
-            <VolumeUpIcon sx={{ mr: 1, color: '#2196f3' }} />
+            <Volume2 size={20} color="#2196f3" style={{ marginRight: 8 }} />
             语音输入
           </Typography>
           
@@ -314,7 +306,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
             variant="contained"
             color="primary"
             size="large"
-            startIcon={<MicIcon />}
+            startIcon={<Mic size={16} />}
             onClick={handleStartRecording}
             sx={{
               borderRadius: '30px',
@@ -405,12 +397,10 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
                   },
                 }}
               />
-              <MicIcon 
-                color="error" 
-                sx={{ 
-                  fontSize: 32,
-                  ...getMicAnimation()
-                }} 
+              <Mic
+                size={32}
+                color="#f44336"
+                style={getMicAnimation()}
               />
             </Box>
             <Typography 
@@ -484,7 +474,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
                 variant="contained"
                 color="error"
                 onClick={handleStopRecording}
-                startIcon={<MicOffIcon />}
+                startIcon={<MicOff size={16} />}
                 sx={{
                   borderRadius: '24px',
                   px: 3,
@@ -503,7 +493,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
                 variant="outlined"
                 color="inherit"
                 onClick={handleClose}
-                startIcon={<CloseIcon />}
+                startIcon={<X size={16} />}
                 sx={{
                   borderRadius: '24px',
                   px: 3,
@@ -625,7 +615,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
               variant="contained"
               color="primary"
               size="medium"
-              startIcon={<AddIcon />}
+              startIcon={<Plus size={16} />}
               onClick={handleInsertText}
               sx={{ 
                 borderRadius: '24px',
@@ -641,7 +631,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
               variant="contained"
               color="success"
               size="medium"
-              startIcon={<SendIcon />}
+              startIcon={<Send size={16} />}
               onClick={handleSendMessage}
               sx={{ 
                 borderRadius: '24px',
@@ -656,7 +646,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
             <Button
               variant="outlined"
               size="medium"
-              startIcon={<EditIcon />}
+              startIcon={<Edit size={16} />}
               onClick={handleTextEdit}
               sx={{ 
                 borderRadius: '24px',

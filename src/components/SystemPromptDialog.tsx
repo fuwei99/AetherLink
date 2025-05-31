@@ -17,7 +17,9 @@ import type { ChatTopic, Assistant } from '../shared/types/Assistant';
 import { TopicService } from '../shared/services/TopicService';
 import { updateTopic } from '../shared/store/slices/assistantsSlice';
 import { useAppDispatch, useAppSelector } from '../shared/store';
-import { selectActiveSystemPrompt } from '../shared/store/slices/systemPromptsSlice';
+// 移除旧的系统提示词选择器，使用默认提示词
+// import { selectActiveSystemPrompt } from '../shared/store/slices/systemPromptsSlice';
+import { dexieStorage } from '../shared/services/DexieStorageService';
 
 interface SystemPromptDialogProps {
   open: boolean;
@@ -45,8 +47,8 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
   const [tokensCount, setTokensCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   
-  // 获取当前活动的系统提示词（如果没有话题提示词）
-  const activeSystemPrompt = useAppSelector(selectActiveSystemPrompt);
+  // 使用默认提示词替代旧的系统提示词
+  const activeSystemPrompt = '';
 
   // 当对话框打开时，初始化提示词
   useEffect(() => {
@@ -66,11 +68,39 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
     }
   }, [open, topic, assistant, activeSystemPrompt]);
 
-  // 保存提示词 - 简化版，更接近电脑端实现
+  // 保存提示词 - 🔥 修复：添加助手提示词保存逻辑，使用侧边栏编辑助手的保存逻辑
   const handleSave = async () => {
     try {
       setSaving(true);
       setError(null);
+
+      // 🔥 新增：如果有助手且当前显示的是助手提示词，保存到助手
+      // 判断逻辑：如果有助手，且当前提示词来源于助手（优先级最高）
+      if (assistant && (assistant.systemPrompt || (!topic?.prompt && !activeSystemPrompt))) {
+        console.log('[SystemPromptDialog] 保存助手系统提示词:', {
+          assistantId: assistant.id,
+          assistantName: assistant.name,
+          systemPrompt: prompt.trim().substring(0, 50) + (prompt.trim().length > 50 ? '...' : '')
+        });
+
+        const updatedAssistant = {
+          ...assistant,
+          systemPrompt: prompt.trim()
+        };
+
+        // 🔥 使用侧边栏编辑助手的保存逻辑：直接保存到数据库，确保数据持久化
+        await dexieStorage.saveAssistant(updatedAssistant);
+        console.log('[SystemPromptDialog] 已保存助手系统提示词到数据库');
+
+        // 🔥 派发事件通知其他组件更新，与侧边栏编辑助手保持一致
+        window.dispatchEvent(new CustomEvent('assistantUpdated', {
+          detail: { assistant: updatedAssistant }
+        }));
+        console.log('[SystemPromptDialog] 已派发助手更新事件');
+
+        onClose();
+        return;
+      }
 
       // 如果没有话题但有助手，先创建话题
       if (!topic && assistant) {
