@@ -50,20 +50,20 @@ export const themeConfigs: Record<ThemeStyle, ThemeConfig> = {
       secondary: '#10B981',
       background: {
         light: '#F8FAFC',
-        dark: '#1a1a1a',
+        dark: '#1A1A1A', // 统一使用稍微柔和的深灰色
       },
       paper: {
         light: '#FFFFFF',
-        dark: '#232323',
+        dark: '#2A2A2A', // 改为更柔和的深灰色，提高可读性
       },
       text: {
         primary: {
           light: '#1E293B',
-          dark: '#e8e8e8',
+          dark: '#F0F0F0', // 改为稍微柔和的白色，提高舒适度
         },
         secondary: {
           light: '#64748B',
-          dark: '#a0a0a0',
+          dark: '#B0B0B0', // 提高次要文字的对比度
         },
       },
     },
@@ -112,20 +112,20 @@ export const themeConfigs: Record<ThemeStyle, ThemeConfig> = {
       secondary: '#6B7280',
       background: {
         light: '#FFFFFF',
-        dark: '#000000',
+        dark: '#1A1A1A', // 改为稍微柔和的深灰色，避免纯黑色过于刺眼
       },
       paper: {
         light: '#FAFAFA',
-        dark: '#111111',
+        dark: '#2A2A2A', // 改为更柔和的深灰色
       },
       text: {
         primary: {
           light: '#000000',
-          dark: '#FFFFFF',
+          dark: '#F0F0F0', // 改为稍微柔和的白色，避免纯白色过于刺眼
         },
         secondary: {
           light: '#6B7280',
-          dark: '#9CA3AF',
+          dark: '#A0A0A0', // 调整次要文字颜色，提高可读性
         },
       },
     },
@@ -142,7 +142,7 @@ export const themeConfigs: Record<ThemeStyle, ThemeConfig> = {
       secondary: '#06B6D4',
       accent: '#F59E0B',
       background: {
-        light: '#F0F9FF',
+        light: '#FAFBFF', // 改为更中性的浅色背景，提高文字对比度
         dark: '#0F172A',
       },
       paper: {
@@ -151,11 +151,11 @@ export const themeConfigs: Record<ThemeStyle, ThemeConfig> = {
       },
       text: {
         primary: {
-          light: '#0F172A',
+          light: '#1E293B', // 改为更深的颜色，提高在浅色背景上的对比度
           dark: '#F1F5F9',
         },
         secondary: {
-          light: '#475569',
+          light: '#334155', // 改为更深的颜色，提高可读性
           dark: '#CBD5E1',
         },
       },
@@ -335,21 +335,7 @@ export const createCustomTheme = (
           },
         },
       },
-      // 添加全局Box组件样式，确保使用主题背景色
-      MuiBox: {
-        styleOverrides: {
-          root: {
-            ...(themeStyle === 'claude' && {
-              // 强制应用Claude主题背景色
-              backgroundColor: config.colors.background[mode],
-              // 但允许有明确背景色的元素覆盖
-              '&[style*="background"]': {
-                backgroundColor: 'inherit',
-              },
-            }),
-          },
-        },
-      },
+      // 移除全局Box样式覆盖，避免影响消息内容
       // 添加全局CssBaseline样式覆盖
       MuiCssBaseline: {
         styleOverrides: {

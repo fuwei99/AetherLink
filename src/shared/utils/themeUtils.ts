@@ -22,23 +22,65 @@ export const getThemeColors = (theme: Theme, themeStyle?: ThemeStyle) => {
 
   // 根据主题风格调整特定颜色
   const styleSpecificColors = {
-    // AI消息气泡颜色
-    aiBubbleColor: themeStyle === 'claude'
-      ? (isDark ? alpha('#D97706', 0.2) : alpha('#D97706', 0.15))
-      : (isDark ? '#1a3b61' : '#e6f4ff'),
+    // AI消息气泡颜色 - 根据不同主题风格配置
+    aiBubbleColor: (() => {
+      switch (themeStyle) {
+        case 'claude':
+          return isDark ? alpha('#D97706', 0.2) : alpha('#D97706', 0.15);
+        case 'minimal':
+          return isDark ? alpha('#FFFFFF', 0.08) : alpha('#000000', 0.05);
+        case 'vibrant':
+          return isDark ? alpha('#8B5CF6', 0.15) : alpha('#8B5CF6', 0.1);
+        default:
+          return isDark ? '#1a3b61' : '#e6f4ff';
+      }
+    })(),
 
-    aiBubbleActiveColor: themeStyle === 'claude'
-      ? (isDark ? alpha('#D97706', 0.3) : alpha('#D97706', 0.2))
-      : (isDark ? '#234b79' : '#d3e9ff'),
+    aiBubbleActiveColor: (() => {
+      switch (themeStyle) {
+        case 'claude':
+          return isDark ? alpha('#D97706', 0.3) : alpha('#D97706', 0.2);
+        case 'minimal':
+          return isDark ? alpha('#FFFFFF', 0.12) : alpha('#000000', 0.08);
+        case 'vibrant':
+          return isDark ? alpha('#8B5CF6', 0.2) : alpha('#8B5CF6', 0.15);
+        default:
+          return isDark ? '#234b79' : '#d3e9ff';
+      }
+    })(),
 
-    // 用户消息气泡颜色
-    userBubbleColor: themeStyle === 'claude'
-      ? (isDark ? alpha('#059669', 0.2) : alpha('#059669', 0.15))
-      : (isDark ? '#333333' : theme.palette.primary.light),
+    // 用户消息气泡颜色 - 根据不同主题风格配置
+    userBubbleColor: (() => {
+      switch (themeStyle) {
+        case 'claude':
+          return isDark ? alpha('#059669', 0.2) : alpha('#059669', 0.15);
+        case 'minimal':
+          return isDark ? alpha('#6B7280', 0.15) : alpha('#6B7280', 0.1);
+        case 'vibrant':
+          return isDark ? alpha('#06B6D4', 0.15) : alpha('#06B6D4', 0.1);
+        default:
+          return isDark ? '#333333' : theme.palette.primary.light;
+      }
+    })(),
 
-    // 按钮和交互元素颜色
-    buttonPrimary: themeStyle === 'claude' ? '#D97706' : theme.palette.primary.main,
-    buttonSecondary: themeStyle === 'claude' ? '#059669' : theme.palette.secondary.main,
+    // 按钮和交互元素颜色 - 根据主题风格配置
+    buttonPrimary: (() => {
+      switch (themeStyle) {
+        case 'claude': return '#D97706';
+        case 'minimal': return '#000000';
+        case 'vibrant': return '#8B5CF6';
+        default: return theme.palette.primary.main;
+      }
+    })(),
+
+    buttonSecondary: (() => {
+      switch (themeStyle) {
+        case 'claude': return '#059669';
+        case 'minimal': return '#6B7280';
+        case 'vibrant': return '#06B6D4';
+        default: return theme.palette.secondary.main;
+      }
+    })(),
 
     // 图标颜色
     iconColor: isDark ? '#64B5F6' : '#1976D2',
@@ -47,19 +89,46 @@ export const getThemeColors = (theme: Theme, themeStyle?: ThemeStyle) => {
     iconColorError: '#f44336',
     iconColorInfo: '#2196F3',
 
-    // 悬停和选中状态
-    hoverColor: themeStyle === 'claude'
-      ? (isDark ? alpha('#D97706', 0.12) : alpha('#D97706', 0.08))
-      : (isDark ? alpha(theme.palette.primary.main, 0.12) : alpha(theme.palette.primary.main, 0.08)),
+    // 悬停和选中状态 - 根据主题风格配置
+    hoverColor: (() => {
+      switch (themeStyle) {
+        case 'claude':
+          return isDark ? alpha('#D97706', 0.12) : alpha('#D97706', 0.08);
+        case 'minimal':
+          return isDark ? alpha('#FFFFFF', 0.08) : alpha('#000000', 0.04);
+        case 'vibrant':
+          return isDark ? alpha('#8B5CF6', 0.12) : alpha('#8B5CF6', 0.08);
+        default:
+          return isDark ? alpha(theme.palette.primary.main, 0.12) : alpha(theme.palette.primary.main, 0.08);
+      }
+    })(),
 
-    selectedColor: themeStyle === 'claude'
-      ? (isDark ? alpha('#D97706', 0.16) : alpha('#D97706', 0.12))
-      : (isDark ? alpha(theme.palette.primary.main, 0.16) : alpha(theme.palette.primary.main, 0.12)),
+    selectedColor: (() => {
+      switch (themeStyle) {
+        case 'claude':
+          return isDark ? alpha('#D97706', 0.16) : alpha('#D97706', 0.12);
+        case 'minimal':
+          return isDark ? alpha('#FFFFFF', 0.12) : alpha('#000000', 0.06);
+        case 'vibrant':
+          return isDark ? alpha('#8B5CF6', 0.16) : alpha('#8B5CF6', 0.12);
+        default:
+          return isDark ? alpha(theme.palette.primary.main, 0.16) : alpha(theme.palette.primary.main, 0.12);
+      }
+    })(),
 
-    // 边框颜色
-    borderColor: themeStyle === 'claude'
-      ? (isDark ? alpha('#D97706', 0.2) : alpha('#D97706', 0.1))
-      : theme.palette.divider,
+    // 边框颜色 - 根据主题风格配置
+    borderColor: (() => {
+      switch (themeStyle) {
+        case 'claude':
+          return isDark ? alpha('#D97706', 0.2) : alpha('#D97706', 0.1);
+        case 'minimal':
+          return isDark ? alpha('#FFFFFF', 0.15) : alpha('#000000', 0.1);
+        case 'vibrant':
+          return isDark ? alpha('#8B5CF6', 0.2) : alpha('#8B5CF6', 0.1);
+        default:
+          return theme.palette.divider;
+      }
+    })(),
 
     // 工具栏样式
     toolbarBg: isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
