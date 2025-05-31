@@ -461,6 +461,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
         </Box>
       )}
       <div ref={messagesEndRef} />
+      {/* 添加一个隐形的底部占位元素，确保最后的消息不被输入框遮挡 */}
+      <div style={{ height: '35px', minHeight: '35px', width: '100%' }} />
     </Box>
   );
 };

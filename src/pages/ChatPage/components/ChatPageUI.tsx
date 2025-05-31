@@ -60,7 +60,6 @@ const STYLES = {
     width: '100%',
     maxWidth: '100%',
     backgroundColor: 'transparent',
-    marginBottom: '80px',
   },
   inputContainer: {
     width: '100%',
@@ -249,7 +248,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   const renderToolbarComponent = useCallback((componentId: string) => {
     switch (componentId) {
       case 'menuButton':
-        return isMobile && mergedTopToolbarSettings.showMenuButton ? (
+        return mergedTopToolbarSettings.showMenuButton ? (
           <IconButton
             key={componentId}
             edge="start"
@@ -425,13 +424,15 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
 
   return (
     <Box sx={STYLES.mainContainer}>
-      {/* 桌面端固定显示侧边栏，移动端可隐藏 */}
+      {/* 桌面端可收起侧边栏，移动端可隐藏 */}
       {!isMobile && (
         <Sidebar
           mcpMode={mcpMode}
           toolsEnabled={toolsEnabled}
           onMCPModeChange={handleMCPModeChange}
           onToolsToggle={toggleToolsEnabled}
+          desktopOpen={drawerOpen}
+          onDesktopToggle={() => setDrawerOpen(!drawerOpen)}
         />
       )}
 

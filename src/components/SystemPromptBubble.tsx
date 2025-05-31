@@ -22,10 +22,10 @@ const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = ({ topic, assistan
   // 获取全局默认系统提示词
   const activeSystemPrompt = useAppSelector(selectActiveSystemPrompt);
 
-  // 获取系统提示词 - 优先使用话题的提示词
-  // 如果没有话题或助手，或者没有提示词，使用默认文本
+  // 获取系统提示词 - 优先显示助手的系统提示词，与编辑对话框保持一致
+  // 如果没有助手提示词，则显示话题提示词或默认提示词
   const systemPrompt =
-    (topic?.prompt || assistant?.systemPrompt || activeSystemPrompt || '点击此处编辑系统提示词');
+    (assistant?.systemPrompt || topic?.prompt || activeSystemPrompt || '点击此处编辑系统提示词');
 
   return (
     <Paper

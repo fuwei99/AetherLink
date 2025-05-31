@@ -10,6 +10,9 @@ interface SidebarProps {
   toolsEnabled?: boolean;
   onMCPModeChange?: (mode: 'prompt' | 'function') => void;
   onToolsToggle?: (enabled: boolean) => void;
+  // 新增：支持桌面端收起功能
+  desktopOpen?: boolean;
+  onDesktopToggle?: () => void;
 }
 
 export default function Sidebar({
@@ -18,27 +21,44 @@ export default function Sidebar({
   mcpMode,
   toolsEnabled,
   onMCPModeChange,
-  onToolsToggle
+  onToolsToggle,
+  // 新增参数
+  desktopOpen = true,
+  onDesktopToggle
 }: SidebarProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [localMobileOpen, setLocalMobileOpen] = useState(false);
+  const [localDesktopOpen, setLocalDesktopOpen] = useState(true);
 
   const drawerWidth = 308;
 
   const handleDrawerToggle = () => {
-    if (onMobileToggle) {
-      onMobileToggle();
+    if (isMobile) {
+      // 移动端逻辑
+      if (onMobileToggle) {
+        onMobileToggle();
+      } else {
+        setLocalMobileOpen(!localMobileOpen);
+      }
     } else {
-      setLocalMobileOpen(!localMobileOpen);
+      // 桌面端逻辑
+      if (onDesktopToggle) {
+        onDesktopToggle();
+      } else {
+        setLocalDesktopOpen(!localDesktopOpen);
+      }
     }
   };
 
-  const isOpen = onMobileToggle ? mobileOpen : localMobileOpen;
+  const isOpen = isMobile
+    ? (onMobileToggle ? mobileOpen : localMobileOpen)
+    : (onDesktopToggle ? desktopOpen : localDesktopOpen);
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {isMobile && (
+      {/* 显示收起按钮：移动端始终显示，桌面端在有控制函数时显示 */}
+      {(isMobile || onDesktopToggle) && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
           <IconButton onClick={handleDrawerToggle}>
             <CloseIcon />
@@ -75,9 +95,11 @@ export default function Sidebar({
         </Drawer>
       ) : (
         <Drawer
-          variant="permanent"
+          variant="persistent"
           sx={{
             display: { xs: 'none', sm: 'block' },
+            width: isOpen ? drawerWidth : 0,
+            flexShrink: 0,
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: drawerWidth,
@@ -86,7 +108,7 @@ export default function Sidebar({
               border: 'none'
             },
           }}
-          open
+          open={isOpen}
         >
           {drawer}
         </Drawer>

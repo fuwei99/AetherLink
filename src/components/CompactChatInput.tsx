@@ -434,6 +434,54 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     handleKnowledgeClick
   });
 
+  // 根据当前样式获取容器样式
+  const getContainerStyle = () => {
+    const baseStyle = {
+      width: '100%',
+      padding: '10px 15px',
+      borderRadius: '20px',
+      backgroundColor: 'transparent', // 确保背景透明
+      background: 'none', // 移除任何背景
+      backdropFilter: 'none', // 移除任何背景滤镜
+      position: 'relative' as const,
+      transition: 'all 0.2s ease-in-out',
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '8px',
+      maxWidth: '100%',
+      marginBottom: '10px',
+    };
+
+    if (isActivated) {
+      return {
+        ...baseStyle,
+        borderRadius: '16px',
+      };
+    }
+
+    return baseStyle;
+  };
+
+  // 获取输入框样式
+  const getInputStyle = () => ({
+    width: '100%',
+    minHeight: '40px',
+    padding: '10px 40px 10px 15px',
+    borderRadius: '18px',
+    border: styles.border,
+    boxShadow: styles.boxShadow,
+    fontSize: '16px',
+    lineHeight: '1.5',
+    outline: 'none',
+    resize: 'none' as const,
+    overflowY: 'auto' as const,
+    backgroundColor: 'transparent', // 使输入框背景透明
+    color: isDarkMode ? '#E0E0E0' : '#000000',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s ease',
+    height: `${inputHeight}px`,
+  });
+
   return (
     <Box sx={{
       width: '100%',

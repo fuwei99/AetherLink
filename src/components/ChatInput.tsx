@@ -536,7 +536,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
           alignItems: 'center',
         padding: isTablet ? '6px 12px' : isMobile ? '5px 8px' : '5px 8px',
         borderRadius: borderRadius,
-        background: inputBgColor,
+        /* 添加实际的背景色以替代透明背景，防止输入框与底部消息重叠或产生视觉干扰
+           黑暗模式使用深色背景 #1e1e1e，亮色模式使用白色背景 #ffffff 
+           这样解决了输入框背景透明导致的显示问题 */
+        background: isDarkMode ? '#1e1e1e' : '#ffffff',
           border: border,
         minHeight: isTablet ? '56px' : isMobile ? '48px' : '50px', // 增加容器最小高度以适应新的textarea高度
         boxShadow: boxShadow,

@@ -14,7 +14,7 @@ export const useInputStyles = () => {
   // 获取样式配置
   const getStyles = () => {
     const baseStyles = {
-      inputBg: isDarkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+      inputBg: 'transparent',
       iconBg: isDarkMode ? 'rgba(40, 40, 40, 0.8)' : 'rgba(248, 250, 252, 0.8)',
       border: isDarkMode ? '1px solid rgba(60, 60, 60, 0.8)' : '1px solid rgba(230, 230, 230, 0.8)',
       borderRadius: '20px',
@@ -25,16 +25,14 @@ export const useInputStyles = () => {
       case 'modern':
         return {
           ...baseStyles,
-          inputBg: isDarkMode
-            ? 'linear-gradient(135deg, rgba(45, 45, 45, 0.95) 0%, rgba(35, 35, 35, 0.95) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%)',
+          inputBg: 'transparent',
           borderRadius: '24px',
           boxShadow: isDarkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.15)',
         };
       case 'minimal':
         return {
           ...baseStyles,
-          inputBg: isDarkMode ? 'rgba(40, 40, 40, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+          inputBg: 'transparent',
           border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
           borderRadius: '16px',
           boxShadow: 'none',
