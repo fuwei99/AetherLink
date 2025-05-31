@@ -1,9 +1,10 @@
 // React组件导入
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider } from '@mui/material';
 import { useEffect, useState, memo, useMemo } from 'react';
 import { HashRouter } from 'react-router-dom';
+import { createCustomTheme } from './shared/config/themes';
 import AppRouter from './routes';
 import store, { persistor } from './shared/store';
 import LoggerService from './shared/services/LoggerService';
@@ -42,6 +43,7 @@ const AppContent = () => {
 
   // 从Redux状态获取主题设置 - 现在在Provider内部安全使用
   const themePreference = useSelector((state: any) => state.settings.theme);
+  const themeStyle = useSelector((state: any) => state.settings.themeStyle);
 
   // 监听主题变化
   useEffect(() => {
@@ -65,149 +67,10 @@ const AppContent = () => {
   // 获取字体大小设置
   const fontSize = useAppSelector((state) => state.settings.fontSize);
 
-  // 根据当前模式和字体大小创建主题
+  // 根据当前模式、主题风格和字体大小创建主题
   const theme = useMemo(() => {
-    // 计算字体大小比例
-    const fontScale = fontSize / 16; // 16px为基准
-
-    return createTheme({
-      palette: {
-        mode,
-        primary: {
-          main: '#64748B', // 柔和的灰蓝色
-          light: '#94A3B8',
-          dark: '#475569',
-        },
-        secondary: {
-          main: '#10B981', // 保留绿色作为辅助色
-          light: '#6EE7B7',
-          dark: '#047857',
-        },
-        background: {
-          default: mode === 'light' ? '#F8FAFC' : '#1a1a1a', // 深色更新为更暗的背景色
-          paper: mode === 'light' ? '#FFFFFF' : '#232323', // 深色卡片背景更新
-        },
-        text: {
-          primary: mode === 'light' ? '#1E293B' : '#e8e8e8', // 深色模式文字更亮一些
-          secondary: mode === 'light' ? '#64748B' : '#a0a0a0', // 次要文字颜色
-        },
-        divider: mode === 'light' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.12)', // 分割线颜色
-        error: {
-          main: '#EF4444',
-        },
-        warning: {
-          main: '#F59E0B',
-        },
-        info: {
-          main: '#38BDF8',
-        },
-        success: {
-          main: '#10B981',
-        },
-        action: {
-          // 深色模式交互颜色
-          active: mode === 'light' ? 'rgba(0, 0, 0, 0.54)' : 'rgba(255, 255, 255, 0.8)',
-          hover: mode === 'light' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.08)',
-          selected: mode === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.16)',
-          disabled: mode === 'light' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(255, 255, 255, 0.3)',
-          disabledBackground: mode === 'light' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.12)',
-        }
-      },
-      typography: {
-        fontFamily: '"Inter", "Noto Sans SC", system-ui, -apple-system, sans-serif',
-        fontSize: fontSize, // 使用全局字体大小设置
-        h1: {
-          fontWeight: 700,
-          fontSize: `${2.5 * fontScale}rem`, // 动态调整标题字体大小
-        },
-        h2: {
-          fontWeight: 700,
-          fontSize: `${2 * fontScale}rem`,
-        },
-        h3: {
-          fontWeight: 600,
-          fontSize: `${1.75 * fontScale}rem`,
-        },
-        h4: {
-          fontWeight: 600,
-          fontSize: `${1.5 * fontScale}rem`,
-        },
-        h5: {
-          fontWeight: 600,
-          fontSize: `${1.25 * fontScale}rem`,
-        },
-        h6: {
-          fontWeight: 600,
-          fontSize: `${1.125 * fontScale}rem`,
-        },
-        body1: {
-          fontSize: `${1 * fontScale}rem`,
-        },
-        body2: {
-          fontSize: `${0.875 * fontScale}rem`,
-        },
-        button: {
-          fontWeight: 600,
-          fontSize: `${0.875 * fontScale}rem`,
-        },
-        caption: {
-          fontSize: `${0.75 * fontScale}rem`,
-        },
-        overline: {
-          fontSize: `${0.75 * fontScale}rem`,
-        },
-      },
-    shape: {
-      borderRadius: 8,
-    },
-    shadows: [
-      'none',
-      mode === 'light'
-        ? '0 1px 2px rgba(0, 0, 0, 0.05)'
-        : '0 1px 2px rgba(255, 255, 255, 0.05)',
-      mode === 'light'
-        ? '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)'
-        : '0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1)',
-      mode === 'light'
-        ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-        : '0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1)',
-      mode === 'light'
-        ? '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-        : '0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
-      mode === 'light'
-        ? '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-        : '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
-      '0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12)',
-      '0px 4px 5px -2px rgba(0,0,0,0.2),0px 7px 10px 1px rgba(0,0,0,0.14),0px 2px 16px 1px rgba(0,0,0,0.12)',
-      '0px 5px 5px -3px rgba(0,0,0,0.2),0px 8px 10px 1px rgba(0,0,0,0.14),0px 3px 14px 2px rgba(0,0,0,0.12)',
-      '0px 5px 6px -3px rgba(0,0,0,0.2),0px 9px 12px 1px rgba(0,0,0,0.14),0px 3px 16px 2px rgba(0,0,0,0.12)',
-      '0px 6px 6px -3px rgba(0,0,0,0.2),0px 10px 14px 1px rgba(0,0,0,0.14),0px 4px 18px 3px rgba(0,0,0,0.12)',
-      '0px 6px 7px -4px rgba(0,0,0,0.2),0px 11px 15px 1px rgba(0,0,0,0.14),0px 4px 20px 3px rgba(0,0,0,0.12)',
-      '0px 7px 8px -4px rgba(0,0,0,0.2),0px 12px 17px 2px rgba(0,0,0,0.14),0px 5px 22px 4px rgba(0,0,0,0.12)',
-      '0px 7px 8px -4px rgba(0,0,0,0.2),0px 13px 19px 2px rgba(0,0,0,0.14),0px 5px 24px 4px rgba(0,0,0,0.12)',
-      '0px 7px 9px -4px rgba(0,0,0,0.2),0px 14px 21px 2px rgba(0,0,0,0.14),0px 5px 26px 4px rgba(0,0,0,0.12)',
-      '0px 8px 9px -5px rgba(0,0,0,0.2),0px 15px 22px 2px rgba(0,0,0,0.14),0px 6px 28px 5px rgba(0,0,0,0.12)',
-      '0px 8px 10px -5px rgba(0,0,0,0.2),0px 16px 24px 2px rgba(0,0,0,0.14),0px 6px 30px 5px rgba(0,0,0,0.12)',
-      '0px 8px 11px -5px rgba(0,0,0,0.2),0px 17px 26px 2px rgba(0,0,0,0.14),0px 6px 32px 5px rgba(0,0,0,0.12)',
-      '0px 9px 11px -5px rgba(0,0,0,0.2),0px 18px 28px 2px rgba(0,0,0,0.14),0px 7px 34px 6px rgba(0,0,0,0.12)',
-      '0px 9px 12px -6px rgba(0,0,0,0.2),0px 19px 29px 2px rgba(0,0,0,0.14),0px 7px 36px 6px rgba(0,0,0,0.12)',
-      '0px 10px 13px -6px rgba(0,0,0,0.2),0px 20px 31px 3px rgba(0,0,0,0.14),0px 8px 38px 7px rgba(0,0,0,0.12)',
-      '0px 10px 13px -6px rgba(0,0,0,0.2),0px 21px 33px 3px rgba(0,0,0,0.14),0px 8px 40px 7px rgba(0,0,0,0.12)',
-      '0px 10px 14px -6px rgba(0,0,0,0.2),0px 22px 35px 3px rgba(0,0,0,0.14),0px 8px 42px 7px rgba(0,0,0,0.12)',
-      '0px 11px 14px -7px rgba(0,0,0,0.2),0px 23px 36px 3px rgba(0,0,0,0.14),0px 9px 44px 8px rgba(0,0,0,0.12)',
-      '0px 11px 15px -7px rgba(0,0,0,0.2),0px 24px 38px 3px rgba(0,0,0,0.14),0px 9px 46px 8px rgba(0,0,0,0.12)',
-    ],
-    components: {
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            backgroundImage: 'none',
-          },
-        },
-      },
-    },
-  });
-  }, [mode, fontSize]);
+    return createCustomTheme(mode, themeStyle || 'default', fontSize);
+  }, [mode, themeStyle, fontSize]);
 
   // 记录应用启动日志
   useEffect(() => {
@@ -393,18 +256,51 @@ const AppContent = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {/* 全局字体大小CSS变量 */}
+      {/* 全局字体大小和主题CSS变量 */}
       <style>
         {`
           :root {
             --global-font-size: ${fontSize}px;
             --global-font-scale: ${fontSize / 16};
+            --theme-primary: ${theme.palette.primary.main};
+            --theme-secondary: ${theme.palette.secondary.main};
+            --theme-background: ${theme.palette.background.default};
+            --theme-paper: ${theme.palette.background.paper};
+            --theme-text-primary: ${theme.palette.text.primary};
+            --theme-text-secondary: ${theme.palette.text.secondary};
           }
 
           /* 应用全局字体大小到常见元素 */
           body {
             font-size: var(--global-font-size) !important;
+            background-color: var(--theme-background) !important;
           }
+
+          /* 强制应用Claude主题背景色到所有主要容器 */
+          ${themeStyle === 'claude' ? `
+            #root,
+            .MuiBox-root:not([style*="background"]):not(.message-content):not(.code-block) {
+              background-color: ${theme.palette.background.default} !important;
+            }
+
+            /* 确保AppBar使用Claude主题色 */
+            .MuiAppBar-root {
+              background-color: ${mode === 'light'
+                ? 'rgba(254, 247, 237, 0.95)'
+                : 'rgba(41, 37, 36, 0.95)'} !important;
+              backdrop-filter: blur(12px) !important;
+            }
+
+            /* 确保主要容器使用Claude背景 */
+            .css-fha6rj,
+            .css-120w7cc,
+            .css-17guv08,
+            .css-kyhwyq,
+            .css-1x2616z,
+            .css-1ttaoha {
+              background-color: ${theme.palette.background.default} !important;
+            }
+          ` : ''}
 
           /* 聊天消息字体大小 */
           .message-content {

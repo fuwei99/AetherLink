@@ -26,6 +26,8 @@ import type { DebateConfig } from '../shared/services/AIDebateService';
 import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition';
 import { VoiceButton, VoiceInputArea } from './VoiceRecognition';
 import EnhancedVoiceInput from './VoiceRecognition/EnhancedVoiceInput';
+import { getThemeColors, getButtonStyles } from '../shared/utils/themeUtils';
+import { useTheme } from '@mui/material/styles';
 
 interface ChatInputProps {
   onSendMessage: (message: string, images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => void;
@@ -87,6 +89,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   // 使用共享的 hooks
   const { styles, isDarkMode, inputBoxStyle } = useInputStyles();
+
+  // 获取主题和主题工具
+  const theme = useTheme();
+  const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
+  const themeColors = getThemeColors(theme, themeStyle);
 
   // URL解析功能
   const {
@@ -173,9 +180,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   // 从 useInputStyles hook 获取样式
   const { inputBg: inputBgColor, border, borderRadius, boxShadow } = styles;
-  const iconColor = isDarkMode ? '#64B5F6' : '#1976D2';
-  const textColor = isDarkMode ? '#E0E0E0' : '#000000';
-  const disabledColor = isDarkMode ? '#555' : '#ccc';
+  const iconColor = themeColors.iconColor;
+  const textColor = themeColors.textPrimary;
+  const disabledColor = themeColors.isDark ? '#555' : '#ccc';
 
   // 检测iOS设备
   useEffect(() => {
@@ -536,10 +543,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
           alignItems: 'center',
         padding: isTablet ? '6px 12px' : isMobile ? '5px 8px' : '5px 8px',
         borderRadius: borderRadius,
-        /* 添加实际的背景色以替代透明背景，防止输入框与底部消息重叠或产生视觉干扰
-           黑暗模式使用深色背景 #1e1e1e，亮色模式使用白色背景 #ffffff 
-           这样解决了输入框背景透明导致的显示问题 */
-        background: isDarkMode ? '#1e1e1e' : '#ffffff',
+        /* 使用主题颜色作为背景，防止输入框与底部消息重叠或产生视觉干扰 */
+        background: themeColors.paper,
           border: border,
         minHeight: isTablet ? '56px' : isMobile ? '48px' : '50px', // 增加容器最小高度以适应新的textarea高度
         boxShadow: boxShadow,

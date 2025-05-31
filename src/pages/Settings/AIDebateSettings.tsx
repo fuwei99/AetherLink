@@ -20,11 +20,11 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Slider,
   Divider,
   Alert,
   AppBar,
-  Toolbar
+  Toolbar,
+  alpha
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -35,7 +35,7 @@ import {
   SmartToy as SmartToyIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { DropdownModelSelector } from '../ChatPage/components/DropdownModelSelector';
 
@@ -66,7 +66,6 @@ interface DebateConfig {
 
 const AIDebateSettings: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   // 从Redux获取提供商和模型
   const providers = useSelector((state: RootState) => state.settings.providers || []);
@@ -582,35 +581,112 @@ const AIDebateSettings: React.FC = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Box sx={{
+      flexGrow: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      bgcolor: (theme) => theme.palette.mode === 'light'
+        ? alpha(theme.palette.primary.main, 0.02)
+        : alpha(theme.palette.background.default, 0.9),
+    }}>
       {/* 顶部导航栏 */}
-      <AppBar position="fixed" elevation={0} sx={{
-        bgcolor: 'background.paper',
-        color: 'text.primary',
-        borderBottom: 1,
-        borderColor: 'divider'
-      }}>
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          borderBottom: 1,
+          borderColor: 'divider',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
         <Toolbar>
-          <IconButton edge="start" onClick={handleBack} sx={{ color: 'primary.main' }}>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={handleBack}
+            aria-label="back"
+            sx={{
+              color: (theme) => theme.palette.primary.main,
+            }}
+          >
             <ArrowBackIcon />
           </IconButton>
-          <ForumIcon sx={{ mr: 1, color: 'primary.main' }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+          <ForumIcon sx={{ mr: 1, color: '#e11d48' }} />
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              flexGrow: 1,
+              fontWeight: 600,
+              backgroundImage: 'linear-gradient(90deg, #9333EA, #754AB4)',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
             AI辩论设置
           </Typography>
         </Toolbar>
       </AppBar>
 
       {/* 主要内容 */}
-      <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2, mt: 8 }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          p: { xs: 1, sm: 2 },
+          mt: 8,
+          '&::-webkit-scrollbar': {
+            width: { xs: '4px', sm: '6px' },
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
+        }}
+      >
         {/* 基本设置 */}
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-            <SmartToyIcon sx={{ mr: 1 }} />
-            基本设置
-          </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.1rem' },
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <SmartToyIcon sx={{ mr: 1, color: '#06b6d4' }} />
+              基本设置
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              配置AI辩论功能的基础参数和选项
+            </Typography>
+          </Box>
 
-          <FormControlLabel
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <FormControlLabel
             control={
               <Switch
                 checked={config.enabled}
@@ -664,21 +740,49 @@ const AIDebateSettings: React.FC = () => {
               label="自动生成辩论总结"
               sx={{ ml: 2 }}
             />
+            </Box>
           </Box>
         </Paper>
 
         {/* 快速配置 */}
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-            <SmartToyIcon sx={{ mr: 1 }} />
-            快速配置
-          </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.1rem' },
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <SmartToyIcon sx={{ mr: 1, color: '#8b5cf6' }} />
+              快速配置
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              为新手用户提供一键配置，快速创建完整的辩论场景
+            </Typography>
+          </Box>
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            为新手用户提供一键配置，快速创建完整的辩论场景
-          </Typography>
+          <Divider />
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
             <Button
               variant="outlined"
               onClick={() => handleQuickSetup('basic')}
@@ -730,23 +834,63 @@ const AIDebateSettings: React.FC = () => {
                 6个不同角色的全方位辩论
               </Typography>
             </Button>
+            </Box>
           </Box>
         </Paper>
 
         {/* 角色管理 */}
-        <Paper sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">
-              辩论角色管理
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleAddRole}
-            >
-              添加角色
-            </Button>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', sm: '1.1rem' }
+                  }}
+                >
+                  辩论角色管理
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                >
+                  创建和管理AI辩论中的各种角色
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddRole}
+                sx={{
+                  background: 'linear-gradient(90deg, #9333EA, #754AB4)',
+                  fontWeight: 600,
+                  '&:hover': {
+                    background: 'linear-gradient(90deg, #8324DB, #6D3CAF)',
+                  },
+                }}
+              >
+                添加角色
+              </Button>
+            </Box>
           </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
 
           {config.roles.length === 0 ? (
             <Alert severity="info" sx={{ mb: 2 }}>
@@ -810,6 +954,7 @@ const AIDebateSettings: React.FC = () => {
               ))}
             </Box>
           )}
+          </Box>
         </Paper>
       </Box>
 

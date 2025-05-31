@@ -25,7 +25,8 @@ import {
   CardActions,
   Tabs,
   Tab,
-  Paper
+  Paper,
+  alpha
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
@@ -452,28 +453,67 @@ const AssistantModelSettings: React.FC = () => {
   }
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{
+      flexGrow: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      bgcolor: (theme) => theme.palette.mode === 'light'
+        ? alpha(theme.palette.primary.main, 0.02)
+        : alpha(theme.palette.background.default, 0.9),
+    }}>
       {/* 顶部导航栏 */}
-      <AppBar position="static" color="default" elevation={1}>
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          borderBottom: 1,
+          borderColor: 'divider',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
         <Toolbar>
           <IconButton
             edge="start"
+            color="inherit"
             onClick={handleBack}
-            sx={{ mr: 2 }}
+            aria-label="back"
+            sx={{
+              color: (theme) => theme.palette.primary.main,
+            }}
           >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            模型设置
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              flexGrow: 1,
+              fontWeight: 600,
+              backgroundImage: 'linear-gradient(90deg, #9333EA, #754AB4)',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
+            {assistant.name} - 模型设置
           </Typography>
           {hasChanges && (
             <Button
               startIcon={<SaveIcon />}
               onClick={handleSave}
               disabled={saving}
-              color="primary"
               variant="contained"
               size="small"
+              sx={{
+                background: 'linear-gradient(90deg, #9333EA, #754AB4)',
+                fontWeight: 600,
+                '&:hover': {
+                  background: 'linear-gradient(90deg, #8324DB, #6D3CAF)',
+                },
+              }}
             >
               {saving ? '保存中...' : '保存'}
             </Button>
@@ -482,31 +522,133 @@ const AssistantModelSettings: React.FC = () => {
       </AppBar>
 
       {/* 内容区域 */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          p: { xs: 1, sm: 2 },
+          mt: 8,
+          '&::-webkit-scrollbar': {
+            width: { xs: '4px', sm: '6px' },
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
+        }}
+      >
         {/* 助手信息 */}
-        <Box sx={{ p: 2, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
-              {assistant.emoji || assistant.name.charAt(0)}
-            </Avatar>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>
-                {assistant.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                配置模型参数和行为
-              </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.1rem' }
+              }}
+            >
+              助手信息
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              当前正在配置的助手详细信息
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{
+                width: { xs: 40, sm: 48 },
+                height: { xs: 40, sm: 48 },
+                bgcolor: alpha('#9333EA', 0.12),
+                color: '#9333EA',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+              }}>
+                {assistant.emoji || assistant.name.charAt(0)}
+              </Avatar>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', sm: '1.1rem' }
+                  }}
+                >
+                  {assistant.name}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                >
+                  配置模型参数和行为设置
+                </Typography>
+                {assistant.isSystem && (
+                  <Chip
+                    label="系统助手"
+                    size="small"
+                    sx={{
+                      mt: 0.5,
+                      bgcolor: alpha('#9333EA', 0.1),
+                      color: '#9333EA',
+                      fontWeight: 500,
+                      fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                      height: { xs: 20, sm: 24 }
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
           </Box>
-        </Box>
+        </Paper>
 
         {/* Tab导航 */}
-        <Paper sx={{ borderRadius: 0 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
           <Tabs
             value={currentTab}
             onChange={(_, newValue) => setCurrentTab(newValue)}
             variant="fullWidth"
-            sx={{ borderBottom: 1, borderColor: 'divider' }}
+            sx={{
+              '& .MuiTab-root': {
+                fontWeight: 600,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                textTransform: 'none',
+                '&.Mui-selected': {
+                  color: '#9333EA',
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#9333EA',
+                height: 3,
+              },
+            }}
           >
             <Tab label="通用参数" />
             <Tab label="OpenAI 专属" />
@@ -518,7 +660,41 @@ const AssistantModelSettings: React.FC = () => {
         {/* Tab内容 */}
         <TabPanel value={currentTab} index={0}>
           {/* 通用参数 */}
-          <List sx={{ p: 0 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden',
+              bgcolor: 'background.paper',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' }
+                }}
+              >
+                通用参数设置
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
+                配置模型的基础参数，适用于大多数AI模型
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <List sx={{ p: 0 }}>
           {/* 模型选择 */}
           <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', py: 2 }}>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'medium' }}>
@@ -895,16 +1071,50 @@ const AssistantModelSettings: React.FC = () => {
             />
           </ListItem>
 
-          </List>
+              </List>
+            </Box>
+          </Paper>
         </TabPanel>
 
         <TabPanel value={currentTab} index={1}>
           {/* OpenAI 专属参数 */}
-          <List sx={{ p: 0 }}>
-          <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', py: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', fontWeight: 'bold' }}>
-              OpenAI 专属参数
-            </Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden',
+              bgcolor: 'background.paper',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' },
+                  color: '#06b6d4'
+                }}
+              >
+                OpenAI 专属参数
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
+                专门针对OpenAI模型的高级参数配置
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <List sx={{ p: 0 }}>
+                <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', py: 2 }}>
 
             {/* Response Format */}
             <Box sx={{ mb: 3 }}>
@@ -992,17 +1202,51 @@ const AssistantModelSettings: React.FC = () => {
                 fullWidth
               />
             </Box>
-          </ListItem>
-          </List>
+                </ListItem>
+              </List>
+            </Box>
+          </Paper>
         </TabPanel>
 
         <TabPanel value={currentTab} index={2}>
           {/* Gemini 专属参数 */}
-          <List sx={{ p: 0 }}>
-          <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', py: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'secondary.main', fontWeight: 'bold' }}>
-              Gemini 专属参数
-            </Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden',
+              bgcolor: 'background.paper',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' },
+                  color: '#8b5cf6'
+                }}
+              >
+                Gemini 专属参数
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
+                专门针对Google Gemini模型的高级参数配置
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <List sx={{ p: 0 }}>
+                <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', py: 2 }}>
 
             {/* Candidate Count */}
             <Box sx={{ mb: 3 }}>
@@ -1142,13 +1386,50 @@ const AssistantModelSettings: React.FC = () => {
                 </Select>
               </FormControl>
             </Box>
-          </ListItem>
-          </List>
+                </ListItem>
+              </List>
+            </Box>
+          </Paper>
         </TabPanel>
 
         <TabPanel value={currentTab} index={3}>
           {/* 自定义参数 */}
-          <List sx={{ p: 0 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden',
+              bgcolor: 'background.paper',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' },
+                  color: '#10b981'
+                }}
+              >
+                自定义参数
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
+                为模型添加自定义参数，支持多种数据类型
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <List sx={{ p: 0 }}>
           <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', py: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
@@ -1235,7 +1516,9 @@ const AssistantModelSettings: React.FC = () => {
               重置为默认值
             </Button>
           </ListItem>
-          </List>
+              </List>
+            </Box>
+          </Paper>
         </TabPanel>
       </Box>
     </Box>

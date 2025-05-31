@@ -9,13 +9,29 @@ import {
   Paper,
   Slider,
   FormHelperText,
-  Chip
+  Chip,
+  AppBar,
+  Toolbar,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  Divider,
+  alpha
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+
+import ChatIcon from '@mui/icons-material/Chat';
+import MessageIcon from '@mui/icons-material/Message';
+import BuildIcon from '@mui/icons-material/Build';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
 import { setTheme, setFontSize } from '../../shared/store/settingsSlice';
+import ThemeStyleSelector from '../../components/settings/ThemeStyleSelector';
 
 const AppearanceSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -61,102 +77,123 @@ const AppearanceSettings: React.FC = () => {
 
   return (
     <Box sx={{
-      height: '100vh',
-      backgroundColor: 'background.default',
+      flexGrow: 1,
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      height: '100vh',
+      bgcolor: (theme) => theme.palette.mode === 'light'
+        ? alpha(theme.palette.primary.main, 0.02)
+        : alpha(theme.palette.background.default, 0.9),
     }}>
-      <Box
+      <AppBar
+        position="fixed"
+        elevation={0}
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: 2,
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
           borderBottom: 1,
           borderColor: 'divider',
-          backgroundColor: 'background.paper',
-          zIndex: 10,
-          flexShrink: 0
+          backdropFilter: 'blur(8px)',
         }}
       >
-        <ArrowBackIcon
-          sx={{ mr: 2, cursor: 'pointer' }}
-          onClick={handleBack}
-        />
-        <Typography variant="h6" color="primary">
-          外观
-        </Typography>
-      </Box>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={handleBack}
+            aria-label="back"
+            sx={{
+              color: (theme) => theme.palette.primary.main,
+            }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              flexGrow: 1,
+              fontWeight: 600,
+              backgroundImage: 'linear-gradient(90deg, #9333EA, #754AB4)',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
+            外观设置
+          </Typography>
+        </Toolbar>
+      </AppBar>
 
-      <Box sx={{
-        p: 2,
-        flex: 1,
-        overflow: 'auto',
-        '&::-webkit-scrollbar': {
-          width: '6px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'rgba(0,0,0,0.2)',
-          borderRadius: '3px',
-        },
-        '&::-webkit-scrollbar-thumb:hover': {
-          background: 'rgba(0,0,0,0.3)',
-        }
-      }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          p: 2,
+          mt: 8,
+          '&::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
+        }}
+      >
         {/* 主题和字体设置 */}
         <Paper
           elevation={0}
           sx={{
-            p: { xs: 2, sm: 3 },
-            mb: 3,
-            border: '1px solid #eee',
+            mb: 2,
             borderRadius: 2,
-            background: 'background.paper',
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            },
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
           }}
         >
-          <Typography
-            variant="subtitle1"
-            sx={{
-              mb: 3,
-              fontWeight: 600,
-              fontSize: { xs: '1.1rem', sm: '1.25rem' },
-              color: 'text.primary',
-            }}
-          >
-            主题和字体
-          </Typography>
+          <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              主题和字体
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              自定义应用的外观主题和全局字体大小设置
+            </Typography>
+          </Box>
 
-          {/* 主题选择 */}
-          <FormControl fullWidth variant="outlined" sx={{ mb: 3 }}>
-            <InputLabel>主题</InputLabel>
-            <Select
-              value={settings.theme}
-              onChange={(e) => dispatch(setTheme(e.target.value as 'light' | 'dark' | 'system'))}
-              label="主题"
-              sx={{
-                '& .MuiSelect-select': {
-                  fontSize: { xs: '0.9rem', sm: '1rem' },
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderRadius: 2,
-                },
-              }}
-            >
-              <MenuItem value="light">浅色</MenuItem>
-              <MenuItem value="dark">深色</MenuItem>
-              <MenuItem value="system">跟随系统</MenuItem>
-            </Select>
-            <FormHelperText>
-              选择应用的外观主题，跟随系统将自动适配设备的深色/浅色模式
-            </FormHelperText>
-          </FormControl>
+          <Divider />
+
+          <Box sx={{ p: 2 }}>
+            {/* 主题选择 */}
+            <FormControl fullWidth variant="outlined" sx={{ mb: 3 }}>
+              <InputLabel>主题</InputLabel>
+              <Select
+                value={settings.theme}
+                onChange={(e) => dispatch(setTheme(e.target.value as 'light' | 'dark' | 'system'))}
+                label="主题"
+                sx={{
+                  '& .MuiSelect-select': {
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderRadius: 2,
+                  },
+                }}
+              >
+                <MenuItem value="light">浅色</MenuItem>
+                <MenuItem value="dark">深色</MenuItem>
+                <MenuItem value="system">跟随系统</MenuItem>
+              </Select>
+              <FormHelperText>
+                选择应用的外观主题，跟随系统将自动适配设备的深色/浅色模式
+              </FormHelperText>
+            </FormControl>
+
+            {/* 主题风格选择器 */}
+            <Box sx={{ mb: 3 }}>
+              <ThemeStyleSelector compact />
+            </Box>
 
           {/* 全局字体大小控制 */}
           <Box sx={{ mb: 2 }}>
@@ -239,75 +276,119 @@ const AppearanceSettings: React.FC = () => {
               调整应用中所有文本的基础字体大小，影响聊天消息、界面文字等全局显示效果
             </FormHelperText>
           </Box>
-        </Paper>
-
-        {/* 聊天界面设置入口 */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            mb: 3,
-            border: '1px solid #eee',
-            cursor: 'pointer'
-          }}
-          onClick={handleNavigateToChatInterface}
-        >
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <Typography variant="subtitle1">
-              聊天界面设置
-            </Typography>
-            <ChevronRightIcon color="action" />
           </Box>
         </Paper>
 
-        {/* 信息气泡管理入口 */}
+        {/* 界面定制选项 */}
         <Paper
           elevation={0}
           sx={{
-            p: 2,
-            mb: 3,
-            border: '1px solid #eee',
-            cursor: 'pointer'
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
           }}
-          onClick={handleNavigateToMessageBubble}
         >
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <Typography variant="subtitle1">
-              信息气泡管理
+          <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              界面定制
             </Typography>
-            <ChevronRightIcon color="action" />
+            <Typography variant="body2" color="text.secondary">
+              自定义聊天界面、消息气泡和工具栏的外观设置
+            </Typography>
           </Box>
-        </Paper>
 
-        {/* 顶部工具栏设置入口 */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            mb: 3,
-            border: '1px solid #eee',
-            cursor: 'pointer'
-          }}
-          onClick={handleNavigateToTopToolbar}
-        >
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <Typography variant="subtitle1">
-              顶部工具栏设置
-            </Typography>
-            <ChevronRightIcon color="action" />
-          </Box>
+          <Divider />
+
+          <List disablePadding>
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToChatInterface}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#6366f1', 0.12),
+                    color: '#6366f1',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <ChatIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>聊天界面设置</Typography>}
+                  secondary="自定义聊天界面布局和显示选项"
+                />
+                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToMessageBubble}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#8b5cf6', 0.12),
+                    color: '#8b5cf6',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <MessageIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>信息气泡管理</Typography>}
+                  secondary="调整消息气泡的样式和宽度设置"
+                />
+                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToTopToolbar}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#06b6d4', 0.12),
+                    color: '#06b6d4',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <BuildIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>顶部工具栏设置</Typography>}
+                  secondary="自定义顶部工具栏的组件和布局"
+                />
+                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+              </ListItemButton>
+            </ListItem>
+          </List>
         </Paper>
       </Box>
     </Box>

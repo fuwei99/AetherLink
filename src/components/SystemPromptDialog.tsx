@@ -51,12 +51,12 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
   // 当对话框打开时，初始化提示词
   useEffect(() => {
     if (open) {
-      // 优先使用话题的提示词，但prompt已被弃用，所以需要检查两种可能性
-      // 注意：这里我们仍然读取prompt属性，但在保存时会根据情况处理
-      setPrompt(topic?.prompt || assistant?.systemPrompt || activeSystemPrompt || '');
+      // 🔥 修复：与气泡组件保持一致的优先级 - 优先显示助手的系统提示词
+      // 优先级：助手提示词 > 话题提示词 > 默认提示词
+      setPrompt(assistant?.systemPrompt || topic?.prompt || activeSystemPrompt || '');
 
       // 简单估算token数量 (英文按照单词计算，中文按照字符计算)
-      const text = topic?.prompt || assistant?.systemPrompt || activeSystemPrompt || '';
+      const text = assistant?.systemPrompt || topic?.prompt || activeSystemPrompt || '';
       const estimatedTokens = Math.ceil(text.split(/\s+/).length +
         text.replace(/[\u4e00-\u9fa5]/g, '').length / 4);
       setTokensCount(estimatedTokens);

@@ -18,7 +18,8 @@ import {
   ListItemText,
   Card,
   Button,
-  Divider
+  Divider,
+  alpha
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import InfoIcon from '@mui/icons-material/Info';
@@ -252,128 +253,195 @@ const TopToolbarSettings: React.FC = () => {
 
   return (
     <Box sx={{
-      height: '100vh',
-      backgroundColor: 'background.default',
+      flexGrow: 1,
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      height: '100vh',
+      bgcolor: (theme) => theme.palette.mode === 'light'
+        ? alpha(theme.palette.primary.main, 0.02)
+        : alpha(theme.palette.background.default, 0.9),
     }}>
-      <Box
+      <AppBar
+        position="fixed"
+        elevation={0}
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: 2,
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
           borderBottom: 1,
           borderColor: 'divider',
-          backgroundColor: 'background.paper',
-          zIndex: 10,
-          flexShrink: 0
+          backdropFilter: 'blur(8px)',
         }}
       >
-        <ArrowBackIcon
-          sx={{ mr: 2, cursor: 'pointer' }}
-          onClick={handleBack}
-        />
-        <Typography variant="h6" color="primary" sx={{ flexGrow: 1 }}>
-          顶部工具栏设置
-        </Typography>
-        <Button
-          variant="outlined"
-          onClick={() => navigate('/settings/appearance/top-toolbar-test')}
-          size="small"
-          sx={{ mr: 1 }}
-        >
-          测试页面
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<AutoFixHighIcon />}
-          onClick={() => navigate('/settings/appearance/top-toolbar-diy')}
-          size="small"
-        >
-          DIY 布局
-        </Button>
-      </Box>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={handleBack}
+            aria-label="back"
+            sx={{
+              color: (theme) => theme.palette.primary.main,
+            }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              flexGrow: 1,
+              fontWeight: 600,
+              backgroundImage: 'linear-gradient(90deg, #9333EA, #754AB4)',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
+            顶部工具栏设置
+          </Typography>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/settings/appearance/top-toolbar-test')}
+            size="small"
+            sx={{
+              mr: 1,
+              borderColor: 'primary.main',
+              color: 'primary.main',
+              '&:hover': { borderColor: 'primary.dark', color: 'primary.dark' }
+            }}
+          >
+            测试页面
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AutoFixHighIcon />}
+            onClick={() => navigate('/settings/appearance/top-toolbar-diy')}
+            size="small"
+            sx={{
+              bgcolor: 'primary.main',
+              '&:hover': { bgcolor: 'primary.dark' }
+            }}
+          >
+            DIY 布局
+          </Button>
+        </Toolbar>
+      </AppBar>
 
-      <Box sx={{
-        p: 2,
-        flex: 1,
-        overflow: 'auto',
-        '&::-webkit-scrollbar': {
-          width: '6px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'rgba(0,0,0,0.2)',
-          borderRadius: '3px',
-        },
-        '&::-webkit-scrollbar-thumb:hover': {
-          background: 'rgba(0,0,0,0.3)',
-        }
-      }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          p: { xs: 1, sm: 2 },
+          mt: 8,
+          '&::-webkit-scrollbar': {
+            width: { xs: '4px', sm: '6px' },
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
+        }}
+      >
 
         {/* 实时预览 */}
         <PreviewToolbar />
 
         {/* 基础组件显示设置 */}
-        <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Typography variant="subtitle1">基础组件显示</Typography>
-            <Tooltip title="控制顶部工具栏中基础组件的显示与隐藏">
-              <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' }
+                }}
+              >
+                基础组件显示
+              </Typography>
+              <Tooltip title="控制顶部工具栏中基础组件的显示与隐藏">
+                <IconButton size="small" sx={{ ml: 1 }}>
+                  <InfoIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              自定义顶部工具栏中基础组件的显示状态
+            </Typography>
           </Box>
 
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={topToolbar.showSettingsButton}
-                  onChange={(e) => handleComponentToggle('settingsButton', e.target.checked)}
-                />
-              }
-              label="显示设置按钮"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={topToolbar.showModelSelector}
-                  onChange={(e) => handleComponentToggle('modelSelector', e.target.checked)}
-                />
-              }
-              label="显示模型选择器"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={topToolbar.showChatTitle}
-                  onChange={(e) => handleComponentToggle('chatTitle', e.target.checked)}
-                />
-              }
-              label='显示"对话"标题'
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={topToolbar.showMenuButton}
-                  onChange={(e) => handleComponentToggle('menuButton', e.target.checked)}
-                />
-              }
-              label="显示菜单按钮"
-            />
-          </FormGroup>
+          <Divider />
 
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            控制顶部工具栏中基础组件的显示。隐藏设置按钮后，可以通过侧边栏菜单访问设置。
-          </Typography>
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={topToolbar.showSettingsButton}
+                    onChange={(e) => handleComponentToggle('settingsButton', e.target.checked)}
+                  />
+                }
+                label="显示设置按钮"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={topToolbar.showModelSelector}
+                    onChange={(e) => handleComponentToggle('modelSelector', e.target.checked)}
+                  />
+                }
+                label="显示模型选择器"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={topToolbar.showChatTitle}
+                    onChange={(e) => handleComponentToggle('chatTitle', e.target.checked)}
+                  />
+                }
+                label='显示"对话"标题'
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={topToolbar.showMenuButton}
+                    onChange={(e) => handleComponentToggle('menuButton', e.target.checked)}
+                  />
+                }
+                label="显示菜单按钮"
+              />
+            </FormGroup>
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 1,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                lineHeight: 1.5
+              }}
+            >
+              控制顶部工具栏中基础组件的显示。隐藏设置按钮后，可以通过侧边栏菜单访问设置。
+            </Typography>
+          </Box>
         </Paper>
 
         {/* 模型选择器样式 */}

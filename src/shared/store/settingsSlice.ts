@@ -8,6 +8,7 @@ import { getDefaultModelProviders, getDefaultModelId, type ModelProvider } from 
 
 interface SettingsState {
   theme: 'light' | 'dark' | 'system';
+  themeStyle: 'default' | 'claude' | 'minimal' | 'vibrant'; // 新增主题风格
   fontSize: number;
   language: string;
   sendWithEnter: boolean;
@@ -91,6 +92,7 @@ const getInitialState = (): SettingsState => {
   // 默认状态
   const defaultState: SettingsState = {
     theme: 'system' as 'light' | 'dark' | 'system',
+    themeStyle: 'default' as 'default' | 'claude' | 'minimal' | 'vibrant',
     fontSize: 16,
     language: 'zh-CN',
     sendWithEnter: true,
@@ -276,6 +278,9 @@ const settingsSlice = createSlice({
     setTheme: (state, action: PayloadAction<'light' | 'dark' | 'system'>) => {
       state.theme = action.payload;
       // 异步操作将通过 extraReducers 处理
+    },
+    setThemeStyle: (state, action: PayloadAction<'default' | 'claude' | 'minimal' | 'vibrant'>) => {
+      state.themeStyle = action.payload;
     },
     setFontSize: (state, action: PayloadAction<number>) => {
       state.fontSize = action.payload;
@@ -518,6 +523,7 @@ const settingsSlice = createSlice({
 // 导出操作
 export const {
   setTheme,
+  setThemeStyle,
   setFontSize,
   setLanguage,
   setSendWithEnter,

@@ -1,10 +1,13 @@
 import React from 'react';
-import { Box, Tabs, Tab, CircularProgress } from '@mui/material';
+import { Box, Tabs, Tab, CircularProgress, useTheme } from '@mui/material';
 import { useSidebarContext } from './SidebarContext';
 import TabPanel, { a11yProps } from './TabPanel';
 import AssistantTab from './AssistantTab/index';
 import TopicTab from './TopicTab/index';
 import SettingsTab from './SettingsTab/index';
+import { getThemeColors } from '../../shared/utils/themeUtils';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../shared/store';
 
 /**
  * 侧边栏标签页内容组件
@@ -39,6 +42,11 @@ export default function SidebarTabsContent() {
     handleMCPModeChange,
     handleToolsToggle
   } = useSidebarContext();
+
+  // 获取主题和主题工具
+  const theme = useTheme();
+  const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
+  const themeColors = getThemeColors(theme, themeStyle);
 
   // 标签页切换
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -85,7 +93,10 @@ export default function SidebarTabsContent() {
                   borderRadius: '8px',
                   transition: 'background-color 0.3s',
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.06)', // 选中标签的背景色
+                    backgroundColor: themeColors.selectedColor,
+                  },
+                  '&:hover': {
+                    backgroundColor: themeColors.hoverColor,
                   },
                 },
               }}

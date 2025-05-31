@@ -19,6 +19,7 @@ import MessageActions from './MessageActions';
 import MessageBlockRenderer from './MessageBlockRenderer';
 import type { RootState } from '../../shared/store';
 import { getMessageDividerSetting } from '../../shared/utils/settingsUtils';
+import { getThemeColors, getMessageStyles } from '../../shared/utils/themeUtils';
 
 interface MessageItemProps {
   message: Message;
@@ -65,6 +66,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
   // 获取设置中的气泡宽度配置
   const settings = useSelector((state: RootState) => state.settings);
+
+  // 获取主题和主题工具
+  const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
+  const themeColors = getThemeColors(theme, themeStyle);
 
   // 获取头像和名称显示设置
   const showUserAvatar = settings.showUserAvatar !== false;
@@ -487,7 +492,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 ) : (
                   <Avatar
                     sx={{
-                      bgcolor: '#00c853', // 绿色背景
+                      bgcolor: themeColors.buttonSecondary, // 使用主题的次要颜色
                       width: 30,
                       height: 30,
                       borderRadius: '20%', // 更接近方形的头像
@@ -634,14 +639,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
             padding: isBubbleStyle ? 1.5 : 1,
             backgroundColor: isBubbleStyle
               ? (isUserMessage
-                  ? theme.palette.mode === 'dark'
-                    ? '#333333' // 深色主题下使用灰色背景
-                    : theme.palette.primary.light
-                  : theme.palette.background.paper)
+                  ? themeColors.userBubbleColor
+                  : themeColors.aiBubbleColor)
               : 'transparent', // 简洁样式使用透明背景
-            color: isBubbleStyle && isUserMessage && theme.palette.mode === 'dark'
-              ? '#ffffff' // 深色主题下使用白色文字
-              : 'inherit',
+            color: themeColors.textPrimary,
             width: '100%',
             borderRadius: isBubbleStyle ? '12px' : '0px', // 气泡样式使用圆角，简洁样式不使用
             border: isBubbleStyle ? 'none' : (theme.palette.mode === 'dark' ? '1px solid #333' : '1px solid #e0e0e0'), // 简洁样式添加边框

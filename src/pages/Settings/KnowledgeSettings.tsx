@@ -15,6 +15,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Divider,
+  alpha,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -187,7 +189,15 @@ const KnowledgeSettings: React.FC = () => {
   }, []);
 
   return (
-    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Box sx={{
+      flexGrow: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      bgcolor: (theme) => theme.palette.mode === 'light'
+        ? alpha(theme.palette.primary.main, 0.02)
+        : alpha(theme.palette.background.default, 0.9),
+    }}>
       <AppBar
         position="fixed"
         elevation={0}
@@ -197,30 +207,91 @@ const KnowledgeSettings: React.FC = () => {
           color: 'text.primary',
           borderBottom: 1,
           borderColor: 'divider',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <Toolbar>
           <IconButton
             edge="start"
+            color="inherit"
             onClick={handleBack}
             aria-label="back"
-            sx={{ color: (theme) => theme.palette.primary.main }}
+            sx={{
+              color: (theme) => theme.palette.primary.main,
+            }}
           >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              flexGrow: 1,
+              fontWeight: 600,
+              backgroundImage: 'linear-gradient(90deg, #9333EA, #754AB4)',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
             知识库设置
           </Typography>
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ flexGrow: 1, overflow: 'auto', px: 2, py: 2, mt: 8 }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          p: { xs: 1, sm: 2 },
+          mt: 8,
+          '&::-webkit-scrollbar': {
+            width: { xs: '4px', sm: '6px' },
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
+        }}
+      >
         {/* 统计信息卡片 */}
-        <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <StorageIcon color="primary" />
-            知识库统计
-          </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.1rem' },
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}
+            >
+              <StorageIcon sx={{ color: '#059669' }} />
+              知识库统计
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              查看知识库的使用情况和存储统计
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
 
           {loading ? (
             <Box display="flex" justifyContent="center" py={3}>
@@ -278,13 +349,44 @@ const KnowledgeSettings: React.FC = () => {
               </Box>
             </Box>
           )}
+          </Box>
         </Paper>
 
         {/* 快速操作 */}
-        <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            快速操作
-          </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.1rem' }
+              }}
+            >
+              快速操作
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              创建和管理知识库的快捷操作
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', margin: -1 }}>
             <Box sx={{ width: { xs: '100%', sm: '50%' }, p: 1 }}>
@@ -324,13 +426,44 @@ const KnowledgeSettings: React.FC = () => {
               您还没有创建任何知识库。点击"创建知识库"开始使用知识库功能。
             </Alert>
           )}
+          </Box>
         </Paper>
 
-        {/* 默认设置 */}
-        <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            知识库配置说明
-          </Typography>
+        {/* 知识库配置说明 */}
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.1rem' }
+              }}
+            >
+              知识库配置说明
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              了解知识库的各项配置参数和使用说明
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
 
           <Alert severity="info" sx={{ mb: 2 }}>
             知识库的嵌入模型、分块大小、相似度阈值等参数在创建知识库时设置，每个知识库可以有不同的配置。
@@ -342,13 +475,44 @@ const KnowledgeSettings: React.FC = () => {
             • <strong>相似度阈值</strong>：搜索结果的最低相似度，越高结果越精确<br/>
             • <strong>文档数量</strong>：搜索时返回的文档段数量，影响回答的详细程度
           </Typography>
+          </Box>
         </Paper>
 
         {/* 数据管理 */}
-        <Paper sx={{ p: 3, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            数据管理
-          </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.1rem' }
+              }}
+            >
+              数据管理
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              导出备份和清理知识库数据
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
 
           {stats.totalKnowledgeBases === 0 ? (
             <Alert severity="warning" sx={{ mb: 3 }}>
@@ -398,6 +562,7 @@ const KnowledgeSettings: React.FC = () => {
                 </Button>
               </>
             )}
+          </Box>
           </Box>
         </Paper>
       </Box>

@@ -88,7 +88,6 @@
     "axios": "^1.9.0",
     "better-react-mathjax": "^2.3.0",
     "buffer": "6.0.3",
-    "capacitor-sse-client": "file:sse-client-plugin",
     "chart.js": "^4.4.9",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",

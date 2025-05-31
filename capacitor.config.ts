@@ -24,7 +24,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     CapacitorHttp: {
-      enabled: true  // 🔥 启用CapacitorHttp，用于绕过CORS
+      enabled: false  // 🔥 禁用CapacitorHttp，使用标准fetch支持流式输出
     },
     WebView: {
       scrollEnabled: true,

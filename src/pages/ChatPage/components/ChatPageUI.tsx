@@ -17,6 +17,8 @@ import type { SiliconFlowImageFormat } from '../../../shared/types';
 import { EventEmitter, EVENT_NAMES } from '../../../shared/services/EventService';
 import { TopicService } from '../../../shared/services/TopicService';
 import { newMessagesActions } from '../../../shared/store/slices/newMessagesSlice';
+import { getThemeColors } from '../../../shared/utils/themeUtils';
+import { useTheme } from '@mui/material/styles';
 
 // 样式常量 - 提取重复的样式对象以提升性能
 const STYLES = {
@@ -194,6 +196,11 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   handleStopDebate
 }) => {
   const dispatch = useDispatch();
+  const theme = useTheme();
+
+  // 获取主题风格
+  const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
+  const themeColors = getThemeColors(theme, themeStyle);
 
   // 优化 selector - 使用 useMemo 避免每次渲染时创建默认对象
   const inputLayoutStyle = useSelector((state: RootState) =>
@@ -209,6 +216,54 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     ...DEFAULT_TOP_TOOLBAR_SETTINGS,
     ...topToolbarSettings
   }), [topToolbarSettings]);
+
+  // 动态样式，支持主题
+  const dynamicStyles = useMemo(() => ({
+    mainContainer: {
+      display: 'flex',
+      flexDirection: { xs: 'column', sm: 'row' },
+      height: '100vh',
+      bgcolor: themeColors.background
+    },
+    contentContainer: {
+      flexGrow: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      overflow: 'hidden',
+      bgcolor: themeColors.background
+    },
+    appBar: {
+      bgcolor: themeColors.paper,
+      color: themeColors.textPrimary,
+      borderBottom: '1px solid',
+      borderColor: themeColors.borderColor,
+    },
+    messageContainer: {
+      flexGrow: 1,
+      overflow: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      width: '100%',
+      maxWidth: '100%',
+      backgroundColor: themeColors.background,
+    },
+    welcomeContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '80%',
+      p: 3,
+      textAlign: 'center',
+      bgcolor: themeColors.background,
+    },
+    welcomeText: {
+      fontWeight: 400,
+      color: themeColors.textPrimary,
+      mb: 1,
+    }
+  }), [themeColors]);
 
   // 根据布局样式决定是否显示工具栏
   const shouldShowToolbar = useMemo(() =>
@@ -423,7 +478,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   ]);
 
   return (
-    <Box sx={STYLES.mainContainer}>
+    <Box sx={dynamicStyles.mainContainer}>
       {/* 桌面端可收起侧边栏，移动端可隐藏 */}
       {!isMobile && (
         <Sidebar
@@ -437,16 +492,17 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
       )}
 
       {/* 主内容区域 */}
-      <Box sx={STYLES.contentContainer}>
+      <Box sx={dynamicStyles.contentContainer}>
         {/* 顶部应用栏 */}
         <AppBar
           position="static"
           elevation={0}
           className="status-bar-safe-area"
-          sx={STYLES.appBar}
+          sx={dynamicStyles.appBar}
         >
           <Toolbar sx={{
-            ...STYLES.toolbar,
+            position: 'relative',
+            minHeight: '56px !important',
             justifyContent: mergedTopToolbarSettings.componentPositions?.length > 0 ? 'center' : 'space-between',
           }}>
             {/* 如果有DIY布局，使用绝对定位渲染组件 */}
@@ -499,11 +555,18 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
         )}
 
         {/* 聊天内容区域 */}
-        <Box sx={STYLES.chatArea}>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: 'calc(100vh - 64px)',
+          width: '100%',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
           {currentTopic ? (
             <>
               {/* 消息列表应该有固定的可滚动区域，不会被输入框覆盖 */}
-              <Box sx={STYLES.messageContainer}>
+              <Box sx={dynamicStyles.messageContainer}>
                 <MessageList
                   messages={currentMessages}
                   onRegenerate={handleRegenerateMessage}
@@ -514,10 +577,30 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
               </Box>
 
               {/* 输入框容器，固定在底部 */}
-              <Box sx={STYLES.inputContainer}>
+              <Box sx={{
+                width: '100%',
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: 2,
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
                 {/* 工具栏容器 - 仅在默认布局时显示 */}
                 {shouldShowToolbar && (
-                  <Box sx={STYLES.toolbarContainer}>
+                  <Box sx={{
+                    width: '100%',
+                    maxWidth: '800px',
+                    display: 'flex',
+                    justifyContent: 'center'
+                  }}>
                     <ChatToolbar
                       onClearTopic={handleClearTopic}
                       imageGenerationMode={imageGenerationMode}
@@ -531,7 +614,12 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
                 )}
 
                 {/* 输入框容器 */}
-                <Box sx={STYLES.inputWrapper}>
+                <Box sx={{
+                  width: '100%',
+                  maxWidth: '800px',
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}>
                   {renderInputComponent()}
                 </Box>
               </Box>
@@ -540,15 +628,15 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
             <>
               <Box
                 sx={{
-                  ...STYLES.messageContainer,
+                  ...dynamicStyles.messageContainer,
                   marginBottom: '100px', // 为输入框留出足够空间
                 }}
               >
-                <Box sx={STYLES.welcomeContainer}>
+                <Box sx={dynamicStyles.welcomeContainer}>
                   <Typography
                     variant="h6"
                     gutterBottom
-                    sx={STYLES.welcomeText}
+                    sx={dynamicStyles.welcomeText}
                   >
                     对话开始了，请输入您的问题
                   </Typography>
@@ -556,10 +644,30 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
               </Box>
 
               {/* 即使没有当前话题，也显示输入框 */}
-              <Box sx={STYLES.inputContainer}>
+              <Box sx={{
+                width: '100%',
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: 2,
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
                 {/* 工具栏容器 - 仅在默认布局时显示 */}
                 {shouldShowToolbar && (
-                  <Box sx={STYLES.toolbarContainer}>
+                  <Box sx={{
+                    width: '100%',
+                    maxWidth: '800px',
+                    display: 'flex',
+                    justifyContent: 'center'
+                  }}>
                     <ChatToolbar
                       onClearTopic={handleClearTopic}
                       imageGenerationMode={imageGenerationMode}
@@ -573,7 +681,12 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
                 )}
 
                 {/* 输入框容器 */}
-                <Box sx={STYLES.inputWrapper}>
+                <Box sx={{
+                  width: '100%',
+                  maxWidth: '800px',
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}>
                   {renderInputComponent()}
                 </Box>
               </Box>

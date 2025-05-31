@@ -12,7 +12,11 @@ import {
   Switch,
   Tooltip,
   IconButton,
-  Slider
+  Slider,
+  AppBar,
+  Toolbar,
+  Divider,
+  alpha
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import InfoIcon from '@mui/icons-material/Info';
@@ -148,108 +152,177 @@ const ChatInterfaceSettings: React.FC = () => {
 
   return (
     <Box sx={{
-      height: '100vh',
-      backgroundColor: 'background.default',
+      flexGrow: 1,
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      height: '100vh',
+      bgcolor: (theme) => theme.palette.mode === 'light'
+        ? alpha(theme.palette.primary.main, 0.02)
+        : alpha(theme.palette.background.default, 0.9),
     }}>
-      <Box
+      <AppBar
+        position="fixed"
+        elevation={0}
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: 2,
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
           borderBottom: 1,
           borderColor: 'divider',
-          backgroundColor: 'background.paper',
-          zIndex: 10,
-          flexShrink: 0
+          backdropFilter: 'blur(8px)',
         }}
       >
-        <ArrowBackIcon
-          sx={{ mr: 2, cursor: 'pointer' }}
-          onClick={handleBack}
-        />
-        <Typography variant="h6" color="primary">
-          聊天界面设置
-        </Typography>
-      </Box>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={handleBack}
+            aria-label="back"
+            sx={{
+              color: (theme) => theme.palette.primary.main,
+            }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              flexGrow: 1,
+              fontWeight: 600,
+              backgroundImage: 'linear-gradient(90deg, #9333EA, #754AB4)',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
+            聊天界面设置
+          </Typography>
+        </Toolbar>
+      </AppBar>
 
-      <Box sx={{
-        p: 2,
-        flex: 1,
-        overflow: 'auto',
-        '&::-webkit-scrollbar': {
-          width: '6px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'rgba(0,0,0,0.2)',
-          borderRadius: '3px',
-        },
-        '&::-webkit-scrollbar-thumb:hover': {
-          background: 'rgba(0,0,0,0.3)',
-        }
-      }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          p: { xs: 1, sm: 2 },
+          mt: 8,
+          '&::-webkit-scrollbar': {
+            width: { xs: '4px', sm: '6px' },
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
+        }}
+      >
         {/* 思考过程显示设置 */}
-        <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Typography variant="subtitle1">思考过程显示</Typography>
-            <Tooltip title="配置AI思考过程的显示方式和行为">
-              <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' }
+                }}
+              >
+                思考过程显示
+              </Typography>
+              <Tooltip title="配置AI思考过程的显示方式和行为">
+                <IconButton size="small" sx={{ ml: 1 }}>
+                  <InfoIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              自定义AI思考过程的显示方式和自动折叠行为
+            </Typography>
           </Box>
 
-          <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
-            <InputLabel>显示样式</InputLabel>
-            <Select
-              value={thinkingDisplayStyle}
-              onChange={handleThinkingStyleChange}
-              label="显示样式"
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
+              <InputLabel>显示样式</InputLabel>
+              <Select
+                value={thinkingDisplayStyle}
+                onChange={handleThinkingStyleChange}
+                label="显示样式"
+              >
+                <MenuItem value={ThinkingDisplayStyle.COMPACT}>紧凑模式（可折叠）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.FULL}>完整模式（始终展开）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.MINIMAL}>极简模式（小图标）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.BUBBLE}>气泡模式（聊天气泡）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.TIMELINE}>时间线模式（左侧指示器）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.CARD}>卡片模式（突出显示）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.INLINE}>内联模式（嵌入消息）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.HIDDEN}>隐藏（不显示思考过程）</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={thoughtAutoCollapse}
+                    onChange={handleThoughtAutoCollapseChange}
+                  />
+                }
+                label="思考完成后自动折叠"
+              />
+            </FormGroup>
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 1,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                lineHeight: 1.5
+              }}
             >
-              <MenuItem value={ThinkingDisplayStyle.COMPACT}>紧凑模式（可折叠）</MenuItem>
-              <MenuItem value={ThinkingDisplayStyle.FULL}>完整模式（始终展开）</MenuItem>
-              <MenuItem value={ThinkingDisplayStyle.MINIMAL}>极简模式（小图标）</MenuItem>
-              <MenuItem value={ThinkingDisplayStyle.BUBBLE}>气泡模式（聊天气泡）</MenuItem>
-              <MenuItem value={ThinkingDisplayStyle.TIMELINE}>时间线模式（左侧指示器）</MenuItem>
-              <MenuItem value={ThinkingDisplayStyle.CARD}>卡片模式（突出显示）</MenuItem>
-              <MenuItem value={ThinkingDisplayStyle.INLINE}>内联模式（嵌入消息）</MenuItem>
-              <MenuItem value={ThinkingDisplayStyle.HIDDEN}>隐藏（不显示思考过程）</MenuItem>
-            </Select>
-          </FormControl>
-
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={thoughtAutoCollapse}
-                  onChange={handleThoughtAutoCollapseChange}
-                />
-              }
-              label="思考完成后自动折叠"
-            />
-          </FormGroup>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            设置AI助手思考过程的显示方式：
-            <br />• 紧凑模式：标准卡片样式，可折叠展开
-            <br />• 完整模式：始终展开显示全部内容
-            <br />• 极简模式：只显示小图标，悬停查看内容
-            <br />• 气泡模式：类似聊天气泡的圆润设计
-            <br />• 时间线模式：左侧带时间线指示器
-            <br />• 卡片模式：突出的渐变卡片设计
-            <br />• 内联模式：嵌入在消息中的紧凑显示
-            <br />• 隐藏：完全不显示思考过程
-          </Typography>
+              设置AI助手思考过程的显示方式：
+              <br />• 紧凑模式：标准卡片样式，可折叠展开
+              <br />• 完整模式：始终展开显示全部内容
+              <br />• 极简模式：只显示小图标，悬停查看内容
+              <br />• 气泡模式：类似聊天气泡的圆润设计
+              <br />• 时间线模式：左侧带时间线指示器
+              <br />• 卡片模式：突出的渐变卡片设计
+              <br />• 内联模式：嵌入在消息中的紧凑显示
+              <br />• 隐藏：完全不显示思考过程
+            </Typography>
+          </Box>
         </Paper>
 
         {/* 多模型对比显示设置 */}
-        <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Typography variant="subtitle1">多模型对比显示</Typography>
             <Tooltip title="配置多模型对比时的布局方式">

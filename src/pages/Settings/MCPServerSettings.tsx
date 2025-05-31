@@ -9,9 +9,9 @@ import {
   List,
   ListItem,
   ListItemText,
-
+  ListItemButton,
+  ListItemAvatar,
   Switch,
-  Fab,
   Chip,
   Avatar,
   alpha,
@@ -26,7 +26,8 @@ import {
   Select,
   MenuItem,
   Snackbar,
-  Alert
+  Alert,
+  Divider
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -35,8 +36,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CloudIcon from '@mui/icons-material/Cloud';
 import StorageIcon from '@mui/icons-material/Storage';
 import HttpIcon from '@mui/icons-material/Http';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+
 import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
 
@@ -48,7 +48,7 @@ const MCPServerSettings: React.FC = () => {
   const [builtinServers, setBuiltinServers] = useState<MCPServer[]>([]);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importJson, setImportJson] = useState('');
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'warning' }>({
     open: false,
     message: '',
     severity: 'success'
@@ -204,25 +204,7 @@ const MCPServerSettings: React.FC = () => {
     navigate(`/settings/mcp-server/${server.id}`, { state: { server } });
   };
 
-  const handleDeleteServer = async (serverId: string) => {
-    if (window.confirm('确定要删除这个服务器吗？')) {
-      try {
-        await mcpService.removeServer(serverId);
-        loadServers();
-        setSnackbar({
-          open: true,
-          message: '服务器已删除',
-          severity: 'success'
-        });
-      } catch (error) {
-        setSnackbar({
-          open: true,
-          message: '删除失败',
-          severity: 'error'
-        });
-      }
-    }
-  };
+
 
   const handleImportJson = async () => {
     try {
@@ -327,7 +309,9 @@ const MCPServerSettings: React.FC = () => {
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
-      bgcolor: 'background.default'
+      bgcolor: (theme) => theme.palette.mode === 'light'
+        ? alpha(theme.palette.primary.main, 0.02)
+        : alpha(theme.palette.background.default, 0.9),
     }}>
       <AppBar
         position="fixed"
@@ -337,15 +321,19 @@ const MCPServerSettings: React.FC = () => {
           bgcolor: 'background.paper',
           color: 'text.primary',
           borderBottom: 1,
-          borderColor: 'divider'
+          borderColor: 'divider',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <Toolbar>
           <IconButton
             edge="start"
+            color="inherit"
             onClick={handleBack}
             aria-label="back"
-            sx={{ color: 'primary.main' }}
+            sx={{
+              color: (theme) => theme.palette.primary.main,
+            }}
           >
             <ArrowBackIcon />
           </IconButton>
@@ -355,207 +343,402 @@ const MCPServerSettings: React.FC = () => {
             sx={{
               flexGrow: 1,
               fontWeight: 600,
-              backgroundImage: 'linear-gradient(90deg, #10b981, #059669)',
+              backgroundImage: 'linear-gradient(90deg, #9333EA, #754AB4)',
               backgroundClip: 'text',
-              color: 'transparent'
+              color: 'transparent',
             }}
           >
             MCP 服务器
           </Typography>
-          {servers.length > 0 && (
-            <>
-              <Button
-                variant="outlined"
-                onClick={() => setImportDialogOpen(true)}
-                sx={{
-                  borderColor: '#10b981',
-                  color: '#10b981',
-                  '&:hover': { borderColor: '#059669', color: '#059669' },
-                  mr: 1
-                }}
-              >
-                导入配置
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => setBuiltinDialogOpen(true)}
-                sx={{
-                  borderColor: '#10b981',
-                  color: '#10b981',
-                  '&:hover': { borderColor: '#059669', color: '#059669' },
-                  mr: 1
-                }}
-              >
-                内置服务器
-              </Button>
-            </>
-          )}
+          <Button
+            startIcon={<AddIcon />}
+            onClick={() => setAddDialogOpen(true)}
+            sx={{
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+              color: 'primary.main',
+              '&:hover': {
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+              },
+              borderRadius: 2,
+            }}
+          >
+            添加
+          </Button>
         </Toolbar>
       </AppBar>
 
       <Box
         sx={{
           flexGrow: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
+          p: { xs: 1, sm: 2 },
           mt: 8,
-          px: 2,
-          py: 2
+          '&::-webkit-scrollbar': {
+            width: { xs: '4px', sm: '6px' },
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
         }}
       >
         {servers.length === 0 ? (
           <Paper
+            elevation={0}
             sx={{
-              p: 4,
-              textAlign: 'center',
-              bgcolor: alpha('#10b981', 0.05),
-              border: '1px dashed',
-              borderColor: alpha('#10b981', 0.3)
+              mb: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden',
+              bgcolor: 'background.paper',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
             }}
           >
-            <SettingsIcon sx={{ fontSize: 48, color: '#10b981', mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
-              还没有配置 MCP 服务器
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              MCP 服务器可以为 AI 提供额外的工具和功能
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setAddDialogOpen(true)}
-                sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}
+            <Box sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center' }}>
+              <SettingsIcon sx={{
+                fontSize: { xs: 40, sm: 48 },
+                color: 'primary.main',
+                mb: { xs: 1.5, sm: 2 }
+              }} />
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                }}
               >
-                添加服务器
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => setImportDialogOpen(true)}
-                sx={{ borderColor: '#10b981', color: '#10b981', '&:hover': { borderColor: '#059669', color: '#059669' } }}
+                还没有配置 MCP 服务器
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  mb: { xs: 2.5, sm: 3 },
+                  fontSize: { xs: '0.875rem', sm: '0.875rem' }
+                }}
               >
-                导入配置
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => setBuiltinDialogOpen(true)}
-                sx={{ borderColor: '#10b981', color: '#10b981', '&:hover': { borderColor: '#059669', color: '#059669' } }}
-              >
-                内置服务器
-              </Button>
+                MCP 服务器可以为 AI 提供额外的工具和功能
+              </Typography>
+              <Box sx={{
+                display: 'flex',
+                gap: { xs: 1.5, sm: 2 },
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: 'center'
+              }}>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setAddDialogOpen(true)}
+                  fullWidth={window.innerWidth < 600}
+                  sx={{
+                    bgcolor: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.dark' },
+                    minHeight: { xs: 44, sm: 36 },
+                    fontSize: { xs: '0.9rem', sm: '0.875rem' }
+                  }}
+                >
+                  添加服务器
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setImportDialogOpen(true)}
+                  fullWidth={window.innerWidth < 600}
+                  sx={{
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    '&:hover': { borderColor: 'primary.dark', color: 'primary.dark' },
+                    minHeight: { xs: 44, sm: 36 },
+                    fontSize: { xs: '0.9rem', sm: '0.875rem' }
+                  }}
+                >
+                  导入配置
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setBuiltinDialogOpen(true)}
+                  fullWidth={window.innerWidth < 600}
+                  sx={{
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    '&:hover': { borderColor: 'primary.dark', color: 'primary.dark' },
+                    minHeight: { xs: 44, sm: 36 },
+                    fontSize: { xs: '0.9rem', sm: '0.875rem' }
+                  }}
+                >
+                  内置服务器
+                </Button>
+              </Box>
             </Box>
           </Paper>
         ) : (
-          <List sx={{ p: 0 }}>
-            {servers.map((server) => (
-              <Paper
-                key={server.id}
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden',
+              bgcolor: 'background.paper',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+              <Typography
+                variant="subtitle1"
                 sx={{
-                  mb: 2,
-                  overflow: 'hidden',
-                  border: '1px solid',
-                  borderColor: 'divider',
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' }
+                }}
+              >
+                MCP 服务器列表
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
+                管理您的 MCP 服务器配置和状态
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            <List disablePadding>
+              {servers.map((server, index) => (
+                <React.Fragment key={server.id}>
+                  <ListItemButton
+                    onClick={() => handleEditServer(server)}
+                    sx={{
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                      }
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <Avatar
+                        sx={{
+                          bgcolor: alpha(getServerTypeColor(server.type), 0.12),
+                          color: getServerTypeColor(server.type),
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                        }}
+                      >
+                        {getServerTypeIcon(server.type)}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Box sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: { xs: 0.5, sm: 1 },
+                          flexWrap: 'wrap'
+                        }}>
+                          <Typography sx={{
+                            fontWeight: 600,
+                            color: 'text.primary',
+                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                          }}>
+                            {server.name}
+                          </Typography>
+                          <Chip
+                            label={getServerTypeLabel(server.type)}
+                            size="small"
+                            sx={{
+                              bgcolor: alpha(getServerTypeColor(server.type), 0.1),
+                              color: getServerTypeColor(server.type),
+                              fontWeight: 500,
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              height: { xs: 20, sm: 24 }
+                            }}
+                          />
+                          {server.isActive && (
+                            <Chip
+                              label="运行中"
+                              size="small"
+                              color="success"
+                              variant="outlined"
+                              sx={{
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                height: { xs: 20, sm: 24 }
+                              }}
+                            />
+                          )}
+                        </Box>
+                      }
+                      secondary={
+                        <Box component="div" sx={{ mt: { xs: 0.5, sm: 1 } }}>
+                          {server.description && (
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              component="div"
+                              sx={{
+                                fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                                lineHeight: 1.4,
+                                display: '-webkit-box',
+                                WebkitLineClamp: { xs: 2, sm: 3 },
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              {server.description}
+                            </Typography>
+                          )}
+                          {server.baseUrl && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              component="div"
+                              sx={{
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                mt: 0.5,
+                                wordBreak: 'break-all'
+                              }}
+                            >
+                              {server.baseUrl}
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                    />
+                    <Switch
+                      checked={server.isActive}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleToggleServer(server.id, e.target.checked);
+                      }}
+                      color="primary"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </ListItemButton>
+                  {index < servers.length - 1 && <Divider variant="inset" component="li" sx={{ ml: 0 }} />}
+                </React.Fragment>
+              ))}
+            </List>
+          </Paper>
+        )}
+
+        {/* 快捷操作 */}
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.1rem' }
+              }}
+            >
+              快捷操作
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              快速添加和管理 MCP 服务器
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <List disablePadding>
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => setImportDialogOpen(true)}
+                sx={{
+                  transition: 'all 0.2s',
                   '&:hover': {
-                    boxShadow: 2
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
                   }
                 }}
               >
-                <ListItem
-                  sx={{
-                    py: 2,
-                    px: 3
-                  }}
-                >
-                  <Avatar
-                    sx={{
-                      bgcolor: alpha(getServerTypeColor(server.type), 0.1),
-                      color: getServerTypeColor(server.type),
-                      mr: 2
-                    }}
-                  >
-                    {getServerTypeIcon(server.type)}
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#06b6d4', 0.12),
+                    color: '#06b6d4',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <AddIcon />
                   </Avatar>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          {server.name}
-                        </Typography>
-                        <Chip
-                          label={getServerTypeLabel(server.type)}
-                          size="small"
-                          sx={{
-                            bgcolor: alpha(getServerTypeColor(server.type), 0.1),
-                            color: getServerTypeColor(server.type),
-                            fontWeight: 500
-                          }}
-                        />
-                        {server.isActive && (
-                          <Chip
-                            label="运行中"
-                            size="small"
-                            color="success"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    }
-                    secondary={
-                      <Box component="div">
-                        {server.description && (
-                          <Typography variant="body2" color="text.secondary" component="div">
-                            {server.description}
-                          </Typography>
-                        )}
-                        {server.baseUrl && (
-                          <Typography variant="caption" color="text.secondary" component="div">
-                            {server.baseUrl}
-                          </Typography>
-                        )}
-                      </Box>
-                    }
-                    secondaryTypographyProps={{ component: 'div' }}
-                  />
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
-                    <IconButton
-                      onClick={() => handleEditServer(server)}
-                      size="small"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDeleteServer(server.id)}
-                      size="small"
-                      color="error"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                    <Switch
-                      checked={server.isActive}
-                      onChange={(e) => handleToggleServer(server.id, e.target.checked)}
-                      color="primary"
-                    />
-                  </Box>
-                </ListItem>
-              </Paper>
-            ))}
-          </List>
-        )}
-      </Box>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography sx={{
+                      fontWeight: 600,
+                      color: 'text.primary',
+                      fontSize: { xs: '0.9rem', sm: '1rem' }
+                    }}>
+                      导入配置
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                      从 JSON 文件导入 MCP 服务器配置
+                    </Typography>
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
 
-      <Fab
-        color="primary"
-        aria-label="add"
-        onClick={() => setAddDialogOpen(true)}
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          bgcolor: '#10b981',
-          '&:hover': { bgcolor: '#059669' }
-        }}
-      >
-        <AddIcon />
-      </Fab>
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => setBuiltinDialogOpen(true)}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#8b5cf6', 0.12),
+                    color: '#8b5cf6',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <SettingsIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography sx={{
+                      fontWeight: 600,
+                      color: 'text.primary',
+                      fontSize: { xs: '0.9rem', sm: '1rem' }
+                    }}>
+                      内置服务器
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                      添加预配置的内置 MCP 服务器
+                    </Typography>
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Paper>
+      </Box>
 
       {/* 添加服务器对话框 */}
       <Dialog
