@@ -14,7 +14,9 @@ import {
   TextField,
   Divider,
   Snackbar,
-  Alert
+  Alert,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import {
   Plus,
@@ -26,7 +28,9 @@ import {
   Trash2,
   ArrowUpAZ,
   ArrowDownAZ,
-  Trash
+  Trash,
+  Search,
+  X
 } from 'lucide-react';
 import type { Assistant } from '../../../shared/types/Assistant';
 import VirtualizedAssistantGroups from './VirtualizedAssistantGroups';
@@ -68,6 +72,7 @@ export default function AssistantTab({
     assistantGroups,
     assistantGroupMap,
     ungroupedAssistants,
+    filteredUserAssistants,
     notification,
     assistantMenuAnchorEl,
     selectedMenuAssistant,
@@ -78,6 +83,9 @@ export default function AssistantTab({
     editAssistantPrompt,
     promptSelectorOpen,
     iconPickerOpen,
+    // 搜索相关状态
+    searchQuery,
+    showSearch,
 
     // 处理函数
     handleCloseNotification,
@@ -110,6 +118,10 @@ export default function AssistantTab({
     handleSelectPrompt,
     handleOpenIconPicker,
     handleCloseIconPicker,
+    // 搜索相关处理函数
+    handleSearchClick,
+    handleCloseSearch,
+    handleSearchChange,
 
     // 数据
     predefinedAssistantsData
@@ -126,35 +138,65 @@ export default function AssistantTab({
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 标题和按钮区域 */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="subtitle1" fontWeight="medium">所有助手</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="创建分组">
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<FolderPlus size={16} />}
-              onClick={handleOpenGroupDialog}
-            >
-              创建分组
-            </Button>
-          </Tooltip>
-          <Tooltip title="创建新助手">
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Plus size={16} />}
-              onClick={handleOpenAssistantDialog}
-            >
-              添加助手
-            </Button>
-          </Tooltip>
-        </Box>
+        {showSearch ? (
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="搜索助手..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            autoFocus
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={18} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={handleCloseSearch}>
+                    <X size={18} />
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
+        ) : (
+          <>
+            <Typography variant="subtitle1" fontWeight="medium">所有助手</Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <IconButton size="small" onClick={handleSearchClick} sx={{ mr: 1 }}>
+                <Search size={18} />
+              </IconButton>
+              <Tooltip title="创建分组">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<FolderPlus size={16} />}
+                  onClick={handleOpenGroupDialog}
+                >
+                  创建分组
+                </Button>
+              </Tooltip>
+              <Tooltip title="创建新助手">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Plus size={16} />}
+                  onClick={handleOpenAssistantDialog}
+                >
+                  添加助手
+                </Button>
+              </Tooltip>
+            </Box>
+          </>
+        )}
       </Box>
 
       {/* 分组区域 - 使用虚拟化组件 */}
       <VirtualizedAssistantGroups
         assistantGroups={assistantGroups || []}
-        userAssistants={userAssistants}
+        userAssistants={filteredUserAssistants} // 使用过滤后的助手列表
         assistantGroupMap={assistantGroupMap || {}}
         currentAssistant={currentAssistant}
         onSelectAssistant={handleSelectAssistantFromList}
@@ -175,7 +217,6 @@ export default function AssistantTab({
         height="calc(100vh - 400px)" // 动态计算高度
         emptyMessage="暂无未分组助手"
         itemHeight={72}
-
       />
 
       {/* 助手选择对话框 */}

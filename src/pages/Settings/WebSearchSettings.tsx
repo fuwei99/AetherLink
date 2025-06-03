@@ -323,7 +323,7 @@ const WebSearchSettings: React.FC = () => {
               <MenuItem value="tavily">💎 Tavily (推荐)</MenuItem>
               <MenuItem value="exa">🧠 Exa (神经搜索)</MenuItem>
               <MenuItem value="bocha">🤖 Bocha (AI搜索)</MenuItem>
-              <MenuItem value="firecrawl">🔥 Firecrawl (网页抓取)</MenuItem>
+              <MenuItem value="firecrawl"> Firecrawl (网页抓取)</MenuItem>
               <MenuItem value="custom">⚙️ 自定义服务</MenuItem>
             </Select>
           </FormControl>

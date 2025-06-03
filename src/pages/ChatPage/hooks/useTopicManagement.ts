@@ -9,6 +9,7 @@ import { getStorageItem } from '../../../shared/utils/storage';
 import { formatDateForTopicTitle } from '../../../shared/utils';
 import { dexieStorage } from '../../../shared/services/DexieStorageService';
 import { v4 as uuid } from 'uuid';
+import store from '../../../shared/store';
 
 export function useTopicManagement(currentTopic: ChatTopic | null) {
   const dispatch = useDispatch();
@@ -37,9 +38,11 @@ export function useTopicManagement(currentTopic: ChatTopic | null) {
       // 使用dexieStorage获取话题
       const validTopics = await dexieStorage.getAllTopics();
 
-      // 如果有主题，选择第一个
-      if (validTopics.length > 0 && !currentTopic) {
-
+      // 如果有主题，选择第一个（只在真正没有选中任何话题时）
+      // 检查Redux状态而不是本地状态，避免组件重新渲染时的误判
+      const currentTopicId = store.getState().messages?.currentTopicId;
+      if (validTopics.length > 0 && !currentTopicId) {
+        console.log('[useTopicManagement] 没有选中话题，自动选择第一个话题:', validTopics[0].name);
         // 设置当前主题
         dispatch(newMessagesActions.setCurrentTopicId(validTopics[0].id));
 

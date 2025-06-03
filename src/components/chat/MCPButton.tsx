@@ -18,7 +18,7 @@ import {
   alpha,
   useTheme
 } from '@mui/material';
-import { Wrench, Settings, Cloud, Database, Globe, Plus } from 'lucide-react';
+import { Wrench, Settings, Database, Globe, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
@@ -79,9 +79,7 @@ const MCPButton: React.FC<MCPButtonProps> = ({
 
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return <Cloud size={16} />;
-      case 'streamableHttp':
+      case 'httpStream':
         return <Globe size={16} />;
       case 'inMemory':
         return <Database size={16} />;
@@ -92,10 +90,8 @@ const MCPButton: React.FC<MCPButtonProps> = ({
 
   const getServerTypeColor = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return '#2196F3';
-      case 'streamableHttp':
-        return '#FF9800';
+      case 'httpStream':
+        return '#9C27B0';
       case 'inMemory':
         return '#4CAF50';
       default:
@@ -298,7 +294,7 @@ const MCPButton: React.FC<MCPButtonProps> = ({
               <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
                 <Button
                   variant="outlined"
-                  startIcon={<SettingsIcon />}
+                  startIcon={<Settings size={16} />}
                   onClick={handleManageServers}
                   sx={{ borderRadius: '8px', flex: 1 }}
                 >
@@ -306,7 +302,7 @@ const MCPButton: React.FC<MCPButtonProps> = ({
                 </Button>
                 <Button
                   variant="contained"
-                  startIcon={<AddIcon />}
+                  startIcon={<Plus size={16} />}
                   onClick={handleManageServers}
                   sx={{ borderRadius: '8px', flex: 1 }}
                 >

@@ -313,7 +313,7 @@ export interface Settings {
 }
 
 // 预设模型提供商
-export type ModelProvider = 'openai' | 'anthropic' | 'google' | 'grok' | 'deepseek' | 'zhipu' | 'siliconflow' | 'volcengine' | 'azure-openai' | 'custom';
+export type ModelProvider = 'openai' | 'openai-aisdk' | 'anthropic' | 'google' | 'grok' | 'deepseek' | 'zhipu' | 'siliconflow' | 'volcengine' | 'azure-openai' | 'custom';
 
 // 预设模型信息
 export interface PresetModel {
@@ -343,7 +343,7 @@ export interface QuickPhrase {
 }
 
 // MCP 相关类型定义
-export type MCPServerType = 'sse' | 'streamableHttp' | 'inMemory';
+export type MCPServerType = 'inMemory' | 'httpStream';
 
 export interface MCPServer {
   id: string;
@@ -361,6 +361,8 @@ export interface MCPServer {
   logoUrl?: string;
   tags?: string[];
   timeout?: number;
+  // HTTP Stream 特定配置
+  enableSSE?: boolean; // 是否启用SSE流（仅对httpStream类型有效）
 }
 
 export interface MCPTool {

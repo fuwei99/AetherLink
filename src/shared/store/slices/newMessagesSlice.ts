@@ -313,6 +313,9 @@ export const {
   selectIds: selectMessageIds
 } = messagesAdapter.getSelectors<RootState>(selectMessagesState);
 
+// 创建稳定的空数组引用
+const EMPTY_MESSAGES_ARRAY: any[] = [];
+
 // 自定义选择器 - 使用 createSelector 进行记忆化
 export const selectMessagesByTopicId = createSelector(
   [
@@ -321,9 +324,9 @@ export const selectMessagesByTopicId = createSelector(
   ],
   (messagesState, topicId) => {
     if (!messagesState) {
-      return [];
+      return EMPTY_MESSAGES_ARRAY;
     }
-    const messageIds = messagesState.messageIdsByTopic[topicId] || [];
+    const messageIds = messagesState.messageIdsByTopic[topicId] || EMPTY_MESSAGES_ARRAY;
     return messageIds.map((id: string) => messagesState.entities[id]).filter(Boolean);
   }
 );
@@ -341,8 +344,8 @@ export const selectTopicStreaming = (state: RootState, topicId: string) =>
 export const selectErrors = createSelector(
   [(state: RootState) => state.messages],
   (messagesState) => {
-    // 直接返回errors数组，createSelector会处理记忆化
-    return messagesState ? messagesState.errors : [];
+    // 确保返回数组，使用稳定的空数组引用
+    return messagesState?.errors || EMPTY_MESSAGES_ARRAY;
   }
 );
 
@@ -360,10 +363,8 @@ export const selectErrorsByTopic = createSelector(
     (_state: RootState, topicId: string) => topicId
   ],
   (messagesState, topicId) => {
-    // 直接返回错误数组，createSelector会处理记忆化
-    return messagesState && messagesState.errorsByTopic[topicId]
-      ? messagesState.errorsByTopic[topicId]
-      : [];
+    // 确保返回数组，使用稳定的空数组引用
+    return messagesState?.errorsByTopic?.[topicId] || EMPTY_MESSAGES_ARRAY;
   }
 );
 
@@ -374,10 +375,8 @@ export const selectApiKeyError = createSelector(
     (_state: RootState, topicId: string) => topicId
   ],
   (messagesState, topicId) => {
-    // 直接返回错误对象，createSelector会处理记忆化
-    return messagesState && messagesState.apiKeyErrors[topicId]
-      ? messagesState.apiKeyErrors[topicId]
-      : null;
+    // 确保返回值，添加默认值处理
+    return messagesState?.apiKeyErrors?.[topicId] || null;
   }
 );
 
@@ -387,8 +386,8 @@ export const selectHasApiKeyError = createSelector(
     (_state: RootState, topicId: string) => topicId
   ],
   (messagesState, topicId) => {
-    // 添加转换逻辑避免直接返回输入
-    return Boolean(messagesState && messagesState.apiKeyErrors[topicId]);
+    // 转换为布尔值，确保有转换逻辑
+    return Boolean(messagesState?.apiKeyErrors?.[topicId]);
   }
 );
 
@@ -396,9 +395,24 @@ export const selectHasApiKeyError = createSelector(
 export const selectOrderedMessagesByTopicId = createSelector(
   [selectMessagesByTopicId],
   (messages) => {
-    // 只有当消息数组不为空时才进行排序，避免不必要的数组创建
+    // 如果消息数组为空，直接返回
     if (messages.length === 0) return messages;
 
+    // 检查消息是否已经按时间排序
+    let isAlreadySorted = true;
+    for (let i = 1; i < messages.length; i++) {
+      const prevTime = new Date(messages[i - 1].createdAt).getTime();
+      const currTime = new Date(messages[i].createdAt).getTime();
+      if (prevTime > currTime) {
+        isAlreadySorted = false;
+        break;
+      }
+    }
+
+    // 如果已经排序，直接返回原数组，避免创建新引用
+    if (isAlreadySorted) return messages;
+
+    // 只有在需要排序时才创建新数组
     return [...messages].sort((a, b) => {
       const aTime = new Date(a.createdAt).getTime();
       const bTime = new Date(b.createdAt).getTime();
@@ -426,15 +440,29 @@ export const loadTopicMessagesThunk = createAsyncThunk(
       // 去重处理 - 使用统一的去重逻辑
       const sortedMessages = deduplicateMessages(messages);
 
-      // 加载消息块
+      // 优化：使用批量查询，一次性获取所有消息块
       const messageIds = sortedMessages.map(msg => msg.id);
       console.log(`[loadTopicMessagesThunk] 加载话题 ${topicId} 的消息，消息数量: ${sortedMessages.length}，消息ID: [${messageIds.join(', ')}]`);
 
-      const blocks = [];
-      const processedBlockIds = new Set<string>(); // 用于跟踪已处理的块ID
+      // 使用新的批量查询方法，一次性获取所有消息块
+      const allBlocks = await dexieStorage.getMessageBlocksByMessageIds(messageIds);
 
-      for (const messageId of messageIds) {
-        const messageBlocks = await dexieStorage.getMessageBlocksByMessageId(messageId);
+      // 按消息ID分组并去重
+      const blocks = [];
+      const processedBlockIds = new Set<string>();
+      const blocksByMessageId = new Map<string, any[]>();
+
+      // 按消息ID分组
+      allBlocks.forEach(block => {
+        if (!blocksByMessageId.has(block.messageId)) {
+          blocksByMessageId.set(block.messageId, []);
+        }
+        blocksByMessageId.get(block.messageId)!.push(block);
+      });
+
+      // 处理每个消息的块并去重
+      messageIds.forEach(messageId => {
+        const messageBlocks = blocksByMessageId.get(messageId) || [];
         console.log(`[loadTopicMessagesThunk] 消息 ${messageId} 有 ${messageBlocks.length} 个块: [${messageBlocks.map(b => `${b.id}(${b.type})`).join(', ')}]`);
 
         // 过滤掉已处理的块
@@ -447,7 +475,7 @@ export const loadTopicMessagesThunk = createAsyncThunk(
         });
 
         blocks.push(...uniqueBlocks);
-      }
+      });
 
       console.log(`[loadTopicMessagesThunk] 总共加载到 ${blocks.length} 个消息块`);
 
@@ -457,14 +485,15 @@ export const loadTopicMessagesThunk = createAsyncThunk(
         console.log(`[loadTopicMessagesThunk] 消息 ${message.id} 的 blocks 数组: [${message.blocks?.join(', ') || '空'}]，实际加载的块: [${messageBlocks.map(b => `${b.id}(${b.type})`).join(', ')}]`);
       }
 
-      // 更新Redux状态 - 使用去重后的消息
-      dispatch(newMessagesActions.messagesReceived({ topicId, messages: sortedMessages }));
-
+      // 使用 batch 来批量更新 Redux 状态，减少重新渲染
       if (blocks.length > 0) {
         console.log(`[loadTopicMessagesThunk] 将 ${blocks.length} 个块添加到 Redux`);
+        // 先更新消息块，再更新消息，这样可以避免组件在没有块数据时的重新渲染
         dispatch(upsertManyBlocks(blocks));
+        dispatch(newMessagesActions.messagesReceived({ topicId, messages: sortedMessages }));
       } else {
         console.log(`[loadTopicMessagesThunk] 没有块需要添加到 Redux`);
+        dispatch(newMessagesActions.messagesReceived({ topicId, messages: sortedMessages }));
       }
 
       return messages;

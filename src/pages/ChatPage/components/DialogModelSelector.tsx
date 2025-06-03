@@ -114,6 +114,9 @@ interface DialogModelSelectorProps {
   menuOpen: boolean;
 }
 
+// 创建稳定的空数组引用
+const EMPTY_PROVIDERS_ARRAY: any[] = [];
+
 export const DialogModelSelector: React.FC<DialogModelSelectorProps> = ({
   selectedModel,
   availableModels,
@@ -125,7 +128,7 @@ export const DialogModelSelector: React.FC<DialogModelSelectorProps> = ({
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [activeTab, setActiveTab] = React.useState<string>('all');
-  const providers = useSelector((state: RootState) => state.settings.providers || []);
+  const providers = useSelector((state: RootState) => state.settings.providers || EMPTY_PROVIDERS_ARRAY);
 
   // 优化主题相关计算 - 使用 useMemo 缓存
   const isDark = useMemo(() => theme.palette.mode === 'dark', [theme.palette.mode]);
@@ -307,7 +310,16 @@ const ModelItem: React.FC<ModelItemProps> = React.memo(({
   return (
     <ListItem
       onClick={onSelect}
-      sx={listItemStyle}
+      sx={{
+        ...listItemStyle,
+        cursor: 'pointer',
+        '&:hover': {
+          ...listItemStyle['&:hover'],
+          backgroundColor: isSelected
+            ? (isDark ? 'rgba(144, 202, 249, 0.16)' : 'rgba(25, 118, 210, 0.08)')
+            : (isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)')
+        }
+      }}
     >
       <ListItemIcon sx={MODEL_ITEM_STYLES.listItemIcon}>
         <Avatar sx={avatarStyle}>
@@ -317,8 +329,10 @@ const ModelItem: React.FC<ModelItemProps> = React.memo(({
       <ListItemText
         primary={model.name}
         secondary={model.description || `${providerDisplayName}模型`}
-        primaryTypographyProps={primaryTextProps}
-        secondaryTypographyProps={MODEL_ITEM_STYLES.secondaryText}
+        slotProps={{
+          primary: primaryTextProps,
+          secondary: MODEL_ITEM_STYLES.secondaryText
+        }}
       />
       {isSelected && (
         <CheckIcon color="primary" fontSize="small" />

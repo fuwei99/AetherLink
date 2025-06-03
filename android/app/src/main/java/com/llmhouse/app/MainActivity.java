@@ -8,6 +8,7 @@ import android.view.WindowManager;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.webkit.WebSettings;
+import android.webkit.WebView;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
@@ -22,6 +23,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // 在Capacitor 4+中，必须在super.onCreate之前注册插件
         registerPlugin(ModernWebViewPlugin.class);
+        registerPlugin(NativeHttpPlugin.class);
 
         super.onCreate(savedInstanceState);
 
@@ -29,7 +31,7 @@ public class MainActivity extends BridgeActivity {
         Log.i(TAG, "=== MainActivity onCreate 开始 ===");
         System.out.println("=== MainActivity onCreate 开始 ===");
 
-        // 🔥 配置WebView允许混合内容（HTTP + HTTPS）
+        //  配置WebView允许混合内容（HTTP + HTTPS）
         configureMixedContent();
 
         // 初始化现代WebView管理
@@ -78,23 +80,49 @@ public class MainActivity extends BridgeActivity {
                         android.webkit.WebView webView = getBridge().getWebView();
                         WebSettings settings = webView.getSettings();
 
-                        // 🔥 关键设置：允许混合内容
+                        //  关键设置：允许混合内容
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
                             Log.d(TAG, "✅ 已启用混合内容支持 (MIXED_CONTENT_ALWAYS_ALLOW)");
                         }
 
-                        // 🔥 禁用 CORS 和安全限制
+                        //  彻底禁用CORS - 关键设置
                         settings.setAllowFileAccess(true);
                         settings.setAllowContentAccess(true);
                         settings.setAllowFileAccessFromFileURLs(true);
                         settings.setAllowUniversalAccessFromFileURLs(true);
 
-                        // 额外的网络相关设置
+                        // 基础Web功能
+                        settings.setJavaScriptEnabled(true);
                         settings.setDomStorageEnabled(true);
                         settings.setDatabaseEnabled(true);
 
-                        Log.d(TAG, "🔥 已禁用 CORS 和安全限制");
+                        // 确保网络请求正常
+                        settings.setBlockNetworkLoads(false);
+                        settings.setLoadsImagesAutomatically(true);
+
+                        //  添加WebView启动参数来禁用安全性
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            try {
+                                // 启用WebView调试
+                                WebView.setWebContentsDebuggingEnabled(true);
+                                Log.d(TAG, "🔓 已启用WebView调试模式");
+                            } catch (Exception e) {
+                                Log.w(TAG, "⚠️ 启用WebView调试失败: " + e.getMessage());
+                            }
+                        }
+
+                        //  尝试禁用Web安全性
+                        try {
+                            java.lang.reflect.Method setWebSecurityMethod = settings.getClass().getDeclaredMethod("setWebSecurityEnabled", boolean.class);
+                            setWebSecurityMethod.setAccessible(true);
+                            setWebSecurityMethod.invoke(settings, false);
+                            Log.d(TAG, "🔓 已禁用Web安全性 (CORS检查已关闭)");
+                        } catch (Exception e) {
+                            Log.w(TAG, "⚠️ 无法禁用Web安全性: " + e.getMessage());
+                        }
+
+                        Log.d(TAG, " 已彻底禁用 CORS 和所有Web安全限制");
 
                         Log.d(TAG, "🎉 WebView混合内容配置完成");
                     } else {
@@ -132,12 +160,24 @@ public class MainActivity extends BridgeActivity {
                         Log.d(TAG, "✅ 混合内容配置成功 (重试第" + retryCount + "次)");
                     }
 
-                    // 🔥 禁用 CORS 和安全限制
+                    //  基础CORS禁用设置
                     settings.setAllowFileAccess(true);
                     settings.setAllowContentAccess(true);
                     settings.setAllowFileAccessFromFileURLs(true);
                     settings.setAllowUniversalAccessFromFileURLs(true);
-                    Log.d(TAG, "🔥 已禁用 CORS 和安全限制 (重试第" + retryCount + "次)");
+                    settings.setBlockNetworkLoads(false);
+
+                    //  尝试禁用Web安全性
+                    try {
+                        java.lang.reflect.Method setWebSecurityMethod = settings.getClass().getDeclaredMethod("setWebSecurityEnabled", boolean.class);
+                        setWebSecurityMethod.setAccessible(true);
+                        setWebSecurityMethod.invoke(settings, false);
+                        Log.d(TAG, "🔓 已禁用Web安全性 (重试第" + retryCount + "次)");
+                    } catch (Exception e) {
+                        Log.w(TAG, "⚠️ 无法禁用Web安全性 (重试第" + retryCount + "次): " + e.getMessage());
+                    }
+
+                    Log.d(TAG, " 已彻底禁用 CORS 和安全限制 (重试第" + retryCount + "次)");
                 } else {
                     Log.d(TAG, "🔄 WebView仍未准备好，继续重试 (第" + retryCount + "次)");
                     configureMixedContentRetry(retryCount + 1);

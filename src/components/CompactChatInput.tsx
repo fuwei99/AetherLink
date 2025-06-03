@@ -3,6 +3,10 @@ import { Box, IconButton, Typography, Collapse, Chip } from '@mui/material';
 import MCPToolsButton from './chat/MCPToolsButton';
 import WebSearchProviderSelector from './WebSearchProviderSelector';
 import KnowledgeSelector from './chat/KnowledgeSelector';
+import AIDebateButton from './AIDebateButton';
+import QuickPhraseButton from './QuickPhraseButton';
+import MultiModelSelector from './MultiModelSelector';
+import EnhancedToast, { toastManager } from './EnhancedToast';
 import { useChatInputLogic } from '../shared/hooks/useChatInputLogic';
 import { useFileUpload } from '../shared/hooks/useFileUpload';
 import { useUrlScraper } from '../shared/hooks/useUrlScraper';
@@ -15,13 +19,17 @@ import { Plus, X, Send, Square, Paperclip } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../shared/store';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../shared/types';
+import type { DebateConfig } from '../shared/services/AIDebateService';
 import { dexieStorage } from '../shared/services/DexieStorageService';
 import { VoiceButton, VoiceInputArea } from './VoiceRecognition';
+import EnhancedVoiceInput from './VoiceRecognition/EnhancedVoiceInput';
 
 
 interface CompactChatInputProps {
   onSendMessage: (message: string, images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[], voiceRecognitionText?: string) => void;
   onSendMultiModelMessage?: (message: string, models: any[], images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => void;
+  onStartDebate?: (question: string, config: DebateConfig) => void; // 开始AI辩论回调
+  onStopDebate?: () => void; // 停止AI辩论回调
   isLoading?: boolean;
   allowConsecutiveMessages?: boolean;
   imageGenerationMode?: boolean;
@@ -30,6 +38,7 @@ interface CompactChatInputProps {
   onDetectUrl?: (url: string) => Promise<string>;
   onStopResponse?: () => void;
   isStreaming?: boolean;
+  isDebating?: boolean; // 是否在辩论中
   toolsEnabled?: boolean;
   availableModels?: any[];
   onClearTopic?: () => void;
@@ -41,7 +50,9 @@ interface CompactChatInputProps {
 
 const CompactChatInput: React.FC<CompactChatInputProps> = ({
   onSendMessage,
-  // onSendMultiModelMessage, // 暂时未使用
+  onSendMultiModelMessage, // 启用多模型功能
+  onStartDebate, // 启用AI辩论功能
+  onStopDebate, // 启用AI辩论功能
   isLoading = false,
   allowConsecutiveMessages = true,
   imageGenerationMode = false,
@@ -50,8 +61,9 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   onDetectUrl,
   onStopResponse,
   isStreaming = false,
+  isDebating = false, // 启用辩论状态
   toolsEnabled = true,
-  // availableModels = [], // 暂时未使用
+  availableModels = [], // 启用多模型功能
   onClearTopic,
   onNewTopic,
   toggleImageGenerationMode,
@@ -67,6 +79,10 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   const [isIOS, setIsIOS] = useState(false); // 是否是iOS设备
   const [isVoiceMode, setIsVoiceMode] = useState(false); // 语音输入模式状态
 
+  // 新增功能状态
+  const [multiModelSelectorOpen, setMultiModelSelectorOpen] = useState(false); // 多模型选择器
+  const [toastMessages, setToastMessages] = useState<any[]>([]); // Toast消息
+
 
   // 文件和图片上传相关状态
   const [images, setImages] = useState<ImageContent[]>([]);
@@ -80,6 +96,11 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   // 使用自定义hooks
   const { styles, isDarkMode, inputBoxStyle } = useInputStyles();
   const { hasKnowledgeContext, getKnowledgeContextSummary, clearStoredKnowledgeContext } = useKnowledgeContext();
+
+  // 获取设置控制状态
+  const showAIDebateButton = useSelector((state: RootState) => state.settings.showAIDebateButton ?? true);
+  const showQuickPhraseButton = useSelector((state: RootState) => state.settings.showQuickPhraseButton ?? true);
+  const currentAssistant = useSelector((state: RootState) => state.assistants.currentAssistant);
 
   // URL解析功能
   const {
@@ -97,7 +118,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     setUploadingMedia
   });
 
-  // 聊天输入逻辑
+  // 聊天输入逻辑 - 启用CompactChatInput的高级功能
   const {
     message,
     setMessage,
@@ -105,9 +126,16 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     canSendMessage,
     handleSubmit,
     handleKeyDown,
-    handleChange
+    handleChange,
+    textareaHeight,
+    showCharCount,
+    handleCompositionStart,
+    handleCompositionEnd,
+    isMobile,
+    isTablet
   } = useChatInputLogic({
     onSendMessage,
+    onSendMultiModelMessage,
     onSendImagePrompt,
     isLoading,
     allowConsecutiveMessages,
@@ -118,7 +146,11 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     files,
     setImages,
     setFiles,
-    resetUrlScraper
+    resetUrlScraper,
+    enableTextareaResize: true, // 启用文本区域自动调整
+    enableCompositionHandling: true, // 启用输入法处理
+    enableCharacterCount: true, // 启用字符计数
+    availableModels
   });
 
   // 语音识别功能
@@ -134,9 +166,15 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   useEffect(() => {
     // 仅用于显示可能的语音识别错误，防止未使用警告
     if (voiceRecognitionError) {
-      console.error('语音识别错误:', voiceRecognitionError);
+      // 静默处理错误
     }
   }, [voiceRecognitionError]);
+
+  // Toast管理器订阅
+  useEffect(() => {
+    const unsubscribe = toastManager.subscribe(setToastMessages);
+    return unsubscribe;
+  }, []);
 
   // 当话题ID变化时，从数据库获取话题信息
   useEffect(() => {
@@ -373,12 +411,10 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   };
 
   const handleStopVoiceRecognition = async () => {
-    console.log('CompactChatInput handleStopVoiceRecognition called');
     try {
       await stopRecognition();
-      console.log('CompactChatInput stopRecognition completed');
     } catch (error) {
-      console.error('CompactChatInput Error stopping voice recognition:', error);
+      // 静默处理错误
     }
   };
 
@@ -408,6 +444,40 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     }
   };
 
+  // 多模型发送处理
+  const handleMultiModelSend = (selectedModels: any[]) => {
+    if (onSendMultiModelMessage && message.trim()) {
+      // 创建正确的图片格式
+      const formattedImages: SiliconFlowImageFormat[] = [...images, ...files.filter(f => f.mimeType.startsWith('image/'))].map(img => ({
+        type: 'image_url',
+        image_url: {
+          url: img.base64Data || img.url
+        }
+      }));
+
+      onSendMultiModelMessage(
+        message.trim(),
+        selectedModels,
+        formattedImages.length > 0 ? formattedImages : undefined,
+        toolsEnabled,
+        files
+      );
+
+      // 重置状态
+      setMessage('');
+      setImages([]);
+      setFiles([]);
+      setUploadingMedia(false);
+      setMultiModelSelectorOpen(false);
+    }
+  };
+
+  // 快捷短语插入处理
+  const handleInsertPhrase = (content: string) => {
+    setMessage(prev => prev + content);
+    setIsActivated(true); // 插入短语后激活输入框
+  };
+
 
 
   // 使用配置文件获取图标
@@ -430,53 +500,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     handleKnowledgeClick
   });
 
-  // 根据当前样式获取容器样式
-  const getContainerStyle = () => {
-    const baseStyle = {
-      width: '100%',
-      padding: '10px 15px',
-      borderRadius: '20px',
-      backgroundColor: 'transparent', // 确保背景透明
-      background: 'none', // 移除任何背景
-      backdropFilter: 'none', // 移除任何背景滤镜
-      position: 'relative' as const,
-      transition: 'all 0.2s ease-in-out',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '8px',
-      maxWidth: '100%',
-      marginBottom: '10px',
-    };
 
-    if (isActivated) {
-      return {
-        ...baseStyle,
-        borderRadius: '16px',
-      };
-    }
-
-    return baseStyle;
-  };
-
-  // 获取输入框样式
-  const getInputStyle = () => ({
-    width: '100%',
-    minHeight: '40px',
-    padding: '10px 40px 10px 15px',
-    borderRadius: '18px',
-    border: styles.border,
-    boxShadow: styles.boxShadow,
-    fontSize: '16px',
-    lineHeight: '1.5',
-    outline: 'none',
-    resize: 'none' as const,
-    overflowY: 'auto' as const,
-    backgroundColor: 'transparent', // 使输入框背景透明
-    color: isDarkMode ? '#E0E0E0' : '#000000',
-    fontFamily: 'inherit',
-    transition: 'all 0.2s ease',
-    height: `${inputHeight}px`,
-  });
 
   return (
     <Box sx={{
@@ -527,21 +551,15 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
 
       {/* 输入框区域 */}
       {isVoiceMode ? (
-        /* 语音输入模式 */
-        <VoiceInputArea
-          isListening={isListening}
-          recognitionText={recognitionText}
-          onStartRecording={handleStartVoiceRecognition}
-          onStopRecording={handleStopVoiceRecognition}
+        /* 增强语音输入模式 */
+        <EnhancedVoiceInput
+          isDarkMode={isDarkMode}
+          onClose={() => setIsVoiceMode(false)}
           onSendMessage={handleVoiceSendMessage}
-          onCancel={() => setIsVoiceMode(false)}
           onInsertText={(text) => {
             setMessage(prev => prev + text);
             setIsVoiceMode(false);
           }}
-          isDarkMode={isDarkMode}
-          silenceTimeout={3000}
-          showVolumeIndicator={true}
         />
       ) : (
         /* 文本输入模式 */
@@ -601,11 +619,30 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
             value={message}
             onChange={handleInputChange}
             onKeyDown={handleInputKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             onClick={handleInputClick}
             disabled={isLoading && !allowConsecutiveMessages}
           />
+
+          {/* 字符计数显示 */}
+          {showCharCount && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-20px',
+                right: '0',
+                fontSize: '12px',
+                color: message.length > 1000 ? '#f44336' : isDarkMode ? '#888' : '#666',
+                opacity: 0.8,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {message.length}{message.length > 1000 ? ' (过长)' : ''}
+            </div>
+          )}
         </Box>
 
         {/* 语音识别和发送按钮 */}
@@ -687,7 +724,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
                   onClick={resetUrlScraper}
                   sx={{ ml: 1, p: 0.5 }}
                 >
-                  <CloseIcon sx={{ fontSize: 12 }} />
+                  <X size={12} />
                 </IconButton>
               )}
             </Box>
@@ -732,7 +769,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
                         '&:hover': { backgroundColor: 'error.dark' }
                       }}
                     >
-                      <CloseIcon sx={{ fontSize: 12 }} />
+                      <X size={12} />
                     </IconButton>
                   </Box>
                 ))}
@@ -761,7 +798,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
                       borderColor: 'divider'
                     }}
                   >
-                    <AttachFileIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Paperclip size={16} style={{ color: 'text.secondary' }} />
                     <Typography variant="caption" sx={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {file.name}
                     </Typography>
@@ -770,7 +807,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
                       onClick={() => handleRemoveFile(index)}
                       sx={{ p: 0.5 }}
                     >
-                      <CloseIcon sx={{ fontSize: 12 }} />
+                      <X size={12} />
                     </IconButton>
                   </Box>
                 ))}
@@ -837,6 +874,27 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
           );
         })}
 
+        {/* AI辩论按钮 */}
+        {showAIDebateButton && (
+          <AIDebateButton
+            onStartDebate={onStartDebate}
+            onStopDebate={onStopDebate}
+            isDebating={isDebating}
+            disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+            question={message}
+          />
+        )}
+
+        {/* 快捷短语按钮 */}
+        {showQuickPhraseButton && (
+          <QuickPhraseButton
+            onInsertPhrase={handleInsertPhrase}
+            assistant={currentAssistant}
+            disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+            size="small"
+          />
+        )}
+
         {/* 展开/收起按钮 */}
         <IconButton
           onClick={() => setExpanded(!expanded)}
@@ -858,7 +916,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
             }
           }}
         >
-          {expanded ? <CloseIcon fontSize="small" /> : <AddIcon fontSize="small" />}
+          {expanded ? <X size={20} /> : <Plus size={20} />}
         </IconButton>
         </Box>
       </Collapse>
@@ -945,6 +1003,58 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
               </Box>
             ))}
 
+            {/* 多模型选择按钮 */}
+            {onSendMultiModelMessage && availableModels.length > 1 && (
+              <Box
+                onClick={() => setMultiModelSelectorOpen(true)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  padding: '6px 12px',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                  border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                  transition: 'all 0.2s ease',
+                  minWidth: 'fit-content',
+                  '&:hover': {
+                    backgroundColor: '#FF9800' + '20',
+                    borderColor: '#FF9800' + '60',
+                    transform: 'translateY(-1px)',
+                    boxShadow: `0 2px 8px ${'#FF9800'}20`
+                  }
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: isDarkMode ? '#B0B0B0' : '#666',
+                    '& svg': {
+                      fontSize: '18px'
+                    }
+                  }}
+                >
+                  <Send size={18} />
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: isDarkMode ? '#B0B0B0' : '#666',
+                    fontSize: '12px',
+                    fontWeight: 400,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  多模型
+                </Typography>
+              </Box>
+            )}
+
             {/* 添加一个提示文字，说明这里可以添加更多功能 */}
             <Typography
               variant="caption"
@@ -976,6 +1086,21 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
         searchQuery={message}
       />
 
+      {/* 多模型选择器 */}
+      <MultiModelSelector
+        open={multiModelSelectorOpen}
+        onClose={() => setMultiModelSelectorOpen(false)}
+        availableModels={availableModels}
+        onConfirm={handleMultiModelSend}
+        maxSelection={5}
+      />
+
+      {/* Toast通知 */}
+      <EnhancedToast
+        messages={toastMessages}
+        onClose={(id) => toastManager.remove(id)}
+        maxVisible={3}
+      />
 
     </Box>
   );

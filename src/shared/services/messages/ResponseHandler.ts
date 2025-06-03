@@ -48,7 +48,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
   // 创建简单的节流数据库更新函数
   const throttledUpdateBlock = throttle((blockId: string, changes: any) => {
     dexieStorage.updateMessageBlock(blockId, changes);
-  }, 200); // 200ms节流，减少数据库写入频率
+  }, 500); // 增加到500ms节流，减少数据库写入频率
 
   // 流式处理状态变量
   let accumulatedContent = '';
@@ -66,12 +66,12 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
   // 创建节流的Redux更新函数，避免无限循环
   const throttledReduxUpdate = throttle((blockId: string, changes: any) => {
     store.dispatch(updateOneBlock({ id: blockId, changes }));
-  }, 100); // 100ms节流，与最佳实例保持一致
+  }, 200); // 增加到200ms节流，减少Redux更新频率
 
-  // 🔥 新增：创建响应处理器实例，用于事件转换
+  //  新增：创建响应处理器实例，用于事件转换
   let responseHandlerInstance: any = null;
 
-  // 🔥 新增：事件监听器清理函数
+  //  新增：事件监听器清理函数
   let eventCleanupFunctions: (() => void)[] = [];
 
   // 实现最佳实例的回调系统
@@ -146,15 +146,21 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
     },
 
     onThinkingChunk: (text: string, thinking_millsec?: number) => {
-      // 🔥 修复DeepSeek-R1重复内容问题：检查是否为累积内容
+      //  改进的内容处理逻辑：更精确地处理增量和累积内容
       if (text.length > accumulatedThinking.length && text.startsWith(accumulatedThinking)) {
         // 如果新文本包含已有内容且更长，说明是累积内容，直接设置
         accumulatedThinking = text;
-      } else if (text !== accumulatedThinking && !accumulatedThinking.includes(text)) {
-        // 如果是真正的增量内容且不重复，则累加
-        accumulatedThinking += text;
+      } else if (text !== accumulatedThinking) {
+        // 检查是否为真正的增量内容
+        if (accumulatedThinking.length === 0 || !accumulatedThinking.endsWith(text)) {
+          // 如果是空的或者不是重复的尾部内容，则累加
+          accumulatedThinking += text;
+        } else {
+          // 跳过重复内容
+          return;
+        }
       } else {
-        // 如果内容完全相同或已包含，跳过处理
+        // 跳过完全相同的内容
         return;
       }
 
@@ -194,7 +200,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
     }
   };
 
-  // 🔥 移除重复的事件监听器，避免双重处理
+  //  移除重复的事件监听器，避免双重处理
   // ResponseHandler应该只通过直接回调处理流式数据，不需要监听全局事件
   // 这样可以避免同一个内容被处理两次的问题
   const setupEventListeners = () => {
@@ -265,7 +271,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
             const textComplete = chunk as import('../../types/chunk').TextCompleteChunk;
             console.log(`[ResponseHandler] 处理文本完成，总长度: ${textComplete.text.length}`);
 
-            // 🔥 关键修复：检查是否需要追加内容而不是覆盖
+            //  关键修复：检查是否需要追加内容而不是覆盖
             if (accumulatedContent.trim() && !textComplete.text.includes(accumulatedContent)) {
               // 如果已有内容且新内容不包含旧内容，则追加
               const separator = '\n\n';
@@ -380,7 +386,6 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         isThinking = true;
         thinkingContent = reasoning;
         thinkingTime = 0;
-        console.log(`[ResponseHandler] 接收到推理内容: "${reasoning}"`);
       } else {
         // 尝试解析JSON，检查是否包含思考内容
         try {
@@ -584,7 +589,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
 
               console.log(`[ResponseHandler] 创建工具块: ${toolBlock.id} (${(toolBlock as ToolMessageBlock).toolName})`);
 
-              // 🔥 修复：简化操作，避免复杂事务
+              //  修复：简化操作，避免复杂事务
               // 1. 更新映射
               toolCallIdToBlockIdMap.set(toolResponse.id, toolBlock.id);
 
@@ -768,7 +773,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
           return;
         }
 
-        // 🔥 修复：预先导入所需模块
+        //  修复：预先导入所需模块
         // 注意：这里不需要导入，因为我们使用 atomicToolBlockUpdate 方法
 
         // 参考 Cline 的顺序处理机制：逐个处理工具完成，确保稳定性
@@ -805,7 +810,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
 
               console.log(`[ResponseHandler] 更新工具块 ${existingBlockId} (toolId: ${toolResponse.id}) 状态为 ${finalStatus}`);
 
-              // 🔥 修复：简化更新操作，避免复杂事务
+              //  修复：简化更新操作，避免复杂事务
 
               // 1. 更新 Redux 状态
               store.dispatch(updateOneBlock({
@@ -829,7 +834,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
             // 参考 Cline 的错误处理：单个工具失败不影响其他工具
             console.error(`[ResponseHandler] 处理单个工具完成失败 (toolId: ${toolResponse.id}):`, toolError);
 
-            // 🔥 修复：即使处理失败也要标记工具完成，避免无限等待
+            //  修复：即使处理失败也要标记工具完成，避免无限等待
             globalToolTracker.completeTool(toolResponse.id, false);
 
             await this.handleSingleToolError(toolResponse.id, toolError);
@@ -846,7 +851,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
      * @returns 累计的响应内容
      */
     async complete(finalContent?: string) {
-      // 🔥 关键修复：不要覆盖 accumulatedContent，因为它已经通过流式回调正确累积了所有内容
+      //  关键修复：不要覆盖 accumulatedContent，因为它已经通过流式回调正确累积了所有内容
       // 在工具调用场景中，finalContent 只包含最后一次响应，会丢失之前的内容
       console.log(`[ResponseHandler] 完成处理 - finalContent长度: ${finalContent?.length || 0}, accumulatedContent长度: ${accumulatedContent.length}`);
 
@@ -874,7 +879,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         console.log(`[ResponseHandler] 保持 accumulatedContent 作为最终内容`);
       }
 
-      // 🔥 关键：保留 XML 工具调用标签，让 MainTextBlock 处理原位置渲染
+      //  关键：保留 XML 工具调用标签，让 MainTextBlock 处理原位置渲染
       //
       // 工具块处理流程：
       // 1. ResponseHandler 保留原始内容（包含 <tool_use> 标签）
@@ -994,7 +999,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         }
       }
 
-      // 🔥 修复：如果有finalContent但没有主文本块，需要创建主文本块
+      //  修复：如果有finalContent但没有主文本块，需要创建主文本块
       if (finalContent && finalContent.trim() && !mainTextBlockId) {
         console.log(`[ResponseHandler] 检测到finalContent但没有主文本块，创建新的主文本块`);
 
@@ -1066,11 +1071,11 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
         }));
       }
 
-      // 🔥 关键修复：正确处理占位符块替换和块ID管理
+      //  关键修复：正确处理占位符块替换和块ID管理
       const currentMessage = store.getState().messages.entities[messageId];
       const existingBlocks = currentMessage?.blocks || [];
 
-      // 🔥 修复：正确处理块ID顺序，思考块在前，主文本块在后
+      //  修复：正确处理块ID顺序，思考块在前，主文本块在后
       let finalBlockIds: string[] = [];
 
       if (mainTextBlockId && mainTextBlockId !== blockId) {
@@ -1336,7 +1341,7 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
     async fail(error: Error) {
       console.error(`[ResponseHandler] 响应失败 - 消息ID: ${messageId}, 错误: ${error.message}`);
 
-      // 🔥 新增：检测 API Key 问题并提供重试机制
+      //  新增：检测 API Key 问题并提供重试机制
       // 注意：现在 checkAndHandleApiKeyError 返回 false，让我们继续创建错误块
       await checkAndHandleApiKeyError(error, messageId, topicId);
 
@@ -1471,10 +1476,10 @@ export function createResponseHandler({ messageId, blockId, topicId }: ResponseH
     }
   };
 
-  // 🔥 新增：设置事件监听器
+  //  新增：设置事件监听器
   setupEventListeners();
 
-  // 🔥 新增：添加清理方法到返回对象
+  //  新增：添加清理方法到返回对象
   responseHandlerInstance.cleanup = () => {
     eventCleanupFunctions.forEach(cleanup => cleanup());
   };

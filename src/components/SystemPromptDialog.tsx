@@ -53,7 +53,7 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
   // 当对话框打开时，初始化提示词
   useEffect(() => {
     if (open) {
-      // 🔥 修复：与气泡组件保持一致的优先级 - 优先显示助手的系统提示词
+      //  修复：与气泡组件保持一致的优先级 - 优先显示助手的系统提示词
       // 优先级：助手提示词 > 话题提示词 > 默认提示词
       setPrompt(assistant?.systemPrompt || topic?.prompt || activeSystemPrompt || '');
 
@@ -68,13 +68,13 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
     }
   }, [open, topic, assistant, activeSystemPrompt]);
 
-  // 保存提示词 - 🔥 修复：添加助手提示词保存逻辑，使用侧边栏编辑助手的保存逻辑
+  // 保存提示词 -  修复：添加助手提示词保存逻辑，使用侧边栏编辑助手的保存逻辑
   const handleSave = async () => {
     try {
       setSaving(true);
       setError(null);
 
-      // 🔥 新增：如果有助手且当前显示的是助手提示词，保存到助手
+      //  新增：如果有助手且当前显示的是助手提示词，保存到助手
       // 判断逻辑：如果有助手，且当前提示词来源于助手（优先级最高）
       if (assistant && (assistant.systemPrompt || (!topic?.prompt && !activeSystemPrompt))) {
         console.log('[SystemPromptDialog] 保存助手系统提示词:', {
@@ -88,11 +88,11 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
           systemPrompt: prompt.trim()
         };
 
-        // 🔥 使用侧边栏编辑助手的保存逻辑：直接保存到数据库，确保数据持久化
+        //  使用侧边栏编辑助手的保存逻辑：直接保存到数据库，确保数据持久化
         await dexieStorage.saveAssistant(updatedAssistant);
         console.log('[SystemPromptDialog] 已保存助手系统提示词到数据库');
 
-        // 🔥 派发事件通知其他组件更新，与侧边栏编辑助手保持一致
+        //  派发事件通知其他组件更新，与侧边栏编辑助手保持一致
         window.dispatchEvent(new CustomEvent('assistantUpdated', {
           detail: { assistant: updatedAssistant }
         }));

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import * as tinyPinyin from 'tiny-pinyin';
+import { debounce } from 'lodash';
 import type { Assistant } from '../../../shared/types/Assistant';
 
 import { AssistantService } from '../../../shared/services';
@@ -28,7 +29,20 @@ export function useAssistantTabLogic(
   const [assistantDialogOpen, setAssistantDialogOpen] = useState(false);
   const [selectedAssistantId, setSelectedAssistantId] = useState<string | null>(null);
 
+  // 搜索相关状态
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
+
+
+  // 创建防抖搜索函数
+  const debouncedSearch = useMemo(
+    () => debounce((query: string) => {
+      setDebouncedSearchQuery(query);
+    }, 300), // 300ms 防抖延迟
+    []
+  );
 
   // 使用助手分组钩子
   const {
@@ -36,6 +50,22 @@ export function useAssistantTabLogic(
     assistantGroupMap,
     ungroupedAssistants
   } = useAssistantGroups(userAssistants);
+
+  // 过滤助手列表 - 使用防抖搜索查询
+  const filteredUserAssistants = useMemo(() => {
+    if (!debouncedSearchQuery) return userAssistants;
+    return userAssistants.filter(assistant => {
+      // 检查助手名称
+      if (assistant.name && assistant.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) {
+        return true;
+      }
+      // 检查系统提示词
+      if (assistant.systemPrompt && assistant.systemPrompt.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) {
+        return true;
+      }
+      return false;
+    });
+  }, [debouncedSearchQuery, userAssistants]);
 
   // 通知提示状态
   const [notification, setNotification] = useState<{message: string, open: boolean, severity: 'success' | 'error' | 'info' | 'warning'}>({
@@ -59,7 +89,7 @@ export function useAssistantTabLogic(
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editAssistantName, setEditAssistantName] = useState('');
   const [editAssistantPrompt, setEditAssistantPrompt] = useState('');
-  const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null); // 🔥 新增：保存正在编辑的助手
+  const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null); //  新增：保存正在编辑的助手
 
   // 提示词选择器状态
   const [promptSelectorOpen, setPromptSelectorOpen] = useState(false);
@@ -211,7 +241,7 @@ export function useAssistantTabLogic(
         console.log('[useAssistantTabLogic] 已通过回调更新助手');
       }
 
-      // 🔥 添加：派发事件通知其他组件更新，确保提示词气泡同步
+      //  添加：派发事件通知其他组件更新，确保提示词气泡同步
       window.dispatchEvent(new CustomEvent('assistantUpdated', {
         detail: { assistant: updatedAssistant }
       }));
@@ -397,6 +427,26 @@ export function useAssistantTabLogic(
     setIconPickerOpen(false);
   };
 
+  // 搜索相关处理函数
+  const handleSearchClick = useCallback(() => {
+    setShowSearch(true);
+  }, []);
+
+  const handleCloseSearch = useCallback(() => {
+    setShowSearch(false);
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
+    // 取消待执行的防抖函数
+    debouncedSearch.cancel();
+  }, [debouncedSearch]);
+
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSearchQuery(value);
+    // 触发防抖搜索
+    debouncedSearch(value);
+  }, [debouncedSearch]);
+
   return {
     // 状态
     assistantDialogOpen,
@@ -404,6 +454,7 @@ export function useAssistantTabLogic(
     assistantGroups,
     assistantGroupMap,
     ungroupedAssistants,
+    filteredUserAssistants, // 新增：过滤后的助手列表
     notification,
     assistantMenuAnchorEl,
     selectedMenuAssistant,
@@ -416,6 +467,10 @@ export function useAssistantTabLogic(
     editingAssistant,
     promptSelectorOpen,
     iconPickerOpen,
+    // 搜索相关状态
+    searchQuery,
+    debouncedSearchQuery,
+    showSearch,
 
     // 处理函数
     showNotification,
@@ -449,6 +504,10 @@ export function useAssistantTabLogic(
     handleSelectPrompt,
     handleOpenIconPicker,
     handleCloseIconPicker,
+    // 搜索相关处理函数
+    handleSearchClick,
+    handleCloseSearch,
+    handleSearchChange,
 
     // 数据
     predefinedAssistantsData

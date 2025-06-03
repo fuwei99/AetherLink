@@ -118,7 +118,11 @@ export abstract class BaseOpenAIProvider extends AbstractBaseProvider {
    */
   protected getTemperature(assistant?: any): number {
     // 优先使用助手设置，然后是模型设置，最后是默认值
-    return assistant?.temperature ?? this.model.temperature ?? 1.0;
+    const temperature = assistant?.settings?.temperature ?? assistant?.temperature ?? this.model.temperature ?? 1.0;
+
+    console.log(`[OpenAIProvider] temperature参数 - 助手设置: ${assistant?.settings?.temperature}, 助手直接设置: ${assistant?.temperature}, 模型设置: ${this.model.temperature}, 最终值: ${temperature}`);
+
+    return temperature;
   }
 
   /**
@@ -127,7 +131,11 @@ export abstract class BaseOpenAIProvider extends AbstractBaseProvider {
    */
   protected getTopP(assistant?: any): number {
     // 优先使用助手设置，然后是模型设置，最后是默认值
-    return assistant?.topP ?? (this.model as any).top_p ?? 1.0;
+    const topP = assistant?.settings?.topP ?? assistant?.topP ?? (this.model as any).top_p ?? 1.0;
+
+    console.log(`[OpenAIProvider] topP参数 - 助手设置: ${assistant?.settings?.topP}, 助手直接设置: ${assistant?.topP}, 模型设置: ${(this.model as any).top_p}, 最终值: ${topP}`);
+
+    return topP;
   }
 
   /**
@@ -136,12 +144,12 @@ export abstract class BaseOpenAIProvider extends AbstractBaseProvider {
    */
   protected getMaxTokens(assistant?: any): number {
     // 优先使用助手设置，然后是模型设置，最后是默认值
-    const maxTokens = assistant?.maxTokens ?? this.model.maxTokens ?? 4096;
+    const maxTokens = assistant?.settings?.maxTokens ?? assistant?.maxTokens ?? this.model.maxTokens ?? 4096;
 
     // 确保值在合理范围内（最小1，最大不限制，让API自己处理）
     const finalTokens = Math.max(maxTokens, 1);
 
-    console.log(`[OpenAIProvider] maxTokens参数 - 助手设置: ${assistant?.maxTokens}, 模型设置: ${this.model.maxTokens}, 最终值: ${finalTokens}`);
+    console.log(`[OpenAIProvider] maxTokens参数 - 助手设置: ${assistant?.settings?.maxTokens}, 助手直接设置: ${assistant?.maxTokens}, 模型设置: ${this.model.maxTokens}, 最终值: ${finalTokens}`);
 
     return finalTokens;
   }
@@ -537,6 +545,7 @@ export abstract class BaseOpenAIProvider extends AbstractBaseProvider {
       mcpTools?: import('../../types').MCPTool[]; // 添加 MCP 工具参数
       mcpMode?: 'prompt' | 'function'; // 添加 MCP 模式参数
       abortSignal?: AbortSignal;
+      assistant?: any; // 添加助手参数以获取设置
     }
   ): Promise<string | { content: string; reasoning?: string; reasoningTime?: number }>;
 }
@@ -842,11 +851,11 @@ export class OpenAIProvider extends BaseOpenAIProvider {
         console.log(`[OpenAIProvider] 提示词模式：移除 API 中的 tools 参数`);
       }
 
-      // 🔥 智能选择处理方式：
+      //  智能选择处理方式：
       // 1. 如果有 onChunk 回调，说明是普通消息处理，使用 OpenAIStreamProcessor 分离思考标签
       // 2. 如果只有 onUpdate 回调，说明可能是组合模型调用，使用 streamCompletion 保持推理内容
       let result;
-      // 🔥 关键修复：确保工具参数传递给 streamCompletion
+      //  关键修复：确保工具参数传递给 streamCompletion
       const streamParams = {
         ...iterationParams,
         enableTools,
@@ -861,7 +870,8 @@ export class OpenAIProvider extends BaseOpenAIProvider {
         params.temperature,
         params.max_tokens || params.max_completion_tokens,
         enhancedCallback,
-        streamParams
+        streamParams,
+        onChunk
       );
 
       if (false) { // 保留原有逻辑结构
@@ -891,7 +901,7 @@ export class OpenAIProvider extends BaseOpenAIProvider {
         const xmlToolResults = await this.processToolUses(content, mcpTools, onChunk);
 
         if (xmlToolResults.length > 0) {
-          // 🔥 修复：保留 XML 标签，让 MainTextBlock 在原位置渲染工具块
+          //  修复：保留 XML 标签，让 MainTextBlock 在原位置渲染工具块
           // 但是对话历史中需要清理后的内容，避免重复处理
           const cleanContent = removeToolUseTags(content);
           console.log(`[OpenAIProvider] 流式：对话历史使用清理后的内容，长度: ${cleanContent.length}`);
@@ -991,7 +1001,7 @@ export class OpenAIProvider extends BaseOpenAIProvider {
           console.log(`[OpenAIProvider] 无回调提示词模式：移除 API 中的 tools 参数`);
         }
 
-        // 🔥 关键修复：确保工具参数传递给 streamCompletion
+        //  关键修复：确保工具参数传递给 streamCompletion
         const streamParams = {
           ...iterationParams,
           enableTools: _enableTools,
@@ -1006,7 +1016,8 @@ export class OpenAIProvider extends BaseOpenAIProvider {
           params.temperature,
           params.max_tokens || params.max_completion_tokens,
           virtualCallback,
-          streamParams
+          streamParams,
+          onChunk
         );
 
         // 检查是否有工具调用标记
@@ -1019,7 +1030,7 @@ export class OpenAIProvider extends BaseOpenAIProvider {
           const xmlToolResults = await this.processToolUses(content, mcpTools, onChunk);
 
           if (xmlToolResults.length > 0) {
-            // 🔥 关键修复：从内容中移除 XML 标签，与非流式响应保持一致
+            //  关键修复：从内容中移除 XML 标签，与非流式响应保持一致
             const cleanContent = removeToolUseTags(content);
             console.log(`[OpenAIProvider] 无回调流式：移除工具使用标签后的内容长度: ${cleanContent.length}`);
 

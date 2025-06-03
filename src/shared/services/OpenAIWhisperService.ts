@@ -81,7 +81,6 @@ class OpenAIWhisperService {
       const result = await response.json();
       return result as WhisperTranscriptionResponse;
     } catch (error) {
-      console.error('Whisper转录失败:', error);
       throw error;
     }
   }

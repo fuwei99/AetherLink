@@ -137,10 +137,10 @@ export async function handleUserSelection(
       console.error(`[modelComparisonUtils] 找不到消息: ${messageId}`);
     }
 
-    // 🔥 关键修复：更新消息本身的内容，确保消息历史正确
+    //  关键修复：更新消息本身的内容，确保消息历史正确
     // 这是其他消息块都会做的操作，确保消息内容被持久化
 
-    // 🔥 关键：清理占位符块，停止显示"正在生成回复"
+    //  关键：清理占位符块，停止显示"正在生成回复"
     // 查找并更新所有 UNKNOWN 类型的占位符块状态
     const placeholderBlocks = allBlocks.filter(
       block => block.messageId === messageId &&
@@ -176,7 +176,7 @@ export async function handleUserSelection(
       }
     }));
 
-    // 🔥 关键修复：重置流式状态和加载状态
+    //  关键修复：重置流式状态和加载状态
     const message = await dexieStorage.getMessage(messageId);
     if (message) {
       const topicId = message.topicId;
@@ -196,7 +196,7 @@ export async function handleUserSelection(
       console.log(`[modelComparisonUtils] 已重置话题 ${topicId} 的流式状态和加载状态`);
     }
 
-    // 🔥 关键：同时更新数据库中的消息状态、对话历史和版本信息
+    //  关键：同时更新数据库中的消息状态、对话历史和版本信息
     // 使用事务确保消息和话题都被正确更新
     await dexieStorage.transaction('rw', [
       dexieStorage.messages,
@@ -209,7 +209,7 @@ export async function handleUserSelection(
         return;
       }
 
-      // 🔥 关键修复：更新消息版本的metadata，确保选中内容被保存到版本中
+      //  关键修复：更新消息版本的metadata，确保选中内容被保存到版本中
       let updatedVersions = message.versions || [];
 
       // 如果有版本信息，更新活跃版本的metadata
@@ -238,12 +238,12 @@ export async function handleUserSelection(
         versions: updatedVersions // 更新版本信息
       });
 
-      // 🔥 关键修复：更新 topics 表中的 messages 数组，包含选中的内容
+      //  关键修复：更新 topics 表中的 messages 数组，包含选中的内容
       const topic = await dexieStorage.topics.get(message.topicId);
       if (topic && topic.messages) {
         const messageIndex = topic.messages.findIndex(m => m.id === messageId);
         if (messageIndex >= 0) {
-          // 🔥 关键：将选中的内容保存到对话历史中
+          //  关键：将选中的内容保存到对话历史中
           // 使用类型断言来处理兼容性问题，因为topics.messages可能包含旧格式的消息
           const currentMessage = topic.messages[messageIndex] as any;
 

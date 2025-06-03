@@ -53,9 +53,19 @@ class EnhancedConsoleService {
       this.originalConsole[method] = console[method].bind(console);
       
       (console as any)[method] = (...args: any[]) => {
+        // 过滤特定的警告
+        if (method === 'error' && args.length > 0) {
+          const message = String(args[0] || '');
+          if (message.includes('non-boolean attribute `button`') ||
+              (message.includes('Received `%s` for a non-boolean attribute `%s`') &&
+               args.length > 1 && String(args[1]).includes('true') && String(args[2]).includes('button'))) {
+            return; // 不调用原始方法，也不记录到系统
+          }
+        }
+
         // 调用原始方法
         this.originalConsole[method](...args);
-        
+
         // 记录到我们的系统
         this.addEntry({
           id: this.generateId(),
@@ -182,12 +192,13 @@ class EnhancedConsoleService {
 
   private addEntry(entry: ConsoleEntry): void {
     this.entries.push(entry);
-    
+    // this.originalConsole.log('Debug: Adding entry with args', JSON.stringify(entry.args));
+
     // 限制条目数量
     if (this.entries.length > this.maxEntries) {
       this.entries = this.entries.slice(-this.maxEntries);
     }
-    
+
     // 通知监听器
     this.notifyListeners();
   }

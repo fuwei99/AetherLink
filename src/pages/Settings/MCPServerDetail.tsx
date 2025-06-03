@@ -25,14 +25,15 @@ import {
   ListItemText,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Checkbox
 } from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
 import TestIcon from '@mui/icons-material/PlayArrow';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CloudIcon from '@mui/icons-material/Cloud';
+
 import StorageIcon from '@mui/icons-material/Storage';
 import HttpIcon from '@mui/icons-material/Http';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -172,9 +173,7 @@ const MCPServerDetail: React.FC = () => {
 
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return <CloudIcon />;
-      case 'streamableHttp':
+      case 'httpStream':
         return <HttpIcon />;
       case 'inMemory':
         return <StorageIcon />;
@@ -185,10 +184,8 @@ const MCPServerDetail: React.FC = () => {
 
   const getServerTypeColor = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return '#2196f3';
-      case 'streamableHttp':
-        return '#4caf50';
+      case 'httpStream':
+        return '#9c27b0';
       case 'inMemory':
         return '#ff9800';
       default:
@@ -326,13 +323,12 @@ const MCPServerDetail: React.FC = () => {
               label="服务器类型"
               onChange={(e) => setServer({ ...server, type: e.target.value as MCPServerType })}
             >
-              <MenuItem value="sse">SSE (Server-Sent Events)</MenuItem>
-              <MenuItem value="streamableHttp">HTTP 流式传输</MenuItem>
+              <MenuItem value="httpStream">HTTP Stream (支持SSE+HTTP)</MenuItem>
               <MenuItem value="inMemory">内存服务器</MenuItem>
             </Select>
           </FormControl>
 
-          {(server.type === 'sse' || server.type === 'streamableHttp') && (
+          {server.type === 'httpStream' && (
             <TextField
               fullWidth
               label="服务器 URL"
@@ -360,7 +356,20 @@ const MCPServerDetail: React.FC = () => {
             value={server.timeout || 60}
             onChange={(e) => setServer({ ...server, timeout: parseInt(e.target.value) || 60 })}
             inputProps={{ min: 1, max: 300 }}
+            sx={{ mb: 2 }}
           />
+
+          {server.type === 'httpStream' && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={server.enableSSE === true} // 默认禁用
+                  onChange={(e) => setServer({ ...server, enableSSE: e.target.checked })}
+                />
+              }
+              label="启用SSE流（Server-Sent Events）"
+            />
+          )}
         </Paper>
 
         {/* 高级设置 */}

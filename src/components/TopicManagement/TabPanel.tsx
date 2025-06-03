@@ -12,7 +12,7 @@ interface TabPanelProps {
  * 标签面板组件，用于在标签页中显示内容
  */
 export default function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  const { children, value, index } = props;
 
   return (
     <div
@@ -34,7 +34,6 @@ export default function TabPanel(props: TabPanelProps) {
         // 滚动条样式优化
         scrollbarWidth: 'thin', // Firefox 细滚动条
       }}
-      {...other}
     >
       <Box
         sx={{

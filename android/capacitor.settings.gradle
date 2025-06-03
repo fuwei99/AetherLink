@@ -52,3 +52,6 @@ project(':capacitor-toast').projectDir = new File('../node_modules/@capacitor/to
 
 include ':capawesome-capacitor-file-picker'
 project(':capawesome-capacitor-file-picker').projectDir = new File('../node_modules/@capawesome/capacitor-file-picker/android')
+
+include ':capacitor-cors-bypass-enhanced'
+project(':capacitor-cors-bypass-enhanced').projectDir = new File('../node_modules/capacitor-cors-bypass-enhanced/android')

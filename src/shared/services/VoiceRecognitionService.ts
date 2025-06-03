@@ -99,7 +99,7 @@ class VoiceRecognitionService {
         this.provider = storedProvider;
       }
     } catch (error) {
-      console.error('加载语音识别提供者失败:', error);
+      // 静默处理错误
     }
   }
 
@@ -157,7 +157,6 @@ class VoiceRecognitionService {
         try {
           return await SpeechRecognition.checkPermissions();
         } catch (error) {
-          console.error('检查权限失败:', error);
           return { speechRecognition: 'unknown' };
         }
       }
@@ -200,7 +199,6 @@ class VoiceRecognitionService {
         try {
           return await SpeechRecognition.requestPermissions();
         } catch (error) {
-          console.error('请求权限失败:', error);
           return { speechRecognition: 'denied' };
         }
       }
@@ -255,7 +253,6 @@ class VoiceRecognitionService {
         // 添加小延迟，确保之前的录音完全停止
         await new Promise(resolve => setTimeout(resolve, 300));
       } catch (error) {
-        console.log('Error stopping previous recognition:', error);
         // 继续尝试新的录音
       }
     }
@@ -288,7 +285,6 @@ class VoiceRecognitionService {
           };
 
           this.webSpeechRecognition.onerror = (event) => {
-            console.error('Speech recognition error:', event);
             if (this.isListening) {
               this.isListening = false;
               if (this.listeningStateCallback) {
@@ -304,7 +300,6 @@ class VoiceRecognitionService {
           try {
             this.webSpeechRecognition.start();
           } catch (err) {
-            console.error('Web Speech start error:', err);
             this.isListening = false;
             if (this.listeningStateCallback) {
               this.listeningStateCallback('stopped');
@@ -434,7 +429,7 @@ class VoiceRecognitionService {
       openAIWhisperService.setTemperature(temperature);
       openAIWhisperService.setResponseFormat(responseFormat as any);
     } catch (error) {
-      console.error('加载Whisper设置失败:', error);
+      // 静默处理错误
     }
   }
 
@@ -458,13 +453,11 @@ class VoiceRecognitionService {
           try {
             this.webSpeechRecognition.stop();
           } catch (err) {
-            console.log('Web Speech API stop error (可以忽略):', err);
-            // 这里不需要重新抛出错误，因为Web Speech API可能会有一些内部状态管理问题
+            // 静默处理错误
           }
         } else {
-          await SpeechRecognition.stop().catch(err => {
-            console.log('Capacitor Speech Recognition stop error:', err);
-            // 同样不需要重新抛出错误
+          await SpeechRecognition.stop().catch(() => {
+            // 静默处理错误
           });
         }
       } else {
@@ -472,7 +465,6 @@ class VoiceRecognitionService {
       }
     } catch (error) {
       // 即使出错，也确保状态被设置为stopped
-      console.error('Error stopping recognition:', error);
       if (this.errorCallback) {
         this.errorCallback(error);
       }
@@ -526,7 +518,6 @@ class VoiceRecognitionService {
           const result = await SpeechRecognition.getSupportedLanguages();
           return result.languages || [];
         } catch (error) {
-          console.error('获取支持的语言失败:', error);
           return [];
         }
       }

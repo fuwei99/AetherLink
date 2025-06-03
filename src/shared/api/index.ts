@@ -118,7 +118,7 @@ export const sendChatRequest = async (options: ChatRequest): Promise<{ success: 
       hasOnChunk: !!options.onChunk
     });
 
-    // 🔥 重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
+    //  重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
     throw error;
   }
 }
@@ -218,7 +218,7 @@ async function processModelRequest(model: Model, options: ChatRequest): Promise<
               const currentReasoningTime = reasoningStartTime > 0 ? Date.now() - reasoningStartTime : undefined;
 
               try {
-                // 🔥 修复网络搜索后AI响应流式输出问题：直接发送内容，不使用JSON包装
+                //  修复网络搜索后AI响应流式输出问题：直接发送内容，不使用JSON包装
                 // 发送完整内容而不是增量，避免增量更新带来的问题
                 options.onChunk!(content);
               } catch (error) {
@@ -318,7 +318,7 @@ async function processModelRequest(model: Model, options: ChatRequest): Promise<
         baseUrl: model.baseUrl || '未设置'
       });
 
-      // 🔥 重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
+      //  重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
       throw error;
     }
   } catch (error) {
@@ -335,7 +335,7 @@ async function processModelRequest(model: Model, options: ChatRequest): Promise<
       hasOnChunk: !!options.onChunk
     });
 
-    // 🔥 重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
+    //  重要：抛出错误而不是返回错误对象，让 ResponseHandler 能正确处理
     throw error;
   }
 }

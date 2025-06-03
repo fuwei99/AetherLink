@@ -36,9 +36,10 @@ import {
   ContentCopy as ContentCopyIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { DropdownModelSelector } from '../ChatPage/components/DropdownModelSelector';
+import { setShowAIDebateButton } from '../../shared/store/settingsSlice';
 
 // AI辩论配置默认值常量
 const DEFAULT_CONFIG = {
@@ -86,9 +87,13 @@ interface DebateConfigGroup {
 
 const AIDebateSettings: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // 从Redux获取提供商和模型
   const providers = useSelector((state: RootState) => state.settings.providers || []);
+
+  // 从Redux获取AI辩论按钮显示设置
+  const showAIDebateButton = useSelector((state: RootState) => state.settings.showAIDebateButton ?? true);
 
   // 获取所有可用模型
   const availableModels = providers.flatMap(provider =>
@@ -826,6 +831,17 @@ const AIDebateSettings: React.FC = () => {
               />
             }
             label="启用AI辩论功能"
+            sx={{ mb: 2 }}
+          />
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showAIDebateButton}
+                onChange={(e) => dispatch(setShowAIDebateButton(e.target.checked))}
+              />
+            }
+            label="在输入框显示AI辩论按钮"
             sx={{ mb: 2 }}
           />
 

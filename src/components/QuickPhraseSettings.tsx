@@ -17,8 +17,11 @@ import {
   Paper,
   Divider,
   Chip,
-  Alert
+  Alert,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Plus as AddIcon,
   Edit as EditIcon,
@@ -28,9 +31,16 @@ import {
 import { useTheme } from '@mui/material/styles';
 import QuickPhraseService from '../shared/services/QuickPhraseService';
 import type { QuickPhrase } from '../shared/types';
+import type { RootState } from '../shared/store';
+import { setShowQuickPhraseButton } from '../shared/store/settingsSlice';
 
 const QuickPhraseSettings: React.FC = () => {
   const theme = useTheme();
+  const dispatch = useDispatch();
+
+  // 从Redux获取快捷短语按钮显示设置
+  const showQuickPhraseButton = useSelector((state: RootState) => state.settings.showQuickPhraseButton ?? true);
+
   const [phrases, setPhrases] = useState<QuickPhrase[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -141,6 +151,25 @@ const QuickPhraseSettings: React.FC = () => {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         管理您的快捷短语，在聊天时快速插入常用内容。
       </Typography>
+
+      {/* 快捷短语按钮显示控制 */}
+      <Paper sx={{ p: 2, mb: 3, border: `1px solid ${theme.palette.divider}` }}>
+        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+          显示设置
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showQuickPhraseButton}
+              onChange={(e) => dispatch(setShowQuickPhraseButton(e.target.checked))}
+            />
+          }
+          label="在输入框显示快捷短语按钮"
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+          控制是否在聊天输入框中显示快捷短语按钮
+        </Typography>
+      </Paper>
 
       {phrases.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: 'center' }}>

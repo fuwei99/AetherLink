@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../shared/store';
 import { useAppDispatch } from '../shared/store';
@@ -22,6 +22,9 @@ const AppInitializer = () => {
   const currentAssistant = useSelector((state: RootState) => state.assistants.currentAssistant);
   const currentTopicId = useSelector((state: RootState) => state.messages.currentTopicId);
   const assistants = useSelector((state: RootState) => state.assistants.assistants);
+
+  // 使用ref来避免重复执行话题归属检查
+  const lastCheckedTopicId = useRef<string | null>(null);
 
   // 初始化模型组合同步
   useModelComboSync();
@@ -98,14 +101,31 @@ const AppInitializer = () => {
             dispatch(newMessagesActions.setCurrentTopicId(currentAssistant.topics[0].id));
           }
           // 情况2: 已选中话题，但需要验证该话题是否属于当前助手
+          // 优化：只在真正需要时才进行话题归属检查，避免用户手动选择被覆盖
           else {
             // 检查当前话题是否属于当前助手
             const topicBelongsToAssistant = currentAssistant.topicIds?.includes(currentTopicId) ||
                                            currentAssistant.topics.some(topic => topic.id === currentTopicId);
 
-            if (!topicBelongsToAssistant) {
-              console.log(`[AppInitializer] 当前话题 ${currentTopicId} 不属于当前助手，自动选择第一个话题: ${currentAssistant.topics[0].name}`);
-              dispatch(newMessagesActions.setCurrentTopicId(currentAssistant.topics[0].id));
+            // 只有在话题确实不属于当前助手时才切换，并且添加额外的验证
+            // 避免重复检查同一个话题
+            if (!topicBelongsToAssistant && lastCheckedTopicId.current !== currentTopicId) {
+              lastCheckedTopicId.current = currentTopicId;
+
+              // 从数据库再次验证话题是否存在且属于当前助手
+              try {
+                const topicFromDB = await dexieStorage.getTopic(currentTopicId);
+                if (topicFromDB && topicFromDB.assistantId === currentAssistant.id) {
+                  // 话题确实属于当前助手，可能是数据同步问题，不需要切换
+                  console.log(`[AppInitializer] 话题 ${currentTopicId} 确实属于当前助手，跳过切换`);
+                } else {
+                  console.log(`[AppInitializer] 当前话题 ${currentTopicId} 不属于当前助手，自动选择第一个话题: ${currentAssistant.topics[0].name}`);
+                  dispatch(newMessagesActions.setCurrentTopicId(currentAssistant.topics[0].id));
+                }
+              } catch (error) {
+                console.error('[AppInitializer] 验证话题归属时出错:', error);
+                // 出错时保持当前状态，不进行切换
+              }
             } else {
               // 减少重复日志输出
               // console.log(`[AppInitializer] 当前话题 ${currentTopicId} 属于当前助手，无需切换`);

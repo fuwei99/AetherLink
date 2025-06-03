@@ -1,18 +1,19 @@
 import { useTheme } from '@mui/material';
 import { useSelector } from 'react-redux';
+import { useMemo } from 'react';
 import type { RootState } from '../store';
 
 export const useInputStyles = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-  
+
   // 获取输入框风格设置
   const inputBoxStyle = useSelector((state: RootState) =>
     (state.settings as any).inputBoxStyle || 'default'
   );
 
-  // 获取样式配置
-  const getStyles = () => {
+  // 使用 useMemo 缓存样式配置，避免每次渲染都创建新对象
+  const styles = useMemo(() => {
     const baseStyles = {
       inputBg: 'transparent',
       iconBg: isDarkMode ? 'rgba(40, 40, 40, 0.8)' : 'rgba(248, 250, 252, 0.8)',
@@ -40,10 +41,10 @@ export const useInputStyles = () => {
       default:
         return baseStyles;
     }
-  };
+  }, [isDarkMode, inputBoxStyle]);
 
   return {
-    styles: getStyles(),
+    styles,
     isDarkMode,
     inputBoxStyle
   };

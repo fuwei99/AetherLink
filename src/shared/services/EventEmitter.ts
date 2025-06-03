@@ -59,6 +59,9 @@ export const EVENT_NAMES = {
   ESTIMATED_TOKEN_COUNT: 'estimated_token_count',
   EDIT_CODE_BLOCK: 'edit_code_block',
 
+  // 工具相关事件
+  TOOL_USE_DETECTED: 'tool:use_detected',
+
   // API Key 错误相关事件
   API_KEY_ERROR: 'api_key:error',
   API_KEY_RETRY: 'api_key:retry',

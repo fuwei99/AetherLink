@@ -123,6 +123,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
     return (providerId: string) => providerMap.get(providerId) || providerId;
   }, [providers]);
 
+  // 创建一个稳定的空数组引用
+  const EMPTY_BLOCKS_ARRAY = useMemo(() => [], []);
+
   // 创建记忆化的 selector 来避免不必要的重新渲染
   const selectMessageBlocks = useMemo(
     () => createSelector(
@@ -131,9 +134,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
         (_state: RootState) => message.blocks // 移除箭头函数，直接访问message.blocks
       ],
       (blockEntities, blockIds) => {
-        // 如果blockIds为空或undefined，返回空数组
+        // 如果blockIds为空或undefined，返回稳定的空数组引用
         if (!blockIds || blockIds.length === 0) {
-          return [];
+          return EMPTY_BLOCKS_ARRAY;
         }
         // 直接返回映射结果，createSelector会处理记忆化
         return blockIds
@@ -141,7 +144,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
           .filter(Boolean) as MessageBlock[];
       }
     ),
-    [message.blocks] // 只有当 message.blocks 改变时才重新创建 selector
+    [message.blocks, EMPTY_BLOCKS_ARRAY] // 只有当 message.blocks 改变时才重新创建 selector
   );
 
   // 从Redux状态中获取块
@@ -609,6 +612,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         {/* 消息内容容器 */}
         <Paper
           elevation={0}
+          data-theme-style={themeStyle} // 添加主题样式属性，用于CSS选择器
           sx={{
             padding: isBubbleStyle ? 1.5 : 1,
             backgroundColor: isBubbleStyle

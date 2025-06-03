@@ -13,7 +13,7 @@ import { nanoid } from './index';
 export function fixBrokenToolTags(content: string): string {
   if (!content) return content;
 
-  // 🔥 高精度检测：只有在明确检测到工具标签上下文时才进行修复
+  //  高精度检测：只有在明确检测到工具标签上下文时才进行修复
   // 避免误伤正常的文本内容
 
   // 首先检查是否包含工具相关的关键词，避免误伤
@@ -124,7 +124,7 @@ export function parseToolUse(content: string, mcpTools: MCPTool[]): MCPToolRespo
     return [];
   }
 
-  // 🔥 自动修复被分割的工具标签
+  //  自动修复被分割的工具标签
   const fixedContent = fixBrokenToolTags(content);
 
   // 工具使用模式：<tool_use><name>工具名</name><arguments>参数</arguments></tool_use>
@@ -153,7 +153,7 @@ export function parseToolUse(content: string, mcpTools: MCPTool[]): MCPToolRespo
       continue;
     }
 
-    // 🔥 修复：使用全局唯一ID，参考 Cline 的做法
+    //  修复：使用全局唯一ID，参考 Cline 的做法
     const uniqueId = `${toolName}-${nanoid()}`;
 
     // 添加到工具数组
@@ -185,7 +185,7 @@ export function parseToolUse(content: string, mcpTools: MCPTool[]): MCPToolRespo
         parsedArgs = { input: toolArgs };
       }
 
-      // 🔥 修复：使用全局唯一ID，参考 Cline 的做法
+      //  修复：使用全局唯一ID，参考 Cline 的做法
       const uniqueId = `${toolName}-${nanoid()}`;
 
       tools.push({
@@ -443,7 +443,7 @@ export function mcpToolCallResponseToMessage(
  * 支持两种格式的移除
  */
 export function removeToolUseTags(content: string): string {
-  // 🔥 自动修复被分割的工具标签
+  //  自动修复被分割的工具标签
   const fixedContent = fixBrokenToolTags(content);
 
   // 移除格式1：<tool_use>...</tool_use>
@@ -460,7 +460,7 @@ export function removeToolUseTags(content: string): string {
  * 支持两种格式的检测
  */
 export function hasToolUseTags(content: string, mcpTools: MCPTool[] = []): boolean {
-  // 🔥 自动修复被分割的工具标签
+  //  自动修复被分割的工具标签
   const fixedContent = fixBrokenToolTags(content);
 
   // 格式1：<tool_use>...</tool_use>
@@ -497,7 +497,7 @@ export function getMCPSystemPrompt(mcpTools: MCPTool[]): string {
   systemPrompt += '你可以使用以下工具来帮助用户。使用工具时，请使用以下 XML 格式：\n\n';
   systemPrompt += '<tool_use>\n  <name>工具名称</name>\n  <arguments>{"参数": "值"}</arguments>\n</tool_use>\n\n';
 
-  // 🔥 添加严格的格式要求，防止标签分割
+  //  添加严格的格式要求，防止标签分割
   systemPrompt += '⚠️ **重要格式要求**：\n';
   systemPrompt += '- 工具标签必须完整，不能在标签中间换行或添加空格\n';
   systemPrompt += '- 错误示例：`<tool\\n_use>` 或 `<tool _use>`\n';

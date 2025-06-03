@@ -17,7 +17,7 @@ interface SystemPromptBubbleProps {
 /**
  * 系统提示词气泡组件
  * 显示在消息列表顶部，点击可以编辑系统提示词
- * 🔥 优化：使用React.memo避免不必要的重新渲染
+ *  优化：使用React.memo避免不必要的重新渲染
  */
 const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = React.memo(({ topic, assistant, onClick }) => {
   const theme = useTheme();

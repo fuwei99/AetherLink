@@ -34,6 +34,9 @@ interface WebSearchProviderSelectorProps {
   onProviderSelect?: (providerId: string) => void;
 }
 
+// 创建稳定的空数组引用
+const EMPTY_PROVIDERS_ARRAY: any[] = [];
+
 /**
  * 网络搜索提供商选择器
  * 类似最佳实例的快捷面板，适配移动端UI
@@ -48,8 +51,8 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
 
   const webSearchSettings = useSelector((state: RootState) => state.webSearch);
 
-  // 安全地解构，确保所有值都有默认值
-  const providers = webSearchSettings?.providers || [];
+  // 安全地解构，使用稳定的空数组引用
+  const providers = webSearchSettings?.providers || EMPTY_PROVIDERS_ARRAY;
   const currentProvider = webSearchSettings?.provider || 'firecrawl';
   const enabled = webSearchSettings?.enabled || false;
 
@@ -99,7 +102,7 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
       case 'bocha':
         return '🤖';
       case 'firecrawl':
-        return '🔥';
+        return '';
       default:
         return '🔍';
     }

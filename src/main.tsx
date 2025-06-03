@@ -1,3 +1,5 @@
+
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
@@ -10,8 +12,9 @@ import store from './shared/store';
 
 // 导入 EventSource polyfill 以支持移动端 SSE
 import { EventSourcePolyfill } from 'event-source-polyfill';
+import { Capacitor } from '@capacitor/core';
 
-// 🔥 保存原生fetch引用，防止被拦截器覆盖
+//  保存原生fetch引用，防止被拦截器覆盖
 if (typeof globalThis !== 'undefined' && globalThis.fetch) {
   (globalThis as any).__originalFetch = globalThis.fetch.bind(globalThis);
   console.log('[Fetch Backup] 原生fetch已备份');
@@ -22,6 +25,8 @@ if (typeof window !== 'undefined') {
   (window as any).EventSource = EventSourcePolyfill;
   console.log('[SSE Polyfill] EventSource polyfill 已加载');
 }
+
+
 
 // 初始化系统服务
 async function initializeApp() {
@@ -48,6 +53,11 @@ async function initializeApp() {
     // 初始化其他服务
     await initializeServices();
     console.log('所有服务初始化完成');
+
+    // 移动端：原生层已禁用CORS，无需代理服务
+    if (Capacitor.isNativePlatform()) {
+      console.log('移动端：原生层已禁用CORS，直接使用标准fetch');
+    }
 
     // 移除旧的系统提示词加载
     // store.dispatch(loadSystemPrompts());

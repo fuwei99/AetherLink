@@ -53,21 +53,24 @@ const ChatPage: React.FC = () => {
     loadTopic();
   }, [currentTopicId]);
 
+  // 创建稳定的空数组引用
+  const EMPTY_MESSAGES_ARRAY = useMemo(() => [], []);
+
   // 创建记忆化的消息选择器
   const selectCurrentMessages = useMemo(
     () => {
       if (!currentTopic?.id) {
-        return () => [];
+        return () => EMPTY_MESSAGES_ARRAY;
       }
       return createSelector(
         [(state: RootState) => selectMessagesForTopic(state, currentTopic.id)],
         (messages) => {
-          // 添加转换逻辑避免直接返回输入
-          return messages ? [...messages] : [];
+          // 确保返回数组，使用稳定的空数组引用
+          return Array.isArray(messages) ? messages : EMPTY_MESSAGES_ARRAY;
         }
       );
     },
-    [currentTopic?.id]
+    [currentTopic?.id, EMPTY_MESSAGES_ARRAY]
   );
 
   // 使用记忆化的选择器获取当前主题的消息
@@ -87,7 +90,7 @@ const ChatPage: React.FC = () => {
       return createSelector(
         [(state: RootState) => selectTopicStreaming(state, currentTopic.id)],
         (streaming) => {
-          // 添加转换逻辑避免直接返回输入
+          // 转换为布尔值，确保有转换逻辑
           return Boolean(streaming);
         }
       );
@@ -103,7 +106,7 @@ const ChatPage: React.FC = () => {
       return createSelector(
         [(state: RootState) => selectTopicLoading(state, currentTopic.id)],
         (loading) => {
-          // 添加转换逻辑避免直接返回输入
+          // 转换为布尔值，确保有转换逻辑
           return Boolean(loading);
         }
       );

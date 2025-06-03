@@ -11,6 +11,7 @@ export interface ModelProvider {
   models: Model[];
   providerType?: string;
   isSystem?: boolean; // 标记是否为系统供应商
+  extraHeaders?: Record<string, string>; // 额外的请求头
 }
 
 // 默认模型供应商配置
@@ -47,6 +48,30 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
       { id: 'o1-pro', name: 'o1-pro', provider: 'openai', enabled: true, isDefault: false },
       { id: 'o3', name: 'o3', provider: 'openai', enabled: true, isDefault: false },
       { id: 'o4-mini', name: 'o4-mini', provider: 'openai', enabled: true, isDefault: false },
+    ]
+  },
+  {
+    id: 'openai-aisdk',
+    name: 'OpenAI (AI SDK)',
+    avatar: '🚀',
+    color: '#10a37f',
+    isEnabled: true,
+    apiKey: '',
+    baseUrl: 'https://api.openai.com/v1',
+    providerType: 'openai-aisdk',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'gpt-4.1', name: 'GPT-4.1', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'gpt-4.1-nano', name: 'GPT-4.1 Nano', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'o1', name: 'o1', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'o1-mini', name: 'o1-mini', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'o1-pro', name: 'o1-pro', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'o3', name: 'o3', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'o3-mini', name: 'o3-mini', provider: 'openai-aisdk', enabled: true, isDefault: false },
+      { id: 'o4-mini', name: 'o4-mini', provider: 'openai-aisdk', enabled: true, isDefault: false },
     ]
   },
   {

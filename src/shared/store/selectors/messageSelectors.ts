@@ -30,7 +30,7 @@ export const selectBlocksForMessage = createSelector(
     (state: RootState, messageId: string) => {
       // 从 state.messages 中获取消息
       const message = selectMessageById(state, messageId);
-      return message?.blocks || [];
+      return message?.blocks || EMPTY_TOPICS_ARRAY;
     }
   ],
   (blockEntities, blockIds) => {
@@ -62,14 +62,11 @@ export const selectCurrentTopic = createSelector(
   }
 );
 
-// 选择所有主题 - 使用 createSelector 进行记忆化
-export const selectTopics = createSelector(
-  [() => null], // 不依赖任何状态
-  () => {
-    // 返回空数组，实际获取需要在组件中处理
-    return [];
-  }
-);
+// 创建一个稳定的空数组引用
+const EMPTY_TOPICS_ARRAY: any[] = [];
+
+// 选择所有主题 - 返回稳定的常量引用
+export const selectTopics = () => EMPTY_TOPICS_ARRAY;
 
 // 选择当前主题的消息 - 使用 createSelector 进行记忆化
 export const selectMessagesForCurrentTopic = createSelector(
@@ -78,7 +75,7 @@ export const selectMessagesForCurrentTopic = createSelector(
     (state: RootState) => state
   ],
   (currentTopicId, state) => {
-    if (!currentTopicId) return [];
+    if (!currentTopicId) return EMPTY_TOPICS_ARRAY;
     return selectMessagesForTopic(state, currentTopicId);
   }
 );
@@ -113,20 +110,8 @@ export const selectIsCurrentTopicStreaming = createSelector(
   }
 );
 
-// 选择系统提示词 - 使用 createSelector 进行记忆化
-export const selectSystemPrompt = createSelector(
-  [() => null], // 不依赖任何状态
-  () => {
-    // 返回空字符串，实际获取需要在组件中处理
-    return '';
-  }
-);
+// 选择系统提示词 - 返回常量，不需要 createSelector
+export const selectSystemPrompt = () => '';
 
-// 选择是否显示系统提示词 - 使用 createSelector 进行记忆化
-export const selectShowSystemPrompt = createSelector(
-  [() => null], // 不依赖任何状态
-  () => {
-    // 返回默认值，实际获取需要在组件中处理
-    return false;
-  }
-);
+// 选择是否显示系统提示词 - 返回常量，不需要 createSelector
+export const selectShowSystemPrompt = () => false;

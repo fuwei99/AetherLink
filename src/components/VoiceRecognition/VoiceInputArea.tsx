@@ -390,7 +390,7 @@ const VoiceInputArea: React.FC<VoiceInputAreaProps> = ({
             </Typography>
           </Box>
           <IconButton size="small" onClick={handleDiscardText}>
-            <CloseIcon fontSize="small" />
+            <X size={16} />
           </IconButton>
         </Box>
 

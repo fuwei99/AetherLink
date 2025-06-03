@@ -81,7 +81,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
     loadTopicAndAssistant();
   }, [currentTopicId]);
 
-  // 🔥 优化：监听助手更新事件，使用ref避免重复渲染
+  //  优化：监听助手更新事件，使用ref避免重复渲染
   const currentAssistantRef = useRef(currentAssistant);
   currentAssistantRef.current = currentAssistant;
 

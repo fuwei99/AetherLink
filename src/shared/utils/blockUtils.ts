@@ -170,7 +170,7 @@ export function getMainTextContent(message: Message): string {
   }
 
   try {
-    // 🔥 优先检查是否有保存的content字段（多模型对比选择后的内容）
+    //  优先检查是否有保存的content字段（多模型对比选择后的内容）
     if (typeof (message as any).content === 'string' && (message as any).content.trim()) {
       return (message as any).content;
     }
@@ -182,7 +182,7 @@ export function getMainTextContent(message: Message): string {
     // 从Redux状态获取所有块
     const state = store.getState();
 
-    // 🔥 首先检查是否有模型对比块，并且有选中的内容
+    //  首先检查是否有模型对比块，并且有选中的内容
     for (const blockId of message.blocks) {
       try {
         const block = messageBlocksSelectors.selectById(state, blockId);

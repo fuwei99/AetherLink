@@ -26,6 +26,14 @@ interface SettingsState {
   toolbarDisplayStyle: 'icon' | 'text' | 'both'; // 工具栏显示样式：仅图标、仅文字、图标+文字
   inputBoxStyle: 'default' | 'modern' | 'minimal'; // 输入框风格：默认、现代、简约
   inputLayoutStyle: 'default' | 'compact'; // 输入框布局样式：默认（分离）或聚合
+
+  // 代码块设置
+  codeStyle: string; // 代码主题风格
+  codeEditor: boolean; // 代码编辑器开关
+  codeShowLineNumbers: boolean; // 显示行号
+  codeCollapsible: boolean; // 代码可折叠
+  codeWrappable: boolean; // 代码可换行
+  codeDefaultCollapsed: boolean; // 代码块默认收起
   showSystemPromptBubble: boolean; // 是否显示系统提示词气泡
   showUserAvatar: boolean; // 是否显示用户头像
   showUserName: boolean; // 是否显示用户名称
@@ -81,6 +89,12 @@ interface SettingsState {
   
   // 版本切换样式
   versionSwitchStyle?: 'popup' | 'arrows'; // 版本切换样式：弹出列表或箭头式切换
+
+  // AI辩论功能设置
+  showAIDebateButton?: boolean; // 是否在输入框显示AI辩论按钮
+
+  // 快捷短语功能设置
+  showQuickPhraseButton?: boolean; // 是否在输入框显示快捷短语按钮
 }
 
 
@@ -106,6 +120,14 @@ const getInitialState = (): SettingsState => {
     toolbarDisplayStyle: 'both' as 'icon' | 'text' | 'both',
     inputBoxStyle: 'default' as 'default' | 'modern' | 'minimal', // 默认输入框风格
     inputLayoutStyle: 'default' as 'default' | 'compact', // 输入框布局样式：默认（分离）或聚合
+
+    // 代码块默认设置
+    codeStyle: 'auto',
+    codeEditor: false, // 默认关闭编辑器
+    codeShowLineNumbers: true, // 默认显示行号
+    codeCollapsible: true, // 默认可折叠
+    codeWrappable: true, // 默认可换行
+    codeDefaultCollapsed: false, // 默认展开代码块
     showSystemPromptBubble: true, // 默认显示系统提示词气泡
     showUserAvatar: true, // 默认显示用户头像
     showUserName: true, // 默认显示用户名称
@@ -148,7 +170,13 @@ const getInitialState = (): SettingsState => {
     toolbarCollapsed: false,    // 默认工具栏不折叠
     
     // 版本切换样式默认设置
-    versionSwitchStyle: 'popup' // 默认使用弹出列表样式
+    versionSwitchStyle: 'popup', // 默认使用弹出列表样式
+
+    // AI辩论功能默认设置
+    showAIDebateButton: true, // 默认显示AI辩论按钮
+
+    // 快捷短语功能默认设置
+    showQuickPhraseButton: true // 默认显示快捷短语按钮
   };
 
   // 设置默认模型
@@ -242,6 +270,26 @@ export const loadSettings = createAsyncThunk('settings/load', async () => {
       // 如果没有自动滚动设置，使用默认值
       if (savedSettings.autoScrollToBottom === undefined) {
         savedSettings.autoScrollToBottom = true;
+      }
+
+      // 如果没有AI辩论按钮显示设置，使用默认值
+      if (savedSettings.showAIDebateButton === undefined) {
+        savedSettings.showAIDebateButton = true;
+      }
+
+      // 如果没有快捷短语按钮显示设置，使用默认值
+      if (savedSettings.showQuickPhraseButton === undefined) {
+        savedSettings.showQuickPhraseButton = true;
+      }
+
+      // 如果没有代码块默认收起设置，使用默认值
+      if (savedSettings.codeDefaultCollapsed === undefined) {
+        savedSettings.codeDefaultCollapsed = false;
+      }
+
+      // 如果没有代码块主题设置，使用默认值
+      if (!savedSettings.codeStyle) {
+        savedSettings.codeStyle = 'auto';
       }
 
       return {
@@ -353,12 +401,13 @@ const settingsSlice = createSlice({
       if (providerIndex !== -1) {
         state.providers[providerIndex] = { ...state.providers[providerIndex], ...updates };
 
-        // 如果apiKey或baseUrl更新了，也要更新所有关联模型
-        if (updates.apiKey !== undefined || updates.baseUrl !== undefined) {
+        // 如果apiKey、baseUrl或extraHeaders更新了，也要更新所有关联模型
+        if (updates.apiKey !== undefined || updates.baseUrl !== undefined || updates.extraHeaders !== undefined) {
           state.providers[providerIndex].models = state.providers[providerIndex].models.map((model: Model) => ({
             ...model,
             apiKey: updates.apiKey !== undefined ? updates.apiKey : model.apiKey,
-            baseUrl: updates.baseUrl !== undefined ? updates.baseUrl : model.baseUrl
+            baseUrl: updates.baseUrl !== undefined ? updates.baseUrl : model.baseUrl,
+            providerExtraHeaders: updates.extraHeaders !== undefined ? updates.extraHeaders : (model as any).providerExtraHeaders
           }));
         }
       }
@@ -487,6 +536,34 @@ const settingsSlice = createSlice({
     setAutoScrollToBottom: (state, action: PayloadAction<boolean>) => {
       state.autoScrollToBottom = action.payload;
     },
+    // AI辩论按钮显示控制
+    setShowAIDebateButton: (state, action: PayloadAction<boolean>) => {
+      state.showAIDebateButton = action.payload;
+    },
+    // 快捷短语按钮显示控制
+    setShowQuickPhraseButton: (state, action: PayloadAction<boolean>) => {
+      state.showQuickPhraseButton = action.payload;
+    },
+
+    // 代码块设置 actions
+    setCodeStyle: (state, action: PayloadAction<string>) => {
+      state.codeStyle = action.payload;
+    },
+    setCodeEditor: (state, action: PayloadAction<boolean>) => {
+      state.codeEditor = action.payload;
+    },
+    setCodeShowLineNumbers: (state, action: PayloadAction<boolean>) => {
+      state.codeShowLineNumbers = action.payload;
+    },
+    setCodeCollapsible: (state, action: PayloadAction<boolean>) => {
+      state.codeCollapsible = action.payload;
+    },
+    setCodeWrappable: (state, action: PayloadAction<boolean>) => {
+      state.codeWrappable = action.payload;
+    },
+    setCodeDefaultCollapsed: (state, action: PayloadAction<boolean>) => {
+      state.codeDefaultCollapsed = action.payload;
+    },
   },
   extraReducers: (builder) => {
     // 处理加载设置
@@ -555,6 +632,17 @@ export const {
   setRenderUserInputAsMarkdown,
   // 自动滚动控制
   setAutoScrollToBottom,
+  // AI辩论按钮显示控制
+  setShowAIDebateButton,
+  // 快捷短语按钮显示控制
+  setShowQuickPhraseButton,
+  // 代码块设置控制
+  setCodeStyle,
+  setCodeEditor,
+  setCodeShowLineNumbers,
+  setCodeCollapsible,
+  setCodeWrappable,
+  setCodeDefaultCollapsed,
 } = settingsSlice.actions;
 
 // 重用现有的action creators，但添加异步保存

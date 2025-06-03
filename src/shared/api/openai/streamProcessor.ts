@@ -123,18 +123,12 @@ export class OpenAIStreamProcessor {
       // 记录开始时间
       this.reasoningStartTime = 0;
 
-      // 检查是否为DeepSeek Reasoner模型
-      const isDeepSeekReasoner = this.model.id.includes('deepseek-reasoner') ||
-                                (this.model.provider === 'deepseek' && this.model.id.includes('reasoner'));
-
       // 使用中间件处理流式响应
       const { stream: processedStream } = await extractReasoningMiddleware<CompleteOpenAIStreamChunk>({
         openingTag: reasoningTag.openingTag,
         closingTag: reasoningTag.closingTag,
         separator: reasoningTag.separator,
-        enableReasoning: this.enableReasoning,
-        // 为DeepSeek Reasoner模型启用特殊处理
-        isDeepSeekReasoner: isDeepSeekReasoner
+        enableReasoning: this.enableReasoning
       }).wrapStream({
         doStream: async () => ({
           stream: asyncGeneratorToReadableStream(openAIChunkToTextDelta(stream))
@@ -218,7 +212,7 @@ export class OpenAIStreamProcessor {
 
       this.content += chunk.textDelta;
 
-      // 🔥 修复流式输出问题：优先使用onChunk发送text.delta事件
+      //  修复流式输出问题：优先使用onChunk发送text.delta事件
       if (this.onChunk) {
         this.onChunk({
           type: 'text.delta',
@@ -228,8 +222,8 @@ export class OpenAIStreamProcessor {
           topicId: this.topicId
         });
       } else if (this.onUpdate) {
-        // 兼容旧的onUpdate回调
-        this.onUpdate(chunk.textDelta, this.reasoning);
+        // 兼容旧的onUpdate回调 - 传递累积内容而不是增量
+        this.onUpdate(this.content, this.reasoning);
       }
 
       console.log(`[OpenAIStreamProcessor] 文本增量处理完成，长度: ${chunk.textDelta.length}`);
@@ -242,7 +236,7 @@ export class OpenAIStreamProcessor {
 
       this.reasoning += chunk.textDelta;
 
-      // 🔥 恢复思考内容的onUpdate处理 - 组合模型依赖这个机制
+      //  恢复思考内容的onUpdate处理 - 组合模型依赖这个机制
       if (this.onUpdate) {
         this.onUpdate(this.content, this.reasoning); // 传递完整的推理内容
       }
@@ -283,7 +277,7 @@ export class OpenAIStreamProcessor {
 
                 this.reasoning += args.thinking;
 
-                // 🔥 修复组合模型问题：确保思考内容通过onUpdate传递
+                //  修复组合模型问题：确保思考内容通过onUpdate传递
                 if (this.onUpdate) {
                   this.onUpdate('', args.thinking); // 推理内容通过reasoning参数传递
                 }
@@ -310,7 +304,7 @@ export class OpenAIStreamProcessor {
         const reasoningAsContent = this.reasoning;
         this.content = reasoningAsContent;
 
-        // 🔥 修复流式输出问题：发送text.complete事件
+        //  修复流式输出问题：发送text.complete事件
         if (this.onChunk) {
           this.onChunk({
             type: 'text.complete',

@@ -350,8 +350,9 @@ export default function ContextSettings({
                 label="数学公式渲染器"
                 onChange={handleMathRendererChange as any}
               >
-                <MenuItem value="KaTeX">KaTeX (轻量)</MenuItem>
-                <MenuItem value="MathJax">MathJax (兼容性好)</MenuItem>
+                <MenuItem value="KaTeX">KaTeX</MenuItem>
+                <MenuItem value="MathJax">MathJax</MenuItem>
+                <MenuItem value="none">禁用</MenuItem>
               </Select>
             </FormControl>
           </Box>

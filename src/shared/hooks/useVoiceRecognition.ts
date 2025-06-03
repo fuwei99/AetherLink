@@ -24,7 +24,6 @@ export const useVoiceRecognition = () => {
     };
 
     const handleError = (err: any) => {
-      console.error('Voice recognition error:', err);
       setError(err);
       setIsListening(false);
     };
@@ -81,7 +80,6 @@ export const useVoiceRecognition = () => {
     try {
       await voiceRecognitionService.stopRecognition();
     } catch (err) {
-      console.error('Error in voiceRecognitionService.stopRecognition:', err);
       setError(err);
     }
   }, []);

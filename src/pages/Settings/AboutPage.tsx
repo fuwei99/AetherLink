@@ -45,17 +45,20 @@ const AboutPage: React.FC = () => {
         background: `linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)`,
         display: 'flex',
         flexDirection: 'column',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {/* 顶部 AppBar 透明渐变，滚动时加阴影 */}
       <AppBar
-        position="static"
+        position="sticky"
         elevation={0}
         sx={{
           background: 'rgba(255,255,255,0.15)',
           backdropFilter: 'blur(12px)',
           boxShadow: '0 2px 16px 0 rgba(147,51,234,0.08)',
           borderBottom: `1.5px solid ${theme.palette.mode === 'dark' ? 'rgba(147,51,234,0.18)' : 'rgba(147,51,234,0.12)'}`,
+          zIndex: 1100,
         }}
       >
         <Toolbar>
@@ -91,7 +94,14 @@ const AboutPage: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="sm" sx={{ mt: 4, mb: 2, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Container maxWidth="sm" sx={{ 
+        py: 4,
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        overflowY: 'auto',
+      }}>
         <Fade in timeout={800}>
           <Paper
             elevation={0}
@@ -103,7 +113,8 @@ const AboutPage: React.FC = () => {
               backdropFilter: 'blur(18px)',
               border: '1.5px solid rgba(147,51,234,0.13)',
               position: 'relative',
-              overflow: 'hidden',
+              overflow: 'visible',
+              width: '100%',
             }}
           >
             {/* 渐变分割线 */}
@@ -184,7 +195,7 @@ const AboutPage: React.FC = () => {
                 <Typography variant="body2" sx={{ mb: 1.5, color: '#6d28d9', fontWeight: 500 }}>
                   如有问题或建议，欢迎加入我们的QQ群进行反馈
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Chip label="群号: 930126592" variant="outlined" size="small" sx={{ borderColor: '#a18cd1', color: '#7c3aed', fontWeight: 700, fontSize: 15 }} />
                   <Button
                     variant="contained"
@@ -215,7 +226,7 @@ const AboutPage: React.FC = () => {
             </Typography>
 
             {/* 底部按钮组 */}
-            <Box sx={{ mt: 5, display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Box sx={{ mt: 5, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Button
                 variant="outlined"
                 href="https://github.com/1600822305/CS-LLM-house"
@@ -273,6 +284,10 @@ const AboutPage: React.FC = () => {
           0% { filter: drop-shadow(0 0 0 #a18cd1); }
           50% { filter: drop-shadow(0 0 8px #a18cd1); }
           100% { filter: drop-shadow(0 0 0 #a18cd1); }
+        }
+        /* 增强移动端滚动体验 */
+        html, body {
+          -webkit-overflow-scrolling: touch;
         }
       `}</style>
     </Box>

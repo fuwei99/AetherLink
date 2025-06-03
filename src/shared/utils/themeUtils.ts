@@ -27,7 +27,8 @@ export const getThemeColors = (theme: Theme, themeStyle?: ThemeStyle) => {
     aiBubbleColor: (() => {
       switch (themeStyle) {
         case 'claude':
-          return isDark ? alpha('#D97706', 0.2) : alpha('#D97706', 0.15);
+          // 修复：使用不透明的背景色，避免"双层"效果
+          return isDark ? '#2A1F1A' : '#FEF3E2'; // 深色：深棕色，浅色：浅米色
         case 'minimal':
           return isDark ? alpha('#FFFFFF', 0.08) : alpha('#000000', 0.05);
         case 'vibrant':
@@ -40,7 +41,8 @@ export const getThemeColors = (theme: Theme, themeStyle?: ThemeStyle) => {
     aiBubbleActiveColor: (() => {
       switch (themeStyle) {
         case 'claude':
-          return isDark ? alpha('#D97706', 0.3) : alpha('#D97706', 0.2);
+          // 修复：使用不透明的悬停背景色
+          return isDark ? '#3A2B20' : '#FDE8C7'; // 深色：稍亮的深棕色，浅色：稍深的米色
         case 'minimal':
           return isDark ? alpha('#FFFFFF', 0.12) : alpha('#000000', 0.08);
         case 'vibrant':
@@ -54,7 +56,8 @@ export const getThemeColors = (theme: Theme, themeStyle?: ThemeStyle) => {
     userBubbleColor: (() => {
       switch (themeStyle) {
         case 'claude':
-          return isDark ? alpha('#059669', 0.2) : alpha('#059669', 0.15);
+          // 修复：使用不透明的背景色，避免"双层"效果
+          return isDark ? '#1A2E26' : '#E6F7F1'; // 深色：深绿色，浅色：浅绿色
         case 'minimal':
           return isDark ? alpha('#6B7280', 0.15) : alpha('#6B7280', 0.1);
         case 'vibrant':

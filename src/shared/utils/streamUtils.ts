@@ -97,8 +97,13 @@ export type OpenAIStreamChunk =
 export async function* openAIChunkToTextDelta(stream: AsyncIterable<any>): AsyncGenerator<OpenAIStreamChunk> {
   // 用于跟踪已经收到的完整推理消息，避免重复处理
   let processedReasoning = '';
+  let chunkCount = 0;
+
+  console.log('[openAIChunkToTextDelta] 开始处理流式响应');
 
   for await (const chunk of stream) {
+    chunkCount++;
+    console.log(`[openAIChunkToTextDelta] 收到第${chunkCount}个chunk:`, JSON.stringify(chunk).substring(0, 200));
     if (chunk.choices && chunk.choices.length > 0) {
       const delta = chunk.choices[0].delta;
 

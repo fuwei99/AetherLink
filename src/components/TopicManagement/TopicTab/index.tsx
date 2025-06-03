@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   List,
@@ -16,6 +16,7 @@ import {
   DialogActions,
   Divider
 } from '@mui/material';
+import { debounce } from 'lodash';
 import {
   Plus,
   Search,
@@ -79,6 +80,7 @@ export default function TopicTab({
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 
   // 话题菜单相关状态
@@ -110,6 +112,14 @@ export default function TopicTab({
 
   // 使用话题分组钩子
   const { topicGroups, topicGroupMap, ungroupedTopics } = useTopicGroups(topics);
+
+  // 创建防抖搜索函数
+  const debouncedSearch = useMemo(
+    () => debounce((query: string) => {
+      setDebouncedSearchQuery(query);
+    }, 300), // 300ms 防抖延迟
+    []
+  );
 
   // 获取所有助手列表（用于移动功能）
   const allAssistants = useSelector((state: RootState) => state.assistants.assistants);
@@ -209,21 +219,19 @@ export default function TopicTab({
     };
   }, [currentAssistant]);
 
-  // 自动选择第一个话题（优化：解决状态同步时序问题）
+  // 自动选择第一个话题（优化：只在真正需要时自动选择）
   useEffect(() => {
     // 优化条件检查：
     // 1. 非加载状态
     // 2. 有话题列表
-    // 3. 没有当前选中的话题ID（使用Redux状态而不是本地状态）
+    // 3. 没有当前选中的话题ID
     if (!isLoading && topics.length > 0) {
-      // 从Redux获取当前话题ID，避免本地状态异步加载的时序问题
+      // 从Redux获取当前话题ID
       const currentTopicId = store.getState().messages?.currentTopicId;
 
-      // 检查当前话题ID是否存在于当前话题列表中
-      const currentTopicExists = currentTopicId && topics.some(topic => topic.id === currentTopicId);
-
-      // 如果没有当前话题ID，或者当前话题不在当前助手的话题列表中，自动选择第一个话题
-      if (!currentTopicId || !currentTopicExists) {
+      // 只有在完全没有选中话题时才自动选择第一个话题
+      // 移除"话题不在当前助手列表中"的检查，避免用户选择被覆盖
+      if (!currentTopicId) {
         console.log('[TopicTab] 自动选择第一个话题:', topics[0].name || topics[0].title);
 
         // 使用requestAnimationFrame确保在下一次渲染帧中执行
@@ -241,10 +249,10 @@ export default function TopicTab({
       if (!isLoading && topics.length > 0) {
         // 使用Redux状态检查，与主自动选择逻辑保持一致
         const currentTopicId = store.getState().messages?.currentTopicId;
-        const currentTopicExists = currentTopicId && topics.some(topic => topic.id === currentTopicId);
 
-        // 如果没有当前话题ID，或者当前话题不在当前助手的话题列表中，自动选择第一个话题
-        if (!currentTopicId || !currentTopicExists) {
+        // 只有在完全没有选中话题时才自动选择第一个话题
+        // 移除"话题不在当前助手列表中"的检查，避免用户选择被覆盖
+        if (!currentTopicId) {
           console.log('[TopicTab] SHOW_TOPIC_SIDEBAR事件触发自动选择第一个话题:', topics[0].name);
 
           // 使用requestAnimationFrame确保在下一次渲染帧中执行
@@ -262,13 +270,13 @@ export default function TopicTab({
     };
   }, [topics, isLoading, onSelectTopic]);
 
-  // 筛选话题
-  const filteredTopics = React.useMemo(() => {
-    if (!searchQuery) return topics;
+  // 筛选话题 - 使用防抖搜索查询
+  const filteredTopics = useMemo(() => {
+    if (!debouncedSearchQuery) return topics;
     return topics.filter(topic => {
       // 检查名称或标题
-      if ((topic.name && topic.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (topic.title && topic.title.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      if ((topic.name && topic.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) ||
+          (topic.title && topic.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))) {
         return true;
       }
 
@@ -277,26 +285,32 @@ export default function TopicTab({
         // 使用getMainTextContent获取消息内容
         const content = getMainTextContent(message);
         if (content) {
-          return content.toLowerCase().includes(searchQuery.toLowerCase());
+          return content.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
         }
         return false;
       });
     });
-  }, [searchQuery, topics]);
+  }, [debouncedSearchQuery, topics]);
 
   // 搜索相关处理函数
   const handleSearchClick = () => {
     setShowSearch(true);
   };
 
-  const handleCloseSearch = () => {
+  const handleCloseSearch = useCallback(() => {
     setShowSearch(false);
     setSearchQuery('');
-  };
+    setDebouncedSearchQuery('');
+    // 取消待执行的防抖函数
+    debouncedSearch.cancel();
+  }, [debouncedSearch]);
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSearchQuery(value);
+    // 触发防抖搜索
+    debouncedSearch(value);
+  }, [debouncedSearch]);
 
   // 打开话题菜单
   const handleOpenMenu = (event: React.MouseEvent, topic: ChatTopic) => {
@@ -678,16 +692,16 @@ export default function TopicTab({
           <List sx={{ flexGrow: 1, overflow: 'auto' }}>
             {ungroupedTopics
               .filter(topic => {
-                if (!searchQuery) return true;
+                if (!debouncedSearchQuery) return true;
                 // 检查名称或标题
-                if ((topic.name && topic.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                    (topic.title && topic.title.toLowerCase().includes(searchQuery.toLowerCase()))) {
+                if ((topic.name && topic.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) ||
+                    (topic.title && topic.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))) {
                   return true;
                 }
                 // 检查消息内容
                 return (topic.messages || []).some(message => {
                   const content = getMainTextContent(message);
-                  return content ? content.toLowerCase().includes(searchQuery.toLowerCase()) : false;
+                  return content ? content.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) : false;
                 });
               })
               .map(topic => (

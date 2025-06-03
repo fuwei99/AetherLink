@@ -101,24 +101,35 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
     setContent(block.content || '');
   }, [block.content]);
 
-  // 添加流式输出事件监听 - 简化版本，参考最佳实例
+  // 添加流式输出事件监听 - 改进版本，确保不丢失内容
   useEffect(() => {
     // 检查是否正在流式输出
     if (isThinking) {
       // 监听流式输出事件
       const thinkingDeltaHandler = () => {
-        setContent(block.content || '');
+        const newContent = block.content || '';
+        setContent(newContent);
         forceUpdate();
       };
 
-      // 只订阅思考完成事件，减少重复更新
+      // 订阅思考增量和完成事件
+      const unsubscribeThinkingDelta = EventEmitter.on(EVENT_NAMES.STREAM_THINKING_DELTA, thinkingDeltaHandler);
       const unsubscribeThinkingComplete = EventEmitter.on(EVENT_NAMES.STREAM_THINKING_COMPLETE, thinkingDeltaHandler);
 
       return () => {
+        unsubscribeThinkingDelta();
         unsubscribeThinkingComplete();
       };
     }
   }, [isThinking, block.content]);
+
+  // 确保内容与block同步
+  useEffect(() => {
+    const newContent = block.content || '';
+    if (newContent !== content) {
+      setContent(newContent);
+    }
+  }, [block.content, content]);
 
   // 修复：分离思考时间更新和自动折叠逻辑
   // 思考时间计时器 - 只在思考状态变化时更新

@@ -655,7 +655,7 @@ export default class GeminiProvider extends BaseProvider {
       systemInstruction = assistant.prompt || '';
     }
 
-    // 🔥 调试日志：显示系统提示词的最终处理结果
+    //  调试日志：显示系统提示词的最终处理结果
     console.log(`[GeminiProvider.completions] 系统提示词最终处理:`, {
       useSystemPromptForTools: this.useSystemPromptForTools,
       assistantPrompt: assistant.prompt?.substring(0, 50) + (assistant.prompt?.length > 50 ? '...' : ''),
@@ -697,7 +697,7 @@ export default class GeminiProvider extends BaseProvider {
       temperature: generateContentConfig.temperature,
       topP: generateContentConfig.topP,
       maxOutputTokens: generateContentConfig.maxOutputTokens,
-      // 🔥 添加系统提示词信息到日志
+      //  添加系统提示词信息到日志
       systemInstruction: generateContentConfig.systemInstruction?.substring(0, 50) + (generateContentConfig.systemInstruction?.length > 50 ? '...' : ''),
       systemInstructionLength: generateContentConfig.systemInstruction?.length || 0,
       geminiSpecificParams: this.getGeminiSpecificParameters(assistant),
@@ -833,7 +833,7 @@ export default class GeminiProvider extends BaseProvider {
                   time_first_token_millsec = new Date().getTime();
                 }
 
-                // 🔥 修复：当遇到正常文本且有思考内容时，发送THINKING_COMPLETE
+                //  修复：当遇到正常文本且有思考内容时，发送THINKING_COMPLETE
                 if (thinkingContent) {
                   onChunk({
                     type: 'thinking.complete',
@@ -1325,11 +1325,11 @@ export default class GeminiProvider extends BaseProvider {
       assistant?: any;
     }
   ): Promise<string | { content: string; reasoning?: string; reasoningTime?: number }> {
-    // 🔥 修复：正确处理系统提示词传递
+    //  修复：正确处理系统提示词传递
     // 如果有传入的assistant，使用它；否则创建一个新的assistant对象
     const assistant = options?.assistant || {
       model: this.model,
-      // 🔥 关键修复：使用systemPrompt参数作为prompt
+      //  关键修复：使用systemPrompt参数作为prompt
       prompt: options?.systemPrompt || '',
       settings: {
         temperature: this.model.temperature || 0.7,
@@ -1342,12 +1342,12 @@ export default class GeminiProvider extends BaseProvider {
       enableGenerateImage: isGenerateImageModel(this.model)
     };
 
-    // 🔥 修复：如果有传入的assistant但没有prompt，使用systemPrompt
+    //  修复：如果有传入的assistant但没有prompt，使用systemPrompt
     if (options?.assistant && options?.systemPrompt && !options.assistant.prompt) {
       assistant.prompt = options.systemPrompt;
     }
 
-    // 🔥 调试日志：显示最终使用的系统提示词
+    //  调试日志：显示最终使用的系统提示词
     console.log(`[GeminiProvider.sendChatMessage] 系统提示词处理:`, {
       hasSystemPrompt: !!options?.systemPrompt,
       systemPromptLength: options?.systemPrompt?.length || 0,

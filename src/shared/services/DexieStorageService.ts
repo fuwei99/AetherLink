@@ -544,6 +544,14 @@ class DexieStorageService extends Dexie {
     return await this.message_blocks.where('messageId').equals(messageId).toArray();
   }
 
+  // 批量获取多个消息的块，优化性能
+  async getMessageBlocksByMessageIds(messageIds: string[]): Promise<MessageBlock[]> {
+    if (messageIds.length === 0) return [];
+
+    // 使用 anyOf 进行批量查询，比多次单独查询更高效
+    return await this.message_blocks.where('messageId').anyOf(messageIds).toArray();
+  }
+
   async deleteMessageBlock(id: string): Promise<void> {
     await this.message_blocks.delete(id);
   }
@@ -1113,7 +1121,7 @@ class DexieStorageService extends Dexie {
     async (blockId: string, changes: any) => {
       return this.updateMessageBlock(blockId, changes);
     },
-    150 // 150ms节流时间 - 与最佳实例保持一致
+    300 // 增加到300ms节流时间，减少数据库写入频率
   );
 
   /**

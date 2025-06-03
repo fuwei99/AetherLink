@@ -377,6 +377,11 @@ export default function SettingsTab({
               ...appSettings,
               mathRenderer: value
             }));
+
+            // 触发自定义事件，通知其他组件设置已更改
+            window.dispatchEvent(new CustomEvent('appSettingsChanged', {
+              detail: { mathRenderer: value }
+            }));
           } catch (error) {
             console.error('保存设置失败', error);
           }

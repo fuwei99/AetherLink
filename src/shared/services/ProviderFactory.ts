@@ -109,6 +109,28 @@ export function getProviderApi(model: Model): any {
       // Azure OpenAI使用OpenAI兼容API，但有特殊配置
       console.log(`[ProviderFactory] 使用Azure OpenAI API`);
       return openaiApi;
+    case 'openai-aisdk':
+      // 使用AI SDK版本的OpenAI API
+      console.log(`[ProviderFactory] 使用AI SDK OpenAI API`);
+      return {
+        sendChatRequest: async (messages: any[], model: Model, onUpdate?: (content: string, reasoning?: string) => void) => {
+          // 动态导入AI SDK模块
+          const { OpenAIAISDKProvider } = await import('../api/openai-aisdk');
+          const provider = new OpenAIAISDKProvider(model);
+          return await provider.sendChatMessage(messages, { onUpdate });
+        },
+        testConnection: async (model: Model) => {
+          try {
+            const { OpenAIAISDKProvider } = await import('../api/openai-aisdk');
+            const provider = new OpenAIAISDKProvider(model);
+            // 简单的连接测试
+            return true;
+          } catch (error) {
+            console.error('AI SDK连接测试失败:', error);
+            return false;
+          }
+        }
+      };
     case 'openai':
     case 'deepseek': // DeepSeek使用OpenAI兼容API
     case 'google':   // Google使用OpenAI兼容API
@@ -273,6 +295,11 @@ export async function fetchModels(provider: any): Promise<any[]> {
           { id: 'glm-4v-plus', name: 'GLM-4V-Plus', description: 'GLM-4V增强版', owned_by: 'zhipu' },
           { id: 'glm-4-alltools', name: 'GLM-4-AllTools', description: 'GLM-4全工具版，支持网络搜索等工具', owned_by: 'zhipu' }
         ];
+        break;
+      case 'openai-aisdk':
+        // AI SDK版本使用相同的模型获取逻辑
+        console.log(`[fetchModels] AI SDK OpenAI使用标准模型获取`);
+        rawModels = await openaiApi.fetchModels(provider);
         break;
       case 'openai':
       case 'google':

@@ -80,8 +80,68 @@ export function createClient(model: Model): OpenAI {
 
     // 添加额外头部（如果有）
     if (model.extraHeaders) {
-      config.defaultHeaders = model.extraHeaders;
-      console.log(`[OpenAI createClient] 设置额外头部: ${Object.keys(model.extraHeaders).join(', ')}`);
+      config.defaultHeaders = {
+        ...config.defaultHeaders,
+        ...model.extraHeaders
+      };
+      console.log(`[OpenAI createClient] 设置模型额外头部: ${Object.keys(model.extraHeaders).join(', ')}`);
+    }
+
+    // 添加供应商级别的额外头部（如果有）
+    if ((model as any).providerExtraHeaders) {
+      const providerHeaders = (model as any).providerExtraHeaders;
+
+      // 处理禁用的请求头（值为 'REMOVE' 的头部将被删除）
+      const filteredHeaders: Record<string, string> = {};
+      const headersToRemove: string[] = [];
+
+      Object.entries(providerHeaders).forEach(([key, value]) => {
+        if (value === 'REMOVE') {
+          headersToRemove.push(key.toLowerCase());
+        } else if (value !== null && value !== undefined && value !== '') {
+          filteredHeaders[key] = value as string;
+        }
+      });
+
+      // 如果有需要删除的头部，创建自定义的 fetch 函数来拦截和删除这些头部
+      if (headersToRemove.length > 0) {
+        const originalFetch = config.fetch || fetch;
+        config.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
+          if (init?.headers) {
+            const headers = new Headers(init.headers);
+
+            // 删除指定的头部
+            headersToRemove.forEach(headerName => {
+              // 删除完全匹配的头部
+              headers.delete(headerName);
+
+              // 对于 stainless 相关头部，进行模糊匹配删除
+              if (headerName.includes('stainless')) {
+                const keysToDelete: string[] = [];
+                for (const [key] of headers.entries()) {
+                  if (key.toLowerCase().includes('stainless')) {
+                    keysToDelete.push(key);
+                  }
+                }
+                keysToDelete.forEach(key => headers.delete(key));
+              }
+            });
+
+            init.headers = headers;
+          }
+          return originalFetch(url.toString(), init);
+        };
+        console.log(`[OpenAI createClient] 配置删除请求头: ${headersToRemove.join(', ')}`);
+      }
+
+      // 添加自定义头部
+      if (Object.keys(filteredHeaders).length > 0) {
+        config.defaultHeaders = {
+          ...config.defaultHeaders,
+          ...filteredHeaders
+        };
+        console.log(`[OpenAI createClient] 设置供应商额外头部: ${Object.keys(filteredHeaders).join(', ')}`);
+      }
     }
 
     // 创建客户端

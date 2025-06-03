@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   List,
@@ -12,20 +12,67 @@ import {
   Typography,
   Divider,
   Collapse,
-  IconButton
+  IconButton,
+  ListSubheader
 } from '@mui/material';
 import { Code, ChevronDown, ChevronUp, Edit, Palette } from 'lucide-react';
+import { useAppSelector, useAppDispatch } from '../../../shared/store';
+import {
+  setCodeStyle,
+  setCodeEditor,
+  setCodeShowLineNumbers,
+  setCodeCollapsible,
+  setCodeWrappable,
+  setCodeDefaultCollapsed
+} from '../../../shared/store/settingsSlice';
 
-// 代码风格选项
+// 代码风格选项 - 大幅扩展主题选择
 const CODE_STYLES = [
-  { value: 'vscDarkPlus', label: 'VS Code Dark+', description: '深色主题，适合夜间使用' },
-  { value: 'vs', label: 'VS Code Light', description: '浅色主题，适合白天使用' },
-  { value: 'github', label: 'GitHub', description: 'GitHub 风格主题' },
-  { value: 'monokai', label: 'Monokai', description: '经典深色主题' },
-  { value: 'solarizedlight', label: 'Solarized Light', description: 'Solarized 浅色主题' },
-  { value: 'solarizeddark', label: 'Solarized Dark', description: 'Solarized 深色主题' },
+  // 自动和经典主题
+  { value: 'auto', label: 'Auto', description: '自动跟随系统主题' },
+  { value: 'vs-code-light', label: 'VS Code Light', description: 'VS Code 浅色主题' },
+  { value: 'vs-code-dark', label: 'VS Code Dark', description: 'VS Code 深色主题' },
+  { value: 'github-light', label: 'GitHub Light', description: 'GitHub 风格浅色主题' },
+  { value: 'github-dark', label: 'GitHub Dark', description: 'GitHub 风格深色主题' },
+  { value: 'one-dark-pro', label: 'One Dark Pro', description: 'Atom 风格深色主题' },
+  { value: 'one-light', label: 'One Light', description: 'Atom 风格浅色主题' },
   { value: 'tomorrow', label: 'Tomorrow', description: '清新浅色主题' },
-  { value: 'twilight', label: 'Twilight', description: '暮光深色主题' }
+  { value: 'twilight', label: 'Twilight', description: '暮光深色主题' },
+
+  // 流行编辑器主题
+  { value: 'atom-dark', label: 'Atom Dark', description: 'Atom 编辑器深色主题' },
+  { value: 'darcula', label: 'Darcula', description: 'JetBrains 经典深色主题' },
+  { value: 'nord', label: 'Nord', description: '北欧风格深色主题' },
+  { value: 'dracula', label: 'Dracula', description: '经典深色主题' },
+  { value: 'monokai', label: 'Monokai', description: '经典深色主题' },
+  { value: 'lucario', label: 'Lucario', description: '蓝紫色深色主题' },
+
+  // Material 系列
+  { value: 'material-dark', label: 'Material Dark', description: 'Material Design 深色主题' },
+  { value: 'material-light', label: 'Material Light', description: 'Material Design 浅色主题' },
+  { value: 'material-oceanic', label: 'Material Oceanic', description: 'Material 海洋主题' },
+
+  // Duotone 系列
+  { value: 'duotone-dark', label: 'Duotone Dark', description: '双色调深色主题' },
+  { value: 'duotone-light', label: 'Duotone Light', description: '双色调浅色主题' },
+  { value: 'duotone-earth', label: 'Duotone Earth', description: '双色调大地主题' },
+  { value: 'duotone-forest', label: 'Duotone Forest', description: '双色调森林主题' },
+  { value: 'duotone-sea', label: 'Duotone Sea', description: '双色调海洋主题' },
+  { value: 'duotone-space', label: 'Duotone Space', description: '双色调太空主题' },
+
+  // 特色主题
+  { value: 'synthwave-84', label: 'Synthwave 84', description: '赛博朋克风格主题' },
+  { value: 'shades-of-purple', label: 'Shades of Purple', description: '紫色系主题' },
+  { value: 'hopscotch', label: 'Hopscotch', description: '跳房子主题' },
+  { value: 'coldark-cold', label: 'Coldark Cold', description: '冷色调浅色主题' },
+  { value: 'coldark-dark', label: 'Coldark Dark', description: '冷色调深色主题' },
+  { value: 'solarized-light', label: 'Solarized Light', description: 'Solarized 浅色主题' },
+  { value: 'base16-light', label: 'Base16 Light', description: 'Base16 浅色主题' },
+  { value: 'coy', label: 'Coy', description: '简约浅色主题' },
+  { value: 'cb', label: 'CB', description: '经典黑白主题' },
+  { value: 'pojoaque', label: 'Pojoaque', description: '温暖色调主题' },
+  { value: 'xonokai', label: 'Xonokai', description: 'Monokai 变体主题' },
+  { value: 'z-touch', label: 'Z-Touch', description: '触感风格主题' }
 ];
 
 interface CodeBlockSettingsProps {
@@ -36,101 +83,18 @@ interface CodeBlockSettingsProps {
  * 代码块设置组件
  */
 const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = ({ onSettingChange }) => {
+  const dispatch = useAppDispatch();
   const [expanded, setExpanded] = useState(false);
-  const [codeStyle, setCodeStyle] = useState('vscDarkPlus');
-  const [editorEnabled, setEditorEnabled] = useState(false);
-  const [showLineNumbers, setShowLineNumbers] = useState(false);
-  const [wordWrap, setWordWrap] = useState(true);
-  const [copyEnabled, setCopyEnabled] = useState(true);
 
-  // 从 localStorage 加载设置
-  useEffect(() => {
-    try {
-      const appSettingsJSON = localStorage.getItem('appSettings');
-      if (appSettingsJSON) {
-        const appSettings = JSON.parse(appSettingsJSON);
-
-        // 加载代码块相关设置
-        if (appSettings.codeStyle) setCodeStyle(appSettings.codeStyle);
-        if (appSettings.codeEditorEnabled !== undefined) setEditorEnabled(appSettings.codeEditorEnabled);
-        if (appSettings.codeShowLineNumbers !== undefined) setShowLineNumbers(appSettings.codeShowLineNumbers);
-        if (appSettings.codeWordWrap !== undefined) setWordWrap(appSettings.codeWordWrap);
-        if (appSettings.codeCopyEnabled !== undefined) setCopyEnabled(appSettings.codeCopyEnabled);
-
-        console.log('[CodeBlockSettings] 从localStorage加载的代码块设置:', {
-          codeStyle: appSettings.codeStyle,
-          editorEnabled: appSettings.codeEditorEnabled,
-          showLineNumbers: appSettings.codeShowLineNumbers,
-          wordWrap: appSettings.codeWordWrap,
-          copyEnabled: appSettings.codeCopyEnabled
-        });
-      }
-    } catch (error) {
-      console.error('加载代码块设置失败:', error);
-    }
-  }, []);
-
-  // 保存设置到 localStorage
-  const saveSettingToStorage = (key: string, value: any) => {
-    try {
-      const appSettingsJSON = localStorage.getItem('appSettings');
-      const appSettings = appSettingsJSON ? JSON.parse(appSettingsJSON) : {};
-      const newSettings = {
-        ...appSettings,
-        [key]: value
-      };
-      localStorage.setItem('appSettings', JSON.stringify(newSettings));
-      console.log(`[CodeBlockSettings] 设置已保存: ${key} = ${value}`);
-
-      // 触发自定义事件通知设置变化
-      console.log(`[CodeBlockSettings] 触发settingsChanged事件: ${key} = ${value}`);
-      window.dispatchEvent(new CustomEvent('settingsChanged', {
-        detail: { key, value }
-      }));
-
-      // 通知父组件设置变化
-      if (onSettingChange) {
-        onSettingChange(key, value);
-      }
-    } catch (error) {
-      console.error('保存代码块设置失败:', error);
-    }
-  };
-
-  // 处理代码风格变化
-  const handleCodeStyleChange = (event: any) => {
-    const newStyle = event.target.value;
-    setCodeStyle(newStyle);
-    saveSettingToStorage('codeStyle', newStyle);
-  };
-
-  // 处理编辑器开关
-  const handleEditorToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    setEditorEnabled(enabled);
-    saveSettingToStorage('codeEditorEnabled', enabled);
-  };
-
-  // 处理行号显示开关
-  const handleLineNumbersToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    setShowLineNumbers(enabled);
-    saveSettingToStorage('codeShowLineNumbers', enabled);
-  };
-
-  // 处理自动换行开关
-  const handleWordWrapToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    setWordWrap(enabled);
-    saveSettingToStorage('codeWordWrap', enabled);
-  };
-
-  // 处理复制功能开关
-  const handleCopyToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    setCopyEnabled(enabled);
-    saveSettingToStorage('codeCopyEnabled', enabled);
-  };
+  // 从 Redux store 获取设置
+  const {
+    codeStyle,
+    codeEditor,
+    codeShowLineNumbers,
+    codeCollapsible,
+    codeWrappable,
+    codeDefaultCollapsed
+  } = useAppSelector(state => state.settings);
 
   const selectedStyle = CODE_STYLES.find(style => style.value === codeStyle);
 
@@ -183,10 +147,87 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = ({ onSettingChange }
             <FormControl fullWidth size="small">
               <Select
                 value={codeStyle}
-                onChange={handleCodeStyleChange}
+                onChange={(e) => dispatch(setCodeStyle(e.target.value))}
                 sx={{ fontSize: '0.875rem' }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: { maxHeight: 400 }
+                  }
+                }}
               >
-                {CODE_STYLES.map((style) => (
+                {/* 自动和经典主题 */}
+                <ListSubheader sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'primary.main' }}>
+                  经典主题
+                </ListSubheader>
+                {CODE_STYLES.slice(0, 9).map((style) => (
+                  <MenuItem key={style.value} value={style.value}>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {style.label}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {style.description}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+
+                {/* 流行编辑器主题 */}
+                <ListSubheader sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'primary.main' }}>
+                  编辑器主题
+                </ListSubheader>
+                {CODE_STYLES.slice(9, 15).map((style) => (
+                  <MenuItem key={style.value} value={style.value}>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {style.label}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {style.description}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+
+                {/* Material 系列 */}
+                <ListSubheader sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'primary.main' }}>
+                  Material 系列
+                </ListSubheader>
+                {CODE_STYLES.slice(15, 18).map((style) => (
+                  <MenuItem key={style.value} value={style.value}>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {style.label}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {style.description}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+
+                {/* Duotone 系列 */}
+                <ListSubheader sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'primary.main' }}>
+                  Duotone 系列
+                </ListSubheader>
+                {CODE_STYLES.slice(18, 24).map((style) => (
+                  <MenuItem key={style.value} value={style.value}>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {style.label}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {style.description}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+
+                {/* 特色主题 */}
+                <ListSubheader sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'primary.main' }}>
+                  特色主题
+                </ListSubheader>
+                {CODE_STYLES.slice(24).map((style) => (
                   <MenuItem key={style.value} value={style.value}>
                     <Box>
                       <Typography variant="body2" fontWeight="medium">
@@ -208,71 +249,88 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = ({ onSettingChange }
             )}
           </ListItem>
 
-          {/* 开启编辑器 */}
+          {/* 代码编辑 */}
           <ListItem sx={{ px: 1, py: 1 }}>
             <ListItemIcon sx={{ minWidth: '36px' }}>
               <Edit size={20} color="#666" />
             </ListItemIcon>
             <ListItemText
-              primary="开启编辑器"
-              secondary="允许直接编辑代码块内容"
+              primary="代码编辑"
+              secondary="启用代码块编辑功能"
               primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
               secondaryTypographyProps={{ variant: 'caption' }}
             />
             <Switch
-              checked={editorEnabled}
-              onChange={handleEditorToggle}
+              checked={codeEditor}
+              onChange={(e) => dispatch(setCodeEditor(e.target.checked))}
               color="primary"
               size="small"
             />
           </ListItem>
 
-          {/* 显示行号 */}
+          {/* 代码显示行号 */}
           <ListItem sx={{ px: 1, py: 1 }}>
             <ListItemText
-              primary="显示行号"
-              secondary="在代码块中显示行号"
-              primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
-              secondaryTypographyProps={{ variant: 'caption' }}
-              sx={{ pl: 4.5 }} // 与上面的图标对齐
-            />
-            <Switch
-              checked={showLineNumbers}
-              onChange={handleLineNumbersToggle}
-              color="primary"
-              size="small"
-            />
-          </ListItem>
-
-          {/* 自动换行 */}
-          <ListItem sx={{ px: 1, py: 1 }}>
-            <ListItemText
-              primary="自动换行"
-              secondary="长代码行自动换行显示"
+              primary="代码显示行号"
+              secondary="在代码块左侧显示行号"
               primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
               secondaryTypographyProps={{ variant: 'caption' }}
               sx={{ pl: 4.5 }}
             />
             <Switch
-              checked={wordWrap}
-              onChange={handleWordWrapToggle}
+              checked={codeShowLineNumbers}
+              onChange={(e) => dispatch(setCodeShowLineNumbers(e.target.checked))}
               color="primary"
               size="small"
             />
           </ListItem>
 
-          {/* 复制功能 */}
+          {/* 代码可折叠 */}
           <ListItem sx={{ px: 1, py: 1 }}>
             <ListItemText
-              primary="复制功能"
-              secondary="显示复制按钮，允许复制代码"
+              primary="代码可折叠"
+              secondary="长代码块可以折叠显示"
               primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
               secondaryTypographyProps={{ variant: 'caption' }}
               sx={{ pl: 4.5 }}
             />
             <Switch
-              checked={copyEnabled}
-              onChange={handleCopyToggle}
+              checked={codeCollapsible}
+              onChange={(e) => dispatch(setCodeCollapsible(e.target.checked))}
+              color="primary"
+              size="small"
+            />
+          </ListItem>
+
+          {/* 代码可换行 */}
+          <ListItem sx={{ px: 1, py: 1 }}>
+            <ListItemText
+              primary="代码可换行"
+              secondary="长代码行可以自动换行"
+              primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
+              secondaryTypographyProps={{ variant: 'caption' }}
+              sx={{ pl: 4.5 }}
+            />
+            <Switch
+              checked={codeWrappable}
+              onChange={(e) => dispatch(setCodeWrappable(e.target.checked))}
+              color="primary"
+              size="small"
+            />
+          </ListItem>
+
+          {/* 默认收起代码块 */}
+          <ListItem sx={{ px: 1, py: 1 }}>
+            <ListItemText
+              primary="默认收起代码块"
+              secondary="新代码块默认以折叠状态显示"
+              primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
+              secondaryTypographyProps={{ variant: 'caption' }}
+              sx={{ pl: 4.5 }}
+            />
+            <Switch
+              checked={codeDefaultCollapsed}
+              onChange={(e) => dispatch(setCodeDefaultCollapsed(e.target.checked))}
               color="primary"
               size="small"
             />

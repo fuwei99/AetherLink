@@ -25,7 +25,7 @@ import {
   IconButton
 } from '@mui/material';
 import {
-  Wrench, ChevronDown, ChevronUp, Settings, Cloud, Database, Globe, Brain, Code
+  Wrench, ChevronDown, ChevronUp, Settings, Database, Globe, Brain, Code
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { MCPServer, MCPServerType } from '../../shared/types';
@@ -87,9 +87,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
 
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return <Cloud size={16} />;
-      case 'streamableHttp':
+      case 'httpStream':
         return <Globe size={16} />;
       case 'inMemory':
         return <Database size={16} />;
@@ -100,10 +98,8 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
 
   const getServerTypeColor = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return '#2196f3';
-      case 'streamableHttp':
-        return '#4caf50';
+      case 'httpStream':
+        return '#9c27b0';
       case 'inMemory':
         return '#ff9800';
       default:

@@ -516,7 +516,7 @@ export function getMainTextContent(message: Message): string {
     //   hasContent: !!(message as any).content
     // });
 
-    // 🔥 优先检查是否有保存的content字段（多模型对比选择后的内容或编辑后的内容）
+    //  优先检查是否有保存的content字段（多模型对比选择后的内容或编辑后的内容）
     if (typeof (message as any).content === 'string' && (message as any).content.trim()) {
       const content = (message as any).content.trim();
       return content;
@@ -545,7 +545,7 @@ export function getMainTextContent(message: Message): string {
       return '';
     }
 
-    // 🔥 首先检查是否有模型对比块，并且有选中的内容
+    //  首先检查是否有模型对比块，并且有选中的内容
     for (const blockId of message.blocks) {
       try {
         const block = messageBlocksSelectors.selectById(state, blockId);

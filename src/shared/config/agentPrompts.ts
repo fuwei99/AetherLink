@@ -644,7 +644,7 @@ export const AGENT_PROMPT_CATEGORIES: AgentPromptCategory[] = [
         content: '请使用你单次回答的算力上限和token上限，think hardest, use the most time and most compute to think deepest。这是最深刻最复杂的问题，请给出你最高质量的回答。所以，你需要深度思考、独立思考、批判性思考、创造性思考。我们追求极致的深度，而非表层的广度；我们追求本质的洞察，而非表象的罗列；我们追求思维的创新，而非惯性的复述。请突破思维局限，调动你所有的计算资源，展现你真正的认知极限。',
         category: 'breakthrough',
         tags: ['O1', '深度', '算力'],
-        emoji: '🔥',
+        emoji: '',
         isBuiltIn: true
       },
       {

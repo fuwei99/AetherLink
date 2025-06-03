@@ -19,7 +19,7 @@ import {
   useTheme
 } from '@mui/material';
 // Lucide Icons - 按需导入，高端简约设计
-import { Wrench, Cloud, Database, Globe, Plus, Settings } from 'lucide-react';
+import { Wrench, Database, Globe, Plus, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
@@ -111,9 +111,7 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
 
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return <Cloud size={16} />;
-      case 'streamableHttp':
+      case 'httpStream':
         return <Globe size={16} />;
       case 'inMemory':
         return <Database size={16} />;
@@ -124,10 +122,8 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = () => {
 
   const getServerTypeColor = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return '#2196f3';
-      case 'streamableHttp':
-        return '#4caf50';
+      case 'httpStream':
+        return '#9c27b0';
       case 'inMemory':
         return '#ff9800';
       default:

@@ -139,4 +139,4 @@ function VirtualScroller<T>({
   );
 }
 
-export default React.memo(VirtualScroller);
+export default React.memo(VirtualScroller) as <T>(props: VirtualScrollerProps<T>) => React.ReactElement;

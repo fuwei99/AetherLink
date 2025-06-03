@@ -99,6 +99,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
   const themeColors = getThemeColors(theme, themeStyle);
 
+  // 获取AI辩论按钮显示设置
+  const showAIDebateButton = useSelector((state: RootState) => state.settings.showAIDebateButton ?? true);
+
+  // 获取快捷短语按钮显示设置
+  const showQuickPhraseButton = useSelector((state: RootState) => state.settings.showQuickPhraseButton ?? true);
+
   // URL解析功能
   const {
     detectedUrl,
@@ -824,21 +830,25 @@ const ChatInput: React.FC<ChatInputProps> = ({
             </Tooltip>
 
             {/* AI辩论按钮 */}
-            <AIDebateButton
-              onStartDebate={onStartDebate}
-              onStopDebate={onStopDebate}
-              isDebating={isDebating}
-              disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-              question={message}
-            />
+            {showAIDebateButton && (
+              <AIDebateButton
+                onStartDebate={onStartDebate}
+                onStopDebate={onStopDebate}
+                isDebating={isDebating}
+                disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+                question={message}
+              />
+            )}
 
             {/* 快捷短语按钮 */}
-            <QuickPhraseButton
-              onInsertPhrase={handleInsertPhrase}
-              assistant={currentAssistant}
-              disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-              size={isTablet ? "large" : "medium"}
-            />
+            {showQuickPhraseButton && (
+              <QuickPhraseButton
+                onInsertPhrase={handleInsertPhrase}
+                assistant={currentAssistant}
+                disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+                size={isTablet ? "large" : "medium"}
+              />
+            )}
 
             {/* 发送按钮或停止按钮 */}
             <IconButton

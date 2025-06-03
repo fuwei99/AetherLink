@@ -220,7 +220,7 @@ const ToolBlock: React.FC<Props> = ({ block }) => {
 
         <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
           {getToolName()}
-          {/* 🔥 参考最佳实例：显示工具状态 */}
+          {/*  参考最佳实例：显示工具状态 */}
           {isProcessing && (
             <Chip
               label="处理中"
@@ -360,7 +360,7 @@ const ToolBlock: React.FC<Props> = ({ block }) => {
                     },
                   }}
                 >
-                  {/* 🔥 修复：工具结果使用纯文本显示，避免 Markdown 渲染导致代码块问题 */}
+                  {/*  修复：工具结果使用纯文本显示，避免 Markdown 渲染导致代码块问题 */}
                   <Typography
                     component="pre"
                     sx={{

@@ -116,47 +116,66 @@ class EnhancedNetworkService {
       try {
         const response = await this.originalFetch(input, init);
         const endTime = performance.now();
-        
-        // 克隆响应以读取数据
-        const clonedResponse = response.clone();
-        let responseData: any;
-        let responseSize = 0;
 
-        try {
-          const contentType = response.headers.get('content-type') || '';
-          const contentLength = response.headers.get('content-length');
-          
-          if (contentLength) {
-            responseSize = parseInt(contentLength, 10);
+        // 检查是否是流式响应，避免缓冲问题
+        const contentType = response.headers.get('content-type') || '';
+        const isStreamResponse = contentType.includes('text/event-stream') ||
+                                contentType.includes('application/stream') ||
+                                url.includes('/chat/completions');
+
+        if (isStreamResponse) {
+          // 对于流式响应，只记录基本信息，不读取响应体以避免缓冲
+          this.updateEntry(id, {
+            status: response.ok ? 'success' : 'error',
+            statusCode: response.status,
+            statusText: response.statusText,
+            endTime,
+            duration: endTime - entry.startTime,
+            responseHeaders: this.extractHeaders(response.headers),
+            responseData: '[Streaming Response - Not Captured]',
+            responseSize: 0
+          });
+        } else {
+          // 非流式响应，正常处理
+          const clonedResponse = response.clone();
+          let responseData: any;
+          let responseSize = 0;
+
+          try {
+            const contentLength = response.headers.get('content-length');
+
+            if (contentLength) {
+              responseSize = parseInt(contentLength, 10);
+            }
+
+            if (contentType.includes('application/json')) {
+              responseData = await clonedResponse.json();
+            } else if (contentType.includes('text/')) {
+              responseData = await clonedResponse.text();
+            } else if (contentType.includes('image/') || contentType.includes('video/') || contentType.includes('audio/')) {
+              responseData = `[${contentType} - ${responseSize} bytes]`;
+            } else {
+              responseData = '[Binary Data]';
+            }
+
+            if (!responseSize && responseData) {
+              responseSize = this.calculateSize(responseData);
+            }
+          } catch (e) {
+            responseData = '[Failed to parse response]';
           }
 
-          if (contentType.includes('application/json')) {
-            responseData = await clonedResponse.json();
-          } else if (contentType.includes('text/')) {
-            responseData = await clonedResponse.text();
-          } else if (contentType.includes('image/') || contentType.includes('video/') || contentType.includes('audio/')) {
-            responseData = `[${contentType} - ${responseSize} bytes]`;
-          } else {
-            responseData = '[Binary Data]';
-          }
-
-          if (!responseSize && responseData) {
-            responseSize = this.calculateSize(responseData);
-          }
-        } catch (e) {
-          responseData = '[Failed to parse response]';
+          this.updateEntry(id, {
+            status: response.ok ? 'success' : 'error',
+            statusCode: response.status,
+            statusText: response.statusText,
+            endTime,
+            duration: endTime - entry.startTime,
+            responseHeaders: this.extractHeaders(response.headers),
+            responseData,
+            responseSize
+          });
         }
-
-        this.updateEntry(id, {
-          status: response.ok ? 'success' : 'error',
-          statusCode: response.status,
-          statusText: response.statusText,
-          endTime,
-          duration: endTime - entry.startTime,
-          responseHeaders: this.extractHeaders(response.headers),
-          responseData,
-          responseSize
-        });
 
         return response;
       } catch (error: any) {
@@ -336,9 +355,7 @@ class EnhancedNetworkService {
     return result;
   }
 
-  private async serializeRequestBody(body: any): Promise<any> {
-    return this.serializeRequestBodySync(body);
-  }
+
 
   private serializeRequestBodySync(body: any): any {
     if (!body) return undefined;

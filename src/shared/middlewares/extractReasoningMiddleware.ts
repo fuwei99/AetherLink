@@ -14,7 +14,6 @@ export interface ExtractReasoningMiddlewareOptions {
   closingTag: string;
   separator?: string;
   enableReasoning?: boolean;
-  isDeepSeekReasoner?: boolean; // 是否为DeepSeek Reasoner模型
 }
 
 
@@ -38,7 +37,7 @@ export function extractReasoningMiddleware<
     | { type: 'text-delta' | 'reasoning'; textDelta: string }
     | { type: string } // 其他类型
   ) = { type: string; textDelta: string }
->({ openingTag, closingTag, separator = '\n', enableReasoning = true, isDeepSeekReasoner = false }: ExtractReasoningMiddlewareOptions) {
+>({ openingTag, closingTag, separator = '\n', enableReasoning = true }: ExtractReasoningMiddlewareOptions) {
   const openingTagEscaped = escapeRegExp(openingTag);
   const closingTagEscaped = escapeRegExp(closingTag);
 
@@ -98,12 +97,6 @@ export function extractReasoningMiddleware<
         stream: stream.pipeThrough(
           new TransformStream<T, T>({
             transform: (chunk, controller) => {
-              // 特殊处理DeepSeek Reasoner模型 - 直接通过所有块，不进行标签处理
-              if (isDeepSeekReasoner) {
-                controller.enqueue(chunk);
-                return;
-              }
-
               // 处理非文本增量类型的块
               if (chunk.type !== 'text-delta') {
                 controller.enqueue(chunk);

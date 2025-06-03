@@ -104,6 +104,39 @@ export const BlockManager = {
   },
 
   /**
+   * 创建代码块
+   * @param messageId 消息ID
+   * @param content 代码内容
+   * @param language 编程语言
+   * @returns 创建的代码块
+   */
+  async createCodeBlock(messageId: string, content: string, language?: string): Promise<MessageBlock> {
+    // 生成唯一的块ID - 使用统一的ID生成工具
+    const blockId = generateBlockId('code');
+
+    // 创建块对象
+    const block: MessageBlock = {
+      id: blockId,
+      messageId,
+      type: MessageBlockType.CODE,
+      content,
+      language,
+      createdAt: new Date().toISOString(),
+      status: MessageBlockStatus.SUCCESS
+    } as MessageBlock;
+
+    console.log(`[BlockManager] 创建代码块 - ID: ${blockId}, 消息ID: ${messageId}, 语言: ${language || 'text'}`);
+
+    // 添加到Redux
+    store.dispatch(upsertOneBlock(block));
+
+    // 保存到数据库
+    await DataRepository.blocks.save(block);
+
+    return block;
+  },
+
+  /**
    * 创建知识库引用块
    * @param messageId 消息ID
    * @param content 文本内容

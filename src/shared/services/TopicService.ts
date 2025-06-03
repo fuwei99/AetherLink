@@ -557,14 +557,14 @@ export class TopicService {
             status: block.status
           });
 
-          // 🔥 修复：处理工具块状态恢复，考虑多个工具的情况
+          //  修复：处理工具块状态恢复，考虑多个工具的情况
           if (!block.status || (typeof block.status !== 'string')) {
             // 状态无效，修复为 success
             console.log(`[TopicService] 修复无效块状态: ${block.id} - 从 ${block.status} 改为 success`);
             block.status = 'success';
             await dexieStorage.updateMessageBlock(block.id, { status: 'success' });
           } else if (block.type === 'tool' && (block.status === 'processing' || block.status === 'streaming' || block.status === 'pending')) {
-            // 🔥 关键修复：工具块在重启后如果还是未完成状态，应该设为已完成
+            //  关键修复：工具块在重启后如果还是未完成状态，应该设为已完成
             // 因为重启意味着之前的工具执行已经中断，应该被视为已完成
             console.log(`[TopicService] 修复工具块未完成状态: ${block.id} - 从 ${block.status} 改为 success`);
             block.status = 'success';

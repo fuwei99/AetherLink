@@ -12,7 +12,7 @@ import { MessageBlockType, MessageBlockStatus } from '../../shared/types/newMess
 import MainTextBlock from './blocks/MainTextBlock';
 import ThinkingBlock from './blocks/ThinkingBlock';
 import ImageBlock from './blocks/ImageBlock';
-import CodeRenderer from './blocks/CodeRenderer';
+import CodeBlock from './blocks/CodeBlock';
 import CitationBlock from './blocks/CitationBlock';
 import ErrorBlock from './blocks/ErrorBlock';
 import TranslationBlock from './blocks/TranslationBlock';
@@ -193,7 +193,7 @@ const MessageBlockRenderer: React.FC<Props> = ({
                 blockComponent = <ImageBlock key={block.id} block={block} />;
                 break;
               case MessageBlockType.CODE:
-                blockComponent = <CodeRenderer key={block.id} block={block} />;
+                blockComponent = <CodeBlock key={block.id} block={block} />;
                 break;
               case MessageBlockType.CITATION:
                 blockComponent = <CitationBlock key={block.id} block={block} />;

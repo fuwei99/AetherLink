@@ -5,7 +5,6 @@ import {
   DialogContent,
   IconButton,
   Tooltip,
-  useTheme,
   Fab,
   Zoom,
   Backdrop
@@ -19,7 +18,6 @@ import {
   SwapVert as FlipVerticalIcon,
   Download as DownloadIcon,
   Close as CloseIcon,
-  Fullscreen as FullscreenIcon,
   RestartAlt as ResetIcon
 } from '@mui/icons-material';
 
@@ -27,7 +25,7 @@ interface AdvancedImagePreviewProps {
   src: string;
   alt?: string;
   style?: React.CSSProperties;
-  [key: string]: any;
+  // 移除通用属性传播，避免传递不合适的属性给 img 元素
 }
 
 interface ImageTransform {
@@ -40,14 +38,13 @@ interface ImageTransform {
 }
 
 /**
- * 🔥 升级版高级图片预览组件
+ *  升级版高级图片预览组件
  * 参考实现，提供完整的图片预览工具栏功能
  */
 const AdvancedImagePreview: React.FC<AdvancedImagePreviewProps> = ({
   src,
   alt = 'Generated Image',
-  style,
-  ...props
+  style
 }) => {
   const [open, setOpen] = useState(false);
   const [transform, setTransform] = useState<ImageTransform>({
@@ -61,9 +58,6 @@ const AdvancedImagePreview: React.FC<AdvancedImagePreviewProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showToolbar, setShowToolbar] = useState(false);
-
-  const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
 
   // 打开预览
   const handleOpen = useCallback(() => {
@@ -193,7 +187,6 @@ const AdvancedImagePreview: React.FC<AdvancedImagePreviewProps> = ({
       <img
         src={src}
         alt={alt}
-        {...props}
         style={{
           maxWidth: '100%',
           height: 'auto',

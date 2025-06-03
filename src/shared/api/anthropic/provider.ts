@@ -95,16 +95,31 @@ export class AnthropicProvider extends BaseProvider {
 
   /**
    * 获取温度参数
+   * @param assistant 助手配置（可选）
    */
-  private getTemperature(): number {
-    return this.model.temperature || 0.7;
+  private getTemperature(assistant?: any): number {
+    // 优先使用助手设置，然后是模型设置，最后是默认值
+    const temperature = assistant?.settings?.temperature ?? assistant?.temperature ?? this.model.temperature ?? 0.7;
+
+    console.log(`[AnthropicProvider] temperature参数 - 助手设置: ${assistant?.settings?.temperature}, 助手直接设置: ${assistant?.temperature}, 模型设置: ${this.model.temperature}, 最终值: ${temperature}`);
+
+    return temperature;
   }
 
   /**
    * 获取最大令牌数
+   * @param assistant 助手配置（可选）
    */
-  private getMaxTokens(): number {
-    return this.model.maxTokens || 4096;
+  private getMaxTokens(assistant?: any): number {
+    // 优先使用助手设置，然后是模型设置，最后是默认值
+    const maxTokens = assistant?.settings?.maxTokens ?? assistant?.maxTokens ?? this.model.maxTokens ?? 4096;
+
+    // 确保值在合理范围内（最小1）
+    const finalTokens = Math.max(maxTokens, 1);
+
+    console.log(`[AnthropicProvider] maxTokens参数 - 助手设置: ${assistant?.settings?.maxTokens}, 助手直接设置: ${assistant?.maxTokens}, 模型设置: ${this.model.maxTokens}, 最终值: ${finalTokens}`);
+
+    return finalTokens;
   }
 
   /**
@@ -151,6 +166,7 @@ export class AnthropicProvider extends BaseProvider {
       mcpMode?: 'prompt' | 'function'; // 添加 MCP 模式参数
       systemPrompt?: string;
       abortSignal?: AbortSignal;
+      assistant?: any; // 添加助手参数以获取设置
     }
   ): Promise<string | { content: string; reasoning?: string; reasoningTime?: number }> {
     try {
@@ -164,7 +180,8 @@ export class AnthropicProvider extends BaseProvider {
         mcpTools = [],
         mcpMode = 'function', // 默认使用函数调用模式
         systemPrompt = '',
-        abortSignal
+        abortSignal,
+        assistant // 助手参数
       } = options || {};
 
       // 使用变量避免未使用警告
@@ -247,13 +264,26 @@ export class AnthropicProvider extends BaseProvider {
         hasSystemPrompt: !!systemMessage
       });
 
-      // 准备请求参数
+      // 准备请求参数 - 从助手设置中获取参数
       const requestParams: any = {
         model: this.model.id,
         messages: anthropicMessages,
-        max_tokens: this.getMaxTokens(),
-        temperature: this.getTemperature()
+        max_tokens: this.getMaxTokens(assistant), // 传递助手参数
+        temperature: this.getTemperature(assistant) // 传递助手参数
       };
+
+      // 添加调试日志显示使用的参数
+      console.log(`[AnthropicProvider] API请求参数:`, {
+        model: requestParams.model,
+        temperature: requestParams.temperature,
+        max_tokens: requestParams.max_tokens,
+        assistantInfo: assistant ? {
+          id: assistant.id,
+          name: assistant.name,
+          temperature: assistant.temperature,
+          maxTokens: assistant.maxTokens
+        } : '无助手信息'
+      });
 
       // 构建系统提示词（包含智能工具注入）
       let finalSystemPrompt = systemPrompt;

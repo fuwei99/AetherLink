@@ -27,13 +27,15 @@ import {
   MenuItem,
   Snackbar,
   Alert,
-  Divider
+  Divider,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import SettingsIcon from '@mui/icons-material/Settings';
-import CloudIcon from '@mui/icons-material/Cloud';
+
 import StorageIcon from '@mui/icons-material/Storage';
 import HttpIcon from '@mui/icons-material/Http';
 
@@ -57,10 +59,11 @@ const MCPServerSettings: React.FC = () => {
   // 新服务器表单状态
   const [newServer, setNewServer] = useState<Partial<MCPServer>>({
     name: '',
-    type: 'sse',
+    type: 'httpStream',
     description: '',
     baseUrl: '',
-    isActive: false
+    isActive: false,
+    enableSSE: false // 默认禁用SSE，避免不必要的错误
   });
 
   useEffect(() => {
@@ -114,10 +117,10 @@ const MCPServerSettings: React.FC = () => {
       return;
     }
 
-    if ((newServer.type === 'sse' || newServer.type === 'streamableHttp') && !newServer.baseUrl) {
+    if (newServer.type === 'httpStream' && !newServer.baseUrl) {
       setSnackbar({
         open: true,
-        message: '网络类型服务器需要提供 URL',
+        message: 'HTTP Stream 服务器需要提供 URL',
         severity: 'error'
       });
       return;
@@ -141,10 +144,11 @@ const MCPServerSettings: React.FC = () => {
       setAddDialogOpen(false);
       setNewServer({
         name: '',
-        type: 'sse',
+        type: 'httpStream',
         description: '',
         baseUrl: '',
-        isActive: false
+        isActive: false,
+        enableSSE: false // 默认禁用SSE，避免不必要的错误
       });
       setSnackbar({
         open: true,
@@ -266,9 +270,7 @@ const MCPServerSettings: React.FC = () => {
 
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return <CloudIcon />;
-      case 'streamableHttp':
+      case 'httpStream':
         return <HttpIcon />;
       case 'inMemory':
         return <StorageIcon />;
@@ -279,10 +281,8 @@ const MCPServerSettings: React.FC = () => {
 
   const getServerTypeLabel = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return 'SSE';
-      case 'streamableHttp':
-        return 'HTTP 流';
+      case 'httpStream':
+        return 'HTTP Stream';
       case 'inMemory':
         return '内存';
       default:
@@ -292,10 +292,8 @@ const MCPServerSettings: React.FC = () => {
 
   const getServerTypeColor = (type: MCPServerType) => {
     switch (type) {
-      case 'sse':
-        return '#2196f3';
-      case 'streamableHttp':
-        return '#4caf50';
+      case 'httpStream':
+        return '#9c27b0';
       case 'inMemory':
         return '#ff9800';
       default:
@@ -766,12 +764,11 @@ const MCPServerSettings: React.FC = () => {
               label="服务器类型"
               onChange={(e) => setNewServer({ ...newServer, type: e.target.value as MCPServerType })}
             >
-              <MenuItem value="sse">SSE (Server-Sent Events)</MenuItem>
-              <MenuItem value="streamableHttp">HTTP 流式传输</MenuItem>
+              <MenuItem value="httpStream">HTTP Stream (支持SSE+HTTP)</MenuItem>
               <MenuItem value="inMemory">内存服务器</MenuItem>
             </Select>
           </FormControl>
-          {(newServer.type === 'sse' || newServer.type === 'streamableHttp') && (
+          {newServer.type === 'httpStream' && (
             <TextField
               margin="dense"
               label="服务器 URL"
@@ -793,6 +790,18 @@ const MCPServerSettings: React.FC = () => {
             value={newServer.description}
             onChange={(e) => setNewServer({ ...newServer, description: e.target.value })}
           />
+          {newServer.type === 'httpStream' && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={newServer.enableSSE === true} // 默认禁用
+                  onChange={(e) => setNewServer({ ...newServer, enableSSE: e.target.checked })}
+                />
+              }
+              label="启用SSE流（Server-Sent Events）"
+              sx={{ mt: 1 }}
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setAddDialogOpen(false)}>取消</Button>

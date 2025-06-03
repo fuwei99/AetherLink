@@ -161,12 +161,19 @@ const ModelProviderSettings: React.FC = () => {
   const [openEditProviderDialog, setOpenEditProviderDialog] = useState(false);
   const [editProviderName, setEditProviderName] = useState('');
 
+  // 自定义请求头相关状态
+  const [extraHeaders, setExtraHeaders] = useState<Record<string, string>>({});
+  const [newHeaderKey, setNewHeaderKey] = useState('');
+  const [newHeaderValue, setNewHeaderValue] = useState('');
+  const [openHeadersDialog, setOpenHeadersDialog] = useState(false);
+
   // 当provider加载完成后初始化状态
   useEffect(() => {
     if (provider) {
       setApiKey(provider.apiKey || '');
       setBaseUrl(provider.baseUrl || '');
       setIsEnabled(provider.isEnabled);
+      setExtraHeaders(provider.extraHeaders || {});
     }
   }, [provider]);
 
@@ -189,7 +196,8 @@ const ModelProviderSettings: React.FC = () => {
         updates: {
           apiKey,
           baseUrl: baseUrl.trim(), // 保存原始URL，只去除前后空格
-          isEnabled
+          isEnabled,
+          extraHeaders
         }
       }));
       return true;
@@ -230,6 +238,37 @@ const ModelProviderSettings: React.FC = () => {
       setOpenEditProviderDialog(false);
       setEditProviderName('');
     }
+  };
+
+  // 自定义请求头相关函数
+  const handleAddHeader = () => {
+    if (newHeaderKey.trim() && newHeaderValue.trim()) {
+      setExtraHeaders(prev => ({
+        ...prev,
+        [newHeaderKey.trim()]: newHeaderValue.trim()
+      }));
+      setNewHeaderKey('');
+      setNewHeaderValue('');
+    }
+  };
+
+  const handleRemoveHeader = (key: string) => {
+    setExtraHeaders(prev => {
+      const newHeaders = { ...prev };
+      delete newHeaders[key];
+      return newHeaders;
+    });
+  };
+
+  const handleUpdateHeader = (oldKey: string, newKey: string, newValue: string) => {
+    setExtraHeaders(prev => {
+      const newHeaders = { ...prev };
+      if (oldKey !== newKey) {
+        delete newHeaders[oldKey];
+      }
+      newHeaders[newKey] = newValue;
+      return newHeaders;
+    });
   };
 
   const handleAddModel = () => {
@@ -785,6 +824,36 @@ const ModelProviderSettings: React.FC = () => {
                 />
               </Box>
 
+              {/* 自定义请求头按钮 */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  自定义请求头 (可选)
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<SettingsIcon />}
+                    onClick={() => setOpenHeadersDialog(true)}
+                    sx={{
+                      borderRadius: 2,
+                      borderColor: (theme) => alpha(theme.palette.secondary.main, 0.5),
+                      color: 'secondary.main',
+                      '&:hover': {
+                        borderColor: 'secondary.main',
+                        bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.1),
+                      },
+                    }}
+                  >
+                    配置请求头
+                  </Button>
+                  {Object.keys(extraHeaders).length > 0 && (
+                    <Typography variant="caption" color="text.secondary">
+                      已配置 {Object.keys(extraHeaders).length} 个请求头
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
               {/* 添加API测试按钮 */}
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                 <Button
@@ -1217,6 +1286,180 @@ const ModelProviderSettings: React.FC = () => {
             }}
           >
             保存
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 自定义请求头对话框 */}
+      <Dialog
+        open={openHeadersDialog}
+        onClose={() => setOpenHeadersDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{
+          fontWeight: 600,
+          backgroundImage: 'linear-gradient(90deg, #9333EA, #754AB4)',
+          backgroundClip: 'text',
+          color: 'transparent',
+        }}>
+          配置自定义请求头
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            用于解决 CORS 问题或添加特殊认证头
+          </Typography>
+
+          {/* 快速操作按钮 */}
+          <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+              快速操作
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  setExtraHeaders(prev => ({
+                    ...prev,
+                    'x-stainless-timeout': 'REMOVE'
+                  }));
+                }}
+                sx={{ fontSize: '0.75rem' }}
+              >
+                禁用 x-stainless-timeout
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  setExtraHeaders(prev => ({
+                    ...prev,
+                    'x-stainless-retry-count': 'REMOVE'
+                  }));
+                }}
+                sx={{ fontSize: '0.75rem' }}
+              >
+                禁用 x-stainless-retry-count
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                onClick={() => {
+                  setExtraHeaders(prev => ({
+                    ...prev,
+                    'x-stainless-timeout': 'REMOVE',
+                    'x-stainless-retry-count': 'REMOVE',
+                    'x-stainless-arch': 'REMOVE',
+                    'x-stainless-lang': 'REMOVE',
+                    'x-stainless-os': 'REMOVE',
+                    'x-stainless-package-version': 'REMOVE',
+                    'x-stainless-runtime': 'REMOVE',
+                    'x-stainless-runtime-version': 'REMOVE'
+                  }));
+                }}
+                sx={{ fontSize: '0.75rem' }}
+              >
+                禁用所有 stainless 头部
+              </Button>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              设置值为 "REMOVE" 可以禁用默认的请求头
+            </Typography>
+          </Box>
+
+          {/* 现有请求头列表 */}
+          {Object.entries(extraHeaders).map(([key, value]) => (
+            <Box key={key} sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+              <TextField
+                size="small"
+                label="请求头名称"
+                value={key}
+                onChange={(e) => handleUpdateHeader(key, e.target.value, value)}
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                size="small"
+                label="请求头值"
+                value={value}
+                onChange={(e) => handleUpdateHeader(key, key, e.target.value)}
+                sx={{
+                  flex: 1,
+                  '& .MuiInputBase-input': {
+                    color: value === 'REMOVE' ? 'error.main' : 'inherit'
+                  }
+                }}
+                helperText={value === 'REMOVE' ? '此头部将被禁用' : ''}
+                slotProps={{
+                  formHelperText: {
+                    sx: { color: 'error.main', fontSize: '0.7rem' }
+                  }
+                }}
+              />
+              <IconButton
+                onClick={() => handleRemoveHeader(key)}
+                sx={{
+                  color: 'error.main',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+                  }
+                }}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          ))}
+
+          {/* 添加新请求头 */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+            <TextField
+              size="small"
+              label="新请求头名称"
+              placeholder="例如: x-stainless-timeout"
+              value={newHeaderKey}
+              onChange={(e) => setNewHeaderKey(e.target.value)}
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              size="small"
+              label="新请求头值"
+              placeholder="例如: 30000"
+              value={newHeaderValue}
+              onChange={(e) => setNewHeaderValue(e.target.value)}
+              sx={{ flex: 1 }}
+            />
+            <Button
+              startIcon={<AddIcon />}
+              onClick={handleAddHeader}
+              disabled={!newHeaderKey.trim() || !newHeaderValue.trim()}
+              sx={{
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                color: 'primary.main',
+                '&:hover': {
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                },
+                borderRadius: 2,
+              }}
+            >
+              添加
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setOpenHeadersDialog(false)}>取消</Button>
+          <Button
+            onClick={() => setOpenHeadersDialog(false)}
+            sx={{
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+              color: 'primary.main',
+              '&:hover': {
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+              },
+              borderRadius: 2,
+            }}
+          >
+            确定
           </Button>
         </DialogActions>
       </Dialog>

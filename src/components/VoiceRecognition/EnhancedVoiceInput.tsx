@@ -128,7 +128,6 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
       updateVolume();
       
     } catch (error) {
-      console.error('无法访问麦克风:', error);
       setErrorMessage('无法访问麦克风，请检查权限设置');
     }
   };
@@ -177,7 +176,6 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
       });
       
     } catch (error) {
-      console.error('启动语音识别失败:', error);
       setErrorMessage('启动语音识别失败');
     }
   };
@@ -187,7 +185,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
     try {
       await stopRecognition();
     } catch (error) {
-      console.error('停止语音识别失败:', error);
+      // 静默处理错误
     }
   };
   
@@ -235,7 +233,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
   const handleClose = () => {
     // 如果正在录音，先停止
     if (isListening) {
-      stopRecognition().catch(console.error);
+      stopRecognition().catch(() => {});
     }
     
     // 动画效果：先隐藏控制按钮，再关闭组件

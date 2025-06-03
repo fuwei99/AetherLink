@@ -41,12 +41,12 @@ const MainTextBlock: React.FC<Props> = ({ block, role, messageId }) => {
       );
     }
 
-    // 🔥 使用工具解析器的检测函数，支持自动修复被分割的标签
+    //  使用工具解析器的检测函数，支持自动修复被分割的标签
     const hasTools = hasToolUseTags(content);
 
     if (isUserMessage || !hasTools) {
       // 用户消息或没有工具标签，直接渲染
-      return <Markdown content={content} allowHtml={false} />;
+      return <Markdown block={block} />;
     }
 
     // 查找对应的工具块
@@ -57,7 +57,7 @@ const MainTextBlock: React.FC<Props> = ({ block, role, messageId }) => {
         block.messageId === messageId
     );
 
-    // 🔥 使用修复后的内容进行工具标签处理
+    //  使用修复后的内容进行工具标签处理
     const fixedContent = fixBrokenToolTags(content);
 
     // 检测工具标签和工具块的匹配情况

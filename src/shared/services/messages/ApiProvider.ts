@@ -1,6 +1,7 @@
 import type { Model } from '../../types';
 import { getActualProviderType, testConnection } from '../ProviderFactory';
 import { OpenAIProvider } from '../../api/openai';
+import { OpenAIAISDKProvider } from '../../api/openai-aisdk';
 import { AnthropicProvider } from '../../api/anthropic';
 import GeminiProvider from '../../api/gemini/provider';
 import { ModelComboProvider } from './ModelComboProvider';
@@ -33,6 +34,8 @@ export const ApiProviderRegistry = {
           apiHost: model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta',
           models: [{ id: model.id }]
         });
+      case 'openai-aisdk':
+        return new OpenAIAISDKProvider(model);
       case 'azure-openai':
       case 'openai':
       case 'deepseek':

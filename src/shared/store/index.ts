@@ -4,7 +4,6 @@ import storage from 'redux-persist/lib/storage';
 // 移除旧的 messagesReducer 导入
 import messagesReducer from './slices/newMessagesSlice'; // 使用 normalizedMessagesReducer 作为唯一的消息状态管理
 import settingsReducer, { settingsMiddleware, loadSettings } from './settingsSlice';
-import { initSettingsAsync } from './slices/settingsSlice';
 import groupsReducer from './slices/groupsSlice';
 import webSearchReducer, { initializeWebSearchSettings } from './slices/webSearchSlice';
 
@@ -58,7 +57,6 @@ export const persistor = persistStore(store);
 
 // 加载设置
 store.dispatch(loadSettings());
-store.dispatch(initSettingsAsync());
 
 // 初始化网络搜索设置
 initializeWebSearchSettings().then(settings => {

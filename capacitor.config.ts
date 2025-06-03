@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     initialFocus: true,
     captureInput: false,
     webContentsDebuggingEnabled: true,
-    // 🔥 Android WebView 允许混合内容
+    //  Android WebView 允许混合内容
     allowMixedContent: true
   },
   ios: {
@@ -24,22 +24,22 @@ const config: CapacitorConfig = {
   },
   plugins: {
     CapacitorHttp: {
-      enabled: false  // 🔥 禁用CapacitorHttp，使用标准fetch支持流式输出
+      enabled: false  //  禁用CapacitorHttp，使用标准fetch支持流式输出
+    },
+    CorsBypass: {
+      // CORS 绕过插件配置 - 暂时不启用功能，仅确保插件加载
     },
     WebView: {
       scrollEnabled: true,
       allowFileAccess: true
     },
     Keyboard: {
-      resize: 'native',
-      resizeOnFullScreen: true,
-      style: 'DARK'
+      resizeOnFullScreen: true
     },
     StatusBar: {
       backgroundColor: '#475569', // 浅色模式默认颜色
       style: 'DARK', // 深色文字适合浅色背景
-      overlaysWebView: false, // 确保背景色生效，避免内容被覆盖
-      translucent: false // 不透明状态栏
+      overlaysWebView: false // 确保背景色生效，避免内容被覆盖
     },
     SplashScreen: {
       launchShowDuration: 0

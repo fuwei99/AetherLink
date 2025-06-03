@@ -105,7 +105,7 @@ export async function checkAndHandleApiKeyError(
     showConfigButton: true
   });
 
-  // 🔥 重要：返回 false，让 ResponseHandler 继续创建错误块显示给用户
+  //  重要：返回 false，让 ResponseHandler 继续创建错误块显示给用户
   // 这样用户既能看到错误信息，又能使用重试功能
   return false;
 }

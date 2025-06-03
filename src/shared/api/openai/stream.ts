@@ -25,19 +25,13 @@ export async function streamCompletion(
   temperature?: number,
   maxTokens?: number,
   onUpdate?: (content: string, reasoning?: string) => void,
-  additionalParams?: Record<string, any>
+  additionalParams?: Record<string, any>,
+  onChunk?: (chunk: any) => void
 ): Promise<string | { content: string; reasoning?: string; reasoningTime?: number }> {
   try {
-    // 检查是否包含思考提示
-    const hasThinkingPrompt = messages.some(msg =>
-      msg.role === 'system' &&
-      typeof msg.content === 'string' &&
-      (msg.content.includes('thinking') ||
-       msg.content.includes('reasoning') ||
-       msg.content.includes('思考过程'))
-    );
 
-    console.log(`[streamCompletion] 开始流式请求，模型ID: ${modelId}, 是否包含思考提示: ${hasThinkingPrompt}`);
+
+
 
     // 创建流式请求参数
     const streamParams: any = {
@@ -64,8 +58,7 @@ export async function streamCompletion(
       Object.assign(streamParams, otherParams);
     }
 
-    // 不添加任何工具
-    console.log('[streamCompletion] 跳过添加思考工具');
+
 
     // 记录API请求
     logApiRequest('OpenAI Chat Completions Stream', 'INFO', {
@@ -94,6 +87,11 @@ export async function streamCompletion(
     let reasoningStartTime = 0;
     let reasoningEndTime = 0;
     let isFirstChunk = true;
+
+    // 用于处理<think>标签的状态
+    let contentBuffer = ''; // 缓冲区，用于处理跨chunk的标签
+    let isInThinkTag = false; // 是否在<think>标签内
+    let thinkBuffer = ''; // 思考内容缓冲区
 
     // 检查是否启用推理
     const enableReasoning = additionalParams?.enableReasoning !== false;
@@ -134,42 +132,126 @@ export async function streamCompletion(
           }
         }
 
-        // 处理普通内容
-        if (content && content.trim()) {
-          // 如果有推理内容且刚结束，记录结束时间
-          if (hasReasoningContent && !reasoning && reasoningEndTime === 0) {
-            reasoningEndTime = Date.now();
-          }
+        // 处理普通内容，包括<think>标签的解析
+        if (content) {
+          // 将当前内容添加到缓冲区
+          contentBuffer += content;
 
-          // 累加内容 - 这是关键步骤
-          fullContent += content;
-          console.log(`[streamCompletion] 累积内容，当前增量: ${content.length}, 总长度: ${fullContent.length}`);
+          // 处理<think>标签
+          while (contentBuffer.length > 0) {
+            if (!isInThinkTag) {
+              // 查找<think>开始标签
+              const thinkStartIndex = contentBuffer.indexOf('<think>');
+              if (thinkStartIndex !== -1) {
+                // 处理<think>标签之前的普通内容
+                const beforeThink = contentBuffer.substring(0, thinkStartIndex);
+                if (beforeThink) {
+                  fullContent += beforeThink;
+                  if (onUpdate) {
+                    onUpdate(beforeThink);
+                  }
 
-          // 调用回调函数 - 只传递内容增量，不传递推理内容（推理内容已经单独处理）
-          if (onUpdate) {
-            onUpdate(content); // 只传递当前内容增量
-          }
+                  EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_DELTA, {
+                    text: beforeThink,
+                    isFirstChunk: isFirstChunk,
+                    chunkLength: beforeThink.length,
+                    fullContentLength: fullContent.length,
+                    timestamp: Date.now()
+                  });
 
-          // 发送事件通知 - 只包含当前文本块，这样UI层可以自行累加
-          EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_DELTA, {
-            text: content, // 只发送当前文本块
-            isFirstChunk: isFirstChunk,
-            chunkLength: content.length,
-            fullContentLength: fullContent.length,
-            timestamp: Date.now()
-          });
+                  if (isFirstChunk && beforeThink.trim()) {
+                    EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_FIRST_CHUNK, {
+                      text: beforeThink,
+                      fullContent: beforeThink,
+                      timestamp: Date.now()
+                    });
+                    isFirstChunk = false;
+                  }
+                }
 
-          // 处理首个文本块
-          if (isFirstChunk && content.trim()) {
-            // 发送特殊事件，通知UI立即替换占位符
-            EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_FIRST_CHUNK, {
-              text: content,
-              fullContent: content,
-              timestamp: Date.now()
-            });
+                // 进入思考模式
+                isInThinkTag = true;
+                if (!hasReasoningContent) {
+                  hasReasoningContent = true;
+                  reasoningStartTime = Date.now();
+                  console.log('[streamCompletion] 开始接收<think>标签思考内容');
+                }
 
-            // 标记为非首次，避免重复触发
-            isFirstChunk = false;
+                // 移除已处理的内容
+                contentBuffer = contentBuffer.substring(thinkStartIndex + 7); // 7 = '<think>'.length
+              } else {
+                // 没有找到<think>标签，处理所有普通内容
+                if (contentBuffer) {
+                  fullContent += contentBuffer;
+                  if (onUpdate) {
+                    onUpdate(contentBuffer);
+                  }
+
+                  EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_DELTA, {
+                    text: contentBuffer,
+                    isFirstChunk: isFirstChunk,
+                    chunkLength: contentBuffer.length,
+                    fullContentLength: fullContent.length,
+                    timestamp: Date.now()
+                  });
+
+                  if (isFirstChunk && contentBuffer.trim()) {
+                    EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_FIRST_CHUNK, {
+                      text: contentBuffer,
+                      fullContent: contentBuffer,
+                      timestamp: Date.now()
+                    });
+                    isFirstChunk = false;
+                  }
+                }
+                contentBuffer = '';
+                break;
+              }
+            } else {
+              // 在<think>标签内，查找</think>结束标签
+              const thinkEndIndex = contentBuffer.indexOf('</think>');
+              if (thinkEndIndex !== -1) {
+                // 处理思考内容
+                const thinkContent = contentBuffer.substring(0, thinkEndIndex);
+                if (thinkContent) {
+                  thinkBuffer += thinkContent;
+                  fullReasoning += thinkContent;
+                  // 发送思考内容事件
+                  if (onChunk) {
+                    onChunk({
+                      type: 'thinking.delta',
+                      text: thinkContent,
+                      thinking_millsec: Date.now() - reasoningStartTime
+                    });
+                  }
+                }
+
+                // 退出思考模式
+                isInThinkTag = false;
+                if (hasReasoningContent && reasoningEndTime === 0) {
+                  reasoningEndTime = Date.now();
+                }
+
+                // 移除已处理的内容
+                contentBuffer = contentBuffer.substring(thinkEndIndex + 8); // 8 = '</think>'.length
+              } else {
+                // 没有找到结束标签，将所有内容作为思考内容
+                if (contentBuffer) {
+                  thinkBuffer += contentBuffer;
+                  fullReasoning += contentBuffer;
+                  // 发送思考内容片段事件
+                  if (onChunk) {
+                    onChunk({
+                      type: 'thinking.delta',
+                      text: contentBuffer,
+                      thinking_millsec: Date.now() - reasoningStartTime
+                    });
+                  }
+                }
+                contentBuffer = '';
+                break;
+              }
+            }
           }
         }
 
@@ -209,20 +291,16 @@ export async function streamCompletion(
           interrupted: true // 标记为被中断
         });
 
-        // 返回当前已处理的内容，并标记为被中断
+        // 返回当前已处理的内容
         if (hasReasoningContent && fullReasoning) {
           const reasoningTime = reasoningEndTime > reasoningStartTime ? reasoningEndTime - reasoningStartTime : 0;
           return {
             content: fullContent,
             reasoning: fullReasoning,
-            reasoningTime,
-            interrupted: true
+            reasoningTime
           };
         }
-        return {
-          content: fullContent,
-          interrupted: true
-        };
+        return fullContent;
       }
 
       // 发送错误事件
@@ -239,17 +317,10 @@ export async function streamCompletion(
     const mcpTools = additionalParams?.mcpTools;
 
     if (enableTools && mcpTools && mcpTools.length > 0 && fullContent) {
-      console.log(`[streamCompletion] 检查工具调用 - 内容长度: ${fullContent.length}, 工具数量: ${mcpTools.length}`);
-      console.log(`[streamCompletion] 内容预览: ${fullContent.substring(0, 200)}...`);
-
-      // 使用静态导入的工具解析函数
-
       // 检查是否包含工具调用
       const hasTools = hasToolUseTags(fullContent, mcpTools);
-      console.log(`[streamCompletion] 工具调用检测结果: ${hasTools}`);
 
       if (hasTools) {
-        console.log(`[streamCompletion] 检测到工具调用，需要重新发起请求`);
 
         // 这里我们需要触发工具调用处理
         // 但由于 streamCompletion 是底层函数，我们只能返回特殊标记
@@ -260,8 +331,6 @@ export async function streamCompletion(
           reasoningTime: hasReasoningContent && fullReasoning ? (reasoningEndTime > reasoningStartTime ? reasoningEndTime - reasoningStartTime : 0) : undefined,
           hasToolCalls: true
         } as any;
-      } else {
-        console.log(`[streamCompletion] 未检测到工具调用`);
       }
     }
 

@@ -28,6 +28,10 @@ export interface SettingsState {
   // 引用显示详情
   showCitationDetails?: boolean;
 
+  // CompactChatInput 功能控制开关
+  showAIDebateButton?: boolean;
+  showQuickPhraseButton?: boolean;
+
   // 其他设置...
   [key: string]: any;
 }
@@ -62,6 +66,8 @@ const loadFromStorage = async (): Promise<SettingsState> => {
     modelSelectorStyle: 'dialog',
     toolbarDisplayStyle: 'both',
     showSystemPromptBubble: true,
+    showAIDebateButton: true,
+    showQuickPhraseButton: true,
     isLoading: false
   };
 };
@@ -85,6 +91,8 @@ const initialState: SettingsState = {
   modelSelectorStyle: 'dialog',
   toolbarDisplayStyle: 'both',
   showSystemPromptBubble: true,
+  showAIDebateButton: true,
+  showQuickPhraseButton: true,
   isLoading: false
 };
 
