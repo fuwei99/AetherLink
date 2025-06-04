@@ -102,7 +102,7 @@ export async function withRetry<T>(
  */
 export async function withRetryAndProgress<T>(
   operation: () => Promise<T>,
-  context: string,
+  _context: string,
   onRetry?: (attempt: number, maxRetries: number, delay: number, error: any) => void,
   maxRetries: number = RETRY_CONFIG.maxRetries
 ): Promise<T> {

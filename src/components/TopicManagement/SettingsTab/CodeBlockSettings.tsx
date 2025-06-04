@@ -76,13 +76,13 @@ const CODE_STYLES = [
 ];
 
 interface CodeBlockSettingsProps {
-  onSettingChange?: (settingId: string, value: any) => void;
+  // 暂时保留接口以保持兼容性，但不使用参数
 }
 
 /**
  * 代码块设置组件
  */
-const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = ({ onSettingChange }) => {
+const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
   const dispatch = useAppDispatch();
   const [expanded, setExpanded] = useState(false);
 

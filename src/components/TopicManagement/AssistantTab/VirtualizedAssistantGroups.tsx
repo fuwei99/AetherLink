@@ -47,7 +47,7 @@ const VirtualizedAssistantGroups = memo(function VirtualizedAssistantGroups({
   }, [assistantGroups, userAssistants, assistantGroupMap]);
 
   // 缓存助手项渲染函数
-  const renderAssistantItem = useCallback((assistant: Assistant, index: number) => {
+  const renderAssistantItem = useCallback((assistant: Assistant, _index: number) => {
     return (
       <AssistantItem
         assistant={assistant}
@@ -60,7 +60,7 @@ const VirtualizedAssistantGroups = memo(function VirtualizedAssistantGroups({
   }, [currentAssistant?.id, onSelectAssistant, onOpenMenu, onDeleteAssistant]);
 
   // 缓存助手键值函数
-  const getAssistantKey = useCallback((assistant: Assistant, index: number) => {
+  const getAssistantKey = useCallback((assistant: Assistant, _index: number) => {
     return assistant.id;
   }, []);
 

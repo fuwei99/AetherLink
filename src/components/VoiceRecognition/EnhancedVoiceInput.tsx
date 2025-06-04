@@ -6,7 +6,6 @@ import {
   Paper,
   IconButton,
   CircularProgress,
-  Tooltip,
   Slide
 } from '@mui/material';
 import { Mic, MicOff, Send, Edit, X, Plus, Volume2 } from 'lucide-react';
@@ -543,13 +542,13 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
         {/* 标题 */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <VolumeUpIcon sx={{ mr: 1, color: isDarkMode ? '#90caf9' : '#2196f3', fontSize: 20 }} />
+            <Volume2 size={20} color={isDarkMode ? '#90caf9' : '#2196f3'} style={{ marginRight: 8 }} />
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               语音识别结果
             </Typography>
           </Box>
           <IconButton size="small" onClick={handleClose}>
-            <CloseIcon fontSize="small" />
+            <X size={16} />
           </IconButton>
         </Box>
 

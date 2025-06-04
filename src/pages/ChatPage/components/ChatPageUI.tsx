@@ -1,9 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import SettingsIcon from '@mui/icons-material/Settings';
-import AddIcon from '@mui/icons-material/Add';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
+import { AlignJustify, Settings, Plus, Trash2 } from 'lucide-react';
 
 import MessageList from '../../../components/message/MessageList';
 import ChatInput from '../../../components/ChatInput';
@@ -20,93 +17,7 @@ import { newMessagesActions } from '../../../shared/store/slices/newMessagesSlic
 import { getThemeColors } from '../../../shared/utils/themeUtils';
 import { useTheme } from '@mui/material/styles';
 
-// 样式常量 - 提取重复的样式对象以提升性能
-const STYLES = {
-  mainContainer: {
-    display: 'flex',
-    flexDirection: { xs: 'column', sm: 'row' },
-    height: '100vh',
-    bgcolor: 'transparent'
-  },
-  contentContainer: {
-    flexGrow: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    overflow: 'hidden',
-    bgcolor: 'transparent'
-  },
-  appBar: {
-    bgcolor: 'background.paper',
-    color: 'text.primary',
-    borderBottom: '1px solid',
-    borderColor: 'divider',
-  },
-  toolbar: {
-    position: 'relative',
-    minHeight: '56px !important'
-  },
-  chatArea: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: 'calc(100vh - 64px)',
-    width: '100%',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  messageContainer: {
-    flexGrow: 1,
-    overflow: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100%',
-    maxWidth: '100%',
-    backgroundColor: 'transparent',
-  },
-  inputContainer: {
-    width: '100%',
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 2,
-    backgroundColor: 'transparent',
-    boxShadow: 'none',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 0,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  toolbarContainer: {
-    width: '100%',
-    maxWidth: '800px',
-    display: 'flex',
-    justifyContent: 'center'
-  },
-  inputWrapper: {
-    width: '100%',
-    maxWidth: '800px',
-    display: 'flex',
-    justifyContent: 'center'
-  },
-  welcomeContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '80%',
-    p: 3,
-    textAlign: 'center',
-    bgcolor: 'transparent',
-  },
-  welcomeText: {
-    fontWeight: 400,
-    color: '#000000',
-    mb: 1,
-  }
-} as const;
+
 
 // 默认设置常量 - 避免每次渲染时创建新对象
 const DEFAULT_TOP_TOOLBAR_SETTINGS = {
@@ -311,7 +222,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
             onClick={() => setDrawerOpen(!drawerOpen)}
             sx={{ mr: 1 }}
           >
-            <MenuIcon />
+            <AlignJustify size={20} />
           </IconButton>
         ) : null;
 
@@ -338,7 +249,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
             size="small"
             sx={{ ml: 1 }}
           >
-            <AddIcon />
+            <Plus size={20} />
           </IconButton>
         ) : null;
 
@@ -351,7 +262,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
             size="small"
             sx={{ ml: 1 }}
           >
-            <ClearAllIcon />
+            <Trash2 size={20} />
           </IconButton>
         ) : null;
 
@@ -371,7 +282,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
       case 'settingsButton':
         return mergedTopToolbarSettings.showSettingsButton ? (
           <IconButton key={componentId} color="inherit" onClick={() => navigate('/settings')}>
-            <SettingsIcon />
+            <Settings size={20} />
           </IconButton>
         ) : null;
 

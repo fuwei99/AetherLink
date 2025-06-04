@@ -158,8 +158,8 @@ export class BingMobileClient {
     // 时间范围
     if (options.timeRange || options.freshness) {
       const timeRange = options.timeRange || options.freshness;
-      const timeMap = { 'day': 'd', 'week': 'w', 'month': 'm', 'year': 'y' };
-      if (timeMap[timeRange]) {
+      const timeMap: Record<string, string> = { 'day': 'd', 'week': 'w', 'month': 'm', 'year': 'y' };
+      if (timeRange && timeMap[timeRange]) {
         params.set('qft', `+filterui:age-lt${timeMap[timeRange]}`);
       }
     }

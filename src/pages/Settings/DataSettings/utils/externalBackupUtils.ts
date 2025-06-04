@@ -296,7 +296,7 @@ export async function convertChatboxaiBackup(backupData: ChatboxaiBackup): Promi
             }));
           }
 
-          newTopic.messages.push(newMsg);
+          newTopic.messages!.push(newMsg);
           newTopic.messageIds.push(newMsg.id);
         } catch (msgError) {
           console.error(`处理消息 ${chatboxMsg.id} 时出错:`, msgError);

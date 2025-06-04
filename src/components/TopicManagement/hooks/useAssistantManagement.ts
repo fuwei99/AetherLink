@@ -85,10 +85,15 @@ export function useAssistantManagement({
         const allTopics = await dexieStorage.getAllTopics();
         const assistantTopics = allTopics.filter((topic: ChatTopic) => topic.assistantId === assistant.id);
 
-        // 按最后消息时间排序
+        // 按固定状态和最后消息时间排序（固定的在前面，然后按时间降序）
         assistantTopics.sort((a: ChatTopic, b: ChatTopic) => {
-          const timeA = new Date(a.lastMessageTime || 0).getTime();
-          const timeB = new Date(b.lastMessageTime || 0).getTime();
+          // 首先按固定状态排序，固定的话题在前面
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+
+          // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
+          const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
+          const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
           return timeB - timeA;
         });
 

@@ -3,9 +3,10 @@ import {
   ListItemButton,
   ListItemText,
   IconButton,
-  Typography
+  Typography,
+  Box
 } from '@mui/material';
-import { MoreVertical, Trash } from 'lucide-react';
+import { MoreVertical, Trash, Pin } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { createSelector } from '@reduxjs/toolkit';
 import { getMainTextContent } from '../../../shared/utils/blockUtils';
@@ -133,17 +134,30 @@ export default function TopicItem({
     >
       <ListItemText
         primary={
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: isSelected ? 600 : 400,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {displayName}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: isSelected ? 600 : 400,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1
+              }}
+            >
+              {displayName}
+            </Typography>
+            {topic.pinned && (
+              <Pin
+                size={12}
+                style={{
+                  color: '#1976d2',
+                  flexShrink: 0,
+                  opacity: 0.8
+                }}
+              />
+            )}
+          </Box>
         }
         secondary={
           <Typography

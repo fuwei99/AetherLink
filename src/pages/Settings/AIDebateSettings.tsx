@@ -117,11 +117,7 @@ const AIDebateSettings: React.FC = () => {
     summaryEnabled: DEFAULT_CONFIG.SUMMARY_ENABLED
   });
 
-  // 临时输入状态，用于允许完全清空输入框
-  const [tempInputs, setTempInputs] = useState({
-    maxRounds: '',
-    maxTokensPerRound: ''
-  });
+
 
   // 分组相关状态
   const [configGroups, setConfigGroups] = useState<DebateConfigGroup[]>([]);

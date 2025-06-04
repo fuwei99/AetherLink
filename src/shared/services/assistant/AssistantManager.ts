@@ -1,8 +1,4 @@
 import type { Assistant, ChatTopic } from '../../types/Assistant';
-import {
-  deserializeAssistant,
-  serializeAssistant
-} from './types';
 import { dexieStorage } from '../DexieStorageService';
 
 /**

@@ -44,13 +44,6 @@ export function useAssistantTabLogic(
     []
   );
 
-  // 使用助手分组钩子
-  const {
-    assistantGroups,
-    assistantGroupMap,
-    ungroupedAssistants
-  } = useAssistantGroups(userAssistants);
-
   // 过滤助手列表 - 使用防抖搜索查询
   const filteredUserAssistants = useMemo(() => {
     if (!debouncedSearchQuery) return userAssistants;
@@ -66,6 +59,13 @@ export function useAssistantTabLogic(
       return false;
     });
   }, [debouncedSearchQuery, userAssistants]);
+
+  // 使用助手分组钩子 - 传入过滤后的助手列表
+  const {
+    assistantGroups,
+    assistantGroupMap,
+    ungroupedAssistants
+  } = useAssistantGroups(filteredUserAssistants);
 
   // 通知提示状态
   const [notification, setNotification] = useState<{message: string, open: boolean, severity: 'success' | 'error' | 'info' | 'warning'}>({

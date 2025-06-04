@@ -18,7 +18,7 @@ export const useInputStyles = () => {
       inputBg: 'transparent',
       iconBg: isDarkMode ? 'rgba(40, 40, 40, 0.8)' : 'rgba(248, 250, 252, 0.8)',
       border: isDarkMode ? '1px solid rgba(60, 60, 60, 0.8)' : '1px solid rgba(230, 230, 230, 0.8)',
-      borderRadius: '20px',
+      borderRadius: '8px',
       boxShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
     };
 
@@ -27,7 +27,7 @@ export const useInputStyles = () => {
         return {
           ...baseStyles,
           inputBg: 'transparent',
-          borderRadius: '24px',
+          borderRadius: '12px',
           boxShadow: isDarkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.15)',
         };
       case 'minimal':
@@ -35,7 +35,7 @@ export const useInputStyles = () => {
           ...baseStyles,
           inputBg: 'transparent',
           border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
-          borderRadius: '16px',
+          borderRadius: '6px',
           boxShadow: 'none',
         };
       default:

@@ -4,6 +4,7 @@ import type { WebSearchResult, WebSearchProviderConfig, WebSearchProviderRespons
 import store from '../store';
 import { newMessagesActions } from '../store/slices/newMessagesSlice';
 import { AssistantMessageStatus } from '../types/newMessage';
+import { bingFreeSearchService } from './BingFreeSearchService';
 
 /**
  * 增强版网络搜索服务
@@ -39,7 +40,7 @@ class EnhancedWebSearchService {
     }
 
     // 本地搜索提供商（Google、Bing）和免费WebSearch不需要API密钥
-    if (provider.id === 'local-google' || provider.id === 'local-bing' || provider.id === 'bing') {
+    if (provider.id === 'local-google' || provider.id === 'local-bing' || provider.id === 'bing' || provider.id === 'bing-free') {
       return true;
     }
 
@@ -87,6 +88,8 @@ class EnhancedWebSearchService {
     }
 
     switch (provider.id) {
+      case 'bing-free':
+        return await this.bingFreeSearch(provider, formattedQuery, websearch);
       case 'tavily':
         return await this.tavilySearch(provider, formattedQuery, websearch);
       case 'exa':
@@ -97,6 +100,47 @@ class EnhancedWebSearchService {
         return await this.firecrawlSearch(provider, formattedQuery, websearch);
       default:
         throw new Error(`不支持的搜索提供商: ${provider.id}`);
+    }
+  }
+
+  /**
+   * 免费Bing搜索实现 - 使用 capacitor-cors-bypass-enhanced 插件
+   */
+  private async bingFreeSearch(
+    _provider: WebSearchProviderConfig,
+    query: string,
+    websearch: any
+  ): Promise<WebSearchProviderResponse> {
+    try {
+      console.log(`[EnhancedWebSearchService] 开始免费Bing搜索: ${query}`);
+
+      // 使用免费Bing搜索服务
+      const response = await bingFreeSearchService.search({
+        query,
+        maxResults: websearch.maxResults || 10,
+        language: 'zh-CN',
+        region: 'CN',
+        safeSearch: websearch.filterSafeSearch ? 'moderate' : 'off',
+        freshness: websearch.searchWithTime ? 'week' : undefined,
+        timeout: 30000
+      });
+
+      // 转换结果格式
+      const results: WebSearchResult[] = response.results.map((result) => ({
+        id: result.id,
+        title: result.title,
+        url: result.url,
+        snippet: result.snippet,
+        timestamp: result.timestamp,
+        provider: 'bing-free',
+        score: result.score
+      }));
+
+      console.log(`[EnhancedWebSearchService] 免费Bing搜索完成，找到 ${results.length} 个结果`);
+      return { results };
+    } catch (error: any) {
+      console.error('[EnhancedWebSearchService] 免费Bing搜索失败:', error);
+      throw new Error(`免费Bing搜索失败: ${error.message}`);
     }
   }
 

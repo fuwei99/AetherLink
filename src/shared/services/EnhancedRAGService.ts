@@ -2,7 +2,6 @@
  * 增强的RAG搜索服务
  * 实现复杂的检索增强生成架构，替代简单的向量搜索
  */
-import { v4 as uuid } from 'uuid';
 import { dexieStorage } from './DexieStorageService';
 import { MobileEmbeddingService } from './MobileEmbeddingService';
 import type { KnowledgeBase, KnowledgeDocument, KnowledgeSearchResult } from '../types/KnowledgeBase';
@@ -44,7 +43,7 @@ export class EnhancedRAGService {
   private static instance: EnhancedRAGService;
   private embeddingService: MobileEmbeddingService;
   private queryCache: Map<string, QueryExpansion> = new Map();
-  private resultCache: Map<string, KnowledgeSearchResult[]> = new Map();
+
 
   private constructor() {
     this.embeddingService = MobileEmbeddingService.getInstance();
@@ -373,7 +372,7 @@ export class EnhancedRAGService {
   private async semanticRetrieval(
     queryExpansion: QueryExpansion,
     documents: KnowledgeDocument[],
-    knowledgeBase: KnowledgeBase,
+    _knowledgeBase: KnowledgeBase,
     maxCandidates: number
   ): Promise<RetrievalResult> {
     // 基于文档元数据和上下文的语义匹配
@@ -420,7 +419,7 @@ export class EnhancedRAGService {
    */
   private async fuseRetrievalResults(
     retrievalResults: RetrievalResult[],
-    originalQuery: string,
+    _originalQuery: string,
     config: RAGSearchConfig
   ): Promise<KnowledgeSearchResult[]> {
     if (retrievalResults.length === 0) {
@@ -786,7 +785,7 @@ export class EnhancedRAGService {
     return maxSimilarity < threshold ? 1 : 0;
   }
 
-  private async calculateRelevanceScore(query: string, content: string, knowledgeBase: KnowledgeBase): Promise<number> {
+  private async calculateRelevanceScore(query: string, content: string, _knowledgeBase: KnowledgeBase): Promise<number> {
     try {
       // 简化的相关性计算
       const queryWords = query.toLowerCase().split(/\s+/);

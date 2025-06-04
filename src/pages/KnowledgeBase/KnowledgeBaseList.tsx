@@ -47,7 +47,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   flexDirection: 'column',
   transition: 'transform 0.2s, box-shadow 0.2s',
   cursor: 'pointer',
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: (theme.shape.borderRadius as number) * 2,
   '&:hover': {
     transform: 'translateY(-4px)',
     boxShadow: theme.shadows[4],

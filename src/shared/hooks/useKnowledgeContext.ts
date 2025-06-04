@@ -4,13 +4,14 @@
  */
 
 import { useCallback } from 'react';
-import { KnowledgeContextService } from '../services/KnowledgeContextService';
 import { REFERENCE_PROMPT } from '../config/prompts';
 
 export interface KnowledgeContextData {
   knowledgeBase: any;
   references: any[];
   messageId: string;
+  isSelected: boolean;
+  searchOnSend: boolean;
 }
 
 /**

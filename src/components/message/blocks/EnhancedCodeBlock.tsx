@@ -3,7 +3,6 @@ import {
   Box,
   IconButton,
   Tooltip,
-  Typography,
   Snackbar,
   Chip,
   Collapse
@@ -28,7 +27,6 @@ import {
   tomorrow,
   twilight,
   oneDark,
-  prism,
   // 新增更多主题
   atomDark,
   base16AteliersulphurpoolLight,

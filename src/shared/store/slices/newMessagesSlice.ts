@@ -448,7 +448,7 @@ export const loadTopicMessagesThunk = createAsyncThunk(
       const allBlocks = await dexieStorage.getMessageBlocksByMessageIds(messageIds);
 
       // 按消息ID分组并去重
-      const blocks = [];
+      const blocks: any[] = [];
       const processedBlockIds = new Set<string>();
       const blocksByMessageId = new Map<string, any[]>();
 

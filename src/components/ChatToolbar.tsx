@@ -75,7 +75,7 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
         background: 'transparent',
         border: 'none',
         borderRadius: '24px',
-        padding: '4px 8px'
+        padding: '0 8px'
       },
       // 按钮样式 - 小巧圆润
       button: {
@@ -418,7 +418,7 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
   return (
     <Box
       sx={{
-        padding: '8px 0',
+        padding: '4px 0 0 0',
         backgroundColor: 'transparent',
         width: '100%',
         position: 'relative',

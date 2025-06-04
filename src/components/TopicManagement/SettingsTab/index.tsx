@@ -3,6 +3,7 @@ import {
   Box,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   ListItemSecondaryAction,
@@ -12,7 +13,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-import { Settings, User, Sliders, Cog } from 'lucide-react';
+import { User, Sliders, Cog } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { MathRendererType } from '../../../shared/types';
 import type { ThinkingOption } from '../../../shared/config/reasoningConfig';
@@ -187,8 +188,7 @@ export default function SettingsTab({
         }
       }}
     >
-      <ListItem
-        button
+      <ListItemButton
         onClick={() => navigate('/settings')}
         sx={{
           px: 2,
@@ -230,7 +230,7 @@ export default function SettingsTab({
             </IconButton>
           </Tooltip>
         </ListItemSecondaryAction>
-      </ListItem>
+      </ListItemButton>
 
       <Divider sx={{ my: 0.5 }} />
 

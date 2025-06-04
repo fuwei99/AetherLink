@@ -12,7 +12,6 @@ import {
   Slider,
   FormControlLabel,
   Switch,
-  Box,
 } from '@mui/material';
 import { Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from '@mui/icons-material';
 

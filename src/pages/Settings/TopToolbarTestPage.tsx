@@ -6,21 +6,16 @@ import {
   Box,
   Typography,
   Paper,
-  Button,
   FormGroup,
   FormControlLabel,
   Switch,
   AppBar,
   Toolbar,
-  IconButton,
-  Divider
+  IconButton
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MenuIcon from '@mui/icons-material/Menu';
 import SettingsIcon from '@mui/icons-material/Settings';
-import AddIcon from '@mui/icons-material/Add';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { ModelSelector } from '../ChatPage/components/ModelSelector';
 
 const TopToolbarTestPage: React.FC = () => {
@@ -58,7 +53,7 @@ const TopToolbarTestPage: React.FC = () => {
   };
 
   const toggleModelSelectorStyle = () => {
-    const newStyle = topToolbar.modelSelectorStyle === 'full' ? 'icon' : 'full';
+    const newStyle = topToolbar.modelSelectorStyle === 'dialog' ? 'dropdown' : 'dialog';
     dispatch(updateSettings({
       topToolbar: {
         ...topToolbar,
@@ -115,16 +110,16 @@ const TopToolbarTestPage: React.FC = () => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={topToolbar.modelSelectorStyle === 'full'}
+                  checked={topToolbar.modelSelectorStyle === 'dialog'}
                   onChange={toggleModelSelectorStyle}
                 />
               }
-              label={`当前样式: ${topToolbar.modelSelectorStyle === 'full' ? '完整显示' : '图标模式'}`}
+              label={`当前样式: ${topToolbar.modelSelectorStyle === 'dialog' ? '弹窗模式' : '下拉模式'}`}
             />
           </FormGroup>
 
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            切换开关来测试不同的模型选择器样式。图标模式应该能正确连接到弹出菜单。
+            切换开关来测试不同的模型选择器样式。弹窗模式使用对话框，下拉模式使用下拉菜单。
           </Typography>
         </Paper>
 
@@ -173,7 +168,7 @@ const TopToolbarTestPage: React.FC = () => {
           </AppBar>
           
           <Typography variant="caption" sx={{ p: 2, pt: 1, color: 'text.secondary', display: 'block' }}>
-            点击模型选择器测试弹出功能。在图标模式下，点击图标应该能正确打开模型选择对话框。
+            点击模型选择器测试弹出功能。在弹窗模式下，点击按钮应该能正确打开模型选择对话框。
           </Typography>
         </Paper>
 
@@ -187,13 +182,13 @@ const TopToolbarTestPage: React.FC = () => {
               切换上方的开关来改变模型选择器样式
             </Typography>
             <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-              在完整模式下，应该显示带文字的按钮
+              在弹窗模式下，应该显示带文字的按钮
             </Typography>
             <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-              在图标模式下，应该只显示图标按钮
+              在下拉模式下，应该显示下拉选择器
             </Typography>
             <Typography component="li" variant="body2">
-              无论哪种模式，点击都应该能正确打开模型选择对话框
+              无论哪种模式，点击都应该能正确打开模型选择界面
             </Typography>
           </Box>
         </Paper>

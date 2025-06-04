@@ -320,7 +320,8 @@ const WebSearchSettings: React.FC = () => {
               input={<OutlinedInput label="搜索服务商" />}
               disabled={!webSearchSettings.enabled}
             >
-              <MenuItem value="tavily">💎 Tavily (推荐)</MenuItem>
+              <MenuItem value="bing-free">🆓 Bing 免费搜索 (推荐)</MenuItem>
+              <MenuItem value="tavily">💎 Tavily (付费)</MenuItem>
               <MenuItem value="exa">🧠 Exa (神经搜索)</MenuItem>
               <MenuItem value="bocha">🤖 Bocha (AI搜索)</MenuItem>
               <MenuItem value="firecrawl"> Firecrawl (网页抓取)</MenuItem>

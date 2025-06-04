@@ -36,7 +36,7 @@ function VirtualScroller<T>({
   const [containerHeight, setContainerHeight] = useState(0);
 
   // 使用 useMemo 缓存计算结果，避免每次渲染都重新计算
-  const { startIndex, endIndex, visibleItems, totalHeight, offsetY } = useMemo(() => {
+  const { startIndex, visibleItems, totalHeight, offsetY } = useMemo(() => {
     // 计算可见区域的起始和结束索引
     const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscanCount);
     const end = Math.min(
@@ -55,7 +55,6 @@ function VirtualScroller<T>({
 
     return {
       startIndex: start,
-      endIndex: end,
       visibleItems: visible,
       totalHeight: total,
       offsetY: offset

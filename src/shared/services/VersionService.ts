@@ -194,10 +194,10 @@ class VersionService {
         // 创建一个新块而不是修改现有块，确保完全隔离
         const updatedBlock = {
           ...mainTextBlock,
-          content: contentSnapshot,
+          content: contentSnapshot as string,
           updatedAt: new Date().toISOString()
         };
-        
+
         // 更新块内容
         await dexieStorage.updateMessageBlock(mainTextBlock.id, updatedBlock);
 
@@ -344,7 +344,7 @@ class VersionService {
           // 使用最新版本的原始内容
           for (const version of sortedVersions) {
             if (version.metadata?.originalContent) {
-              latestContent = version.metadata.originalContent;
+              latestContent = version.metadata.originalContent as string;
               console.log(`[VersionService] 使用最新版本(ID: ${version.id})的原始内容，长度: ${latestContent.length}`);
               break;
             }
@@ -356,7 +356,7 @@ class VersionService {
       if (!latestContent && message.currentVersionId && message.versions) {
         const currentVersion = message.versions.find(v => v.id === message.currentVersionId);
         if (currentVersion?.metadata?.originalContent) {
-          latestContent = currentVersion.metadata.originalContent;
+          latestContent = currentVersion.metadata.originalContent as string;
           console.log(`[VersionService] 使用当前版本的原始内容，长度: ${latestContent.length}`);
         }
       }

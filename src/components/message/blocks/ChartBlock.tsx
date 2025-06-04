@@ -49,13 +49,13 @@ const ChartBlock: React.FC<Props> = ({ block }) => {
     try {
       switch (block.chartType) {
         case 'bar':
-          return <Bar data={block.data} options={block.options || {}} />;
+          return <Bar data={block.data as any} options={block.options || {}} />;
         case 'line':
-          return <Line data={block.data} options={block.options || {}} />;
+          return <Line data={block.data as any} options={block.options || {}} />;
         case 'pie':
-          return <Pie data={block.data} options={block.options || {}} />;
+          return <Pie data={block.data as any} options={block.options || {}} />;
         case 'scatter':
-          return <Scatter data={block.data} options={block.options || {}} />;
+          return <Scatter data={block.data as any} options={block.options || {}} />;
         default:
           return (
             <Typography variant="body2" color="error">

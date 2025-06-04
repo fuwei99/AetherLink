@@ -97,29 +97,7 @@ const hostPreview = (baseUrl: string, providerType?: string) => {
   return formatApiHost(cleanUrl) + 'responses';
 };
 
-/**
- * 智能URL补全函数 - 专门处理OpenAI兼容格式的API
- * @param baseUrl 用户输入的基础URL
- * @param providerType 供应商类型
- * @returns 补全后的完整API URL
- */
-const smartCompleteApiUrl = (baseUrl: string, providerType?: string): string => {
-  if (!baseUrl.trim()) return '';
 
-  // 去除可能的@前缀
-  let cleanUrl = baseUrl.trim();
-  if (cleanUrl.startsWith('@')) {
-    cleanUrl = cleanUrl.substring(1);
-    }
-
-  // 如果用户在末尾添加了 #，表示强制使用原始URL
-  if (cleanUrl.endsWith('#')) {
-    return cleanUrl.slice(0, -1);
-  }
-
-  // 其他情况保持URL不变
-  return cleanUrl;
-};
 
 /**
  * 显示用的URL补全函数 - 仅用于显示完整的API端点

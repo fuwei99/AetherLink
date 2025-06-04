@@ -66,8 +66,8 @@ export class SafeAreaService {
   private async initializeNativeSafeArea(): Promise<void> {
     try {
       // 获取安全区域信息
-      const safeAreaData = await SafeArea.getSafeAreaInsets();
-      
+      const safeAreaData = await (SafeArea as any).getSafeAreaInsets();
+
       this.currentInsets = {
         top: safeAreaData.insets.top,
         right: safeAreaData.insets.right,
@@ -78,14 +78,14 @@ export class SafeAreaService {
       console.log('[SafeAreaService] 原生安全区域获取成功:', this.currentInsets);
 
       // 监听安全区域变化（如屏幕旋转）
-      SafeArea.addListener('safeAreaChanged', (data) => {
+      (SafeArea as any).addListener('safeAreaChanged', (data: any) => {
         this.currentInsets = {
           top: data.insets.top,
           right: data.insets.right,
           bottom: data.insets.bottom,
           left: data.insets.left
         };
-        
+
         console.log('[SafeAreaService] 安全区域已更新:', this.currentInsets);
         this.applySafeAreaToCSS();
         this.notifyListeners();

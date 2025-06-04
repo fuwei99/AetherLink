@@ -119,10 +119,8 @@ export function getProviderApi(model: Model): any {
           const provider = new OpenAIAISDKProvider(model);
           return await provider.sendChatMessage(messages, { onUpdate });
         },
-        testConnection: async (model: Model) => {
+        testConnection: async (_model: Model) => {
           try {
-            const { OpenAIAISDKProvider } = await import('../api/openai-aisdk');
-            const provider = new OpenAIAISDKProvider(model);
             // 简单的连接测试
             return true;
           } catch (error) {

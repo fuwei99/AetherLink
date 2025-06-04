@@ -21,7 +21,7 @@ import type { RootState } from '../shared/store';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../shared/types';
 import type { DebateConfig } from '../shared/services/AIDebateService';
 import { dexieStorage } from '../shared/services/DexieStorageService';
-import { VoiceButton, VoiceInputArea } from './VoiceRecognition';
+import { VoiceButton } from './VoiceRecognition';
 import EnhancedVoiceInput from './VoiceRecognition/EnhancedVoiceInput';
 
 
@@ -127,12 +127,9 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     handleSubmit,
     handleKeyDown,
     handleChange,
-    textareaHeight,
     showCharCount,
     handleCompositionStart,
-    handleCompositionEnd,
-    isMobile,
-    isTablet
+    handleCompositionEnd
   } = useChatInputLogic({
     onSendMessage,
     onSendMultiModelMessage,
@@ -156,9 +153,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   // 语音识别功能
   const {
     isListening,
-    recognitionText,
     error: voiceRecognitionError,
-    startRecognition,
     stopRecognition,
   } = useVoiceRecognition();
 
@@ -196,8 +191,8 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
 
   // 检测iOS设备
   useEffect(() => {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                       (navigator.userAgent.includes('Mac') && navigator.maxTouchPoints > 1);
     setIsIOS(isIOSDevice);
   }, []);
 
@@ -401,22 +396,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     }
   };
 
-  const handleStartVoiceRecognition = async () => {
-    await startRecognition({
-      language: 'zh-CN',
-      maxResults: 1,
-      partialResults: true,
-      popup: false,
-    });
-  };
 
-  const handleStopVoiceRecognition = async () => {
-    try {
-      await stopRecognition();
-    } catch (error) {
-      // 静默处理错误
-    }
-  };
 
   const handleVoiceSendMessage = (voiceMessage: string) => {
     // 发送语音识别的消息

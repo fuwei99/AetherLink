@@ -114,8 +114,8 @@ export interface GeneratedImage {
   modelId: string;
 }
 
-// 网络搜索提供商类型 - 仅包含收费API服务
-export type WebSearchProvider = 'tavily' | 'exa' | 'bocha' | 'firecrawl' | 'custom';
+// 网络搜索提供商类型 - 包含免费和收费API服务
+export type WebSearchProvider = 'bing-free' | 'tavily' | 'exa' | 'bocha' | 'firecrawl' | 'custom';
 
 // 网络搜索提供商配置
 export interface WebSearchProviderConfig {

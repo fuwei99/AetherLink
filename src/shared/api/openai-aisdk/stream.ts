@@ -9,51 +9,7 @@ import { hasToolUseTags } from '../../utils/mcpToolParser';
 import { getAppropriateTag } from '../../config/reasoningTags';
 import type { Model } from '../../types';
 
-/**
- * 从文本中提取推理内容的简化函数
- * @param text 完整文本
- * @param reasoningTag 推理标签配置
- * @returns 分离后的内容和推理
- */
-function extractReasoningFromText(text: string, reasoningTag: any): { content: string; reasoning: string } {
-  if (!text || !reasoningTag) {
-    return { content: text || '', reasoning: '' };
-  }
 
-  try {
-    const { openingTag, closingTag, separator = '\n' } = reasoningTag;
-
-    // 转义正则表达式特殊字符
-    const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const openingTagEscaped = escapeRegExp(openingTag);
-    const closingTagEscaped = escapeRegExp(closingTag);
-
-    // 创建正则表达式匹配推理标签
-    const regexp = new RegExp(`${openingTagEscaped}(.*?)${closingTagEscaped}`, 'gs');
-    const matches = Array.from(text.matchAll(regexp));
-
-    if (!matches.length) {
-      return { content: text, reasoning: '' };
-    }
-
-    // 提取推理内容
-    const reasoning = matches.map((match: RegExpMatchArray) => match[1]).join(separator);
-
-    // 移除推理标签，保留其他内容
-    let contentWithoutReasoning = text;
-    for (let i = matches.length - 1; i >= 0; i--) {
-      const match = matches[i] as RegExpMatchArray;
-      const beforeMatch = contentWithoutReasoning.slice(0, match.index as number);
-      const afterMatch = contentWithoutReasoning.slice((match.index as number) + match[0].length);
-      contentWithoutReasoning = beforeMatch + (beforeMatch.length > 0 && afterMatch.length > 0 ? separator : '') + afterMatch;
-    }
-
-    return { content: contentWithoutReasoning, reasoning };
-  } catch (error) {
-    console.error('[extractReasoningFromText] 推理提取失败:', error);
-    return { content: text, reasoning: '' };
-  }
-}
 
 /**
  * AI SDK 流式完成函数

@@ -1,7 +1,7 @@
 {
   "name": "aetherlink",
   "private": true,
-  "version": "0.4.2",
+  "version": "0.4.3",
   "type": "module",
   "engines": {
     "node": ">=22.0.0",
@@ -91,7 +91,7 @@
     "axios": "^1.9.0",
     "better-react-mathjax": "^2.3.0",
     "buffer": "6.0.3",
-    "capacitor-cors-bypass-enhanced": "^1.0.0",
+    "capacitor-cors-bypass-enhanced": "^1.0.4",
     "chart.js": "^4.4.9",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",

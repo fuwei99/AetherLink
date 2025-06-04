@@ -50,7 +50,7 @@ export class WebDavBackupService {
 
     try {
       const savedState = await getStorageItem('webdav-sync-state');
-      return savedState ? { ...defaultState, ...JSON.parse(savedState) } : defaultState;
+      return savedState ? { ...defaultState, ...JSON.parse(savedState as string) } : defaultState;
     } catch (error) {
       console.error('获取同步状态失败:', error);
       return defaultState;

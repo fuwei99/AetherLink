@@ -11,26 +11,25 @@ import {
   Switch,
   IconButton,
   Tooltip,
-  AppBar,
-  Toolbar,
   Chip,
   Button,
-  Divider,
   Card,
   Grid
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import InfoIcon from '@mui/icons-material/Info';
-import MenuIcon from '@mui/icons-material/Menu';
-import SettingsIcon from '@mui/icons-material/Settings';
-import AddIcon from '@mui/icons-material/Add';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import TitleIcon from '@mui/icons-material/Title';
-import TopicIcon from '@mui/icons-material/Topic';
-import TouchAppIcon from '@mui/icons-material/TouchApp';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import RestoreIcon from '@mui/icons-material/Restore';
+import {
+  ArrowLeft,
+  Info,
+  AlignJustify,
+  Settings,
+  Plus,
+  Trash2,
+  Bot,
+  Type,
+  MessageSquare,
+  Hand,
+  Wand2,
+  RotateCcw
+} from 'lucide-react';
 
 interface ComponentPosition {
   id: string;
@@ -57,7 +56,7 @@ const TopToolbarDIYSettings: React.FC = () => {
   const topToolbar = settings.topToolbar || {
     showSettingsButton: true,
     showModelSelector: true,
-    modelSelectorStyle: 'full',
+    modelSelectorStyle: 'dialog',
     showChatTitle: true,
     showTopicName: false,
     showNewTopicButton: false,
@@ -76,13 +75,13 @@ const TopToolbarDIYSettings: React.FC = () => {
 
   // 组件配置
   const componentConfig = {
-    menuButton: { name: '菜单按钮', icon: <MenuIcon />, key: 'showMenuButton' },
-    chatTitle: { name: '对话标题', icon: <TitleIcon />, key: 'showChatTitle' },
-    topicName: { name: '话题名称', icon: <TopicIcon />, key: 'showTopicName' },
-    newTopicButton: { name: '新建话题', icon: <AddIcon />, key: 'showNewTopicButton' },
-    clearButton: { name: '清空按钮', icon: <ClearAllIcon />, key: 'showClearButton' },
-    modelSelector: { name: '模型选择器', icon: <SmartToyIcon />, key: 'showModelSelector' },
-    settingsButton: { name: '设置按钮', icon: <SettingsIcon />, key: 'showSettingsButton' },
+    menuButton: { name: '菜单按钮', icon: <AlignJustify size={20} />, key: 'showMenuButton' },
+    chatTitle: { name: '对话标题', icon: <Type size={20} />, key: 'showChatTitle' },
+    topicName: { name: '话题名称', icon: <MessageSquare size={20} />, key: 'showTopicName' },
+    newTopicButton: { name: '新建话题', icon: <Plus size={20} />, key: 'showNewTopicButton' },
+    clearButton: { name: '清空按钮', icon: <Trash2 size={20} />, key: 'showClearButton' },
+    modelSelector: { name: '模型选择器', icon: <Bot size={20} />, key: 'showModelSelector' },
+    settingsButton: { name: '设置按钮', icon: <Settings size={20} />, key: 'showSettingsButton' },
   };
 
   const handleBack = () => {
@@ -200,7 +199,7 @@ const TopToolbarDIYSettings: React.FC = () => {
       case 'menuButton':
         return (
           <IconButton key={componentId} color="inherit" size="small" sx={style}>
-            <MenuIcon />
+            <AlignJustify size={20} />
           </IconButton>
         );
       case 'chatTitle':
@@ -218,19 +217,19 @@ const TopToolbarDIYSettings: React.FC = () => {
       case 'newTopicButton':
         return (
           <IconButton key={componentId} color="inherit" size="small" sx={style}>
-            <AddIcon />
+            <Plus size={20} />
           </IconButton>
         );
       case 'clearButton':
         return (
           <IconButton key={componentId} color="inherit" size="small" sx={style}>
-            <ClearAllIcon />
+            <Trash2 size={20} />
           </IconButton>
         );
       case 'modelSelector':
-        return topToolbar.modelSelectorStyle === 'icon' ? (
+        return topToolbar.modelSelectorStyle === 'dialog' ? (
           <IconButton key={componentId} color="inherit" size="small" sx={style}>
-            <SmartToyIcon />
+            <Bot size={20} />
           </IconButton>
         ) : (
           <Chip
@@ -248,7 +247,7 @@ const TopToolbarDIYSettings: React.FC = () => {
       case 'settingsButton':
         return (
           <IconButton key={componentId} color="inherit" size="small" sx={style}>
-            <SettingsIcon />
+            <Settings size={20} />
           </IconButton>
         );
       default:
@@ -285,15 +284,16 @@ const TopToolbarDIYSettings: React.FC = () => {
         zIndex: 10,
         flexShrink: 0
       }}>
-        <ArrowBackIcon
-          sx={{ mr: 2, cursor: 'pointer' }}
+        <ArrowLeft
+          size={20}
+          style={{ marginRight: 16, cursor: 'pointer' }}
           onClick={handleBack}
         />
         <Typography variant="h6" color="primary" sx={{ flexGrow: 1 }}>
           顶部工具栏 DIY 设置
         </Typography>
         <Button
-          startIcon={<RestoreIcon />}
+          startIcon={<RotateCcw size={16} />}
           onClick={handleResetLayout}
           size="small"
           variant="outlined"
@@ -306,13 +306,13 @@ const TopToolbarDIYSettings: React.FC = () => {
         {/* DIY 预览区域 */}
         <Paper elevation={2} sx={{ mb: 3, overflow: 'hidden' }}>
           <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <AutoFixHighIcon color="primary" />
+            <Wand2 size={20} color="primary" />
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               DIY 布局预览
             </Typography>
             <Tooltip title="拖拽下方组件到此区域进行自由布局">
               <IconButton size="small">
-                <InfoIcon fontSize="small" />
+                <Info size={16} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -379,7 +379,7 @@ const TopToolbarDIYSettings: React.FC = () => {
                 textAlign: 'center',
                 color: 'text.secondary'
               }}>
-                <TouchAppIcon sx={{ fontSize: 48, mb: 1, opacity: 0.5 }} />
+                <Hand size={48} style={{ marginBottom: 8, opacity: 0.5 }} />
                 <Typography variant="body2">
                   拖拽下方组件到此区域进行自由布局
                 </Typography>
@@ -394,7 +394,7 @@ const TopToolbarDIYSettings: React.FC = () => {
             <Typography variant="subtitle1">可用组件</Typography>
             <Tooltip title="长按组件拖拽到预览区域进行布局">
               <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
+                <Info size={16} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -405,7 +405,7 @@ const TopToolbarDIYSettings: React.FC = () => {
               const isPlaced = (topToolbar.componentPositions || []).some(pos => pos.id === componentId);
 
               return (
-                <Grid item xs={6} sm={4} md={3} key={componentId}>
+                <Grid size={{ xs: 6, sm: 4, md: 3 }} key={componentId}>
                   <Card
                     sx={{
                       p: 2,
@@ -462,14 +462,14 @@ const TopToolbarDIYSettings: React.FC = () => {
             <Typography variant="subtitle1">组件显示设置</Typography>
             <Tooltip title="控制哪些组件可以在工具栏中显示">
               <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
+                <Info size={16} />
               </IconButton>
             </Tooltip>
           </Box>
 
           <Grid container spacing={2}>
             {Object.entries(componentConfig).map(([componentId, config]) => (
-              <Grid item xs={12} sm={6} key={componentId}>
+              <Grid size={{ xs: 12, sm: 6 }} key={componentId}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -497,7 +497,7 @@ const TopToolbarDIYSettings: React.FC = () => {
               <Typography variant="subtitle1">模型选择器样式</Typography>
               <Tooltip title="选择模型选择器的显示样式">
                 <IconButton size="small" sx={{ ml: 1 }}>
-                  <InfoIcon fontSize="small" />
+                  <Info size={16} />
                 </IconButton>
               </Tooltip>
             </Box>

@@ -315,9 +315,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
         {((isUserMessage && showUserAvatar) || (!isUserMessage && showModelAvatar)) && (
           <Avatar
             sx={{
-              width: 40,
-              height: 40,
-              fontSize: '1.2rem',
+              width: 32,
+              height: 32,
+              fontSize: '1rem',
               fontWeight: 600,
               background: isUserMessage
                 ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
@@ -325,9 +325,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
               color: 'white',
               flexShrink: 0,
               boxShadow: theme.palette.mode === 'dark'
-                ? '0 8px 32px rgba(0, 0, 0, 0.3)'
-                : '0 8px 32px rgba(0, 0, 0, 0.15)',
-              border: '3px solid',
+                ? '0 6px 24px rgba(0, 0, 0, 0.3)'
+                : '0 6px 24px rgba(0, 0, 0, 0.15)',
+              border: '2px solid',
               borderColor: theme.palette.mode === 'dark'
                 ? 'rgba(255, 255, 255, 0.1)'
                 : 'rgba(255, 255, 255, 0.8)',
@@ -461,8 +461,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <Avatar
                     src={userAvatar}
                     sx={{
-                      width: 30,
-                      height: 30,
+                      width: 24,
+                      height: 24,
                       borderRadius: '20%', // 更接近方形的头像
                     }}
                   />
@@ -470,12 +470,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <Avatar
                     sx={{
                       bgcolor: themeColors.buttonSecondary, // 使用主题的次要颜色
-                      width: 30,
-                      height: 30,
+                      width: 24,
+                      height: 24,
                       borderRadius: '20%', // 更接近方形的头像
                     }}
                   >
-                    <PersonIcon sx={{ fontSize: 20, color: 'white' }} />
+                    <PersonIcon sx={{ fontSize: 16, color: 'white' }} />
                   </Avatar>
                 )
               )}
@@ -526,8 +526,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <Avatar
                     src={modelAvatar}
                     sx={{
-                      width: 30,
-                      height: 30,
+                      width: 24,
+                      height: 24,
                       borderRadius: '20%', // 更接近方形的头像
                     }}
                   />
@@ -535,10 +535,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <Avatar
                     sx={{
                       bgcolor: 'secondary.main',
-                      width: 30,
-                      height: 30,
+                      width: 24,
+                      height: 24,
                       borderRadius: '20%', // 更接近方形的头像
-                      fontSize: '1rem',
+                      fontSize: '0.8rem',
                       fontWeight: 600
                     }}
                   >
@@ -661,7 +661,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </Paper>
 
         {/* 版本指示器和播放按钮 - 放在气泡上方贴合位置 */}
-        {!isUserMessage && (
+        {!isUserMessage && settings.showMicroBubbles !== false && (
           <Box sx={{
             position: 'absolute',
             top: -22, // 调整位置使其贴合气泡

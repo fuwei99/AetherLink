@@ -6,7 +6,6 @@ import App from './App';
 import './index.css';
 import { initStorageService, dexieStorage } from './shared/services/storageService';
 import { initializeServices } from './shared/services';
-import store from './shared/store';
 // 移除旧的系统提示词slice引用
 // import { loadSystemPrompts } from './shared/store/slices/systemPromptsSlice';
 

@@ -56,15 +56,26 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
       groups[providerId].push(model);
     });
 
-    // 按供应商名称排序
+    // 按照设置中的供应商顺序排序
     const sortedGroups = Object.keys(groups).sort((a, b) => {
+      const indexA = providers.findIndex(p => p.id === a);
+      const indexB = providers.findIndex(p => p.id === b);
+
+      // 如果都在providers中，按照providers中的顺序
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      // 如果只有一个在providers中，优先显示在providers中的
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      // 如果都不在providers中，按字母顺序
       const nameA = getProviderName(a);
       const nameB = getProviderName(b);
       return nameA.localeCompare(nameB);
     });
 
     return { groups, sortedGroups };
-  }, [availableModels, getProviderName]);
+  }, [availableModels, getProviderName, providers]);
 
   const handleChange = (event: SelectChangeEvent<string>) => {
     const compositeValue = event.target.value;
@@ -103,6 +114,80 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
     return getCompositeValue(selectedModel);
   }, [selectedModel, getCompositeValue]);
 
+  // 计算动态字体大小函数
+  const getDynamicFontSize = (text: string): string => {
+    const baseSize = 0.875; // 基础字体大小 (rem)
+    const minSize = 0.65; // 最小字体大小 (rem)
+    const maxLength = 18; // 理想最大长度
+
+    if (text.length <= maxLength) {
+      return `${baseSize}rem`;
+    }
+
+    // 使用更平滑的缩放算法
+    const lengthRatio = text.length / maxLength;
+    const scaleFactor = Math.max(1 / Math.sqrt(lengthRatio), minSize / baseSize);
+    const scaledSize = baseSize * scaleFactor;
+
+    return `${Math.max(scaledSize, minSize)}rem`;
+  };
+
+  // 自定义渲染选中的值
+  const renderValue = (value: string) => {
+    if (!value || !selectedModel) {
+      return (
+        <Typography
+          variant="body2"
+          sx={{
+            color: theme.palette.text.secondary,
+            fontSize: '0.875rem'
+          }}
+        >
+          选择模型
+        </Typography>
+      );
+    }
+
+    const dynamicFontSize = getDynamicFontSize(selectedModel.name);
+    const providerName = getProviderName(selectedModel.provider);
+
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%', py: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 500,
+            fontSize: dynamicFontSize,
+            color: theme.palette.text.primary,
+            maxWidth: '150px', // 限制最大宽度
+            transition: 'font-size 0.2s ease', // 平滑过渡效果
+            wordBreak: 'keep-all', // 保持单词完整
+            lineHeight: 1.1 // 调整行高
+          }}
+          title={selectedModel.name} // 悬停时显示完整名称
+        >
+          {selectedModel.name}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            fontSize: '0.7rem',
+            color: theme.palette.text.secondary,
+            lineHeight: 1,
+            mt: 0.25,
+            maxWidth: '150px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+          title={providerName} // 悬停时显示完整供应商名称
+        >
+          {providerName}
+        </Typography>
+      </Box>
+    );
+  };
+
   return (
     <FormControl
       variant="outlined"
@@ -113,19 +198,18 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
         '& .MuiOutlinedInput-root': {
           borderRadius: '16px',
           fontSize: '0.9rem',
-          bgcolor: 'transparent', // 完全透明背景
-          border: 'none', // 移除边框
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', // 深色模式淡背景，浅色模式纯白背景
           '& .MuiOutlinedInput-notchedOutline': {
-            border: 'none', // 移除默认边框
+            border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`, // 淡黑边框
           },
           '&:hover .MuiOutlinedInput-notchedOutline': {
-            border: 'none', // 悬停时也不显示边框
+            border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`, // 悬停时稍微明显一点
           },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            border: 'none', // 聚焦时也不显示边框
+            border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)'}`, // 聚焦时更明显
           },
           '&:hover': {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
           }
         }
       }}
@@ -136,11 +220,12 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
         value={getCurrentValue()}
         onChange={handleChange}
         displayEmpty
+        renderValue={renderValue}
         sx={{
           bgcolor: 'transparent',
           border: 'none',
           '& .MuiSelect-select': {
-            padding: '8px 32px 8px 12px', // 调整内边距
+            padding: '10px 32px 10px 12px', // 增加垂直内边距以适应两行文字
             bgcolor: 'transparent',
             border: 'none',
             '&:focus': {

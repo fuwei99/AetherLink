@@ -224,7 +224,7 @@ class AIDebateService {
 
     if (messages.length > 0) {
       context += '之前的发言：\n';
-      messages.slice(-6).forEach((msg, index) => { // 只取最近6条消息避免上下文过长
+      messages.slice(-6).forEach((msg) => { // 只取最近6条消息避免上下文过长
         context += `${msg.roleName}（${msg.stance}）：${msg.content}\n\n`;
       });
     }
@@ -235,11 +235,7 @@ class AIDebateService {
   }
 
   // 发送AI请求 - 调用实际的消息发送接口
-  private async sendAIRequest(role: DebateRole, context: string): Promise<string> {
-    // 构建带有角色系统提示词的完整消息
-    const systemPrompt = role.systemPrompt;
-    const fullMessage = `${systemPrompt}\n\n${context}`;
-
+  private async sendAIRequest(role: DebateRole, _context: string): Promise<string> {
     // 这里应该调用实际的AI API，暂时返回模拟响应
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -263,10 +259,15 @@ class AIDebateService {
             '感谢各位的精彩发言，让我们总结一下要点...',
             '讨论很充分，是否可以寻找共同点？',
             '基于目前的讨论，我建议我们可以结束这轮辩论了。'
+          ],
+          summary: [
+            '基于以上讨论，我来总结一下各方观点...',
+            '让我们回顾一下辩论的主要内容...',
+            '综合各方意见，可以得出以下结论...'
           ]
         };
 
-        const roleResponses = responses[role.stance] || responses.neutral;
+        const roleResponses = responses[role.stance as keyof typeof responses] || responses.neutral;
         const randomResponse = roleResponses[Math.floor(Math.random() * roleResponses.length)];
 
         resolve(`**${role.name}**：${randomResponse}`);
@@ -320,7 +321,7 @@ class AIDebateService {
   }
 
   // 生成AI总结
-  private async generateAISummary(context: string): Promise<string> {
+  private async generateAISummary(_context: string): Promise<string> {
     // 这里需要调用实际的AI API生成总结
     // 暂时返回模拟总结
     return new Promise((resolve) => {

@@ -214,9 +214,6 @@ async function processModelRequest(model: Model, options: ChatRequest): Promise<
               contentAccumulator = content;
               lastUpdateTime = currentTime;
 
-              // 计算思考过程时间
-              const currentReasoningTime = reasoningStartTime > 0 ? Date.now() - reasoningStartTime : undefined;
-
               try {
                 //  修复网络搜索后AI响应流式输出问题：直接发送内容，不使用JSON包装
                 // 发送完整内容而不是增量，避免增量更新带来的问题

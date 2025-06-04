@@ -454,7 +454,7 @@ const BackupRestorePanel: React.FC = () => {
     }
   };
 
-  const handleWebDavRestoreFile = async (fileName: string, data: any) => {
+  const handleWebDavRestoreFile = async (_fileName: string, data: any) => {
     try {
       setIsLoading(true);
 

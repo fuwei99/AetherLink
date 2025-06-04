@@ -353,7 +353,8 @@ export const processAssistantResponse = async (
         if (isActualGeminiProvider) {
           // 对于Gemini provider，从apiMessages中提取系统提示词
           const systemMessage = apiMessages.find((msg: any) => msg.role === 'system');
-          systemPromptForProvider = systemMessage?.content || '';
+          const content = systemMessage?.content;
+          systemPromptForProvider = typeof content === 'string' ? content : '';
           console.log(`[processAssistantResponse] Gemini提取到系统提示词:`, {
             hasSystemMessage: !!systemMessage,
             systemPromptLength: systemPromptForProvider.length,

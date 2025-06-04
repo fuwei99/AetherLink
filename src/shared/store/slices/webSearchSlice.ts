@@ -6,11 +6,18 @@ import { getStorageItem, setStorageItem } from '../../utils/storage';
 // 存储键名
 const STORAGE_KEY = 'webSearchSettings';
 
-// 默认提供商配置 - 仅包含收费API服务
+// 默认提供商配置 - 包含免费和收费API服务
 const getDefaultProviders = (): WebSearchProviderConfig[] => [
   {
+    id: 'bing-free',
+    name: 'Bing 免费搜索 (推荐)',
+    apiHost: 'https://www.bing.com',
+    apiKey: '', // 免费服务，无需API密钥
+    url: 'https://www.bing.com/search?q=%s&ensearch=1'
+  },
+  {
     id: 'tavily',
-    name: 'Tavily (推荐)',
+    name: 'Tavily (付费)',
     apiHost: 'https://api.tavily.com',
     apiKey: ''
   },
@@ -54,7 +61,7 @@ const loadFromStorage = async (): Promise<WebSearchSettings> => {
   // 默认初始状态
   return {
     enabled: false,
-    provider: 'tavily',
+    provider: 'bing-free', // 默认使用免费的Bing搜索
     apiKey: '',
     includeInContext: true,
     maxResults: 5,
@@ -86,7 +93,7 @@ const loadFromStorage = async (): Promise<WebSearchSettings> => {
 // 定义初始状态（首次加载使用默认值）
 const initialState: WebSearchSettings = {
   enabled: false,
-  provider: 'tavily',
+  provider: 'bing-free', // 默认使用免费的Bing搜索
   apiKey: '',
   includeInContext: true,
   maxResults: 5,

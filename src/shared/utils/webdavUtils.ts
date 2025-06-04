@@ -24,7 +24,7 @@ export async function saveWebDavConfig(config: WebDavConfig): Promise<void> {
 export async function getWebDavConfig(): Promise<WebDavConfig | null> {
   try {
     const configStr = await getStorageItem(WEBDAV_CONFIG_KEY);
-    return configStr ? JSON.parse(configStr) : null;
+    return configStr ? JSON.parse(configStr as string) : null;
   } catch (error) {
     console.error('获取 WebDAV 配置失败:', error);
     return null;

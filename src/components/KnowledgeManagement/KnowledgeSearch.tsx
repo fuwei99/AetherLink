@@ -5,14 +5,11 @@ import {
   Button,
   Typography,
   List,
-  ListItem,
-  ListItemText,
   Paper,
   InputAdornment,
   IconButton,
   CircularProgress,
   Alert,
-  Divider,
   Card,
   CardContent,
   Stack,
@@ -27,8 +24,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SpeedIcon from '@mui/icons-material/Speed';
 import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeService';
-import { RAGSearchMode } from '../../shared/constants/ragConfig';
-import type { KnowledgeSearchResult, KnowledgeBase } from '../../shared/types/KnowledgeBase';
+import type { KnowledgeSearchResult } from '../../shared/types/KnowledgeBase';
 import { BlockManager } from '../../shared/services/messages/BlockManager';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
@@ -46,9 +42,8 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
   const [results, setResults] = useState<KnowledgeSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBase | null>(null);
   const [threshold, setThreshold] = useState(0.7);
-  const [maxResults, setMaxResults] = useState(5);
+  const [maxResults] = useState(5);
   const [useEnhancedRAG, setUseEnhancedRAG] = useState(true); // 新增：RAG模式开关
   const [searchTime, setSearchTime] = useState<number | null>(null); // 新增：搜索耗时
   const currentTopicId = useSelector((state: RootState) => state.messages.currentTopicId);
@@ -58,7 +53,6 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
       try {
         const kb = await MobileKnowledgeService.getInstance().getKnowledgeBase(knowledgeBaseId);
         if (kb) {
-          setKnowledgeBase(kb);
           setThreshold(kb.threshold || 0.7);
         }
       } catch (err) {
@@ -180,19 +174,21 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            endAdornment: query && (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={handleClearSearch}>
-                  <ClearIcon />
-                </IconButton>
-              </InputAdornment>
-            )
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: query && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={handleClearSearch}>
+                    <ClearIcon />
+                  </IconButton>
+                </InputAdornment>
+              )
+            }
           }}
           sx={{ mb: 1 }}
         />

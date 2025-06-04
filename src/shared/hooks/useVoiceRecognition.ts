@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { voiceRecognitionService } from '../services/VoiceRecognitionService';
-import type { VoiceRecognitionSettings, SpeechRecognitionPermissions } from '../types/voice';
+import type { SpeechRecognitionPermissions } from '../types/voice';
 
 export const useVoiceRecognition = () => {
   const [isListening, setIsListening] = useState(voiceRecognitionService.getIsListening());

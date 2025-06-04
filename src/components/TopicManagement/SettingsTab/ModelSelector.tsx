@@ -97,8 +97,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
     return availableModels.find(model => model.id === modelId);
   };
 
-  const selectedModel = getModelById(value);
-
   if (loading) {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>

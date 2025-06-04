@@ -74,38 +74,53 @@
 
 /* 段落样式 */
 .markdown p {
-  margin: 8px 0;
+  margin: 1em 0;
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.6;
 }
 
 .markdown p:last-child {
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .markdown p:first-child {
   margin-top: 0;
 }
 
+/* 段落与列表的特殊关系 - 注意：CSS :has() 选择器支持有限 */
+.markdown p + ul {
+  margin-top: 0;
+}
+
 /* 列表样式 */
 .markdown ul,
 .markdown ol {
-  padding-left: 24px;
-  margin: 8px 0;
+  padding-left: 1.5em;
+  margin: 1em 0;
 }
 
 .markdown li {
-  margin-bottom: 4px;
+  margin-bottom: 0.5em;
 }
 
 .markdown li > ul,
 .markdown li > ol {
-  margin: 4px 0;
+  margin: 0.5em 0;
 }
 
 .markdown ul {
-  list-style: disc;
+  list-style: initial;
+}
+
+/* 列表标记样式 */
+.markdown li::marker {
+  color: #999;
+}
+
+/* 列表中的代码块 */
+.markdown li pre {
+  margin: 1.5em 0;
 }
 
 /* 引用样式 */
@@ -126,12 +141,22 @@
 
 /* 行内代码样式 */
 .markdown code {
-  font-family: monospace;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', Menlo, Courier, monospace;
   background-color: rgba(0, 0, 0, 0.05);
-  padding: 2px 4px;
-  border-radius: 4px;
-  word-break: break-all;
-  white-space: pre-wrap;
+  padding: 3px 5px;
+  border-radius: 5px;
+  word-break: keep-all;
+  white-space: pre;
+}
+
+/* 段落和列表中的行内代码 */
+.markdown p code,
+.markdown li code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 3px 5px;
+  border-radius: 5px;
+  word-break: keep-all;
+  white-space: pre;
 }
 
 /* Claude 主题气泡内的行内代码 - 移除背景色避免双层效果 */
@@ -161,9 +186,36 @@
     border-top-color: #404040;
   }
 
-  .markdown code {
+  .markdown code,
+  .markdown p code,
+  .markdown li code {
     background-color: rgba(255, 255, 255, 0.1);
     color: #e3e3e3;
+  }
+
+  .markdown pre {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .markdown li::marker {
+    color: #666;
+  }
+
+  .markdown .footnote-ref {
+    color: #90caf9;
+  }
+
+  .footnotes {
+    background-color: #2a2a2a;
+  }
+
+  .footnotes li {
+    color: #ccc;
+  }
+
+  .footnotes a,
+  .footnotes .footnote-backref {
+    color: #90caf9;
   }
 
   /* Claude 主题深色模式气泡内的行内代码 */
@@ -176,10 +228,175 @@
 
 /* 代码块容器样式 */
 .markdown pre {
-  margin: 0;
-  padding: 0;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  background-color: rgba(0, 0, 0, 0.05);
+  margin: 1em 0;
+}
+
+/* 特殊预览的代码块 */
+.markdown pre:has(.mermaid),
+.markdown pre:has(.plantuml-preview),
+.markdown pre:has(.svg-preview) {
   background-color: transparent;
-  overflow: visible;
+}
+
+/* 嵌套代码块样式 */
+.markdown pre:not(pre pre) > code:not(pre pre > code) {
+  padding: 15px;
+  display: block;
+}
+
+.markdown pre pre {
+  margin: 0 !important;
+}
+
+.markdown pre pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* 连续代码块间距 */
+.markdown pre + pre {
+  margin-top: 10px;
+}
+
+/* 文本格式化样式 */
+.markdown strong {
+  font-weight: bold;
+}
+
+.markdown em {
+  font-style: italic;
+}
+
+.markdown del {
+  text-decoration: line-through;
+}
+
+/* 上标和下标 */
+.markdown sup,
+.markdown sub {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.markdown sup {
+  top: -0.5em;
+}
+
+.markdown sub {
+  bottom: -0.25em;
+}
+
+/* 表格样式 */
+.markdown table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  width: 100%;
+}
+
+.markdown th,
+.markdown td {
+  border: 1px solid #e0e0e0;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+/* 深色模式表格样式 */
+@media (prefers-color-scheme: dark) {
+  .markdown th,
+  .markdown td {
+    border-color: #404040;
+  }
+
+  .markdown th {
+    background-color: #2a2a2a;
+  }
+}
+
+/* 脚注引用样式 */
+.markdown .footnote-ref {
+  font-size: 0.8em;
+  vertical-align: super;
+  line-height: 0;
+  margin: 0 2px;
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.markdown .footnote-ref:hover {
+  text-decoration: underline;
+}
+
+/* 脚注区域样式 */
+.footnotes {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.footnotes h4 {
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.footnotes a {
+  color: #1976d2;
+}
+
+.footnotes ol {
+  padding-left: 1em;
+  margin: 0;
+}
+
+.footnotes li:last-child {
+  margin-bottom: 0;
+}
+
+.footnotes li {
+  font-size: 0.9em;
+  margin-bottom: 0.5em;
+  color: #666;
+}
+
+.footnotes li p {
+  display: inline;
+  margin: 0;
+}
+
+.footnotes .footnote-backref {
+  font-size: 0.8em;
+  vertical-align: super;
+  line-height: 0;
+  margin-left: 5px;
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.footnotes .footnote-backref:hover {
+  text-decoration: underline;
+}
+
+/* 数学公式样式 */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+mjx-container {
+  overflow-x: auto;
 }
 
 /* span 元素保持预格式化 */

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconButton, Box, CircularProgress, Tooltip } from '@mui/material';
+import { IconButton, Box, Tooltip } from '@mui/material';
 import { Mic, MicOff } from 'lucide-react';
 
 // CSS动画样式

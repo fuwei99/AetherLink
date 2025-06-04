@@ -27,11 +27,11 @@ import {
   FolderPlus,
   Trash,
   Sparkles,
-  MessageSquare,
   ArrowRight
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addItemToGroup } from '../../../shared/store/slices/groupsSlice';
+import { removeTopic, addTopic } from '../../../shared/store/slices/assistantsSlice';
 import GroupDialog from '../GroupDialog';
 import { dexieStorage } from '../../../shared/services/DexieStorageService';
 import { EventEmitter, EVENT_NAMES } from '../../../shared/services/EventService';
@@ -45,6 +45,7 @@ import type { RootState } from '../../../shared/store';
 import store from '../../../shared/store';
 import { TopicService } from '../../../shared/services/TopicService';
 import { TopicNamingService } from '../../../shared/services/TopicNamingService';
+import { TopicManager } from '../../../shared/services/assistant/TopicManager';
 
 interface TopicTabProps {
   currentAssistant: ({
@@ -96,8 +97,9 @@ export default function TopicTab({
 
   // 编辑对话框状态
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editDialogType, setEditDialogType] = useState<'name' | 'prompt'>('name');
-  const [editDialogValue, setEditDialogValue] = useState('');
+  const [editTopicName, setEditTopicName] = useState('');
+  const [editTopicPrompt, setEditTopicPrompt] = useState('');
+  const [editingTopic, setEditingTopic] = useState<ChatTopic | null>(null);
 
   // 确认对话框状态
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -139,8 +141,13 @@ export default function TopicTab({
         // 如果Redux中已有数据，直接使用，不设置加载状态
 
 
-        // 按最后消息时间降序排序话题（最新的在前面）
+        // 按固定状态和最后消息时间排序话题（固定的在前面，然后按时间降序）
         const sortedTopics = [...currentAssistant.topics].sort((a, b) => {
+          // 首先按固定状态排序，固定的话题在前面
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+
+          // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
           const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
           const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
           return timeB - timeA; // 降序排序
@@ -165,8 +172,13 @@ export default function TopicTab({
           // 助手没有话题，可能需要创建默认话题
         } else {
 
-          // 按最后消息时间降序排序话题（最新的在前面）
+          // 按固定状态和最后消息时间排序话题（固定的在前面，然后按时间降序）
           const sortedTopics = [...assistantTopics].sort((a, b) => {
+            // 首先按固定状态排序，固定的话题在前面
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+
+            // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
             const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
             const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
             return timeB - timeA; // 降序排序
@@ -191,14 +203,38 @@ export default function TopicTab({
 
     const handleTopicChange = (eventData: any) => {
       if (eventData && (eventData.assistantId === currentAssistant.id || !eventData.assistantId)) {
-        // 如果是话题创建事件且有topic数据，将新话题添加到顶部
-        if (eventData.topic && eventData.type === 'create') {
-          setTopics(prevTopics => [eventData.topic, ...prevTopics]);
+        // 如果是话题创建或移动事件且有topic数据，将话题添加到顶部
+        if (eventData.topic && (eventData.type === 'create' || eventData.type === 'move')) {
+          setTopics(prevTopics => {
+            // 检查话题是否已存在，避免重复添加
+            const exists = prevTopics.some(topic => topic.id === eventData.topic.id);
+            if (exists) {
+              return prevTopics;
+            }
+
+            // 添加新话题并重新排序
+            const newTopics = [eventData.topic, ...prevTopics];
+            return newTopics.sort((a, b) => {
+              // 首先按固定状态排序，固定的话题在前面
+              if (a.pinned && !b.pinned) return -1;
+              if (!a.pinned && b.pinned) return 1;
+
+              // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
+              const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
+              const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
+              return timeB - timeA; // 降序排序
+            });
+          });
         }
         // 如果currentAssistant.topics已更新，则使用它并排序
         else if (currentAssistant.topics && currentAssistant.topics.length > 0) {
-          // 按最后消息时间降序排序话题（最新的在前面）
+          // 按固定状态和最后消息时间排序话题（固定的在前面，然后按时间降序）
           const sortedTopics = [...currentAssistant.topics].sort((a, b) => {
+            // 首先按固定状态排序，固定的话题在前面
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+
+            // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
             const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
             const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
             return timeB - timeA; // 降序排序
@@ -212,10 +248,12 @@ export default function TopicTab({
     // 订阅话题变更事件
     const unsubCreate = EventEmitter.on(EVENT_NAMES.TOPIC_CREATED, handleTopicChange);
     const unsubDelete = EventEmitter.on(EVENT_NAMES.TOPIC_DELETED, handleTopicChange);
+    const unsubMoved = EventEmitter.on(EVENT_NAMES.TOPIC_MOVED, handleTopicChange);
 
     return () => {
       unsubCreate();
       unsubDelete();
+      unsubMoved();
     };
   }, [currentAssistant]);
 
@@ -366,62 +404,74 @@ export default function TopicTab({
     handleOpenGroupDialog();
   };
 
-  // 编辑话题名称
-  const handleEditTopicName = () => {
+  // 打开编辑话题对话框
+  const handleEditTopic = () => {
     if (!contextTopic) return;
-    setEditDialogType('name');
-    setEditDialogValue(contextTopic.name || contextTopic.title || '');
+
+    setEditingTopic(contextTopic);
+    setEditTopicName(contextTopic.name || contextTopic.title || '');
+    setEditTopicPrompt(contextTopic.prompt || '');
     setEditDialogOpen(true);
     handleCloseMenu();
   };
 
-  // 编辑提示词
-  const handleEditPrompt = () => {
-    if (!contextTopic) return;
-    setEditDialogType('prompt');
-    setEditDialogValue(contextTopic.prompt || '');
-    setEditDialogOpen(true);
-    handleCloseMenu();
+  // 关闭编辑话题对话框
+  const handleCloseEditDialog = () => {
+    setEditDialogOpen(false);
+    setEditingTopic(null);
   };
 
-  // 保存编辑
+  // 保存编辑后的话题
   const handleSaveEdit = async () => {
-    if (!contextTopic) return;
+    if (!editingTopic) return;
 
     try {
       const updatedTopic = {
-        ...contextTopic,
-        [editDialogType === 'name' ? 'name' : 'prompt']: editDialogValue,
+        ...editingTopic,
+        name: editTopicName,
+        prompt: editTopicPrompt,
+        isNameManuallyEdited: true, // 标记为手动编辑
         updatedAt: new Date().toISOString()
       };
 
-      // 如果是编辑名称，标记为手动编辑
-      if (editDialogType === 'name') {
-        updatedTopic.isNameManuallyEdited = true;
-      }
-
-      // 保存到数据库
+      // 直接保存到数据库，确保数据持久化
       await dexieStorage.saveTopic(updatedTopic);
+      console.log('[TopicTab] 已保存话题到数据库');
 
-      // 更新本地状态
-      setTopics(prevTopics =>
-        prevTopics.map(topic =>
+      // 更新本地状态并重新排序
+      setTopics(prevTopics => {
+        const updatedTopics = prevTopics.map(topic =>
           topic.id === updatedTopic.id ? updatedTopic : topic
-        )
-      );
+        );
+
+        // 重新排序：固定的话题在前面，然后按时间降序
+        return updatedTopics.sort((a, b) => {
+          // 首先按固定状态排序，固定的话题在前面
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+
+          // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
+          const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
+          const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
+          return timeB - timeA; // 降序排序
+        });
+      });
+      console.log('[TopicTab] 已更新本地话题状态');
 
       // 如果有更新回调，调用它
       if (onUpdateTopic) {
         onUpdateTopic(updatedTopic);
+        console.log('[TopicTab] 已通过回调更新话题');
       }
 
       // 发送更新事件
       EventEmitter.emit(EVENT_NAMES.TOPIC_UPDATED, updatedTopic);
+      console.log('[TopicTab] 已发送话题更新事件');
 
-      setEditDialogOpen(false);
-      setEditDialogValue('');
+      handleCloseEditDialog();
+      console.log('[TopicTab] 话题编辑完成');
     } catch (error) {
-      console.error('保存话题编辑失败:', error);
+      console.error('[TopicTab] 保存话题编辑失败:', error);
     }
   };
 
@@ -439,12 +489,24 @@ export default function TopicTab({
       // 保存到数据库
       await dexieStorage.saveTopic(updatedTopic);
 
-      // 更新本地状态
-      setTopics(prevTopics =>
-        prevTopics.map(topic =>
+      // 更新本地状态并重新排序
+      setTopics(prevTopics => {
+        const updatedTopics = prevTopics.map(topic =>
           topic.id === updatedTopic.id ? updatedTopic : topic
-        )
-      );
+        );
+
+        // 重新排序：固定的话题在前面，然后按时间降序
+        return updatedTopics.sort((a, b) => {
+          // 首先按固定状态排序，固定的话题在前面
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+
+          // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
+          const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
+          const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
+          return timeB - timeA; // 降序排序
+        });
+      });
 
       // 如果有更新回调，调用它
       if (onUpdateTopic) {
@@ -482,12 +544,24 @@ export default function TopicTab({
         // 保存到数据库
         await dexieStorage.saveTopic(updatedTopic);
 
-        // 更新本地状态
-        setTopics(prevTopics =>
-          prevTopics.map(topic =>
+        // 更新本地状态并重新排序
+        setTopics(prevTopics => {
+          const updatedTopics = prevTopics.map(topic =>
             topic.id === updatedTopic.id ? updatedTopic : topic
-          )
-        );
+          );
+
+          // 重新排序：固定的话题在前面，然后按时间降序
+          return updatedTopics.sort((a, b) => {
+            // 首先按固定状态排序，固定的话题在前面
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+
+            // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
+            const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
+            const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
+            return timeB - timeA; // 降序排序
+          });
+        });
 
         // 如果有更新回调，调用它
         if (onUpdateTopic) {
@@ -584,18 +658,35 @@ export default function TopicTab({
       // 保存到数据库
       await dexieStorage.saveTopic(updatedTopic);
 
+      // 更新助手的topicIds - 从源助手移除，添加到目标助手
+      await Promise.all([
+        TopicManager.removeTopicFromAssistant(currentAssistant.id, contextTopic.id),
+        TopicManager.addTopicToAssistant(targetAssistant.id, contextTopic.id)
+      ]);
+
+      // 更新Redux状态 - 按照新建话题的方式
+      dispatch(removeTopic({
+        assistantId: currentAssistant.id,
+        topicId: contextTopic.id
+      }));
+      dispatch(addTopic({
+        assistantId: targetAssistant.id,
+        topic: updatedTopic
+      }));
+
       // 从当前助手的话题列表中移除
       setTopics(prevTopics =>
         prevTopics.filter(topic => topic.id !== contextTopic.id)
       );
 
-      // 发送话题移动事件
+      // 发送话题移动事件 - 按照新建话题的格式
       EventEmitter.emit(EVENT_NAMES.TOPIC_MOVED, {
         topic: updatedTopic,
-        fromAssistantId: currentAssistant.id,
-        toAssistantId: targetAssistant.id
+        assistantId: targetAssistant.id,
+        type: 'move'
       });
 
+      console.log(`话题 ${contextTopic.name} 已移动到助手 ${targetAssistant.name}`);
       handleCloseMoveToMenu();
       handleCloseMenu();
     } catch (error) {
@@ -738,17 +829,13 @@ export default function TopicTab({
           <FolderPlus size={18} style={{ marginRight: 8 }} />
           添加到分组...
         </MenuItem>
-        <MenuItem onClick={handleEditTopicName}>
+        <MenuItem onClick={handleEditTopic}>
           <Edit3 size={18} style={{ marginRight: 8 }} />
-          编辑话题名称
+          编辑话题
         </MenuItem>
         <MenuItem onClick={handleAutoRenameTopic}>
           <Sparkles size={18} style={{ marginRight: 8 }} />
           自动命名话题
-        </MenuItem>
-        <MenuItem onClick={handleEditPrompt}>
-          <MessageSquare size={18} style={{ marginRight: 8 }} />
-          编辑提示词
         </MenuItem>
         <MenuItem onClick={handleTogglePin}>
           <Pin size={18} style={{ marginRight: 8 }} />
@@ -839,35 +926,35 @@ export default function TopicTab({
           ))}
       </Menu>
 
-      {/* 编辑对话框 */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {editDialogType === 'name' ? '编辑话题名称' : '编辑提示词'}
-        </DialogTitle>
+      {/* 编辑话题对话框 */}
+      <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>编辑话题</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
+            label="话题名称"
+            type="text"
             fullWidth
-            multiline={editDialogType === 'prompt'}
-            rows={editDialogType === 'prompt' ? 4 : 1}
-            value={editDialogValue}
-            onChange={(e) => setEditDialogValue(e.target.value)}
-            placeholder={editDialogType === 'name' ? '请输入话题名称' : '请输入提示词'}
+            variant="outlined"
+            value={editTopicName}
+            onChange={(e) => setEditTopicName(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="系统提示词"
+            multiline
+            rows={6}
+            fullWidth
+            variant="outlined"
+            value={editTopicPrompt}
+            onChange={(e) => setEditTopicPrompt(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>
-            取消
-          </Button>
-          <Button onClick={handleSaveEdit} variant="contained">
-            保存
-          </Button>
+          <Button onClick={handleCloseEditDialog}>取消</Button>
+          <Button onClick={handleSaveEdit} color="primary">保存</Button>
         </DialogActions>
       </Dialog>
 

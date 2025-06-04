@@ -78,11 +78,7 @@ export async function sendChatRequest(
 
   console.log(`[openai/index.ts] 调用sendChatRequest - 模型ID: ${model.id}, 消息数量: ${messages.length}, 系统提示: ${systemPrompt ? '有' : '无'}`);
   try {
-    const response = await originalSendChatRequest(messages, model, {
-      onUpdate,
-      enableWebSearch: model.capabilities?.webSearch,
-      systemPrompt
-    });
+    const response = await originalSendChatRequest(messages, model, onUpdate);
     console.log(`[openai/index.ts] sendChatRequest成功返回`);
     return response;
   } catch (error) {

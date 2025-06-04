@@ -12,7 +12,6 @@ import {
   CardContent,
   LinearProgress,
   Chip,
-  Divider,
   List,
   ListItem,
   ListItemText,
@@ -112,7 +111,7 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
       <Grid container spacing={2}>
         {/* 当前搜索指标 */}
         {currentMetrics && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" gutterBottom>
@@ -143,7 +142,7 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
         )}
 
         {/* 平均性能对比 */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="subtitle2" gutterBottom>
@@ -187,7 +186,7 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
         </Grid>
 
         {/* 结果质量对比 */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="subtitle2" gutterBottom>
@@ -203,13 +202,13 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
                     {averageMetrics.simpleResultsCount.toFixed(1)}
                   </Typography>
                 </Box>
-                <LinearProgress 
-                  variant="determinate" 
+                <LinearProgress
+                  variant="determinate"
                   value={(averageMetrics.simpleResultsCount / 10) * 100}
                   color="primary"
                 />
               </Box>
-              
+
               <Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                   <Box display="flex" alignItems="center" gap={1}>
@@ -220,8 +219,8 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
                     {averageMetrics.enhancedResultsCount.toFixed(1)}
                   </Typography>
                 </Box>
-                <LinearProgress 
-                  variant="determinate" 
+                <LinearProgress
+                  variant="determinate"
                   value={(averageMetrics.enhancedResultsCount / 10) * 100}
                   color="success"
                 />
@@ -232,7 +231,7 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
 
         {/* 性能改进指标 */}
         {speedImprovement !== null && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card variant="outlined">
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
@@ -278,7 +277,7 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
 
         {/* 最近搜索历史 */}
         {metrics.length > 0 && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" gutterBottom>

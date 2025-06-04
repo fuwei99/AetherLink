@@ -388,6 +388,9 @@ export class HttpStreamMCPClient {
       this.pendingRequests.set(requestId, { resolve, reject });
 
       try {
+        if (!this.messageEndpoint) {
+          throw new Error('Message endpoint is not configured');
+        }
         const response = await universalFetch(this.messageEndpoint, {
           method: 'POST',
           headers: {
@@ -436,14 +439,19 @@ export class HttpStreamMCPClient {
 
     console.log(`[HTTP Stream MCP] 发送HTTP Stream请求: ${method}`, params);
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/event-stream',
+      ...this.options.headers
+    };
+
+    if (this.sessionId) {
+      headers['Mcp-Session-Id'] = this.sessionId;
+    }
+
     const response = await universalFetch(this.baseUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json, text/event-stream',
-        'Mcp-Session-Id': this.sessionId,
-        ...this.options.headers
-      },
+      headers,
       body: JSON.stringify(request),
       timeout: this.options.timeout || 30000
     });

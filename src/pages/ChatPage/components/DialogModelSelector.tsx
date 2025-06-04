@@ -185,15 +185,52 @@ export const DialogModelSelector: React.FC<DialogModelSelectorProps> = ({
     handleModelSelect(model);
   }, [handleModelSelect]);
 
+  // 计算动态字体大小函数
+  const getDynamicFontSize = useCallback((text: string): string => {
+    const baseSize = 0.9; // 基础字体大小 (rem)
+    const minSize = 0.65; // 最小字体大小 (rem)
+    const maxLength = 16; // 理想最大长度
+
+    if (text.length <= maxLength) {
+      return `${baseSize}rem`;
+    }
+
+    // 使用更平滑的缩放算法
+    const lengthRatio = text.length / maxLength;
+    const scaleFactor = Math.max(1 / Math.sqrt(lengthRatio), minSize / baseSize);
+    const scaledSize = baseSize * scaleFactor;
+
+    return `${Math.max(scaledSize, minSize)}rem`;
+  }, []);
+
   return (
     <>
       {/* 显示带文字的按钮 */}
       <Button
         onClick={handleMenuClick}
         endIcon={<KeyboardArrowDownIcon />}
-        sx={DIALOG_STYLES.button(isDark)}
+        sx={{
+          ...DIALOG_STYLES.button(isDark),
+          maxWidth: '200px', // 限制按钮最大宽度
+          '& .MuiButton-startIcon, & .MuiButton-endIcon': {
+            flexShrink: 0 // 防止图标被压缩
+          }
+        }}
+        title={selectedModel?.name || '选择模型'} // 悬停时显示完整名称
       >
-        {selectedModel?.name || '选择模型'}
+        <Box
+          sx={{
+            fontSize: selectedModel ? getDynamicFontSize(selectedModel.name) : '0.9rem',
+            fontWeight: 'normal',
+            transition: 'font-size 0.2s ease', // 平滑过渡效果
+            width: '100%',
+            textAlign: 'left',
+            wordBreak: 'keep-all', // 保持单词完整
+            lineHeight: 1.2 // 调整行高
+          }}
+        >
+          {selectedModel?.name || '选择模型'}
+        </Box>
       </Button>
 
       <Dialog

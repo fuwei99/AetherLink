@@ -14,16 +14,7 @@ import { withRetry } from '../../utils/retryUtils';
 const MB = 1024 * 1024;
 const MAX_FILE_SIZE = 20 * MB; // 20MB 限制，与电脑版保持一致
 
-/**
- * Gemini 文件缓存
- */
-interface GeminiFileCache {
-  files: GeminiFile[];
-  timestamp: number;
-}
-
 const FILE_CACHE_DURATION = 3000; // 3秒缓存，与电脑版保持一致
-let fileCache: GeminiFileCache | null = null;
 
 /**
  * 缓存服务 - 模拟电脑版的 CacheService
@@ -331,7 +322,7 @@ export class GeminiFileService {
       );
 
       // 清除缓存
-      fileCache = null;
+      MobileCacheService.clear('gemini_file_list');
 
       console.log(`[GeminiFileService] 文件删除成功: ${fileId}`);
     } catch (error) {

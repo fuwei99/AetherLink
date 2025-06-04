@@ -16,7 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import type { ChatTopic, Assistant } from '../shared/types/Assistant';
 import { TopicService } from '../shared/services/TopicService';
 import { updateTopic } from '../shared/store/slices/assistantsSlice';
-import { useAppDispatch, useAppSelector } from '../shared/store';
+import { useAppDispatch } from '../shared/store';
 // 移除旧的系统提示词选择器，使用默认提示词
 // import { selectActiveSystemPrompt } from '../shared/store/slices/systemPromptsSlice';
 import { dexieStorage } from '../shared/services/DexieStorageService';
@@ -113,7 +113,7 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
           // 更新新话题的提示词
           // 虽然prompt属性已弃用，但目前仍需要使用它，因为ChatTopic类型定义中没有systemPrompt属性
           // 这是一个临时解决方案，未来应该迁移到新的属性
-          newTopic.prompt = prompt.trim();
+          (newTopic as any).prompt = prompt.trim();
           await TopicService.saveTopic(newTopic);
           console.log('[SystemPromptDialog] 已保存话题提示词');
 
@@ -129,6 +129,7 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
         console.log('[SystemPromptDialog] 更新现有话题的系统提示词');
         // 虽然prompt属性已弃用，但目前仍需要使用它，因为ChatTopic类型定义中没有systemPrompt属性
         // 这是一个临时解决方案，未来应该迁移到新的属性
+        // @ts-ignore - 临时使用已弃用的prompt属性，直到有新的替代方案
         const updatedTopic = { ...topic, prompt: prompt.trim() };
 
         // 保存到数据库

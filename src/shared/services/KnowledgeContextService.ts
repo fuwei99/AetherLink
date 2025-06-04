@@ -5,7 +5,7 @@
 
 import { MobileKnowledgeService } from './MobileKnowledgeService';
 import { REFERENCE_PROMPT } from '../config/prompts';
-import type { KnowledgeSearchResult } from '../types/KnowledgeBase';
+
 
 export interface KnowledgeReference {
   id: number;
@@ -201,7 +201,7 @@ export class KnowledgeContextService {
    * 清理过期的缓存
    * @param maxAge 最大缓存时间（毫秒）
    */
-  cleanupExpiredCache(maxAge: number = 24 * 60 * 60 * 1000): void {
+  cleanupExpiredCache(_maxAge: number = 24 * 60 * 60 * 1000): void {
     // 简单的清理策略：清除所有缓存
     // 在实际应用中，可以根据时间戳进行更精确的清理
     if (this.knowledgeCache.size > 100) {

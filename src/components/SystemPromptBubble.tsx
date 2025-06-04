@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Typography, Paper, useTheme } from '@mui/material';
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import PsychologyIcon from '@mui/icons-material/Psychology';
+import { Edit, Brain } from 'lucide-react';
 import type { ChatTopic, Assistant } from '../shared/types/Assistant';
 // 移除不再使用的useAppSelector导入
 // import { useAppSelector } from '../shared/store';
@@ -43,29 +42,32 @@ const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = React.memo(({ topi
         borderRadius: '8px',
         cursor: 'pointer',
         backgroundColor: theme.palette.mode === 'dark'
-          ? 'rgba(25, 118, 210, 0.08)'
-          : 'rgba(25, 118, 210, 0.04)',
-        border: `1px solid ${theme.palette.primary.main}`,
+          ? 'rgba(255, 255, 255, 0.02)'
+          : 'rgba(0, 0, 0, 0.02)',
+        border: `1px solid`,
         borderColor: theme.palette.mode === 'dark'
-          ? 'rgba(25, 118, 210, 0.5)'
-          : 'rgba(25, 118, 210, 0.25)',
+          ? 'rgba(255, 255, 255, 0.1)'
+          : 'rgba(0, 0, 0, 0.08)',
         transition: 'all 0.2s ease',
         '&:hover': {
           backgroundColor: theme.palette.mode === 'dark'
-            ? 'rgba(25, 118, 210, 0.15)'
-            : 'rgba(25, 118, 210, 0.08)',
-          borderColor: theme.palette.primary.main,
+            ? 'rgba(255, 255, 255, 0.05)'
+            : 'rgba(0, 0, 0, 0.04)',
+          borderColor: theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.2)'
+            : 'rgba(0, 0, 0, 0.15)',
         },
         position: 'relative',
         zIndex: 10
       }}
     >
-      <PsychologyIcon
-        fontSize="small"
-        sx={{
-          mr: 1.5,
-          color: theme.palette.primary.main,
-          fontSize: '20px'
+      <Brain
+        size={20}
+        style={{
+          marginRight: 12,
+          color: theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.6)'
+            : 'rgba(0, 0, 0, 0.6)'
         }}
       />
 
@@ -75,8 +77,8 @@ const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = React.memo(({ topi
           component="div"
           sx={{
             color: theme.palette.mode === 'dark'
-              ? theme.palette.primary.light
-              : theme.palette.primary.main,
+              ? 'rgba(255, 255, 255, 0.7)'
+              : 'rgba(0, 0, 0, 0.7)',
             fontSize: '12px',
             lineHeight: 1.3,
             display: '-webkit-box',
@@ -90,12 +92,13 @@ const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = React.memo(({ topi
         </Typography>
       </Box>
 
-      <EditNoteIcon
-        fontSize="small"
-        sx={{
-          ml: 1,
-          color: theme.palette.primary.main,
-          fontSize: '18px'
+      <Edit
+        size={18}
+        style={{
+          marginLeft: 8,
+          color: theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.5)'
+            : 'rgba(0, 0, 0, 0.5)'
         }}
       />
     </Paper>

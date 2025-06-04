@@ -109,6 +109,9 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
   // 获取版本切换样式设置
   const settings = useAppSelector((state) => state.settings);
   const versionSwitchStyle = (settings as any).versionSwitchStyle || 'popup';
+  
+  // 检查是否显示小功能气泡
+  const showMicroBubbles = settings.showMicroBubbles !== false;
 
   // 优化：使用useMemo缓存主题颜色计算
   const themeColors = useMemo(() =>
@@ -541,7 +544,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
   return (
     <>
       {/* 根据renderMode决定渲染哪些部分 */}
-      {renderMode === 'full' && (
+      {renderMode === 'full' && showMicroBubbles && (
         /* 只显示版本指示器和播放按钮，不显示三点菜单 */
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '2px', position: 'relative', top: '-1px' }}>
           {/* 只有助手消息且有多个版本时显示版本指示器 */}

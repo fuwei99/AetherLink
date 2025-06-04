@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   IconButton,
-  Tooltip,
   SpeedDial,
   SpeedDialAction,
   SpeedDialIcon,
@@ -93,7 +92,7 @@ export const KnowledgeToolbar: React.FC<KnowledgeToolbarProps> = ({
           <SpeedDialAction
             key={action.name}
             icon={action.icon}
-            tooltipTitle={action.name}
+            title={action.name}
             onClick={() => {
               setOpen(false);
               action.action();
@@ -108,8 +107,10 @@ export const KnowledgeToolbar: React.FC<KnowledgeToolbarProps> = ({
         anchor="right"
         open={searchDrawerOpen}
         onClose={() => setSearchDrawerOpen(false)}
-        PaperProps={{
-          sx: { width: { xs: '100%', sm: 400 }, p: 2 }
+        slotProps={{
+          paper: {
+            sx: { width: { xs: '100%', sm: 400 }, p: 2 }
+          }
         }}
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

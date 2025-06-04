@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTheme, useMediaQuery } from '@mui/material';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../types';
-import { useKnowledgeContext } from './useKnowledgeContext';
 
 interface UseChatInputLogicProps {
   onSendMessage: (message: string, images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => void;
@@ -26,7 +25,6 @@ interface UseChatInputLogicProps {
 
 export const useChatInputLogic = ({
   onSendMessage,
-  onSendMultiModelMessage,
   onSendImagePrompt,
   isLoading = false,
   allowConsecutiveMessages = true,
@@ -40,14 +38,10 @@ export const useChatInputLogic = ({
   resetUrlScraper,
   enableTextareaResize = false,
   enableCompositionHandling = false,
-  enableCharacterCount = false,
-  availableModels = []
+  enableCharacterCount = false
 }: UseChatInputLogicProps) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // 知识库上下文处理
-  const { applyKnowledgeContext, clearStoredKnowledgeContext, hasKnowledgeContext } = useKnowledgeContext();
 
   // 主题和响应式
   const theme = useTheme();

@@ -698,8 +698,12 @@ export default class GeminiProvider extends BaseProvider {
       topP: generateContentConfig.topP,
       maxOutputTokens: generateContentConfig.maxOutputTokens,
       //  添加系统提示词信息到日志
-      systemInstruction: generateContentConfig.systemInstruction?.substring(0, 50) + (generateContentConfig.systemInstruction?.length > 50 ? '...' : ''),
-      systemInstructionLength: generateContentConfig.systemInstruction?.length || 0,
+      systemInstruction: typeof generateContentConfig.systemInstruction === 'string'
+        ? generateContentConfig.systemInstruction.substring(0, 50) + (generateContentConfig.systemInstruction.length > 50 ? '...' : '')
+        : generateContentConfig.systemInstruction ? '[Complex Content]' : '',
+      systemInstructionLength: typeof generateContentConfig.systemInstruction === 'string'
+        ? generateContentConfig.systemInstruction.length
+        : 0,
       geminiSpecificParams: this.getGeminiSpecificParameters(assistant),
       assistantInfo: assistant ? {
         id: assistant.id,

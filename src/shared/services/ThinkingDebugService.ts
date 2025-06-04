@@ -145,7 +145,7 @@ class ThinkingDebugService {
   }
 
   private getColorForSource(source: string): string {
-    const colors = {
+    const colors: Record<string, string> = {
       'ai-sdk': '#2196F3',
       'response-handler': '#4CAF50',
       'thinking-block': '#FF9800',

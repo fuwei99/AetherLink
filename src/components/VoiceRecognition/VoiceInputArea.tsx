@@ -5,9 +5,7 @@ import {
   Button,
   Paper,
   IconButton,
-  CircularProgress,
-  Tooltip,
-  Fade
+  CircularProgress
 } from '@mui/material';
 import { Mic, Send, X, Edit, MicOff, Plus, Volume2 } from 'lucide-react';
 

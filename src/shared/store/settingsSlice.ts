@@ -95,6 +95,9 @@ interface SettingsState {
 
   // 快捷短语功能设置
   showQuickPhraseButton?: boolean; // 是否在输入框显示快捷短语按钮
+  
+  // 控制信息气泡上小功能气泡的显示
+  showMicroBubbles?: boolean; // 是否显示消息气泡上的小功能气泡（播放和版本切换）
 }
 
 
@@ -176,7 +179,10 @@ const getInitialState = (): SettingsState => {
     showAIDebateButton: true, // 默认显示AI辩论按钮
 
     // 快捷短语功能默认设置
-    showQuickPhraseButton: true // 默认显示快捷短语按钮
+    showQuickPhraseButton: true, // 默认显示快捷短语按钮
+    
+    // 小功能气泡默认设置
+    showMicroBubbles: true, // 默认显示消息气泡上的小功能气泡
   };
 
   // 设置默认模型
@@ -292,9 +298,15 @@ export const loadSettings = createAsyncThunk('settings/load', async () => {
         savedSettings.codeStyle = 'auto';
       }
 
+      // 如果没有小功能气泡显示设置，使用默认值
+      if (savedSettings.showMicroBubbles === undefined) {
+        savedSettings.showMicroBubbles = true;
+      }
+
       return {
         ...savedSettings,
-        providers
+        providers,
+        isLoading: false
       };
     }
 
@@ -414,6 +426,9 @@ const settingsSlice = createSlice({
     },
     deleteProvider: (state, action: PayloadAction<string>) => {
       state.providers = state.providers.filter((provider: ModelProvider) => provider.id !== action.payload);
+    },
+    reorderProviders: (state, action: PayloadAction<ModelProvider[]>) => {
+      state.providers = action.payload;
     },
     toggleProviderEnabled: (state, action: PayloadAction<{ id: string; enabled: boolean }>) => {
       const { id, enabled } = action.payload;
@@ -613,6 +628,7 @@ export const {
   addProvider,
   updateProvider,
   deleteProvider,
+  reorderProviders,
   toggleProviderEnabled,
   addModelToProvider,
   setProviderDefaultModel,

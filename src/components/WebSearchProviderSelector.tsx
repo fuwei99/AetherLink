@@ -53,7 +53,7 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
 
   // 安全地解构，使用稳定的空数组引用
   const providers = webSearchSettings?.providers || EMPTY_PROVIDERS_ARRAY;
-  const currentProvider = webSearchSettings?.provider || 'firecrawl';
+  const currentProvider = webSearchSettings?.provider || 'bing-free';
   const enabled = webSearchSettings?.enabled || false;
 
   // 如果providers为空，显示加载状态
@@ -91,6 +91,8 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
 
   const getProviderIcon = (providerId: string) => {
     switch (providerId) {
+      case 'bing-free':
+        return '🆓'; // 免费Bing搜索图标
       case 'tavily':
         return '🔍';
       case 'bing':
@@ -110,7 +112,7 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
 
   const getProviderStatus = (provider: WebSearchProviderConfig) => {
     // 🚀 免费搜索引擎（WebSearch）无需配置，直接可用
-    if (provider.id === 'bing') {
+    if (provider.id === 'bing-free' || provider.id === 'bing') {
       return { available: true, label: '免费可用' };
     }
 
