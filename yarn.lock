@@ -2730,9 +2730,9 @@ caniuse-lite@^1.0.30001716:
   integrity sha512-AflseV1ahcSunK53NfEs9gFWgOEmzr0f+kaMFA4xiLZlr9Hzt7HxcSpIFcnNCUkz6R6dWKa54rUz3HUmI3nVcw==
 
 capacitor-cors-bypass-enhanced@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.npmjs.org/capacitor-cors-bypass-enhanced/-/capacitor-cors-bypass-enhanced-1.0.4.tgz"
-  integrity sha512-jRGyzmIqDJC2oXUVaKY+kqEcjYB6lr2gHsB0jml7SuGw1g+O1+jg5syAVLbeWBTVti1mvl3BYZpOIE1TR7e2bw==
+  version "1.0.5"
+  resolved "https://registry.npmjs.org/capacitor-cors-bypass-enhanced/-/capacitor-cors-bypass-enhanced-1.0.5.tgz"
+  integrity sha512-KxcyXFj7PAXsCItRGSTk7XqJxtNRIxIcS3OHXVf5/oXM4dcIOjkJ2DZP0wz/dT8k3X1ldZLypxZvHWnGaYukYw==
   dependencies:
     "@modelcontextprotocol/sdk" "^1.12.1"
 
