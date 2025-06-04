@@ -77,6 +77,7 @@ const CODE_STYLES = [
 
 interface CodeBlockSettingsProps {
   // 暂时保留接口以保持兼容性，但不使用参数
+  onSettingChange?: (settingId: string, value: string | boolean) => void;
 }
 
 /**
