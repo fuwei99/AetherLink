@@ -6,7 +6,7 @@ import { REFERENCE_PROMPT } from '../../../config/prompts';
 import { MobileKnowledgeService } from '../../../services/MobileKnowledgeService';
 import { newMessagesActions } from '../../slices/newMessagesSlice';
 import { AssistantMessageStatus } from '../../../types/newMessage';
-import store from '../../index';
+import store, { type RootState } from '../../index';
 import { injectSystemPromptVariables } from '../../../utils/systemPromptVariables';
 
 /**
@@ -358,7 +358,7 @@ export const prepareMessagesForApi = async (
   // 注意：MCP 工具注入现在由提供商层的智能切换机制处理
 
   // 获取当前设置并注入系统提示词变量
-  const currentState = store.getState();
+  const currentState: RootState = store.getState();
   const variableConfig = currentState.settings.systemPromptVariables;
   const processedSystemPrompt = injectSystemPromptVariables(systemPrompt, variableConfig || {});
 
