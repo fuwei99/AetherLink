@@ -16,11 +16,11 @@ const SearchResultsBlock: React.FC<Props> = ({ block }) => {
   }
 
   return (
-    <SearchResultsCollapsible 
-      results={block.searchResults} 
-      query={block.query} 
+    <SearchResultsCollapsible
+      results={block.searchResults}
+      query={block.query}
     />
   );
 };
 
-export default SearchResultsBlock;
+export default React.memo(SearchResultsBlock);

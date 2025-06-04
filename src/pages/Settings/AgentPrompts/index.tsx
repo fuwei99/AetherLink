@@ -22,6 +22,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useNavigate } from 'react-router-dom';
 import { getAgentPromptCategories, searchAgentPrompts } from '../../../shared/config/agentPrompts';
 import type { AgentPrompt, AgentPromptCategory } from '../../../shared/types/AgentPrompt';
+import SystemPromptVariablesPanel from '../../../components/SystemPromptVariablesPanel';
 
 /**
  * 智能体提示词集合 - 主页面组件
@@ -257,6 +258,9 @@ const AgentPromptsSettings: React.FC = () => {
           },
         }}
       >
+        {/* 系统提示词变量注入面板 */}
+        <SystemPromptVariablesPanel />
+
         {/* 搜索框 */}
         <Paper
           elevation={0}

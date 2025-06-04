@@ -7,6 +7,7 @@ import { MobileKnowledgeService } from '../../../services/MobileKnowledgeService
 import { newMessagesActions } from '../../slices/newMessagesSlice';
 import { AssistantMessageStatus } from '../../../types/newMessage';
 import store from '../../index';
+import { injectSystemPromptVariables } from '../../../utils/systemPromptVariables';
 
 /**
  * 在API调用前检查是否需要进行知识库搜索（风格：新模式）
@@ -355,9 +356,15 @@ export const prepareMessagesForApi = async (
 
   // 在数组开头添加系统消息
   // 注意：MCP 工具注入现在由提供商层的智能切换机制处理
+
+  // 获取当前设置并注入系统提示词变量
+  const currentState = store.getState();
+  const variableConfig = currentState.settings.systemPromptVariables;
+  const processedSystemPrompt = injectSystemPromptVariables(systemPrompt, variableConfig || {});
+
   apiMessages.unshift({
     role: 'system',
-    content: systemPrompt
+    content: processedSystemPrompt
   });
 
   return apiMessages;

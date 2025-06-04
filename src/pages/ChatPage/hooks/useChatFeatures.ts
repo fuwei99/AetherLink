@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { newMessagesActions } from '../../../shared/store/slices/newMessagesSlice';
-import { updateOneBlock } from '../../../shared/store/slices/messageBlocksSlice';
+import { updateOneBlock, upsertOneBlock } from '../../../shared/store/slices/messageBlocksSlice';
 import { multiModelService } from '../../../shared/services/MultiModelService';
 import { ApiProviderRegistry } from '../../../shared/services/messages/ApiProvider';
 import { dexieStorage } from '../../../shared/services/DexieStorageService';
@@ -126,8 +126,8 @@ export const useChatFeatures = (
       if (searchResults.length === 0) {
         resultsContent = "没有找到相关结果。";
       } else {
-        // 🚀 消息内容为空，搜索结果完全通过块显示
-        resultsContent = '';
+        // 🚀 搜索成功，显示简短提示，详细结果通过搜索结果块显示
+        resultsContent = `✅ 搜索完成，找到 ${searchResults.length} 个相关结果`;
 
         // 🚀 创建搜索结果块
         const searchResultsBlock = {
@@ -142,11 +142,28 @@ export const useChatFeatures = (
           updatedAt: new Date().toISOString()
         };
 
+        // 🚀 立即添加搜索结果块到Redux状态（参考思考块的处理方式）
+        store.dispatch(upsertOneBlock(searchResultsBlock));
+
+        // 发送块创建事件，确保其他组件能够监听到
+        const { EventEmitter, EVENT_NAMES } = await import('../../../shared/services/EventEmitter');
+        EventEmitter.emit(EVENT_NAMES.BLOCK_CREATED, { id: searchResultsBlock.id, block: searchResultsBlock });
+
         // 🚀 将搜索结果块插入到消息块列表的开头（在主文本块之前）
         const updatedMessage = await dexieStorage.getMessage(searchingMessage.id);
         if (updatedMessage) {
           // 将搜索结果块ID插入到blocks数组的开头
           const updatedBlocks = [searchResultsBlock.id, ...(updatedMessage.blocks || [])];
+
+          // 立即更新Redux中的消息blocks数组
+          store.dispatch(newMessagesActions.updateMessage({
+            id: searchingMessage.id,
+            changes: {
+              blocks: updatedBlocks
+            }
+          }));
+
+          // 保存到数据库
           await dexieStorage.updateMessage(searchingMessage.id, { blocks: updatedBlocks });
           await dexieStorage.saveMessageBlock(searchResultsBlock);
         }
@@ -154,10 +171,20 @@ export const useChatFeatures = (
 
       // 更新主文本块内容
       if (mainTextBlock && mainTextBlock.id) {
-        TopicService.updateMessageBlockFields(mainTextBlock.id, {
+        await TopicService.updateMessageBlockFields(mainTextBlock.id, {
           content: resultsContent,
           status: MessageBlockStatus.SUCCESS
         });
+
+        // 立即更新Redux状态以确保UI立即响应
+        dispatch(updateOneBlock({
+          id: mainTextBlock.id,
+          changes: {
+            content: resultsContent,
+            status: MessageBlockStatus.SUCCESS,
+            updatedAt: new Date().toISOString()
+          }
+        }));
       }
 
       // 🚀 不再创建引用块，搜索结果通过搜索结果块显示

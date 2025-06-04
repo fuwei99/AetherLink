@@ -122,19 +122,29 @@ class EnhancedWebSearchService {
         region: 'CN',
         safeSearch: websearch.filterSafeSearch ? 'moderate' : 'off',
         freshness: websearch.searchWithTime ? 'week' : undefined,
-        timeout: 30000
+        timeout: 30000,
+        fetchContent: false, // 默认关闭内容抓取，避免耗时和流量消耗
+        maxContentLength: 1500 // 限制每个页面内容长度
       });
 
-      // 转换结果格式
-      const results: WebSearchResult[] = response.results.map((result) => ({
-        id: result.id,
-        title: result.title,
-        url: result.url,
-        snippet: result.snippet,
-        timestamp: result.timestamp,
-        provider: 'bing-free',
-        score: result.score
-      }));
+      // 转换结果格式，包含抓取的内容
+      const results: WebSearchResult[] = response.results.map((result) => {
+        // 将抓取的内容合并到snippet中，提供更丰富的上下文
+        let enhancedSnippet = result.snippet;
+        if (result.content && result.content !== '跳过此类型的链接' && result.content !== '内容解析失败') {
+          enhancedSnippet = `${result.snippet}\n\n页面内容摘要:\n${result.content}`;
+        }
+
+        return {
+          id: result.id,
+          title: result.title,
+          url: result.url,
+          snippet: enhancedSnippet,
+          timestamp: result.timestamp,
+          provider: 'bing-free',
+          score: result.score
+        };
+      });
 
       console.log(`[EnhancedWebSearchService] 免费Bing搜索完成，找到 ${results.length} 个结果`);
       return { results };

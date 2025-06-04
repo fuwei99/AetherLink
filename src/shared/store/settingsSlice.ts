@@ -86,7 +86,7 @@ interface SettingsState {
 
   // 工具栏折叠状态
   toolbarCollapsed?: boolean; // 工具栏是否折叠
-  
+
   // 版本切换样式
   versionSwitchStyle?: 'popup' | 'arrows'; // 版本切换样式：弹出列表或箭头式切换
 
@@ -95,9 +95,17 @@ interface SettingsState {
 
   // 快捷短语功能设置
   showQuickPhraseButton?: boolean; // 是否在输入框显示快捷短语按钮
-  
+
   // 控制信息气泡上小功能气泡的显示
   showMicroBubbles?: boolean; // 是否显示消息气泡上的小功能气泡（播放和版本切换）
+
+  // 系统提示词变量注入设置
+  systemPromptVariables?: {
+    enableTimeVariable?: boolean;
+    enableLocationVariable?: boolean;
+    customLocation?: string;
+    enableOSVariable?: boolean;
+  };
 }
 
 
@@ -171,7 +179,7 @@ const getInitialState = (): SettingsState => {
 
     // 工具栏默认设置
     toolbarCollapsed: false,    // 默认工具栏不折叠
-    
+
     // 版本切换样式默认设置
     versionSwitchStyle: 'popup', // 默认使用弹出列表样式
 
@@ -180,9 +188,17 @@ const getInitialState = (): SettingsState => {
 
     // 快捷短语功能默认设置
     showQuickPhraseButton: true, // 默认显示快捷短语按钮
-    
+
     // 小功能气泡默认设置
     showMicroBubbles: true, // 默认显示消息气泡上的小功能气泡
+
+    // 系统提示词变量注入默认设置
+    systemPromptVariables: {
+      enableTimeVariable: false,
+      enableLocationVariable: false,
+      customLocation: '',
+      enableOSVariable: false
+    },
   };
 
   // 设置默认模型
@@ -301,6 +317,16 @@ export const loadSettings = createAsyncThunk('settings/load', async () => {
       // 如果没有小功能气泡显示设置，使用默认值
       if (savedSettings.showMicroBubbles === undefined) {
         savedSettings.showMicroBubbles = true;
+      }
+
+      // 如果没有系统提示词变量注入设置，使用默认值
+      if (!savedSettings.systemPromptVariables) {
+        savedSettings.systemPromptVariables = {
+          enableTimeVariable: false,
+          enableLocationVariable: false,
+          customLocation: '',
+          enableOSVariable: false
+        };
       }
 
       return {

@@ -32,6 +32,13 @@ export interface SettingsState {
   showAIDebateButton?: boolean;
   showQuickPhraseButton?: boolean;
 
+  // 系统提示词变量注入设置
+  systemPromptVariables?: {
+    enableTimeVariable?: boolean;
+    enableLocationVariable?: boolean;
+    customLocation?: string;
+  };
+
   // 其他设置...
   [key: string]: any;
 }
@@ -68,6 +75,11 @@ const loadFromStorage = async (): Promise<SettingsState> => {
     showSystemPromptBubble: true,
     showAIDebateButton: true,
     showQuickPhraseButton: true,
+    systemPromptVariables: {
+      enableTimeVariable: false,
+      enableLocationVariable: false,
+      customLocation: ''
+    },
     isLoading: false
   };
 };
@@ -93,6 +105,11 @@ const initialState: SettingsState = {
   showSystemPromptBubble: true,
   showAIDebateButton: true,
   showQuickPhraseButton: true,
+  systemPromptVariables: {
+    enableTimeVariable: false,
+    enableLocationVariable: false,
+    customLocation: ''
+  },
   isLoading: false
 };
 
@@ -124,6 +141,7 @@ const settingsSlice = createSlice({
 
 // 导出操作
 export const settingsActions = settingsSlice.actions;
+export const { setTheme, updateSettings, initSettings } = settingsSlice.actions;
 
 // 导出异步初始化操作
 export const initSettingsAsync = () => async (dispatch: any) => {

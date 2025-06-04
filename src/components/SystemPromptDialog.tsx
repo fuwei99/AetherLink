@@ -46,7 +46,7 @@ const SystemPromptDialog: React.FC<SystemPromptDialogProps> = ({
   const [saving, setSaving] = useState(false);
   const [tokensCount, setTokensCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  
+
   // 使用默认提示词替代旧的系统提示词
   const activeSystemPrompt = '';
 
