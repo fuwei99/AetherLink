@@ -123,7 +123,7 @@ class EnhancedWebSearchService {
         safeSearch: websearch.filterSafeSearch ? 'moderate' : 'off',
         freshness: websearch.searchWithTime ? 'week' : undefined,
         timeout: 30000,
-        fetchContent: false, // 默认关闭内容抓取，避免耗时和流量消耗
+        fetchContent: true, // 启用内容抓取，提供更丰富的搜索结果
         maxContentLength: 1500 // 限制每个页面内容长度
       });
 
