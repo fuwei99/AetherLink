@@ -154,7 +154,8 @@ const AssistantItem = memo(function AssistantItem({
   );
 }, (prevProps, nextProps) => {
   // 自定义比较函数，避免不必要的重新渲染
-  return (
+  // 添加更详细的日志来调试emoji更新问题
+  const shouldSkipRender = (
     prevProps.assistant.id === nextProps.assistant.id &&
     prevProps.assistant.name === nextProps.assistant.name &&
     prevProps.assistant.emoji === nextProps.assistant.emoji &&
@@ -162,6 +163,17 @@ const AssistantItem = memo(function AssistantItem({
     (prevProps.assistant.topics?.length || 0) === (nextProps.assistant.topics?.length || 0) &&
     (prevProps.assistant.topicIds?.length || 0) === (nextProps.assistant.topicIds?.length || 0)
   );
+
+  // 如果emoji发生变化，记录日志
+  if (prevProps.assistant.emoji !== nextProps.assistant.emoji) {
+    console.log(`[AssistantItem] Emoji changed for ${nextProps.assistant.name}:`, {
+      old: prevProps.assistant.emoji,
+      new: nextProps.assistant.emoji,
+      willRerender: !shouldSkipRender
+    });
+  }
+
+  return shouldSkipRender;
 });
 
 export default AssistantItem;

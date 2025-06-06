@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useTransition, useOptimistic, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -26,6 +26,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { alpha } from '@mui/material/styles';
 import { fetchModels } from '../shared/services/APIService';
 import type { Model } from '../shared/types';
+import { debounce } from 'lodash';
 
 // 分组模型的接口
 interface GroupedModels {
@@ -55,9 +56,18 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [models, setModels] = useState<Model[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [actualSearchTerm, setActualSearchTerm] = useState<string>('');
+  const [optimisticSearchTerm, setOptimisticSearchTerm] = useOptimistic(
+    actualSearchTerm,
+    (_currentSearchTerm, newSearchTerm: string) => newSearchTerm
+  );
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [pendingModels, setPendingModels] = useState<Map<string, boolean>>(new Map());
+
+  // 性能优化：使用 useTransition 处理搜索和筛选
+  const [isSearchPending, startSearchTransition] = useTransition();
+  const [isGroupTogglePending, startGroupToggleTransition] = useTransition();
+
   // 使用ref存储初始provider，避免重新加载
   const initialProviderRef = useRef<any>(null);
 
@@ -66,12 +76,29 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
     return existingModels.some(m => m.id === modelId) || pendingModels.get(modelId) === true;
   }, [existingModels, pendingModels]);
 
-  // 按group对模型进行分组
-  const getGroupedModels = useCallback((): GroupedModels => {
+  // 防抖搜索函数
+  const debouncedSetSearchTerm = useMemo(
+    () => debounce((value: string) => {
+      startSearchTransition(() => {
+        setActualSearchTerm(value);
+      });
+    }, 300),
+    []
+  );
+
+  // 清理防抖函数
+  useEffect(() => {
+    return () => {
+      debouncedSetSearchTerm.cancel();
+    };
+  }, [debouncedSetSearchTerm]);
+
+  // 按group对模型进行分组 - 使用 useMemo 优化性能
+  const groupedModels = useMemo((): GroupedModels => {
     // 过滤搜索结果
     const filteredModels = models.filter(model =>
-      model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      model.id.toLowerCase().includes(searchTerm.toLowerCase())
+      model.name.toLowerCase().includes(actualSearchTerm.toLowerCase()) ||
+      model.id.toLowerCase().includes(actualSearchTerm.toLowerCase())
     );
 
     // 按group分组
@@ -83,10 +110,7 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
       groups[group].push(model);
       return groups;
     }, {});
-  }, [models, searchTerm]);
-
-  // 分组后的模型
-  const groupedModels = getGroupedModels();
+  }, [models, actualSearchTerm]);
 
   // 加载模型列表
   const loadModels = async () => {
@@ -114,99 +138,102 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
     }
   };
 
-  // 处理组展开/折叠
-  const handleGroupToggle = (group: string) => {
-    const newExpandedGroups = new Set(expandedGroups);
-    if (newExpandedGroups.has(group)) {
-      newExpandedGroups.delete(group);
-    } else {
-      newExpandedGroups.add(group);
-    }
-    setExpandedGroups(newExpandedGroups);
-  };
+  // 处理组展开/折叠 - 使用 useTransition 优化性能
+  const handleGroupToggle = useCallback((group: string) => {
+    startGroupToggleTransition(() => {
+      setExpandedGroups(prev => {
+        const newExpandedGroups = new Set(prev);
+        if (newExpandedGroups.has(group)) {
+          newExpandedGroups.delete(group);
+        } else {
+          newExpandedGroups.add(group);
+        }
+        return newExpandedGroups;
+      });
+    });
+  }, []);
 
-  // 添加模型，更新pending状态
-  const handleAddSingleModel = (model: Model) => {
+  // 添加模型，更新pending状态 - 使用 useCallback 优化性能
+  const handleAddSingleModel = useCallback((model: Model) => {
     if (!isModelInProvider(model.id)) {
-      const newPendingModels = new Map(pendingModels);
-      newPendingModels.set(model.id, true);
-      setPendingModels(newPendingModels);
+      setPendingModels(prev => {
+        const newPendingModels = new Map(prev);
+        newPendingModels.set(model.id, true);
+        return newPendingModels;
+      });
       onAddModel(model);
     }
-  };
+  }, [isModelInProvider, onAddModel]);
 
-  // 移除模型，更新pending状态
-  const handleRemoveSingleModel = (modelId: string) => {
-    const newPendingModels = new Map(pendingModels);
-    newPendingModels.delete(modelId);
-    setPendingModels(newPendingModels);
+  // 移除模型，更新pending状态 - 使用 useCallback 优化性能
+  const handleRemoveSingleModel = useCallback((modelId: string) => {
+    setPendingModels(prev => {
+      const newPendingModels = new Map(prev);
+      newPendingModels.delete(modelId);
+      return newPendingModels;
+    });
     onRemoveModel(modelId);
-  };
+  }, [onRemoveModel]);
 
-  // 添加整个组
-  const handleAddGroup = (group: string) => {
+  // 添加整个组 - 使用 useCallback 优化性能
+  const handleAddGroup = useCallback((group: string) => {
     // 创建新模型集合，一次性添加整个组
-    const modelsToAdd = groupedModels[group].filter(model => !isModelInProvider(model.id));
+    const modelsToAdd = groupedModels[group]?.filter(model => !isModelInProvider(model.id)) || [];
 
     if (modelsToAdd.length > 0) {
       // 批量更新pendingModels状态
-      const newPendingModels = new Map(pendingModels);
+      setPendingModels(prev => {
+        const newPendingModels = new Map(prev);
+        modelsToAdd.forEach(model => {
+          newPendingModels.set(model.id, true);
+        });
+        return newPendingModels;
+      });
 
       // 使用批量添加API（如果可用）
       if (onAddModels) {
         // 为每个模型创建副本
         const modelsCopy = modelsToAdd.map(model => ({...model}));
-
-        // 更新本地状态
-        modelsCopy.forEach(model => {
-          newPendingModels.set(model.id, true);
-        });
-        setPendingModels(newPendingModels);
-
         // 批量添加
         onAddModels(modelsCopy);
       } else {
         // 为每个要添加的模型创建一个副本，添加到provider中
         modelsToAdd.forEach(model => {
-          newPendingModels.set(model.id, true);
           onAddModel({...model});
         });
-        setPendingModels(newPendingModels);
       }
     }
-  };
+  }, [groupedModels, isModelInProvider, onAddModels, onAddModel]);
 
-  // 移除整个组
-  const handleRemoveGroup = (group: string) => {
+  // 移除整个组 - 使用 useCallback 优化性能
+  const handleRemoveGroup = useCallback((group: string) => {
     // 找出要移除的模型ID列表
     const modelIdsToRemove = groupedModels[group]
-      .filter(model => isModelInProvider(model.id))
-      .map(model => model.id);
+      ?.filter(model => isModelInProvider(model.id))
+      ?.map(model => model.id) || [];
 
     if (modelIdsToRemove.length > 0) {
       // 批量更新pendingModels状态
-      const newPendingModels = new Map(pendingModels);
-
-      // 使用批量删除API（如果可用）
-      if (onRemoveModels) {
-        // 更新本地状态
+      setPendingModels(prev => {
+        const newPendingModels = new Map(prev);
         modelIdsToRemove.forEach(modelId => {
           newPendingModels.delete(modelId);
         });
-        setPendingModels(newPendingModels);
+        return newPendingModels;
+      });
 
+      // 使用批量删除API（如果可用）
+      if (onRemoveModels) {
         // 批量删除
         onRemoveModels(modelIdsToRemove);
       } else {
         // 移除每个模型
         modelIdsToRemove.forEach(modelId => {
-          newPendingModels.delete(modelId);
           onRemoveModel(modelId);
         });
-        setPendingModels(newPendingModels);
       }
     }
-  };
+  }, [groupedModels, isModelInProvider, onRemoveModels, onRemoveModel]);
 
   // 加载模型，只在对话框打开时加载一次
   useEffect(() => {
@@ -258,13 +285,22 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
           fullWidth
           placeholder="搜索模型..."
           size="small"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={optimisticSearchTerm}
+          onChange={(e) => {
+            const newSearchValue = e.target.value;
+            setOptimisticSearchTerm(newSearchValue); // 立即更新输入框
+            debouncedSetSearchTerm(newSearchValue); // 防抖更新实际搜索
+          }}
           InputProps={{
             startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
             sx: { borderRadius: 2 }
           }}
         />
+        {isSearchPending && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+            <CircularProgress size={16} />
+          </Box>
+        )}
       </Box>
 
       <Divider />
@@ -281,7 +317,7 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
           },
         }}
       >
-        {loading ? (
+        {loading || isSearchPending || isGroupTogglePending ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
             <CircularProgress />
           </Box>

@@ -23,13 +23,15 @@ import {
   Snackbar,
   Alert
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import AutofpsSelectIcon from '@mui/icons-material/AutofpsSelect';
-import VerifiedIcon from '@mui/icons-material/Verified';
-import SettingsIcon from '@mui/icons-material/Settings';
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Edit,
+  Zap,
+  CheckCircle,
+  Settings
+} from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../shared/store';
 import {
@@ -43,6 +45,7 @@ import ModelManagementDialog from '../../components/ModelManagementDialog';
 import SimpleModelDialog from '../../components/settings/SimpleModelDialog';
 import { testApiConnection } from '../../shared/api';
 import { sendChatRequest } from '../../shared/api';
+import { getProviderDisplayName } from '../../shared/api/providerFactory';
 
 // API调用注意: 配置中保存原始URL，实际请求时使用formatApiHost处理URL并添加正确路径
 
@@ -56,7 +59,7 @@ const formatApiHost = (host: string) => {
     if (host.endsWith('/')) {
       return true;
     }
-    
+
     // 特定URL保持原样
     return host.endsWith('volces.com/api/v3');
   };
@@ -80,34 +83,34 @@ const formatApiHost = (host: string) => {
 /**
  * 生成预览URL
  */
-const hostPreview = (baseUrl: string, providerType?: string) => {
+const hostPreview = (baseUrl: string) => {
   if (baseUrl.endsWith('#')) {
     return baseUrl.replace('#', '');
   }
 
-  // 去除可能的@前缀
-  let cleanUrl = baseUrl;
-  if (cleanUrl.startsWith('@')) {
-    cleanUrl = cleanUrl.substring(1);
-  }
-  
-  if (providerType === 'openai') {
-    return formatApiHost(cleanUrl) + 'chat/completions';
-  }
-  return formatApiHost(cleanUrl) + 'responses';
+  // 所有OpenAI兼容的API都使用 /v1/chat/completions 端点
+  return formatApiHost(baseUrl) + 'chat/completions';
 };
 
 
 
 /**
+ * 判断是否为OpenAI类型的提供商（参考电脑版逻辑）
+ * @param providerType 供应商类型
+ * @returns 是否为OpenAI类型
+ */
+const isOpenAIProvider = (providerType?: string): boolean => {
+  return !['anthropic', 'gemini'].includes(providerType || '');
+};
+
+/**
  * 显示用的URL补全函数 - 仅用于显示完整的API端点
  * @param baseUrl 基础URL
- * @param providerType 供应商类型
  * @returns 显示用的完整API端点
  */
-const getCompleteApiUrl = (baseUrl: string, providerType?: string): string => {
+const getCompleteApiUrl = (baseUrl: string): string => {
   if (!baseUrl.trim()) return '';
-  return hostPreview(baseUrl, providerType);
+  return hostPreview(baseUrl);
 };
 
 const ModelProviderSettings: React.FC = () => {
@@ -558,7 +561,7 @@ const ModelProviderSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
           <Typography
             variant="h6"
@@ -644,9 +647,7 @@ const ModelProviderSettings: React.FC = () => {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {provider.isSystem ? '系统供应商' :
-                 provider.providerType === 'openai' ? 'OpenAI API' :
-                 provider.providerType === 'anthropic' ? 'Anthropic API' :
-                 provider.providerType === 'gemini' ? 'Google Generative AI API' : '自定义API'}
+                 `${getProviderDisplayName({ providerType: provider.providerType } as any)} API`}
               </Typography>
             </Box>
             <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
@@ -661,7 +662,7 @@ const ModelProviderSettings: React.FC = () => {
                       }
                     }}
                   >
-                    <EditIcon color="info" />
+                    <Edit size={20} color="#0288d1" />
                   </IconButton>
                   <IconButton
                     color="error"
@@ -673,7 +674,7 @@ const ModelProviderSettings: React.FC = () => {
                       }
                     }}
                   >
-                    <DeleteIcon />
+                    <Trash2 size={20} />
                   </IconButton>
                 </>
               )}
@@ -746,6 +747,15 @@ const ModelProviderSettings: React.FC = () => {
                       borderRadius: 2,
                     }
                   }}
+                  slotProps={{
+                    input: {
+                      'aria-invalid': false,
+                      'aria-describedby': 'provider-settings-api-key-helper-text'
+                    },
+                    formHelperText: {
+                      id: 'provider-settings-api-key-helper-text'
+                    }
+                  }}
                 />
               </Box>
 
@@ -772,7 +782,7 @@ const ModelProviderSettings: React.FC = () => {
                       <span style={{ display: 'block', color: 'text.secondary', marginBottom: '4px', fontSize: '0.75rem' }}>
                         在URL末尾添加#可强制使用自定义格式，末尾添加/也可保持原格式
                       </span>
-                      {baseUrl && (
+                      {baseUrl && isOpenAIProvider(provider?.providerType) && (
                         <span
                           style={{
                             display: 'inline-block',
@@ -785,9 +795,9 @@ const ModelProviderSettings: React.FC = () => {
                             marginTop: '4px'
                           }}
                         >
-                          {baseUrl.endsWith('#') ? '强制使用: ' : 
+                          {baseUrl.endsWith('#') ? '强制使用: ' :
                            baseUrl.endsWith('/') ? '保持原格式: ' : '完整地址: '}
-                          {getCompleteApiUrl(baseUrl, provider?.providerType)}
+                          {getCompleteApiUrl(baseUrl)}
                         </span>
                       )}
                     </span>
@@ -810,7 +820,7 @@ const ModelProviderSettings: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Button
                     variant="outlined"
-                    startIcon={<SettingsIcon />}
+                    startIcon={<Settings size={16} />}
                     onClick={() => setOpenHeadersDialog(true)}
                     sx={{
                       borderRadius: 2,
@@ -836,7 +846,7 @@ const ModelProviderSettings: React.FC = () => {
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                 <Button
                   variant="outlined"
-                  startIcon={isTesting ? <CircularProgress size={16} /> : <VerifiedIcon />}
+                  startIcon={isTesting ? <CircularProgress size={16} /> : <CheckCircle size={16} />}
                   onClick={handleTestConnection}
                   disabled={isTesting || !apiKey}
                   sx={{
@@ -881,7 +891,7 @@ const ModelProviderSettings: React.FC = () => {
             {provider.isSystem ? (
               <Button
                 variant="outlined"
-                startIcon={<SettingsIcon />}
+                startIcon={<Settings size={16} />}
                 onClick={() => window.location.href = '/settings/model-combo'}
                 sx={{
                   borderRadius: 2,
@@ -906,7 +916,7 @@ const ModelProviderSettings: React.FC = () => {
                 </Typography>
                 <Button
                   variant="outlined"
-                  startIcon={<AutofpsSelectIcon />}
+                  startIcon={<Zap size={16} />}
                   onClick={handleOpenModelManagement}
                   sx={{
                     mr: 2,
@@ -922,7 +932,7 @@ const ModelProviderSettings: React.FC = () => {
                   自动获取
                 </Button>
                 <Button
-                  startIcon={<AddIcon />}
+                  startIcon={<Plus size={16} />}
                   onClick={() => setOpenAddModelDialog(true)}
                   sx={{
                     bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
@@ -972,7 +982,7 @@ const ModelProviderSettings: React.FC = () => {
                             }
                           }}
                         >
-                          <SettingsIcon color="primary" />
+                          <Settings size={20} color="#1976d2" />
                         </IconButton>
                       </Box>
                     ) : (
@@ -990,7 +1000,7 @@ const ModelProviderSettings: React.FC = () => {
                             }
                           }}
                         >
-                          {testingModelId === model.id ? <CircularProgress size={16} color="success" /> : <VerifiedIcon color="success" />}
+                          {testingModelId === model.id ? <CircularProgress size={16} color="success" /> : <CheckCircle size={16} color="#2e7d32" />}
                         </IconButton>
                         <IconButton
                           aria-label="edit"
@@ -1003,7 +1013,7 @@ const ModelProviderSettings: React.FC = () => {
                             }
                           }}
                         >
-                          <EditIcon color="info" />
+                          <Edit size={20} color="#0288d1" />
                         </IconButton>
                         <IconButton
                           aria-label="delete"
@@ -1015,7 +1025,7 @@ const ModelProviderSettings: React.FC = () => {
                             }
                           }}
                         >
-                          <DeleteIcon color="error" />
+                          <Trash2 size={20} color="#d32f2f" />
                         </IconButton>
                       </Box>
                     )

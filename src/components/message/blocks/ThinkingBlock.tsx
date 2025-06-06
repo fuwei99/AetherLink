@@ -10,12 +10,14 @@ import {
   Avatar,
   Tooltip
 } from '@mui/material';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import PsychologyIcon from '@mui/icons-material/Psychology';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import TimelineIcon from '@mui/icons-material/Timeline';
+import {
+  Lightbulb,
+  Copy,
+  ChevronDown,
+  Brain,
+  Sparkles,
+  BarChart
+} from 'lucide-react';
 import { styled } from '@mui/material/styles';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../shared/store';
@@ -201,16 +203,12 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
           borderBottom: expanded ? `1px solid ${theme.palette.divider}` : 'none'
         }}
       >
-        <LightbulbIcon
-          sx={{
-            mr: 1,
-            color: isThinking ? theme.palette.warning.main : theme.palette.text.secondary,
-            animation: isThinking ? 'pulse 1.5s infinite' : 'none',
-            '@keyframes pulse': {
-              '0%': { opacity: 0.6 },
-              '50%': { opacity: 1 },
-              '100%': { opacity: 0.6 }
-            }
+        <Lightbulb
+          size={20}
+          color={isThinking ? theme.palette.warning.main : theme.palette.text.secondary}
+          style={{
+            marginRight: theme.spacing(1),
+            animation: isThinking ? 'pulse 1.5s infinite' : 'none'
           }}
         />
 
@@ -234,11 +232,12 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
             sx={{ mr: 1 }}
             color={copied ? "success" : "default"}
           >
-            <ContentCopyIcon fontSize="small" />
+            <Copy size={16} />
           </IconButton>
 
-          <ExpandMoreIcon
-            sx={{
+          <ChevronDown
+            size={20}
+            style={{
               transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.2s'
             }}
@@ -284,11 +283,10 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
           borderBottom: `1px solid ${theme.palette.divider}`
         }}
       >
-        <LightbulbIcon
-          sx={{
-            mr: 1,
-            color: isThinking ? theme.palette.warning.main : theme.palette.primary.main
-          }}
+        <Lightbulb
+          size={20}
+          color={isThinking ? theme.palette.warning.main : theme.palette.primary.main}
+          style={{ marginRight: theme.spacing(1) }}
         />
 
         <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, gap: 1 }}>
@@ -308,7 +306,7 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
           onClick={handleCopy}
           color={copied ? "success" : "default"}
         >
-          <ContentCopyIcon fontSize="small" />
+          <Copy size={16} />
         </IconButton>
       </Box>
 
@@ -344,16 +342,11 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
             }
           }}
         >
-          <LightbulbIcon
-            sx={{
-              fontSize: 16,
-              color: isThinking ? theme.palette.warning.contrastText : theme.palette.text.secondary,
-              animation: isThinking ? 'pulse 1.5s infinite' : 'none',
-              '@keyframes pulse': {
-                '0%': { opacity: 0.6 },
-                '50%': { opacity: 1 },
-                '100%': { opacity: 0.6 }
-              }
+          <Lightbulb
+            size={16}
+            color={isThinking ? theme.palette.warning.contrastText : theme.palette.text.secondary}
+            style={{
+              animation: isThinking ? 'pulse 1.5s infinite' : 'none'
             }}
           />
         </Box>
@@ -389,7 +382,7 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
                   onClick={handleCopy}
                   color={copied ? "success" : "default"}
                 >
-                  <ContentCopyIcon fontSize="small" />
+                  <Copy size={16} />
                 </IconButton>
               </Box>
             </Box>
@@ -416,7 +409,7 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
           backgroundColor: isThinking ? theme.palette.warning.main : theme.palette.primary.main
         }}
       >
-        <PsychologyIcon sx={{ fontSize: 18 }} />
+        <Brain size={18} />
       </Avatar>
       <Box
         onClick={toggleExpanded}
@@ -454,7 +447,7 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
             sx={{ ml: 1, p: 0.5 }}
             color={copied ? "success" : "default"}
           >
-            <ContentCopyIcon sx={{ fontSize: 14 }} />
+            <Copy size={14} />
           </IconButton>
         </Box>
         <Collapse in={expanded}>
@@ -513,7 +506,7 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', mb: expanded ? 1 : 0 }}>
-            <TimelineIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
+            <BarChart size={20} color={theme.palette.text.secondary} style={{ marginRight: theme.spacing(1) }} />
             <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, gap: 1 }}>
               <Typography variant="subtitle2" component="span">
                 {isThinking ? '正在思考...' : '思考过程'}
@@ -529,10 +522,11 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
               onClick={handleCopy}
               color={copied ? "success" : "default"}
             >
-              <ContentCopyIcon fontSize="small" />
+              <Copy size={16} />
             </IconButton>
-            <ExpandMoreIcon
-              sx={{
+            <ChevronDown
+              size={20}
+              style={{
                 transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: 'transform 0.2s'
               }}
@@ -595,7 +589,7 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
               }
             }}
           >
-            <AutoAwesomeIcon sx={{ color: 'white', fontSize: 20 }} />
+            <Sparkles size={20} color="white" />
           </Box>
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
@@ -615,13 +609,14 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
                 '&:hover': { backgroundColor: theme.palette.action.hover }
               }}
             >
-              <ContentCopyIcon fontSize="small" />
+              <Copy size={16} />
             </IconButton>
-            <ExpandMoreIcon
-              sx={{
+            <ChevronDown
+              size={20}
+              color={theme.palette.primary.main}
+              style={{
                 transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s',
-                color: theme.palette.primary.main
+                transition: 'transform 0.3s'
               }}
             />
           </Box>
@@ -666,17 +661,12 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
         }}
         onClick={toggleExpanded}
       >
-        <LightbulbIcon
-          sx={{
-            fontSize: 14,
-            mr: 0.5,
-            color: isThinking ? theme.palette.warning.main : theme.palette.text.secondary,
-            animation: isThinking ? 'pulse 1.5s infinite' : 'none',
-            '@keyframes pulse': {
-              '0%': { opacity: 0.6 },
-              '50%': { opacity: 1 },
-              '100%': { opacity: 0.6 }
-            }
+        <Lightbulb
+          size={14}
+          color={isThinking ? theme.palette.warning.main : theme.palette.text.secondary}
+          style={{
+            marginRight: theme.spacing(0.5),
+            animation: isThinking ? 'pulse 1.5s infinite' : 'none'
           }}
         />
         <Typography variant="caption" sx={{ mr: 0.5 }}>
@@ -694,7 +684,7 @@ const ThinkingBlock: React.FC<Props> = ({ block }) => {
           sx={{ p: 0.25 }}
           color={copied ? "success" : "default"}
         >
-          <ContentCopyIcon sx={{ fontSize: 12 }} />
+          <Copy size={12} />
         </IconButton>
       </Box>
       {expanded && (

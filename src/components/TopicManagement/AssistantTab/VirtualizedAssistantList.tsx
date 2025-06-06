@@ -148,7 +148,7 @@ const VirtualizedAssistantList = memo(function VirtualizedAssistantList({
   );
 }, (prevProps, nextProps) => {
   // 自定义比较函数，只有在关键属性变化时才重新渲染
-  return (
+  const shouldSkipRender = (
     prevProps.assistants.length === nextProps.assistants.length &&
     prevProps.currentAssistant?.id === nextProps.currentAssistant?.id &&
     prevProps.height === nextProps.height &&
@@ -161,6 +161,20 @@ const VirtualizedAssistantList = memo(function VirtualizedAssistantList({
       assistant.emoji === nextProps.assistants[index]?.emoji
     )
   );
+
+  // 如果有助手的emoji发生变化，记录日志
+  if (!shouldSkipRender) {
+    const emojiChanges = prevProps.assistants.filter((assistant, index) => {
+      const nextAssistant = nextProps.assistants[index];
+      return nextAssistant && assistant.emoji !== nextAssistant.emoji;
+    });
+
+    if (emojiChanges.length > 0) {
+      console.log('[VirtualizedAssistantList] Emoji changes detected:', emojiChanges.map(a => a.name));
+    }
+  }
+
+  return shouldSkipRender;
 });
 
 export default VirtualizedAssistantList;

@@ -10,12 +10,14 @@ import {
   Slide
 } from '@mui/material';
 import type { SlideProps } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import WarningIcon from '@mui/icons-material/Warning';
-import InfoIcon from '@mui/icons-material/Info';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
+import {
+  X,
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  Upload
+} from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'upload';
 
@@ -58,17 +60,17 @@ const EnhancedToast: React.FC<EnhancedToastProps> = ({
   const getIcon = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return <CheckCircleIcon />;
+        return <CheckCircle size={20} />;
       case 'error':
-        return <ErrorIcon />;
+        return <AlertCircle size={20} />;
       case 'warning':
-        return <WarningIcon />;
+        return <AlertTriangle size={20} />;
       case 'info':
-        return <InfoIcon />;
+        return <Info size={20} />;
       case 'upload':
-        return <UploadFileIcon />;
+        return <Upload size={20} />;
       default:
-        return <InfoIcon />;
+        return <Info size={20} />;
     }
   };
 
@@ -149,7 +151,7 @@ const EnhancedToast: React.FC<EnhancedToastProps> = ({
                   onClick={() => onClose(toast.id)}
                   sx={{ color: 'inherit' }}
                 >
-                  <CloseIcon fontSize="small" />
+                  <X size={16} />
                 </IconButton>
               </Box>
             }

@@ -11,11 +11,12 @@ import {
   ListItemText,
   Tooltip
 } from '@mui/material';
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import BrightnessLowIcon from '@mui/icons-material/BrightnessLow';
-import BrightnessMediumIcon from '@mui/icons-material/BrightnessMedium';
-import BrightnessHighIcon from '@mui/icons-material/BrightnessHigh';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import {
+  Lightbulb,
+  Sun,
+  Zap,
+  Sparkles
+} from 'lucide-react';
 import type { Model } from '../../shared/types';
 import type { ThinkingOption } from '../../shared/config/reasoningConfig';
 import {
@@ -66,16 +67,16 @@ const ThinkingButton: React.FC<ThinkingButtonProps> = ({
   const createThinkingIcon = useCallback((option?: ThinkingOption) => {
     switch (option) {
       case 'low':
-        return <BrightnessLowIcon />;
+        return <Sun size={20} />;
       case 'medium':
-        return <BrightnessMediumIcon />;
+        return <Lightbulb size={20} />;
       case 'high':
-        return <BrightnessHighIcon />;
+        return <Zap size={20} />;
       case 'auto':
-        return <AutoFixHighIcon />;
+        return <Sparkles size={20} />;
       case 'off':
       default:
-        return <LightbulbOutlinedIcon />;
+        return <Lightbulb size={20} />;
     }
   }, []);
 
@@ -129,7 +130,7 @@ const ThinkingButton: React.FC<ThinkingButtonProps> = ({
           selected={currentEffort === 'off' || !currentEffort}
         >
           <ListItemIcon>
-            <LightbulbOutlinedIcon />
+            <Lightbulb size={20} />
           </ListItemIcon>
           <ListItemText>关闭思考</ListItemText>
         </MenuItem>

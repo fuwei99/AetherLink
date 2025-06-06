@@ -61,8 +61,10 @@
     "@capacitor/keyboard": "^7.0.1",
     "@capacitor/preferences": "^7.0.1",
     "@capacitor/share": "^7.0.1",
+    "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/status-bar": "^7.0.1",
     "@capacitor/toast": "^7.0.1",
+    "@capawesome/capacitor-android-edge-to-edge-support": "^7.2.2",
     "@capawesome/capacitor-file-picker": "^7.0.1",
     "@codemirror/basic-setup": "^0.20.0",
     "@codemirror/lang-javascript": "^6.2.4",
@@ -75,9 +77,9 @@
     "@google/genai": "^1.2.0",
     "@google/generative-ai": "^0.24.1",
     "@hello-pangea/dnd": "^18.0.1",
+    "@lobehub/icons": "^2.3.0",
     "@mendable/firecrawl-js": "^1.25.1",
     "@modelcontextprotocol/sdk": "^1.12.0",
-    "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.1",
     "@reduxjs/toolkit": "^2.8.1",
     "@shikijs/markdown-it": "^3.4.2",
@@ -161,7 +163,7 @@
     "@types/react-dom": "^19.1.2",
     "@types/react-katex": "^3.0.4",
     "@vitejs/plugin-react": "^4.4.1",
-    "@vitejs/plugin-react-swc": "^3.10.0",
+    "@vitejs/plugin-react-swc": "^3.10.1",
     "concurrently": "^9.1.2",
     "esbuild": "^0.25.4",
     "eslint": "^9.25.0",
@@ -176,6 +178,7 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
     "vite": "^6.3.5",
+    "vite-bundle-analyzer": "^0.22.0",
     "vite-plugin-checker": "^0.9.3"
   }
 }

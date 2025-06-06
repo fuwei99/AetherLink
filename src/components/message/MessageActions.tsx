@@ -18,20 +18,22 @@ import {
   Button,
   Tooltip
 } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import HistoryIcon from '@mui/icons-material/History';
-import CallSplitIcon from '@mui/icons-material/CallSplit';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import SendIcon from '@mui/icons-material/Send';
-import AddIcon from '@mui/icons-material/Add';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import {
+  MoreVertical,
+  Volume2,
+  VolumeX,
+  History,
+  GitBranch,
+  Copy,
+  RefreshCw,
+  Trash2,
+  Edit,
+  Save,
+  Send,
+  Plus,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 import type { Message, MessageVersion } from '../../shared/types/newMessage.ts';
 import MessageEditor from './MessageEditor';
 import { TTSService } from '../../shared/services/TTSService';
@@ -578,7 +580,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                       color: themeColors.textColor
                     }}
                   >
-                    <ArrowBackIosNewIcon sx={{ fontSize: '0.7rem' }} />
+                    <ChevronLeft size={12} />
                   </IconButton>
                   
                   <Typography 
@@ -605,7 +607,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                       color: themeColors.textColor
                     }}
                   >
-                    <ArrowForwardIosIcon sx={{ fontSize: '0.7rem' }} />
+                    <ChevronRight size={12} />
                   </IconButton>
                 </Box>
               ) : (
@@ -616,7 +618,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                   variant="filled"
                   color="info"
                   onClick={(e) => setVersionAnchorEl(e.currentTarget)}
-                  icon={<HistoryIcon style={{ fontSize: 12 }} />}
+                  icon={<History size={12} />}
                   sx={{
                     height: 18,
                     paddingLeft: '2px',
@@ -658,7 +660,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
               variant="filled"
               color="primary"
               onClick={handleTextToSpeech}
-              icon={isPlaying ? <VolumeUpIcon style={{ fontSize: 12 }} /> : <VolumeOffIcon style={{ fontSize: 12 }} />}
+              icon={isPlaying ? <Volume2 size={12} /> : <VolumeX size={12} />}
               sx={{
                 height: 18,
                 paddingLeft: '2px',
@@ -702,7 +704,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
           onClick={handleMenuClick}
           sx={menuButtonStyle(theme.palette.mode === 'dark')}
         >
-          <MoreVertIcon sx={{ fontSize: '0.9rem' }} />
+          <MoreVertical size={14} />
         </IconButton>
       )}
 
@@ -716,7 +718,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
               onClick={handleCopyContent}
               sx={toolbarIconButtonStyle}
             >
-              <ContentCopyIcon sx={{ fontSize: '1rem' }} />
+              <Copy size={16} />
             </IconButton>
           </Tooltip>
 
@@ -727,7 +729,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
               onClick={handleEditClick}
               sx={toolbarIconButtonStyle}
             >
-              <EditIcon sx={{ fontSize: '1rem' }} />
+              <Edit size={16} />
             </IconButton>
           </Tooltip>
 
@@ -738,7 +740,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
               onClick={handleSaveContent}
               sx={toolbarIconButtonStyle}
             >
-              <SaveIcon sx={{ fontSize: '1rem' }} />
+              <Save size={16} />
             </IconButton>
           </Tooltip>
 
@@ -750,7 +752,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                 onClick={handleResendClick}
                 sx={toolbarIconButtonStyle}
               >
-                <SendIcon sx={{ fontSize: '1rem' }} />
+                <Send size={16} />
               </IconButton>
             </Tooltip>
           )}
@@ -763,7 +765,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                 onClick={handleRegenerateClick}
                 sx={toolbarIconButtonStyle}
               >
-                <RefreshIcon sx={{ fontSize: '1rem' }} />
+                <RefreshCw size={16} />
               </IconButton>
             </Tooltip>
           )}
@@ -781,7 +783,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                   '&:hover': { opacity: 1 }
                 }}
               >
-                {isPlaying ? <VolumeUpIcon sx={{ fontSize: '1rem' }} /> : <VolumeOffIcon sx={{ fontSize: '1rem' }} />}
+                {isPlaying ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </IconButton>
             </Tooltip>
           )}
@@ -794,7 +796,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                 onClick={(e) => setVersionAnchorEl(e.currentTarget)}
                 sx={toolbarIconButtonStyle}
               >
-                <HistoryIcon sx={{ fontSize: '1rem' }} />
+                <History size={16} />
               </IconButton>
             </Tooltip>
           )}
@@ -806,7 +808,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
               onClick={handleCreateBranch}
               sx={toolbarIconButtonStyle}
             >
-              <CallSplitIcon sx={{ fontSize: '1rem' }} />
+              <GitBranch size={16} />
             </IconButton>
           </Tooltip>
 
@@ -817,7 +819,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
               onClick={handleDeleteClick}
               sx={deleteButtonStyle(theme.palette.error.main)}
             >
-              <DeleteIcon sx={{ fontSize: '1rem' }} />
+              <Trash2 size={16} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -850,7 +852,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
             <span>消息版本历史</span>
             <Button 
               size="small" 
-              startIcon={<AddIcon sx={{ fontSize: '0.8rem' }} />}
+              startIcon={<Plus size={13} />}
               onClick={handleCreateVersion}
               variant="outlined" 
               color="primary" 
@@ -959,7 +961,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                         '.MuiListItem-root:hover &': { opacity: 0.5 }
                       }}
                     >
-                      <DeleteIcon sx={{ fontSize: '0.8rem', color: theme.palette.error.main }} />
+                      <Trash2 size={13} color={theme.palette.error.main} />
                     </IconButton>
                   )}
                 </ListItem>
@@ -1044,7 +1046,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
         {/* AI消息特有功能 */}
         {!isUser && [
           <MenuItem key="regenerate" onClick={handleRegenerateClick}>重新生成</MenuItem>,
-          <MenuItem key="history" onClick={() => {
+          <MenuItem key="versions" onClick={() => {
             handleMenuClose();
             // 使用消息ID作为DOM元素ID参考
             const messageElement = document.getElementById(`message-${message.id}`);
@@ -1054,7 +1056,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
 
         {/* 通用功能 */}
         <MenuItem onClick={handleCreateBranch} sx={{ display: 'flex', alignItems: 'center' }}>
-          <CallSplitIcon fontSize="small" sx={{ mr: 1 }} />
+          <GitBranch size={16} style={{ marginRight: '8px' }} />
           分支
         </MenuItem>
         <MenuItem onClick={handleDeleteClick}>删除</MenuItem>

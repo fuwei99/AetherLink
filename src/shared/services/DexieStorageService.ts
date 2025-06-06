@@ -9,11 +9,12 @@ import { throttle } from 'lodash';
 import { makeSerializable, diagnoseSerializationIssues } from '../utils/serialization';
 import { DataRepairService } from './DataRepairService';
 
+
 /**
  * 基于Dexie.js的统一存储服务
  * 升级版本
  */
-class DexieStorageService extends Dexie {
+export class DexieStorageService extends Dexie {
   assistants!: Dexie.Table<Assistant, string>;
   topics!: Dexie.Table<ChatTopic & { _lastMessageTimeNum?: number }, string>;
   settings!: Dexie.Table<any, string>;
@@ -26,6 +27,7 @@ class DexieStorageService extends Dexie {
   knowledge_bases!: Dexie.Table<any, string>;
   knowledge_documents!: Dexie.Table<any, string>;
   quick_phrases!: Dexie.Table<QuickPhrase, string>;
+
 
   private static instance: DexieStorageService;
 
@@ -70,7 +72,11 @@ class DexieStorageService extends Dexie {
       knowledge_documents: 'id, knowledgeBaseId, content, metadata.source, metadata.timestamp',
       quick_phrases: 'id, title, content, createdAt, updatedAt, order',
     }).upgrade(() => this.upgradeToV6());
+
+
   }
+
+
 
   /**
    * 升级到数据库版本6：添加文件存储表、知识库相关表和快捷短语表
@@ -228,6 +234,9 @@ class DexieStorageService extends Dexie {
 
   async getAssistant(id: string): Promise<Assistant | null> {
     const assistant = await this.assistants.get(id);
+    if (assistant) {
+      console.log(`[DexieStorageService.getAssistant] 从数据库读取助手 ${id} (${assistant.name})，emoji: "${assistant.emoji}"`);
+    }
     return assistant || null;
   }
 
@@ -238,6 +247,9 @@ class DexieStorageService extends Dexie {
       }
 
       const assistantToSave = { ...assistant };
+
+      // 调试日志：记录保存前的emoji值
+      console.log(`[DexieStorageService.saveAssistant] 保存助手 ${assistant.id} (${assistant.name})，emoji: "${assistant.emoji}"`);
 
       if (assistantToSave.icon && typeof assistantToSave.icon === 'object') {
         assistantToSave.icon = null;
@@ -250,7 +262,15 @@ class DexieStorageService extends Dexie {
         }));
       }
 
+      // 调试日志：记录保存到数据库的emoji值
+      console.log(`[DexieStorageService.saveAssistant] 即将保存到数据库的emoji: "${assistantToSave.emoji}"`);
+
       await this.assistants.put(assistantToSave);
+
+      // 验证保存结果
+      const savedAssistant = await this.assistants.get(assistant.id);
+      console.log(`[DexieStorageService.saveAssistant] 保存后验证，数据库中的emoji: "${savedAssistant?.emoji}"`);
+
     } catch (error) {
       const errorMessage = error instanceof Error
         ? `${error.name}: ${error.message}`
@@ -1037,7 +1057,7 @@ class DexieStorageService extends Dexie {
       // 查找所有metadata.versionId等于指定versionId的块
       const blocks = await this.message_blocks.toArray();
       return blocks.filter(block =>
-        block.metadata && 
+        block.metadata &&
         typeof block.metadata === 'object' &&
         'versionId' in block.metadata &&
         block.metadata.versionId === versionId

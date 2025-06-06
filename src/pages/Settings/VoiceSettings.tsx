@@ -21,10 +21,12 @@ import {
 
   Chip
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import MicIcon from '@mui/icons-material/Mic'; // 新增导入 MicIcon
-import StopIcon from '@mui/icons-material/Stop';
+import {
+  ArrowLeft,
+  Volume2,
+  Mic,
+  Square
+} from 'lucide-react';
 
 import { useNavigate } from 'react-router-dom';
 import { TTSService } from '../../shared/services/TTSService';
@@ -607,7 +609,7 @@ const VoiceSettings: React.FC = () => {
               transition: 'all 0.2s ease-in-out',
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
           <Typography
             variant="h6"
@@ -721,8 +723,8 @@ const VoiceSettings: React.FC = () => {
             },
           }}
         >
-          <Tab label="文本转语音 (TTS)" icon={<VolumeUpIcon />} iconPosition="start" />
-          <Tab label="语音识别 (STT)" icon={<MicIcon />} iconPosition="start" />
+          <Tab label="文本转语音 (TTS)" icon={<Volume2 size={20} />} iconPosition="start" />
+          <Tab label="语音识别 (STT)" icon={<Mic size={20} />} iconPosition="start" />
         </Tabs>
 
         {uiState.mainTabValue === 0 && (
@@ -1293,7 +1295,7 @@ const VoiceSettings: React.FC = () => {
                 }}
               />
             </Box>
-            
+
             {/* 语音识别服务选择 - 添加子Tab */}
             <Tabs
               value={uiState.sttSubTabValue}
@@ -1401,7 +1403,7 @@ const VoiceSettings: React.FC = () => {
                   </Box>
                 }
               />
-              
+
               {/* OpenAI Whisper Tab */}
               <Tab
                 label={
@@ -1466,7 +1468,7 @@ const VoiceSettings: React.FC = () => {
                 }
               />
             </Tabs>
-            
+
             {/* 根据选中的子Tab显示不同的内容 */}
             {uiState.sttSubTabValue === 0 && (
               // Capacitor语音识别设置
@@ -1559,7 +1561,7 @@ const VoiceSettings: React.FC = () => {
                       partialResults: speechRecognitionSettings.partialResults,
                       popup: false,
                     })}
-                    startIcon={isListening ? <StopIcon /> : <MicIcon />}
+                    startIcon={isListening ? <Square size={16} /> : <Mic size={16} />}
                     sx={{ flex: 1 }}
                   >
                     {isListening ? "停止识别" : "开始识别"}
@@ -1579,16 +1581,16 @@ const VoiceSettings: React.FC = () => {
                 )}
               </>
             )}
-            
+
             {uiState.sttSubTabValue === 1 && (
               // OpenAI Whisper设置
               <>
-                <OpenAIWhisperTab 
+                <OpenAIWhisperTab
                   settings={whisperSettings}
                   onSettingsChange={setWhisperSettings}
                 />
-                
-                <WhisperTestSection 
+
+                <WhisperTestSection
                   settings={whisperSettings}
                   enabled={speechRecognitionSettings.enabled}
                 />

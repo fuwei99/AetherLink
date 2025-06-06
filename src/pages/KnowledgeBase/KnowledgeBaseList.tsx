@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
+import {
+  Box,
+  Typography,
   Button,
   Dialog,
   DialogTitle,
@@ -20,12 +20,14 @@ import {
   Alert,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import FolderIcon from '@mui/icons-material/Folder';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import {
+  Folder,
+  Trash2,
+  Edit,
+  Plus,
+  Eye,
+  ArrowLeft
+} from 'lucide-react';
 import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeService';
 import type { KnowledgeBase } from '../../shared/types/KnowledgeBase';
 import { useNavigate } from 'react-router-dom';
@@ -61,11 +63,11 @@ const KnowledgeBaseList: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingKnowledgeBase, setEditingKnowledgeBase] = useState<KnowledgeBase | null>(null);
 
-  const { 
-    knowledgeBases, 
-    isLoading, 
-    error, 
-    refreshKnowledgeBases 
+  const {
+    knowledgeBases,
+    isLoading,
+    error,
+    refreshKnowledgeBases
   } = useKnowledge();
 
   // 导航到详情页
@@ -100,7 +102,7 @@ const KnowledgeBaseList: React.FC = () => {
       if (editingKnowledgeBase) {
         // 更新现有知识库
         await MobileKnowledgeService.getInstance().updateKnowledgeBase(
-          editingKnowledgeBase.id, 
+          editingKnowledgeBase.id,
           formData
         );
       } else {
@@ -131,7 +133,7 @@ const KnowledgeBaseList: React.FC = () => {
   // 删除知识库
   const handleDelete = async () => {
     if (!deleteTargetId) return;
-    
+
     try {
       await MobileKnowledgeService.getInstance().deleteKnowledgeBase(deleteTargetId);
       handleCloseDeleteDialog();
@@ -165,14 +167,14 @@ const KnowledgeBaseList: React.FC = () => {
             aria-label="back"
             sx={{ color: (theme) => theme.palette.primary.main }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
             知识库管理
           </Typography>
           <Button
             variant="contained"
-            startIcon={<AddIcon />}
+            startIcon={<Plus size={20} />}
             onClick={() => handleOpenDialog()}
             sx={{
               background: 'linear-gradient(45deg, #059669 30%, #10b981 90%)',
@@ -202,11 +204,11 @@ const KnowledgeBaseList: React.FC = () => {
             <Typography variant="body1" color="textSecondary" gutterBottom>
               暂无知识库
             </Typography>
-            <Button 
+            <Button
               variant="contained"
-              startIcon={<AddIcon />} 
+              startIcon={<Plus size={20} />}
               onClick={() => handleOpenDialog()}
-              sx={{ 
+              sx={{
                 mt: 2,
                 background: 'linear-gradient(45deg, #059669 30%, #10b981 90%)',
                 '&:hover': {
@@ -225,15 +227,15 @@ const KnowledgeBaseList: React.FC = () => {
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Box display="flex" alignItems="center" mb={1}>
                       <Avatar sx={{ mr: 1, bgcolor: 'primary.main' }}>
-                        <FolderIcon />
+                        <Folder size={20} />
                       </Avatar>
                       <Typography variant="h6" noWrap>{kb.name}</Typography>
                     </Box>
-                    
-                    <Typography variant="body2" color="text.secondary" sx={{ 
-                      mb: 2, 
-                      height: 40, 
-                      overflow: 'hidden', 
+
+                    <Typography variant="body2" color="text.secondary" sx={{
+                      mb: 2,
+                      height: 40,
+                      overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
@@ -241,7 +243,7 @@ const KnowledgeBaseList: React.FC = () => {
                     }}>
                       {kb.description || '无描述'}
                     </Typography>
-                    
+
                     <Box display="flex" flexWrap="wrap" gap={0.5}>
                       <Typography variant="caption" color="text.secondary">
                         模型: {kb.model}
@@ -257,16 +259,16 @@ const KnowledgeBaseList: React.FC = () => {
                       e.stopPropagation();
                       handleOpenDialog(kb);
                     }}>
-                      <EditIcon fontSize="small" />
+                      <Edit size={16} />
                     </IconButton>
                     <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(kb.id, e)}>
-                      <DeleteIcon fontSize="small" />
+                      <Trash2 size={16} />
                     </IconButton>
                     <Box flexGrow={1} />
-                    <Button 
-                      size="small" 
+                    <Button
+                      size="small"
                       variant="outlined"
-                      startIcon={<VisibilityIcon />}
+                      startIcon={<Eye size={16} />}
                       onClick={() => handleViewDetails(kb.id)}
                     >
                       查看

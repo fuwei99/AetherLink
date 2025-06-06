@@ -286,7 +286,7 @@ const AddProviderPage: React.FC = () => {
                   <MenuItem key={type.value} value={type.value}>
                     {type.label}
                   </MenuItem>
-                ))}
+                )).filter(Boolean)}
               </Select>
             </FormControl>
             {providerType && (

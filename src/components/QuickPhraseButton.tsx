@@ -173,58 +173,56 @@ const QuickPhraseButton: React.FC<QuickPhraseButtonProps> = ({
           }
         }}
       >
-        {allPhrases.length > 0 && (
-          <>
-            {assistantPhrases.map((phrase) => (
-              <MenuItem
-                key={phrase.id}
-                onClick={() => handlePhraseSelect(phrase)}
-                style={{ paddingRight: 16 }}
-              >
-                <ListItemIcon>
-                  <BotMessageSquare size={18} />
-                </ListItemIcon>
-                <ListItemText
-                  primary={phrase.title}
-                  secondary={phrase.content.length > 50 
-                    ? phrase.content.substring(0, 50) + '...' 
-                    : phrase.content
-                  }
-                  secondaryTypographyProps={{
-                    style: { fontSize: '0.75rem', opacity: 0.7 }
-                  }}
-                />
-              </MenuItem>
-            ))}
-            
-            {assistantPhrases.length > 0 && globalPhrases.length > 0 && (
-              <Divider />
-            )}
-            
-            {globalPhrases.map((phrase) => (
-              <MenuItem
-                key={phrase.id}
-                onClick={() => handlePhraseSelect(phrase)}
-                style={{ paddingRight: 16 }}
-              >
-                <ListItemIcon>
-                  <Zap size={18} />
-                </ListItemIcon>
-                <ListItemText
-                  primary={phrase.title}
-                  secondary={phrase.content.length > 50 
-                    ? phrase.content.substring(0, 50) + '...' 
-                    : phrase.content
-                  }
-                  secondaryTypographyProps={{
-                    style: { fontSize: '0.75rem', opacity: 0.7 }
-                  }}
-                />
-              </MenuItem>
-            ))}
-            <Divider />
-          </>
-        )}
+        {allPhrases.length > 0 && [
+          ...assistantPhrases.map((phrase) => (
+            <MenuItem
+              key={phrase.id}
+              onClick={() => handlePhraseSelect(phrase)}
+              style={{ paddingRight: 16 }}
+            >
+              <ListItemIcon>
+                <BotMessageSquare size={18} />
+              </ListItemIcon>
+              <ListItemText
+                primary={phrase.title}
+                secondary={phrase.content.length > 50
+                  ? phrase.content.substring(0, 50) + '...'
+                  : phrase.content
+                }
+                secondaryTypographyProps={{
+                  style: { fontSize: '0.75rem', opacity: 0.7 }
+                }}
+              />
+            </MenuItem>
+          )),
+
+          ...(assistantPhrases.length > 0 && globalPhrases.length > 0 ? [
+            <Divider key="divider-1" />
+          ] : []),
+
+          ...globalPhrases.map((phrase) => (
+            <MenuItem
+              key={phrase.id}
+              onClick={() => handlePhraseSelect(phrase)}
+              style={{ paddingRight: 16 }}
+            >
+              <ListItemIcon>
+                <Zap size={18} />
+              </ListItemIcon>
+              <ListItemText
+                primary={phrase.title}
+                secondary={phrase.content.length > 50
+                  ? phrase.content.substring(0, 50) + '...'
+                  : phrase.content
+                }
+                secondaryTypographyProps={{
+                  style: { fontSize: '0.75rem', opacity: 0.7 }
+                }}
+              />
+            </MenuItem>
+          )),
+          <Divider key="divider-2" />
+        ]}
         
         <MenuItem onClick={handleOpenDialog}>
           <ListItemIcon>

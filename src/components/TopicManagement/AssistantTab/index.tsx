@@ -258,42 +258,44 @@ export default function AssistantTab({
         open={Boolean(assistantMenuAnchorEl)}
         onClose={handleCloseAssistantMenu}
       >
-        <MenuItem onClick={handleOpenAddToGroupMenu}>
-          <FolderPlus size={18} style={{ marginRight: 8 }} />
-          添加到分组...
-        </MenuItem>
-        <MenuItem onClick={handleOpenEditDialog}>
-          <Edit3 size={18} style={{ marginRight: 8 }} />
-          编辑助手
-        </MenuItem>
-        <MenuItem onClick={handleOpenIconPicker}>
-          <Image size={18} style={{ marginRight: 8 }} />
-          修改图标
-        </MenuItem>
-        <MenuItem onClick={handleCopyAssistant}>
-          <Copy size={18} style={{ marginRight: 8 }} />
-          复制助手
-        </MenuItem>
-        <MenuItem onClick={handleClearTopics}>
-          <Trash2 size={18} style={{ marginRight: 8 }} />
-          清空话题
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleSortByPinyinAsc}>
-          <ArrowUpAZ size={18} style={{ marginRight: 8 }} />
-          按拼音升序排列
-        </MenuItem>
-        <MenuItem onClick={handleSortByPinyinDesc}>
-          <ArrowDownAZ size={18} style={{ marginRight: 8 }} />
-          按拼音降序排列
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => {
-          if (selectedMenuAssistant) handleDeleteAssistantAction(selectedMenuAssistant.id);
-        }}>
-          <Trash size={18} style={{ marginRight: 8 }} />
-          删除助手
-        </MenuItem>
+        {[
+          <MenuItem key="add-to-group" onClick={handleOpenAddToGroupMenu}>
+            <FolderPlus size={18} style={{ marginRight: 8 }} />
+            添加到分组...
+          </MenuItem>,
+          <MenuItem key="edit-assistant" onClick={handleOpenEditDialog}>
+            <Edit3 size={18} style={{ marginRight: 8 }} />
+            编辑助手
+          </MenuItem>,
+          <MenuItem key="change-icon" onClick={handleOpenIconPicker}>
+            <Image size={18} style={{ marginRight: 8 }} />
+            修改图标
+          </MenuItem>,
+          <MenuItem key="copy-assistant" onClick={handleCopyAssistant}>
+            <Copy size={18} style={{ marginRight: 8 }} />
+            复制助手
+          </MenuItem>,
+          <MenuItem key="clear-topics" onClick={handleClearTopics}>
+            <Trash2 size={18} style={{ marginRight: 8 }} />
+            清空话题
+          </MenuItem>,
+          <Divider key="divider-1" />,
+          <MenuItem key="sort-pinyin-asc" onClick={handleSortByPinyinAsc}>
+            <ArrowUpAZ size={18} style={{ marginRight: 8 }} />
+            按拼音升序排列
+          </MenuItem>,
+          <MenuItem key="sort-pinyin-desc" onClick={handleSortByPinyinDesc}>
+            <ArrowDownAZ size={18} style={{ marginRight: 8 }} />
+            按拼音降序排列
+          </MenuItem>,
+          <Divider key="divider-2" />,
+          <MenuItem key="delete-assistant" onClick={() => {
+            if (selectedMenuAssistant) handleDeleteAssistantAction(selectedMenuAssistant.id);
+          }}>
+            <Trash size={18} style={{ marginRight: 8 }} />
+            删除助手
+          </MenuItem>
+        ].filter(Boolean)}
       </Menu>
 
       {/* 添加到分组菜单 */}
@@ -302,15 +304,17 @@ export default function AssistantTab({
         open={Boolean(addToGroupMenuAnchorEl)}
         onClose={handleCloseAddToGroupMenu}
       >
-        {(assistantGroups || []).map((group: Group) => (
-          <MenuItem
-            key={group.id}
-            onClick={() => handleAddToGroup(group.id)}
-          >
-            {group.name}
-          </MenuItem>
-        ))}
-        <MenuItem onClick={handleAddToNewGroup}>创建新分组...</MenuItem>
+        {[
+          ...(assistantGroups || []).map((group: Group) => (
+            <MenuItem
+              key={group.id}
+              onClick={() => handleAddToGroup(group.id)}
+            >
+              {group.name}
+            </MenuItem>
+          )),
+          <MenuItem key="create-new-group" onClick={handleAddToNewGroup}>创建新分组...</MenuItem>
+        ].filter(Boolean)}
       </Menu>
 
       {/* 编辑助手对话框 */}

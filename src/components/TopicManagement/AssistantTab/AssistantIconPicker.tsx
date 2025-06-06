@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -116,42 +116,39 @@ export default function AssistantIconPicker({
   const [selectedIcon, setSelectedIcon] = useState<string>(currentEmoji || '');
   const [activeTab, setActiveTab] = useState(0);
 
-  const handleIconSelect = (iconName: string) => {
+  // 使用useCallback优化点击处理函数
+  const handleIconSelect = useCallback((iconName: string) => {
     setSelectedIcon(iconName);
     onSelectEmoji(iconName);
     onClose();
-  };
+  }, [onSelectEmoji, onClose]);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-  };
+  }, []);
 
-  // 响应式网格列数
-  const getGridColumns = () => {
+  // 使用useMemo缓存响应式计算结果
+  const gridColumns = useMemo(() => {
     if (isMobile) return 6;
     if (isTablet) return 8;
     return 10;
-  };
+  }, [isMobile, isTablet]);
 
-  // 响应式图标大小
-  const getIconSize = () => {
+  const iconSize = useMemo(() => {
     if (isMobile) return 18;
     if (isTablet) return 20;
     return 22;
-  };
+  }, [isMobile, isTablet]);
 
-  // 响应式按钮大小
-  const getButtonSize = () => {
+  const buttonSize = useMemo(() => {
     if (isMobile) return 36;
     if (isTablet) return 40;
     return 44;
-  };
+  }, [isMobile, isTablet]);
 
-  // 渲染Lucide图标 - 响应式设计
-  const renderLucideIcon = (iconData: { icon: any, name: string }, isSelected: boolean) => {
+  // 使用useCallback优化渲染函数
+  const renderLucideIcon = useCallback((iconData: { icon: any, name: string }, isSelected: boolean) => {
     const IconComponent = iconData.icon;
-    const buttonSize = getButtonSize();
-    const iconSize = getIconSize();
 
     return (
       <IconButton
@@ -178,12 +175,10 @@ export default function AssistantIconPicker({
         <IconComponent size={iconSize} />
       </IconButton>
     );
-  };
+  }, [buttonSize, iconSize, isMobile, handleIconSelect]);
 
-  // 渲染Emoji - 响应式设计
-  const renderEmoji = (emoji: string, isSelected: boolean) => {
-    const buttonSize = getButtonSize();
-
+  // 使用useCallback优化emoji渲染函数
+  const renderEmoji = useCallback((emoji: string, isSelected: boolean) => {
     return (
       <IconButton
         key={emoji}
@@ -210,7 +205,7 @@ export default function AssistantIconPicker({
         {emoji}
       </IconButton>
     );
-  };
+  }, [buttonSize, isMobile, handleIconSelect]);
 
   return (
     <Dialog
@@ -302,7 +297,7 @@ export default function AssistantIconPicker({
                   <Box
                     sx={{
                       display: 'grid',
-                      gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`,
+                      gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
                       gap: isMobile ? 0.5 : 1
                     }}
                   >
@@ -335,7 +330,7 @@ export default function AssistantIconPicker({
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`,
+                  gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
                   gap: isMobile ? 0.5 : 1
                 }}
               >

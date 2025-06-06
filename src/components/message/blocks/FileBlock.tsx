@@ -1,13 +1,13 @@
 import React from 'react';
 import { Box, Typography, IconButton, Chip } from '@mui/material';
 import {
-  InsertDriveFile as FileIcon,
-  Description as DocumentIcon,
+  File as FileIcon,
+  FileText as DocumentIcon,
   Image as ImageIcon,
   Code as CodeIcon,
   Archive as ArchiveIcon,
   Download as DownloadIcon
-} from '@mui/icons-material';
+} from 'lucide-react';
 import type { FileMessageBlock } from '../../../shared/types/newMessage';
 import { FileTypes } from '../../../shared/utils/fileUtils';
 
@@ -34,16 +34,16 @@ const FileBlock: React.FC<Props> = ({ block }) => {
   const getFileIcon = () => {
     switch (file.type) {
       case FileTypes.IMAGE:
-        return <ImageIcon />;
+        return <ImageIcon size={24} />;
       case FileTypes.TEXT:
       case FileTypes.DOCUMENT:
-        return <DocumentIcon />;
+        return <DocumentIcon size={24} />;
       case FileTypes.CODE:
-        return <CodeIcon />;
+        return <CodeIcon size={24} />;
       case FileTypes.ARCHIVE:
-        return <ArchiveIcon />;
+        return <ArchiveIcon size={24} />;
       default:
-        return <FileIcon />;
+        return <FileIcon size={24} />;
     }
   };
 
@@ -174,7 +174,7 @@ const FileBlock: React.FC<Props> = ({ block }) => {
             }
           }}
         >
-          <DownloadIcon fontSize="small" />
+          <DownloadIcon size={16} />
         </IconButton>
       )}
     </Box>

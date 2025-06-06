@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Box, Typography, IconButton, Chip, LinearProgress, Tooltip, useTheme } from '@mui/material';
-import CancelIcon from '@mui/icons-material/Cancel';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import DescriptionIcon from '@mui/icons-material/Description';
-import ImageIcon from '@mui/icons-material/Image';
-import AudioFileIcon from '@mui/icons-material/AudioFile';
-import VideoFileIcon from '@mui/icons-material/VideoFile';
-import TextSnippetIcon from '@mui/icons-material/TextSnippet';
-import CodeIcon from '@mui/icons-material/Code';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import {
+  X,
+  File,
+  FileText,
+  Image,
+  Music,
+  Video,
+  Code,
+  CheckCircle,
+  AlertCircle,
+  GripVertical
+} from 'lucide-react';
 import type { FileContent } from '../shared/types';
 import { FileUploadService } from '../shared/services/FileUploadService';
 import { getFileTypeByExtension } from '../shared/utils/fileUtils';
@@ -50,24 +50,24 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   // 获取文件图标和颜色
   const getFileIcon = () => {
     const mimeType = file.mimeType.toLowerCase();
-    const iconSize = compact ? 'small' : 'medium';
+    const iconSize = compact ? 16 : 24;
 
     if (mimeType.startsWith('image/')) {
-      return <ImageIcon color="primary" fontSize={iconSize} />;
+      return <Image size={iconSize} color="#2196f3" />;
     } else if (mimeType.startsWith('video/')) {
-      return <VideoFileIcon color="error" fontSize={iconSize} />;
+      return <Video size={iconSize} color="#f44336" />;
     } else if (mimeType.startsWith('audio/')) {
-      return <AudioFileIcon color="success" fontSize={iconSize} />;
+      return <Music size={iconSize} color="#4caf50" />;
     } else if (mimeType.includes('pdf')) {
-      return <PictureAsPdfIcon sx={{ color: '#e53935' }} fontSize={iconSize} />;
+      return <FileText size={iconSize} color="#e53935" />;
     } else if (mimeType.includes('word') || mimeType.includes('document')) {
-      return <DescriptionIcon sx={{ color: '#1565c0' }} fontSize={iconSize} />;
+      return <FileText size={iconSize} color="#1565c0" />;
     } else if (fileType === 'code') {
-      return <CodeIcon sx={{ color: '#ff9800' }} fontSize={iconSize} />;
+      return <Code size={iconSize} color="#ff9800" />;
     } else if (mimeType.includes('text/')) {
-      return <TextSnippetIcon sx={{ color: '#757575' }} fontSize={iconSize} />;
+      return <FileText size={iconSize} color="#757575" />;
     } else {
-      return <InsertDriveFileIcon color="action" fontSize={iconSize} />;
+      return <File size={iconSize} color="#9e9e9e" />;
     }
   };
 
@@ -75,9 +75,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   const getStatusIcon = () => {
     switch (status) {
       case 'success':
-        return <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 16 }} />;
+        return <CheckCircle size={16} color="#4caf50" />;
       case 'error':
-        return <ErrorIcon sx={{ color: '#f44336', fontSize: 16 }} />;
+        return <AlertCircle size={16} color="#f44336" />;
       case 'uploading':
       case 'validating':
         return null; // 显示进度条
@@ -138,7 +138,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
         >
           {/* 拖拽指示器 */}
           {draggable && (
-            <DragIndicatorIcon sx={{ fontSize: 12, color: 'rgba(0, 0, 0, 0.4)', marginRight: '4px' }} />
+            <GripVertical size={12} color="rgba(0, 0, 0, 0.4)" style={{ marginRight: '4px' }} />
           )}
 
           {/* 文件图标 */}
@@ -180,7 +180,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               },
             }}
           >
-            <CancelIcon sx={{ fontSize: 12 }} />
+            <X size={12} />
           </IconButton>
 
           {/* 进度条 */}
@@ -238,7 +238,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
       {/* 拖拽指示器 */}
       {draggable && (
         <Box sx={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
-          <DragIndicatorIcon sx={{ color: 'rgba(0, 0, 0, 0.4)' }} />
+          <GripVertical size={20} color="rgba(0, 0, 0, 0.4)" />
         </Box>
       )}
 
@@ -327,7 +327,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
           },
         }}
       >
-        <CancelIcon fontSize="small" />
+        <X size={20} />
       </IconButton>
 
       {/* 进度条 */}

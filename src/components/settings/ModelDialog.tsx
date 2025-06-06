@@ -271,6 +271,15 @@ const ModelDialog: React.FC<ModelDialogProps> = ({
             error={!!errors.apiKey}
             helperText={errors.apiKey || '请输入API密钥，将安全存储在本地'}
             required={selectedPreset?.requiresApiKey}
+            slotProps={{
+              input: {
+                'aria-invalid': !!errors.apiKey,
+                'aria-describedby': 'model-api-key-helper-text'
+              },
+              formHelperText: {
+                id: 'model-api-key-helper-text'
+              }
+            }}
           />
 
           <TextField

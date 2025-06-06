@@ -303,29 +303,53 @@ export function useAssistantTabLogic(
 
   // 选择新的图标
   const handleSelectEmoji = async (emoji: string) => {
-    if (!selectedMenuAssistant) return;
+    if (!selectedMenuAssistant) {
+      console.warn('[useAssistantTabLogic] 没有选中的助手，无法更新图标');
+      return;
+    }
 
     try {
-      console.log('[useAssistantTabLogic] 更新助手图标:', {
+      console.log('[useAssistantTabLogic] 开始更新助手图标:', {
         id: selectedMenuAssistant.id,
         name: selectedMenuAssistant.name,
-        emoji: emoji
+        oldEmoji: selectedMenuAssistant.emoji,
+        newEmoji: emoji
       });
 
       const updatedAssistant = {
         ...selectedMenuAssistant,
-        emoji: emoji
+        emoji: emoji,
+        updatedAt: new Date().toISOString() // 添加更新时间戳
       };
 
       // 保存到数据库，确保图标持久化
       await dexieStorage.saveAssistant(updatedAssistant);
       console.log('[useAssistantTabLogic] 已保存助手图标到数据库');
 
+      // 验证保存结果 - 立即从数据库读取验证
+      const verifyAssistant = await dexieStorage.getAssistant(selectedMenuAssistant.id);
+      console.log('[useAssistantTabLogic] 验证保存结果:', {
+        savedEmoji: verifyAssistant?.emoji,
+        expectedEmoji: emoji,
+        isCorrect: verifyAssistant?.emoji === emoji
+      });
+
       // 更新Redux状态
       if (onUpdateAssistant) {
         onUpdateAssistant(updatedAssistant);
         console.log('[useAssistantTabLogic] 已通过回调更新助手图标');
+      } else {
+        console.warn('[useAssistantTabLogic] onUpdateAssistant回调不存在');
       }
+
+      // 派发自定义事件，确保其他组件也能收到更新
+      window.dispatchEvent(new CustomEvent('assistantUpdated', {
+        detail: { assistant: updatedAssistant }
+      }));
+      console.log('[useAssistantTabLogic] 已派发assistantUpdated事件');
+
+      // 关闭图标选择器
+      handleCloseIconPicker();
 
       // 显示成功通知
       showNotification('助手图标已更新');
@@ -418,13 +442,27 @@ export function useAssistantTabLogic(
 
   // 打开图标选择器
   const handleOpenIconPicker = () => {
+    if (!selectedMenuAssistant) {
+      console.warn('[useAssistantTabLogic] 没有选中的助手，无法打开图标选择器');
+      return;
+    }
+
+    console.log('[useAssistantTabLogic] 打开图标选择器，选中的助手:', {
+      id: selectedMenuAssistant.id,
+      name: selectedMenuAssistant.name,
+      emoji: selectedMenuAssistant.emoji
+    });
+
     setIconPickerOpen(true);
-    handleCloseAssistantMenu();
+    // 不要立即关闭菜单，保持selectedMenuAssistant的值
+    setAssistantMenuAnchorEl(null); // 只关闭菜单UI，不清空选中的助手
   };
 
   // 关闭图标选择器
   const handleCloseIconPicker = () => {
     setIconPickerOpen(false);
+    // 清空选中的助手
+    setSelectedMenuAssistant(null);
   };
 
   // 搜索相关处理函数

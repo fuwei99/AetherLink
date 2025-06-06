@@ -1,3 +1,5 @@
+/// <reference types="@capawesome/capacitor-android-edge-to-edge-support" />
+
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -34,15 +36,23 @@ const config: CapacitorConfig = {
       allowFileAccess: true
     },
     Keyboard: {
-      resizeOnFullScreen: true
+      resizeOnFullScreen: false // 根据edge-to-edge插件要求设置为false
     },
     StatusBar: {
-      backgroundColor: '#475569', // 浅色模式默认颜色
-      style: 'DARK', // 深色文字适合浅色背景
+      // 移除硬编码的背景色，由StatusBarService动态设置
+      // backgroundColor: '#475569',
+      style: 'DEFAULT', // 使用默认样式，由StatusBarService动态控制
       overlaysWebView: false // 确保背景色生效，避免内容被覆盖
     },
     SplashScreen: {
-      launchShowDuration: 0
+      launchShowDuration: 1000, // 显示1秒启动画面，首次安装时会动态延长
+      launchAutoHide: false, // 手动控制启动画面隐藏
+      backgroundColor: '#ffffff', // 设置启动画面背景色
+      androidSplashResourceName: 'splash', // Android启动画面资源
+      iosSplashResourceName: 'Splash' // iOS启动画面资源
+    },
+    EdgeToEdge: {
+      backgroundColor: '#ffffff' // 默认背景色，将由StatusBarService动态更新
     }
   }
 };

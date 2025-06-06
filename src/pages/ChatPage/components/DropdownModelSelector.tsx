@@ -270,7 +270,7 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
           }
         }}
       >
-        {groupedModels.sortedGroups.map((providerId) => {
+        {groupedModels.sortedGroups.flatMap((providerId) => {
           const providerName = getProviderName(providerId);
           const providerInfo = getProviderInfo(providerId);
           const models = groupedModels.groups[providerId];
@@ -365,9 +365,9 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
                   </Box>
                 </MenuItem>
               );
-            })
-          ];
-        }).flat()}
+            }).filter(Boolean)
+          ].filter(Boolean);
+        })}
       </Select>
     </FormControl>
   );

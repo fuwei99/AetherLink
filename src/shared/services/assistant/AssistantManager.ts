@@ -12,6 +12,12 @@ export class AssistantManager {
     try {
       // 直接从dexieStorage获取数据
       const assistants = await dexieStorage.getAllAssistants();
+      console.log(`[AssistantManager.getUserAssistants] 从数据库获取到 ${assistants.length} 个助手`);
+
+      // 检查emoji字段
+      assistants.forEach(assistant => {
+        console.log(`[AssistantManager.getUserAssistants] 助手 ${assistant.name} (${assistant.id}) emoji: "${assistant.emoji}"`);
+      });
 
       // 为每个助手加载话题
       for (const assistant of assistants) {
@@ -38,13 +44,20 @@ export class AssistantManager {
       }
 
       // 直接返回助手数据，emoji字段已经在数据库中正确保存
-      return assistants.map(assistant => {
+      const result = assistants.map(assistant => {
         // 确保助手有type字段
         if (!assistant.type) {
           assistant.type = 'assistant';
         }
         return assistant;
       });
+
+      console.log(`[AssistantManager.getUserAssistants] 返回 ${result.length} 个助手，emoji检查:`);
+      result.forEach(assistant => {
+        console.log(`  - ${assistant.name}: "${assistant.emoji}"`);
+      });
+
+      return result;
     } catch (error) {
       console.error('获取用户助手失败:', error);
       return [];

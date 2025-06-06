@@ -17,6 +17,16 @@ const assistantsSlice = createSlice({
   initialState,
   reducers: {
     setAssistants: (state, action: PayloadAction<Assistant[]>) => {
+      console.log(`[assistantsSlice] 设置助手列表，数量: ${action.payload.length}`);
+
+      // 检查是否有emoji字段丢失的情况
+      const assistantsWithoutEmoji = action.payload.filter(a => !a.emoji);
+      if (assistantsWithoutEmoji.length > 0) {
+        console.warn(`[assistantsSlice] 发现 ${assistantsWithoutEmoji.length} 个助手没有emoji字段:`,
+          assistantsWithoutEmoji.map(a => ({ id: a.id, name: a.name }))
+        );
+      }
+
       state.assistants = action.payload;
     },
     setCurrentAssistant: (state, action: PayloadAction<Assistant | null>) => {
@@ -144,6 +154,7 @@ const assistantsSlice = createSlice({
     updateAssistant: (state, action: PayloadAction<Assistant>) => {
       const index = state.assistants.findIndex(a => a.id === action.payload.id);
       if (index !== -1) {
+        const oldAssistant = state.assistants[index];
         state.assistants[index] = action.payload;
 
         // 如果更新的是当前选中的助手，也更新currentAssistant
@@ -151,7 +162,17 @@ const assistantsSlice = createSlice({
           state.currentAssistant = action.payload;
         }
 
+        // 详细日志记录emoji变化
+        if (oldAssistant.emoji !== action.payload.emoji) {
+          console.log(`[assistantsSlice] 助手emoji更新: ${action.payload.id} (${action.payload.name})`, {
+            oldEmoji: oldAssistant.emoji,
+            newEmoji: action.payload.emoji
+          });
+        }
+
         console.log(`[assistantsSlice] 更新助手: ${action.payload.id} (${action.payload.name})`);
+      } else {
+        console.warn(`[assistantsSlice] 未找到要更新的助手: ${action.payload.id}`);
       }
     },
     removeAssistant: (state, action: PayloadAction<string>) => {

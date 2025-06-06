@@ -15,7 +15,8 @@ export const DB_CONFIG = {
     IMAGE_METADATA: 'imageMetadata' as const,
     METADATA: 'metadata' as const,
     MESSAGE_BLOCKS: 'message_blocks' as const,
-    MESSAGES: 'messages' as const
+    MESSAGES: 'messages' as const,
+    MEMORIES: 'memories' as const
   }
 };
 

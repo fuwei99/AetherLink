@@ -25,6 +25,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ModernWebViewPlugin.class);
         registerPlugin(NativeHttpPlugin.class);
 
+        // 预配置WebView以减少启动时间
+        preConfigureWebView();
+
         super.onCreate(savedInstanceState);
 
         // 添加明显的启动日志
@@ -37,31 +40,31 @@ public class MainActivity extends BridgeActivity {
         // 初始化现代WebView管理
         initializeModernWebView();
 
-        // 针对Android 15及以上版本处理状态栏重叠问题
-        if (Build.VERSION.SDK_INT >= 35) {
-            // 设置状态栏为非透明
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        // Android 15 edge-to-edge处理现在由EdgeToEdge插件负责
+        // 移除了手动的状态栏处理代码，让专业插件处理
+    }
 
-            // 设置状态栏为可绘制
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+    /**
+     * 预配置WebView以减少启动时间
+     */
+    private void preConfigureWebView() {
+        try {
+            Log.d(TAG, "🚀 开始预配置WebView");
 
-            // 让Capacitor StatusBar插件来控制状态栏样式，不在这里强制设置
-            // 移除了强制设置状态栏文字颜色的代码，让插件动态控制
+            // 在主线程上预热WebView
+            if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+                // 创建一个临时WebView来预热WebView进程
+                android.webkit.WebView tempWebView = new android.webkit.WebView(this);
+                tempWebView.getSettings().setJavaScriptEnabled(true);
+                tempWebView.loadUrl("about:blank");
 
-            // 添加窗口内容扩展到状态栏
-            View decorView = getWindow().getDecorView();
-            decorView.setOnApplyWindowInsetsListener((v, insets) -> {
-                // 确保WebView不会被状态栏覆盖
-                View webView = findViewById(android.R.id.content);
-                if (webView != null) {
-                    ViewCompat.setOnApplyWindowInsetsListener(webView, (view, windowInsets) -> {
-                        int statusBarHeight = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-                        view.setPadding(0, statusBarHeight, 0, 0);
-                        return WindowInsetsCompat.CONSUMED;
-                    });
-                }
-                return insets;
-            });
+                // 立即销毁临时WebView
+                tempWebView.destroy();
+
+                Log.d(TAG, "✅ WebView预热完成");
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "⚠️ WebView预热失败: " + e.getMessage());
         }
     }
 
@@ -73,7 +76,7 @@ public class MainActivity extends BridgeActivity {
         try {
             Log.d(TAG, "🔧 开始配置WebView混合内容支持");
 
-            // 延迟执行，确保Capacitor WebView已经初始化
+            // 减少延迟时间，更快配置WebView
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 try {
                     if (getBridge() != null && getBridge().getWebView() != null) {
@@ -133,7 +136,7 @@ public class MainActivity extends BridgeActivity {
                 } catch (Exception e) {
                     Log.e(TAG, "❌ 配置WebView混合内容时发生错误: " + e.getMessage(), e);
                 }
-            }, 500); // 延迟500ms执行
+            }, 200); // 减少延迟到200ms，加快启动速度
 
         } catch (Exception e) {
             Log.e(TAG, "❌ 初始化混合内容配置时发生错误: " + e.getMessage(), e);

@@ -10,12 +10,14 @@ import {
   Typography,
   Divider,
 } from '@mui/material';
-import StorageIcon from '@mui/icons-material/Storage';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import CloseIcon from '@mui/icons-material/Close';
+import {
+  Database,
+  Search,
+  Plus,
+  BookOpen,
+  Upload,
+  X
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { KnowledgeSearch } from './KnowledgeSearch';
 import CreateKnowledgeDialog from './CreateKnowledgeDialog';
@@ -67,10 +69,10 @@ export const KnowledgeToolbar: React.FC<KnowledgeToolbarProps> = ({
   };
 
   const actions = [
-    { icon: <SearchIcon />, name: '搜索知识', action: handleSearchClick, disabled: !currentKnowledgeBaseId },
-    { icon: <UploadFileIcon />, name: '上传文件', action: handleUploadClick, disabled: !currentKnowledgeBaseId },
-    { icon: <AddIcon />, name: '新建知识库', action: () => setCreateDialogOpen(true) },
-    { icon: <MenuBookIcon />, name: '知识库列表', action: handleListClick },
+    { icon: <Search size={20} />, name: '搜索知识', action: handleSearchClick, disabled: !currentKnowledgeBaseId },
+    { icon: <Upload size={20} />, name: '上传文件', action: handleUploadClick, disabled: !currentKnowledgeBaseId },
+    { icon: <Plus size={20} />, name: '新建知识库', action: () => setCreateDialogOpen(true) },
+    { icon: <BookOpen size={20} />, name: '知识库列表', action: handleListClick },
   ];
 
   return (
@@ -80,7 +82,7 @@ export const KnowledgeToolbar: React.FC<KnowledgeToolbarProps> = ({
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
         icon={
           <Badge color="primary" variant="dot" invisible={!currentKnowledgeBaseId}>
-            <SpeedDialIcon icon={<StorageIcon />} />
+            <SpeedDialIcon icon={<Database size={20} />} />
           </Badge>
         }
         onClose={() => setOpen(false)}
@@ -116,13 +118,13 @@ export const KnowledgeToolbar: React.FC<KnowledgeToolbarProps> = ({
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6">知识库搜索</Typography>
           <IconButton onClick={() => setSearchDrawerOpen(false)}>
-            <CloseIcon />
+            <X size={20} />
           </IconButton>
         </Box>
         <Divider sx={{ mb: 2 }} />
         {currentKnowledgeBaseId && (
-          <KnowledgeSearch 
-            knowledgeBaseId={currentKnowledgeBaseId} 
+          <KnowledgeSearch
+            knowledgeBaseId={currentKnowledgeBaseId}
             onInsertReference={() => setSearchDrawerOpen(false)}
           />
         )}
@@ -138,4 +140,4 @@ export const KnowledgeToolbar: React.FC<KnowledgeToolbarProps> = ({
   );
 };
 
-export default KnowledgeToolbar; 
+export default KnowledgeToolbar;

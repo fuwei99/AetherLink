@@ -822,72 +822,74 @@ export default function TopicTab({
         open={Boolean(menuAnchorEl)}
         onClose={handleCloseMenu}
       >
-        <MenuItem onClick={(e) => {
-          if (contextTopic) handleAddToGroupMenu(e, contextTopic);
-          handleCloseMenu();
-        }}>
-          <FolderPlus size={18} style={{ marginRight: 8 }} />
-          添加到分组...
-        </MenuItem>
-        <MenuItem onClick={handleEditTopic}>
-          <Edit3 size={18} style={{ marginRight: 8 }} />
-          编辑话题
-        </MenuItem>
-        <MenuItem onClick={handleAutoRenameTopic}>
-          <Sparkles size={18} style={{ marginRight: 8 }} />
-          自动命名话题
-        </MenuItem>
-        <MenuItem onClick={handleTogglePin}>
-          <Pin size={18} style={{ marginRight: 8 }} />
-          {contextTopic?.pinned ? '取消固定' : '固定话题'}
-        </MenuItem>
-        <MenuItem onClick={handleClearMessages}>
-          <Trash2 size={18} style={{ marginRight: 8 }} />
-          清空消息
-        </MenuItem>
-        {allAssistants.length > 1 && currentAssistant && (
-          <MenuItem onClick={handleOpenMoveToMenu}>
-            <ArrowRight size={18} style={{ marginRight: 8 }} />
-            移动到...
-          </MenuItem>
-        )}
-        <Divider />
-        <MenuItem onClick={() => {
-          if (contextTopic) {
-            // 使用确认对话框来删除话题
-            setConfirmDialogConfig({
-              title: '删除话题',
-              content: '确定要删除此话题吗？此操作不可撤销。',
-              onConfirm: async () => {
-                try {
-                  // 直接调用删除逻辑，不需要传递事件对象
-                  await TopicService.deleteTopic(contextTopic.id);
+        {[
+          <MenuItem key="add-to-group" onClick={(e) => {
+            if (contextTopic) handleAddToGroupMenu(e, contextTopic);
+            handleCloseMenu();
+          }}>
+            <FolderPlus size={18} style={{ marginRight: 8 }} />
+            添加到分组...
+          </MenuItem>,
+          <MenuItem key="edit-topic" onClick={handleEditTopic}>
+            <Edit3 size={18} style={{ marginRight: 8 }} />
+            编辑话题
+          </MenuItem>,
+          <MenuItem key="auto-rename" onClick={handleAutoRenameTopic}>
+            <Sparkles size={18} style={{ marginRight: 8 }} />
+            自动命名话题
+          </MenuItem>,
+          <MenuItem key="toggle-pin" onClick={handleTogglePin}>
+            <Pin size={18} style={{ marginRight: 8 }} />
+            {contextTopic?.pinned ? '取消固定' : '固定话题'}
+          </MenuItem>,
+          <MenuItem key="clear-messages" onClick={handleClearMessages}>
+            <Trash2 size={18} style={{ marginRight: 8 }} />
+            清空消息
+          </MenuItem>,
+          allAssistants.length > 1 && currentAssistant && (
+            <MenuItem key="move-to" onClick={handleOpenMoveToMenu}>
+              <ArrowRight size={18} style={{ marginRight: 8 }} />
+              移动到...
+            </MenuItem>
+          ),
+          <Divider key="divider-1" />,
+          <MenuItem key="delete-topic" onClick={() => {
+            if (contextTopic) {
+              // 使用确认对话框来删除话题
+              setConfirmDialogConfig({
+                title: '删除话题',
+                content: '确定要删除此话题吗？此操作不可撤销。',
+                onConfirm: async () => {
+                  try {
+                    // 直接调用删除逻辑，不需要传递事件对象
+                    await TopicService.deleteTopic(contextTopic.id);
 
-                  // 从本地状态中移除话题
-                  setTopics(prevTopics =>
-                    prevTopics.filter(topic => topic.id !== contextTopic.id)
-                  );
+                    // 从本地状态中移除话题
+                    setTopics(prevTopics =>
+                      prevTopics.filter(topic => topic.id !== contextTopic.id)
+                    );
 
-                  // 发送删除事件
-                  EventEmitter.emit(EVENT_NAMES.TOPIC_DELETED, {
-                    topicId: contextTopic.id,
-                    assistantId: currentAssistant?.id
-                  });
+                    // 发送删除事件
+                    EventEmitter.emit(EVENT_NAMES.TOPIC_DELETED, {
+                      topicId: contextTopic.id,
+                      assistantId: currentAssistant?.id
+                    });
 
-                  console.log('话题已删除');
-                } catch (error) {
-                  console.error('删除话题失败:', error);
+                    console.log('话题已删除');
+                  } catch (error) {
+                    console.error('删除话题失败:', error);
+                  }
+                  setConfirmDialogOpen(false);
                 }
-                setConfirmDialogOpen(false);
-              }
-            });
-            setConfirmDialogOpen(true);
-          }
-          handleCloseMenu();
-        }}>
-          <Trash size={18} style={{ marginRight: 8 }} />
-          删除话题
-        </MenuItem>
+              });
+              setConfirmDialogOpen(true);
+            }
+            handleCloseMenu();
+          }}>
+            <Trash size={18} style={{ marginRight: 8 }} />
+            删除话题
+          </MenuItem>
+        ].filter(Boolean)}
       </Menu>
 
       {/* 添加到分组菜单 */}
@@ -896,15 +898,17 @@ export default function TopicTab({
         open={Boolean(addToGroupMenuAnchorEl)}
         onClose={handleCloseAddToGroupMenu}
       >
-        {topicGroups.map((group) => (
-          <MenuItem
-            key={group.id}
-            onClick={() => handleAddToGroup(group.id)}
-          >
-            {group.name}
-          </MenuItem>
-        ))}
-        <MenuItem onClick={handleAddToNewGroup}>创建新分组...</MenuItem>
+        {[
+          ...topicGroups.map((group) => (
+            <MenuItem
+              key={group.id}
+              onClick={() => handleAddToGroup(group.id)}
+            >
+              {group.name}
+            </MenuItem>
+          )),
+          <MenuItem key="create-new-group" onClick={handleAddToNewGroup}>创建新分组...</MenuItem>
+        ].filter(Boolean)}
       </Menu>
 
       {/* 移动到助手菜单 */}
@@ -923,7 +927,7 @@ export default function TopicTab({
               {assistant.emoji && <span style={{ marginRight: 8 }}>{assistant.emoji}</span>}
               {assistant.name}
             </MenuItem>
-          ))}
+          )).filter(Boolean)}
       </Menu>
 
       {/* 编辑话题对话框 */}

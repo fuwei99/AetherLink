@@ -1,20 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'  // 使用SWC版本
 import vue from '@vitejs/plugin-vue'
-// import { muiIconsPlugin } from './scripts/vite-mui-icons-plugin'
 import checker from 'vite-plugin-checker' // 保留检查器用于开发模式
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    // MUI图标动态分析插件（暂时注释，保持SWC构建纯净）
-    // muiIconsPlugin({
-    //   scanDirs: ['src'],
-    //   enableCache: true,
-    //   verbose: true
-    // }),
     react({
-      // SWC 优化配置
+      // SWC 优化配置 - 使用现代 ES 目标以获得更好的性能
       devTarget: 'es2022'
     }),
     vue({
@@ -25,13 +18,17 @@ export default defineConfig({
         }
       }
     }),
-    // TypeScript 类型检查器 - 在构建时启用
+    // TypeScript 类型检查器 - 优化配置
     checker({
       typescript: {
-        buildMode: true, // 构建时进行类型检查
+        buildMode: false, // 开发模式下不使用构建模式
         tsconfigPath: './tsconfig.app.json'
       },
-      enableBuild: true // 生产构建时启用类型检查
+      enableBuild: true, // 生产构建时启用类型检查
+      overlay: {
+        initialIsOpen: false, // 不自动打开错误覆盖层
+        position: 'tl' // 错误显示在左上角
+      }
     })
   ],
 
@@ -111,41 +108,169 @@ export default defineConfig({
   // 优化构建配置
   build: {
     sourcemap: false, // 生产环境不生成sourcemap
-    minify: 'terser', // 使用terser进行更强的压缩
-    terserOptions: {
-      compress: {
-        drop_console: false, // 保留console以便调试
-        drop_debugger: true, // 移除debugger语句
-      },
-    },
+    minify: 'esbuild', // 使用 esbuild 进行更快的压缩（基于 Go，比 Terser 快很多）
+    target: 'es2022', // 现代浏览器目标，生成更小的代码
     rollupOptions: {
       output: {
-        manualChunks: {
-          // 将React相关库拆分到单独的chunk
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          // 将UI库拆分到单独的chunk
-          'mui-vendor': ['@mui/material', '@mui/system', '@mui/utils'],
-          // MUI图标会由muiIconsPlugin动态添加
-          'mui-icons': [],
-          // 将工具库拆分到单独的chunk
-          'utils-vendor': ['redux', '@reduxjs/toolkit', 'lodash'],
-          // Vue相关库
-          'vue-vendor': ['vue'],
-          //  升级：语法高亮相关 - 使用 Shiki
-          'syntax-vendor': ['shiki'],
-          // 日期处理相关
-          'date-vendor': ['date-fns'],
-          // 动画相关
-          'animation-vendor': ['framer-motion']
+        manualChunks: (id) => {
+          // 第三方库分割
+          if (id.includes('node_modules')) {
+            // React 生态系统
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+
+            // MUI 核心库
+            if (id.includes('@mui/material') || id.includes('@mui/system')) {
+              return 'mui-core';
+            }
+
+            // Redux 状态管理
+            if (id.includes('redux') || id.includes('@reduxjs/toolkit')) {
+              return 'redux-vendor';
+            }
+
+            // Vue 相关
+            if (id.includes('vue')) {
+              return 'vue-vendor';
+            }
+
+            // Capacitor 相关
+            if (id.includes('@capacitor')) {
+              return 'capacitor-vendor';
+            }
+
+            // 语法高亮
+            if (id.includes('shiki') || id.includes('highlight')) {
+              return 'syntax-vendor';
+            }
+
+            // 工具库
+            if (id.includes('lodash') || id.includes('date-fns') || id.includes('uuid')) {
+              return 'utils-vendor';
+            }
+
+            // 动画库
+            if (id.includes('framer-motion') || id.includes('lottie')) {
+              return 'animation-vendor';
+            }
+
+            // 其他大型第三方库
+            if (id.includes('monaco-editor')) {
+              return 'editor-vendor';
+            }
+
+            // 图表和可视化库
+            if (id.includes('chart') || id.includes('d3') || id.includes('echarts')) {
+              return 'chart-vendor';
+            }
+
+            // 数学和科学计算库
+            if (id.includes('math') || id.includes('ml-') || id.includes('tensorflow')) {
+              return 'math-vendor';
+            }
+
+            // 网络请求相关
+            if (id.includes('axios') || id.includes('fetch') || id.includes('request')) {
+              return 'http-vendor';
+            }
+
+            // 文件处理相关
+            if (id.includes('file-') || id.includes('blob') || id.includes('buffer')) {
+              return 'file-vendor';
+            }
+
+            // 加密和安全相关
+            if (id.includes('crypto') || id.includes('hash') || id.includes('encrypt')) {
+              return 'crypto-vendor';
+            }
+
+            // 解析器相关
+            if (id.includes('parser') || id.includes('ast') || id.includes('babel')) {
+              return 'parser-vendor';
+            }
+
+            // 按大小进一步分割剩余的第三方库
+            // 大型库（通常 > 100KB）
+            if (id.includes('moment') || id.includes('antd') || id.includes('material-ui') ||
+                id.includes('three') || id.includes('babylon') || id.includes('codemirror')) {
+              return 'large-vendor';
+            }
+
+            // 中型库（通常 50-100KB）
+            if (id.includes('styled-components') || id.includes('emotion') ||
+                id.includes('formik') || id.includes('yup') || id.includes('joi')) {
+              return 'medium-vendor';
+            }
+
+            // 剩余的小型第三方库
+            return 'small-vendor';
+          }
+
+          // 应用代码分割
+          // 设置页面相关
+          if (id.includes('/pages/Settings') || id.includes('/components/settings')) {
+            return 'settings';
+          }
+
+          // 聊天页面相关
+          if (id.includes('/pages/ChatPage') || id.includes('/components/chat')) {
+            return 'chat';
+          }
+
+          // 消息相关组件
+          if (id.includes('/components/message')) {
+            return 'message-components';
+          }
+
+          // 知识库相关
+          if (id.includes('/pages/KnowledgeBase') || id.includes('/components/KnowledgeManagement')) {
+            return 'knowledge';
+          }
+
+          // Vue 组件
+          if (id.includes('/components/VueComponents') || id.includes('/pages/VueDemo')) {
+            return 'vue-components';
+          }
+
+          // 主题管理相关
+          if (id.includes('/components/TopicManagement')) {
+            return 'topic-management';
+          }
+
+          // 服务层
+          if (id.includes('/shared/services')) {
+            return 'services';
+          }
+
+          // 工具函数
+          if (id.includes('/shared/utils')) {
+            return 'utils';
+          }
+
+          // Store 相关
+          if (id.includes('/shared/store')) {
+            return 'store';
+          }
+
+          // API 相关
+          if (id.includes('/shared/api')) {
+            return 'api';
+          }
+
+          // 开发工具
+          if (id.includes('/pages/DevToolsPage') || id.includes('/components/DevTools')) {
+            return 'dev-tools';
+          }
         },
-        // 限制chunk大小
+        // 限制chunk大小 - 设置更小的阈值
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
-    // 限制chunk大小警告阈值
-    chunkSizeWarningLimit: 2000,
+    // 限制chunk大小警告阈值 - 设置为500KB
+    chunkSizeWarningLimit: 500,
   },
   // 优化依赖预构建
   optimizeDeps: {
@@ -158,15 +283,25 @@ export default defineConfig({
       '@mui/utils',
       '@reduxjs/toolkit',
       'vue'
-      // MUI图标会由muiIconsPlugin动态添加
+
     ],
     // 强制预构建这些依赖，即使它们没有被直接导入
     force: true
   },
-  // 启用esbuild优化
+  // 启用esbuild优化 - 最大化性能
   esbuild: {
+    // 移除调试相关代码
     pure: ['console.log', 'console.debug', 'console.trace'],
+    // 移除法律注释以减小文件大小
     legalComments: 'none',
+    // 启用更激进的优化
+    treeShaking: true,
+    // 目标现代浏览器
+    target: 'es2022',
+    // 启用压缩
+    minifyIdentifiers: true,
+    minifySyntax: true,
+    minifyWhitespace: true,
   },
 
   // 缓存配置
