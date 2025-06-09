@@ -110,167 +110,17 @@ export default defineConfig({
     sourcemap: false, // 生产环境不生成sourcemap
     minify: 'esbuild', // 使用 esbuild 进行更快的压缩（基于 Go，比 Terser 快很多）
     target: 'es2022', // 现代浏览器目标，生成更小的代码
+    // 参考电脑版策略 - 简单稳定的默认分割
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // 第三方库分割
-          if (id.includes('node_modules')) {
-            // React 生态系统
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
-            }
-
-            // MUI 核心库
-            if (id.includes('@mui/material') || id.includes('@mui/system')) {
-              return 'mui-core';
-            }
-
-            // Redux 状态管理
-            if (id.includes('redux') || id.includes('@reduxjs/toolkit')) {
-              return 'redux-vendor';
-            }
-
-            // Vue 相关
-            if (id.includes('vue')) {
-              return 'vue-vendor';
-            }
-
-            // Capacitor 相关
-            if (id.includes('@capacitor')) {
-              return 'capacitor-vendor';
-            }
-
-            // 语法高亮
-            if (id.includes('shiki') || id.includes('highlight')) {
-              return 'syntax-vendor';
-            }
-
-            // 工具库
-            if (id.includes('lodash') || id.includes('date-fns') || id.includes('uuid')) {
-              return 'utils-vendor';
-            }
-
-            // 动画库
-            if (id.includes('framer-motion') || id.includes('lottie')) {
-              return 'animation-vendor';
-            }
-
-            // 其他大型第三方库
-            if (id.includes('monaco-editor')) {
-              return 'editor-vendor';
-            }
-
-            // 图表和可视化库
-            if (id.includes('chart') || id.includes('d3') || id.includes('echarts')) {
-              return 'chart-vendor';
-            }
-
-            // 数学和科学计算库
-            if (id.includes('math') || id.includes('ml-') || id.includes('tensorflow')) {
-              return 'math-vendor';
-            }
-
-            // 网络请求相关
-            if (id.includes('axios') || id.includes('fetch') || id.includes('request')) {
-              return 'http-vendor';
-            }
-
-            // 文件处理相关
-            if (id.includes('file-') || id.includes('blob') || id.includes('buffer')) {
-              return 'file-vendor';
-            }
-
-            // 加密和安全相关
-            if (id.includes('crypto') || id.includes('hash') || id.includes('encrypt')) {
-              return 'crypto-vendor';
-            }
-
-            // 解析器相关
-            if (id.includes('parser') || id.includes('ast') || id.includes('babel')) {
-              return 'parser-vendor';
-            }
-
-            // 按大小进一步分割剩余的第三方库
-            // 大型库（通常 > 100KB）
-            if (id.includes('moment') || id.includes('antd') || id.includes('material-ui') ||
-                id.includes('three') || id.includes('babylon') || id.includes('codemirror')) {
-              return 'large-vendor';
-            }
-
-            // 中型库（通常 50-100KB）
-            if (id.includes('styled-components') || id.includes('emotion') ||
-                id.includes('formik') || id.includes('yup') || id.includes('joi')) {
-              return 'medium-vendor';
-            }
-
-            // 剩余的小型第三方库
-            return 'small-vendor';
-          }
-
-          // 应用代码分割
-          // 设置页面相关
-          if (id.includes('/pages/Settings') || id.includes('/components/settings')) {
-            return 'settings';
-          }
-
-          // 聊天页面相关
-          if (id.includes('/pages/ChatPage') || id.includes('/components/chat')) {
-            return 'chat';
-          }
-
-          // 消息相关组件
-          if (id.includes('/components/message')) {
-            return 'message-components';
-          }
-
-          // 知识库相关
-          if (id.includes('/pages/KnowledgeBase') || id.includes('/components/KnowledgeManagement')) {
-            return 'knowledge';
-          }
-
-          // Vue 组件
-          if (id.includes('/components/VueComponents') || id.includes('/pages/VueDemo')) {
-            return 'vue-components';
-          }
-
-          // 主题管理相关
-          if (id.includes('/components/TopicManagement')) {
-            return 'topic-management';
-          }
-
-          // 服务层
-          if (id.includes('/shared/services')) {
-            return 'services';
-          }
-
-          // 工具函数
-          if (id.includes('/shared/utils')) {
-            return 'utils';
-          }
-
-          // Store 相关
-          if (id.includes('/shared/store')) {
-            return 'store';
-          }
-
-          // API 相关
-          if (id.includes('/shared/api')) {
-            return 'api';
-          }
-
-          // 开发工具
-          if (id.includes('/pages/DevToolsPage') || id.includes('/components/DevTools')) {
-            return 'dev-tools';
-          }
-        },
-        // 限制chunk大小 - 设置更小的阈值
+        // 不设置 manualChunks，使用 Vite 默认的智能分割
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
     // 限制chunk大小警告阈值 - 设置为500KB
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 500
   },
   // 优化依赖预构建
   optimizeDeps: {
@@ -283,10 +133,22 @@ export default defineConfig({
       '@mui/utils',
       '@reduxjs/toolkit',
       'vue'
-
     ],
     // 强制预构建这些依赖，即使它们没有被直接导入
-    force: true
+    force: true,
+    // 增加并行处理数量
+    esbuildOptions: {
+      // 使用多核并行处理
+      target: 'es2022',
+      // 启用更激进的优化
+      treeShaking: true,
+      // 移除调试信息
+      drop: ['console', 'debugger'],
+      // 优化标识符
+      minifyIdentifiers: true,
+      minifySyntax: true,
+      minifyWhitespace: true
+    }
   },
   // 启用esbuild优化 - 最大化性能
   esbuild: {
@@ -306,6 +168,19 @@ export default defineConfig({
 
   // 缓存配置
   cacheDir: 'node_modules/.vite',
+
+  // 性能优化配置
+  worker: {
+    // 使用 esbuild 处理 worker
+    format: 'es',
+    plugins: () => []
+  },
+
+  // 实验性功能优化
+  experimental: {
+    // 启用更快的依赖扫描
+    skipSsrTransform: true
+  },
 
   // 定义全局常量
   define: {

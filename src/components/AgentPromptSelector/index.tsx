@@ -19,11 +19,7 @@ import {
   ListItemText,
   ListItemButton
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-
-import CloseIcon from '@mui/icons-material/Close';
+import { Search as SearchIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, X as CloseIcon } from 'lucide-react';
 import { getAgentPromptCategories, searchAgentPrompts } from '../../shared/config/agentPrompts';
 import type { AgentPrompt, AgentPromptCategory } from '../../shared/types/AgentPrompt';
 
@@ -145,7 +141,7 @@ const AgentPromptSelector: React.FC<AgentPromptSelectorProps> = ({
   // 渲染类别
   const renderCategory = (category: AgentPromptCategory) => {
     const isExpanded = expandedCategories.has(category.id);
-    
+
     return (
       <Paper
         key={category.id}
@@ -177,9 +173,9 @@ const AgentPromptSelector: React.FC<AgentPromptSelectorProps> = ({
           <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
             {category.prompts.length}
           </Typography>
-          {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+          {isExpanded ? <ExpandLessIcon size={16} /> : <ExpandMoreIcon size={16} />}
         </Box>
-        
+
         <Collapse in={isExpanded}>
           <Divider />
           <Box sx={{ p: 1 }}>
@@ -210,7 +206,7 @@ const AgentPromptSelector: React.FC<AgentPromptSelectorProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      
+
       <DialogContent sx={{ p: 2 }}>
         {/* 搜索框 */}
         <TextField
@@ -278,8 +274,8 @@ const AgentPromptSelector: React.FC<AgentPromptSelectorProps> = ({
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               已选择: {selectedPrompt.emoji} {selectedPrompt.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ 
-              maxHeight: 100, 
+            <Typography variant="body2" color="text.secondary" sx={{
+              maxHeight: 100,
               overflowY: 'auto',
               fontSize: '0.85rem'
             }}>
@@ -291,7 +287,7 @@ const AgentPromptSelector: React.FC<AgentPromptSelectorProps> = ({
 
       <DialogActions>
         <Button onClick={handleClose}>取消</Button>
-        <Button 
+        <Button
           onClick={handleConfirmSelect}
           variant="contained"
           disabled={!selectedPrompt}

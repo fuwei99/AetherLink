@@ -142,7 +142,7 @@ export class NativeEventSource {
   private connectionId: string;
   private url: string;
   private headers: Record<string, string>;
-  private listeners: Map<string, Function[]> = new Map();
+  private listeners: Map<string, ((event: any) => void)[]> = new Map();
   private isConnected = false;
 
   constructor(url: string, options: { headers?: Record<string, string> } = {}) {
@@ -207,14 +207,14 @@ export class NativeEventSource {
     });
   }
 
-  addEventListener(type: string, listener: Function) {
+  addEventListener(type: string, listener: (event: any) => void) {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, []);
     }
     this.listeners.get(type)!.push(listener);
   }
 
-  removeEventListener(type: string, listener: Function) {
+  removeEventListener(type: string, listener: (event: any) => void) {
     const listeners = this.listeners.get(type);
     if (listeners) {
       const index = listeners.indexOf(listener);
@@ -271,19 +271,19 @@ export class NativeEventSource {
   }
 
   // 兼容标准EventSource API
-  set onopen(handler: Function | null) {
+  set onopen(handler: ((event: any) => void) | null) {
     if (handler) {
       this.addEventListener('open', handler);
     }
   }
 
-  set onmessage(handler: Function | null) {
+  set onmessage(handler: ((event: any) => void) | null) {
     if (handler) {
       this.addEventListener('message', handler);
     }
   }
 
-  set onerror(handler: Function | null) {
+  set onerror(handler: ((event: any) => void) | null) {
     if (handler) {
       this.addEventListener('error', handler);
     }

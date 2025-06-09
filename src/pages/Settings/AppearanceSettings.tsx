@@ -22,12 +22,7 @@ import {
   Divider,
   alpha
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-
-import ChatIcon from '@mui/icons-material/Chat';
-import MessageIcon from '@mui/icons-material/Message';
-import BuildIcon from '@mui/icons-material/Build';
+import { ArrowLeft, ChevronRight, MessageSquare, MessageCircle, Wrench } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
 import { setTheme, setFontSize } from '../../shared/store/settingsSlice';
@@ -107,7 +102,7 @@ const AppearanceSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={24} />
           </IconButton>
           <Typography
             variant="h6"
@@ -320,14 +315,14 @@ const AppearanceSettings: React.FC = () => {
                     color: '#6366f1',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                   }}>
-                    <ChatIcon />
+                    <MessageSquare size={20} />
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
                   primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>聊天界面设置</Typography>}
                   secondary="自定义聊天界面布局和显示选项"
                 />
-                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
               </ListItemButton>
             </ListItem>
 
@@ -349,14 +344,14 @@ const AppearanceSettings: React.FC = () => {
                     color: '#8b5cf6',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                   }}>
-                    <MessageIcon />
+                    <MessageCircle size={20} />
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
                   primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>信息气泡管理</Typography>}
                   secondary="调整消息气泡的样式和宽度设置"
                 />
-                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
               </ListItemButton>
             </ListItem>
 
@@ -378,14 +373,14 @@ const AppearanceSettings: React.FC = () => {
                     color: '#06b6d4',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                   }}>
-                    <BuildIcon />
+                    <Wrench size={20} />
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
                   primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>顶部工具栏设置</Typography>}
                   secondary="自定义顶部工具栏的组件和布局"
                 />
-                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
               </ListItemButton>
             </ListItem>
           </List>

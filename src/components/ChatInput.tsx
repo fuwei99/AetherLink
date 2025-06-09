@@ -91,6 +91,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   // 获取当前助手状态
   const currentAssistant = useSelector((state: RootState) => state.assistants.currentAssistant);
 
+  // 获取设置状态
+  const settings = useSelector((state: RootState) => state.settings);
+
   // 使用共享的 hooks
   const { styles, isDarkMode, inputBoxStyle } = useInputStyles();
 
@@ -258,16 +261,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   // 增强的焦点处理，适应iOS设备
   useEffect(() => {
+    const currentTextarea = textareaRef.current; // 保存当前的 ref 值
+
     // 设置一个延迟以确保组件挂载后聚焦生效
     const timer = setTimeout(() => {
-      if (textareaRef.current) {
+      if (currentTextarea) {
         // 聚焦后立即模糊，这有助于解决某些Android设备上的复制粘贴问题
-        textareaRef.current.focus();
-        textareaRef.current.blur();
+        currentTextarea.focus();
+        currentTextarea.blur();
 
         // 确保初始高度正确设置，以显示完整的placeholder
         const initialHeight = isMobile ? 32 : isTablet ? 36 : 34;
-        textareaRef.current.style.height = `${initialHeight}px`;
+        currentTextarea.style.height = `${initialHeight}px`;
       }
     }, 300);
 
@@ -313,19 +318,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
       setIsKeyboardVisible(false);
     };
 
-    if (textareaRef.current) {
-      textareaRef.current.addEventListener('focus', handleFocus);
-      textareaRef.current.addEventListener('blur', handleBlur);
+    if (currentTextarea) {
+      currentTextarea.addEventListener('focus', handleFocus);
+      currentTextarea.addEventListener('blur', handleBlur);
     }
 
     return () => {
       clearTimeout(timer);
-      if (textareaRef.current) {
-        textareaRef.current.removeEventListener('focus', handleFocus);
-        textareaRef.current.removeEventListener('blur', handleBlur);
+      if (currentTextarea) {
+        currentTextarea.removeEventListener('focus', handleFocus);
+        currentTextarea.removeEventListener('blur', handleBlur);
       }
     };
-  }, [isMobile, isTablet, isIOS]); // 添加isIOS作为依赖项
+  }, [isMobile, isTablet, isIOS]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 处理上传菜单
   const handleOpenUploadMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -396,7 +401,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         textarea.setSelectionRange(newCursorPosition, newCursorPosition);
       }
     }, 10);
-  }, [message, setMessage]);
+  }, [message, setMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 语音识别处理函数
   const handleToggleVoiceMode = () => {
@@ -545,6 +550,71 @@ const ChatInput: React.FC<ChatInputProps> = ({
     const clipboardData = e.clipboardData;
     if (!clipboardData) return;
 
+    // 获取长文本粘贴设置
+    const pasteLongTextAsFile = settings.pasteLongTextAsFile ?? false;
+    const pasteLongTextThreshold = settings.pasteLongTextThreshold ?? 1500;
+
+    // 优先处理文本粘贴（长文本转文件功能）
+    const textData = clipboardData.getData('text');
+    if (textData && pasteLongTextAsFile && textData.length > pasteLongTextThreshold) {
+      e.preventDefault(); // 阻止默认粘贴行为
+
+      try {
+        setUploadingMedia(true);
+
+        // 使用移动端文件存储服务创建文件
+        const { MobileFileStorageService } = await import('../shared/services/MobileFileStorageService');
+        const fileStorageService = MobileFileStorageService.getInstance();
+
+        const fileName = `粘贴的文本_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.txt`;
+
+        // 将文本转换为 base64 (支持中文等多字节字符)
+        const encoder = new TextEncoder();
+        const data = encoder.encode(textData);
+        const base64Data = btoa(String.fromCharCode(...data));
+
+        const fileData = {
+          name: fileName,
+          size: new Blob([textData], { type: 'text/plain' }).size,
+          mimeType: 'text/plain',
+          base64Data: `data:text/plain;base64,${base64Data}`
+        };
+
+        const fileRecord = await fileStorageService.uploadFile(fileData);
+
+        // 转换为 FileContent 格式
+        const fileContent = {
+          name: fileRecord.origin_name,
+          mimeType: fileRecord.mimeType || 'text/plain',
+          extension: fileRecord.ext || '.txt',
+          size: fileRecord.size,
+          base64Data: fileRecord.base64Data,
+          url: fileRecord.path || '',
+          fileId: fileRecord.id,
+          fileRecord: fileRecord
+        };
+
+        setFiles(prev => [...prev, fileContent]);
+
+        toastManager.show({
+          message: `长文本已转换为文件: ${fileName}`,
+          type: 'success',
+          duration: 3000
+        });
+      } catch (error) {
+        console.error('长文本转文件失败:', error);
+        toastManager.show({
+          message: '长文本转文件失败，请重试',
+          type: 'error',
+          duration: 3000
+        });
+      } finally {
+        setUploadingMedia(false);
+      }
+      return;
+    }
+
+    // 处理图片粘贴
     const items = Array.from(clipboardData.items);
     const imageItems = items.filter(item => item.type.startsWith('image/'));
 

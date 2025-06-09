@@ -18,12 +18,7 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  CompareArrows as CompareArrowsIcon,
-  SelectAll as SelectAllIcon,
-  ClearAll as ClearAllIcon
-} from '@mui/icons-material';
+import { X as CloseIcon, ArrowLeftRight as CompareArrowsIcon, CheckSquare as SelectAllIcon, Trash2 as ClearAllIcon } from 'lucide-react';
 import type { Model } from '../shared/types';
 
 interface MultiModelSelectorProps {
@@ -134,13 +129,13 @@ const MultiModelSelector: React.FC<MultiModelSelectorProps> = ({
         pb: 1
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <CompareArrowsIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+          <CompareArrowsIcon size={20} style={{ marginRight: 8, color: theme.palette.primary.main }} />
           <Typography variant="h6">
             选择多个模型
           </Typography>
         </Box>
         <IconButton onClick={handleClose} size="small">
-          <CloseIcon />
+          <CloseIcon size={20} />
         </IconButton>
       </DialogTitle>
 
@@ -163,7 +158,7 @@ const MultiModelSelector: React.FC<MultiModelSelectorProps> = ({
                 onClick={handleSelectAll}
                 disabled={availableModels.length === 0}
               >
-                <SelectAllIcon />
+                <SelectAllIcon size={16} />
               </IconButton>
             </Tooltip>
             <Tooltip title="清空">
@@ -172,7 +167,7 @@ const MultiModelSelector: React.FC<MultiModelSelectorProps> = ({
                 onClick={handleClearAll}
                 disabled={selectedModelIds.length === 0}
               >
-                <ClearAllIcon />
+                <ClearAllIcon size={16} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -264,7 +259,7 @@ const MultiModelSelector: React.FC<MultiModelSelectorProps> = ({
           onClick={handleConfirm}
           variant="contained"
           disabled={selectedModelIds.length === 0}
-          startIcon={<CompareArrowsIcon />}
+          startIcon={<CompareArrowsIcon size={16} />}
         >
           发送到 {selectedModelIds.length} 个模型
         </Button>

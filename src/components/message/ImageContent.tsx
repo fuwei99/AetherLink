@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, CircularProgress, IconButton, Dialog } from '@mui/material';
-import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
-import CloseIcon from '@mui/icons-material/Close';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { Maximize2 as ZoomOutMapIcon, X as CloseIcon, AlertCircle as ErrorOutlineIcon } from 'lucide-react';
 import type { ImageContent as ImageContentType } from '../../shared/types';
 import { dexieStorage } from '../../shared/services/DexieStorageService';
 
@@ -18,7 +16,48 @@ const ImageContent: React.FC<ImageContentProps> = ({ image, index }) => {
   const [imgSrc, setImgSrc] = useState<string>('');
   const imgRef = useRef<HTMLImageElement>(null);
   const observer = useRef<IntersectionObserver | null>(null);
-  
+
+  // 从图片引用加载图片
+  const loadImageFromReference = useCallback(async (id: string) => {
+    try {
+      // 检查是否已有缓存
+      const cachedUrl = sessionStorage.getItem(`img_cache_${id}`);
+      if (cachedUrl) {
+        setImgSrc(cachedUrl);
+        return;
+      }
+
+      // 获取图片Blob
+      const blob = await dexieStorage.getImageBlob(id);
+      if (!blob) {
+        throw new Error('图片不存在');
+      }
+
+      // 获取图片元数据
+      const metadata = await dexieStorage.getImageMetadata(id);
+      console.debug('Image metadata loaded:', metadata);
+
+      // 创建Blob URL
+      const url = URL.createObjectURL(blob);
+
+      // 缓存到sessionStorage
+      sessionStorage.setItem(`img_cache_${id}`, url);
+
+      // 设置图片源
+      setImgSrc(url);
+
+      // 预加载高清图片（如果是在预览模式）
+      if (!open) {
+        const img = new Image();
+        img.src = url;
+      }
+    } catch (error) {
+      console.error('从引用加载图片失败:', error);
+      setError(true);
+      setLoading(false);
+    }
+  }, [open]);
+
   // 判断是否为图片引用 (格式为 [图片:ID])
   useEffect(() => {
     const checkImageReference = async () => {
@@ -43,21 +82,22 @@ const ImageContent: React.FC<ImageContentProps> = ({ image, index }) => {
         }
       }
     };
-    
+
     checkImageReference();
-  }, [image]);
-  
+  }, [image, loadImageFromReference, open]);
+
   // 图片懒加载
   useEffect(() => {
-    if (!imgRef.current) return;
-    
+    const currentImg = imgRef.current;
+    if (!currentImg) return;
+
     observer.current = new IntersectionObserver((entries) => {
       const [entry] = entries;
       if (entry.isIntersecting) {
         // 图片进入视口，加载图片
-        if (imgRef.current && imgRef.current.getAttribute('data-src')) {
-          imgRef.current.src = imgRef.current.getAttribute('data-src') || '';
-          observer.current?.unobserve(imgRef.current);
+        if (currentImg && currentImg.getAttribute('data-src')) {
+          currentImg.src = currentImg.getAttribute('data-src') || '';
+          observer.current?.unobserve(currentImg);
         }
       }
     }, {
@@ -65,79 +105,38 @@ const ImageContent: React.FC<ImageContentProps> = ({ image, index }) => {
       threshold: 0.1,
       rootMargin: '100px'
     });
-    
-    if (imgRef.current) {
-      observer.current.observe(imgRef.current);
-    }
-    
+
+    observer.current.observe(currentImg);
+
     return () => {
-      if (imgRef.current && observer.current) {
-        observer.current.unobserve(imgRef.current);
+      if (currentImg && observer.current) {
+        observer.current.unobserve(currentImg);
       }
     };
   }, [imgSrc]);
-  
-  // 从图片引用加载图片
-  const loadImageFromReference = async (id: string) => {
-    try {
-      // 检查是否已有缓存
-      const cachedUrl = sessionStorage.getItem(`img_cache_${id}`);
-      if (cachedUrl) {
-        setImgSrc(cachedUrl);
-        return;
-      }
-      
-      // 获取图片Blob
-      const blob = await dexieStorage.getImageBlob(id);
-      if (!blob) {
-        throw new Error('图片不存在');
-      }
-      
-      // 获取图片元数据
-      const metadata = await dexieStorage.getImageMetadata(id);
-      console.debug('Image metadata loaded:', metadata);
-      
-      // 创建Blob URL
-      const url = URL.createObjectURL(blob);
-      
-      // 缓存到sessionStorage
-      sessionStorage.setItem(`img_cache_${id}`, url);
-      
-      // 设置图片源
-      setImgSrc(url);
-      
-      // 预加载高清图片（如果是在预览模式）
-      if (!open) {
-        const img = new Image();
-        img.src = url;
-      }
-    } catch (error) {
-      console.error('从引用加载图片失败:', error);
-      setError(true);
-      setLoading(false);
-    }
-  };
-  
+
+
+
   const handleOpen = () => {
     setOpen(true);
   };
-  
+
   const handleClose = () => {
     setOpen(false);
   };
-  
+
   const handleImageLoad = () => {
     setLoading(false);
   };
-  
+
   const handleImageError = () => {
     setLoading(false);
     setError(true);
   };
-  
+
   return (
     <>
-      <Box 
+      <Box
         sx={{
           position: 'relative',
           margin: '4px 0',
@@ -150,7 +149,7 @@ const ImageContent: React.FC<ImageContentProps> = ({ image, index }) => {
         }}
       >
         {loading && (
-          <Box 
+          <Box
             sx={{
               position: 'absolute',
               top: 0,
@@ -167,7 +166,7 @@ const ImageContent: React.FC<ImageContentProps> = ({ image, index }) => {
             <CircularProgress size={24} />
           </Box>
         )}
-        
+
         {error ? (
           <Box
             sx={{
@@ -220,24 +219,26 @@ const ImageContent: React.FC<ImageContentProps> = ({ image, index }) => {
                 padding: 0.5,
               }}
             >
-              <ZoomOutMapIcon fontSize="small" />
+              <ZoomOutMapIcon size={16} />
             </IconButton>
           </Box>
         )}
       </Box>
-      
+
       {/* 图片预览对话框 */}
       <Dialog
         open={open}
         onClose={handleClose}
         maxWidth="xl"
-        PaperProps={{
-          style: {
-            backgroundColor: 'transparent',
-            boxShadow: 'none',
-            overflow: 'hidden',
-            margin: 0,
-            padding: 0,
+        slotProps={{
+          paper: {
+            style: {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              overflow: 'hidden',
+              margin: 0,
+              padding: 0,
+            },
           },
         }}
       >
@@ -285,4 +286,4 @@ const ImageContent: React.FC<ImageContentProps> = ({ image, index }) => {
   );
 };
 
-export default ImageContent; 
+export default ImageContent;

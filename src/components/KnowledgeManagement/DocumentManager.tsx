@@ -25,13 +25,9 @@ import {
   Alert,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import SearchIcon from '@mui/icons-material/Search';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Upload as CloudUploadIcon, File as InsertDriveFileIcon, Search as SearchIcon, Trash2 as DeleteIcon } from 'lucide-react';
 
-import CloseIcon from '@mui/icons-material/Close';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
+import { X as CloseIcon, Trash2 as ClearAllIcon } from 'lucide-react';
 import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeService';
 import type { KnowledgeDocument } from '../../shared/types/KnowledgeBase';
 

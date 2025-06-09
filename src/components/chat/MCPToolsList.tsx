@@ -8,9 +8,9 @@ import {
   LinearProgress
 } from '@mui/material';
 import {
-  PlayArrow as PlayAllIcon,
-  Refresh as RefreshIcon
-} from '@mui/icons-material';
+  Play as PlayAllIcon,
+  RefreshCw as RefreshIcon
+} from 'lucide-react';
 import type { MCPToolResponse, MCPCallToolResponse } from '../../shared/types';
 import { parseAndCallTools } from '../../shared/utils/mcpToolParser';
 // MCPToolBlock 已被移除，使用统一的 ToolBlock 组件

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, IconButton, Drawer, useMediaQuery, useTheme } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { X as CloseIcon } from 'lucide-react';
 import SidebarTabs from './SidebarTabs';
 
 interface SidebarProps {
@@ -61,7 +61,7 @@ export default function Sidebar({
       {(isMobile || onDesktopToggle) && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
           <IconButton onClick={handleDrawerToggle}>
-            <CloseIcon />
+            <CloseIcon size={20} />
           </IconButton>
         </Box>
       )}

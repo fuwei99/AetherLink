@@ -18,11 +18,7 @@ import {
   Chip,
   Tooltip
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import SpeedIcon from '@mui/icons-material/Speed';
+import { Search, X, Copy, Sparkles, Zap } from 'lucide-react';
 import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeService';
 import type { KnowledgeSearchResult } from '../../shared/types/KnowledgeBase';
 import { BlockManager } from '../../shared/services/messages/BlockManager';
@@ -34,9 +30,9 @@ interface KnowledgeSearchProps {
   onInsertReference?: (contentId: string, content: string) => void;
 }
 
-export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({ 
+export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
   knowledgeBaseId,
-  onInsertReference 
+  onInsertReference
 }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<KnowledgeSearchResult[]>([]);
@@ -47,7 +43,7 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
   const [useEnhancedRAG, setUseEnhancedRAG] = useState(true); // 新增：RAG模式开关
   const [searchTime, setSearchTime] = useState<number | null>(null); // 新增：搜索耗时
   const currentTopicId = useSelector((state: RootState) => state.messages.currentTopicId);
-  
+
   useEffect(() => {
     const fetchKnowledgeBase = async () => {
       try {
@@ -59,7 +55,7 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
         console.error('Error fetching knowledge base details:', err);
       }
     };
-    
+
     fetchKnowledgeBase();
   }, [knowledgeBaseId]);
 
@@ -118,7 +114,7 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
         setError('未选择会话');
         return;
       }
-      
+
       // 使用BlockManager创建引用块
       await BlockManager.createKnowledgeReferenceBlockFromSearchResult(
         currentTopicId,
@@ -126,7 +122,7 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
         knowledgeBaseId,
         query
       );
-      
+
       // 如果传入了回调函数，调用它
       if (onInsertReference) {
         onInsertReference(result.documentId, result.content);
@@ -156,7 +152,7 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
               }
               label={
                 <Box display="flex" alignItems="center" gap={0.5}>
-                  {useEnhancedRAG ? <AutoAwesomeIcon fontSize="small" /> : <SpeedIcon fontSize="small" />}
+                  {useEnhancedRAG ? <Sparkles size={16} /> : <Zap size={16} />}
                   <Typography variant="caption">
                     {useEnhancedRAG ? '增强RAG' : '简单搜索'}
                   </Typography>
@@ -178,13 +174,13 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon />
+                  <Search size={20} />
                 </InputAdornment>
               ),
               endAdornment: query && (
                 <InputAdornment position="end">
                   <IconButton size="small" onClick={handleClearSearch}>
-                    <ClearIcon />
+                    <X size={16} />
                   </IconButton>
                 </InputAdornment>
               )
@@ -192,10 +188,10 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
           }}
           sx={{ mb: 1 }}
         />
-        
-        <Button 
-          variant="contained" 
-          color="primary" 
+
+        <Button
+          variant="contained"
+          color="primary"
           onClick={handleSearch}
           disabled={loading || !query.trim()}
           fullWidth
@@ -230,34 +226,34 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
                 label={useEnhancedRAG ? '增强RAG' : '简单搜索'}
                 size="small"
                 color={useEnhancedRAG ? 'success' : 'default'}
-                icon={useEnhancedRAG ? <AutoAwesomeIcon /> : <SpeedIcon />}
+                icon={useEnhancedRAG ? <Sparkles size={16} /> : <Zap size={16} />}
               />
             </Box>
           </Box>
-          
+
           <List disablePadding>
             {results.map((result) => (
               <Card key={result.documentId} variant="outlined" sx={{ mb: 1 }}>
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Stack spacing={1}>
-                    <Typography variant="body2" component="div" sx={{ 
-                      fontSize: '0.875rem', 
+                    <Typography variant="body2" component="div" sx={{
+                      fontSize: '0.875rem',
                       mb: 1,
                       maxHeight: 100,
                       overflow: 'auto'
                     }}>
                       {result.content}
                     </Typography>
-                    
+
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                       <Typography variant="caption" color="text.secondary">
                         相似度: {(result.similarity * 100).toFixed(1)}%
                       </Typography>
-                      
+
                       <Button
                         size="small"
                         variant="outlined"
-                        startIcon={<ContentCopyIcon />}
+                        startIcon={<Copy size={16} />}
                         onClick={() => handleInsertReference(result)}
                       >
                         插入引用
@@ -274,4 +270,4 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
   );
 };
 
-export default KnowledgeSearch; 
+export default KnowledgeSearch;

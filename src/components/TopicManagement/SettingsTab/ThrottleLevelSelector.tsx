@@ -13,7 +13,7 @@ import {
   ListItemText,
   ListItemSecondaryAction
 } from '@mui/material';
-import { ChevronDown, ChevronUp, Sliders } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
   getThrottleLevel,
   setThrottleLevel,
@@ -109,15 +109,14 @@ export default function ThrottleLevelSelector() {
           }
         }}
       >
-        <Sliders size={20} color="#1976d2" style={{ marginRight: 12 }} />
         <ListItemText
           primary="性能节流强度"
           secondary={currentConfig ? `当前: ${currentConfig.label}` : '优化流式输出性能'}
-          primaryTypographyProps={{ fontWeight: 'medium' }}
-          secondaryTypographyProps={{ fontSize: '0.75rem' }}
+          primaryTypographyProps={{ fontWeight: 'medium', fontSize: '0.95rem', lineHeight: 1.2 }}
+          secondaryTypographyProps={{ fontSize: '0.75rem', lineHeight: 1.2 }}
         />
         <ListItemSecondaryAction>
-          <IconButton edge="end" size="small" sx={{ padding: '4px' }}>
+          <IconButton edge="end" size="small" sx={{ padding: '2px' }}>
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </IconButton>
         </ListItemSecondaryAction>

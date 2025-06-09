@@ -16,6 +16,12 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    // 启用 BuildConfig 生成 - 修复 BuildConfig 找不到的问题
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         release {
             minifyEnabled false

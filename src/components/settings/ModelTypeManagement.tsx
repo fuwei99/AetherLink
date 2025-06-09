@@ -14,7 +14,7 @@ import {
   Chip,
   Alert,
 } from '@mui/material';
-import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Trash2 as DeleteIcon, Plus as AddIcon } from 'lucide-react';
 import { ModelType } from '../../shared/types';
 import type { ModelTypeRule } from '../../shared/types';
 import { matchModelTypes, getModelTypeDisplayName } from '../../shared/data/modelTypeRules';
@@ -55,7 +55,7 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
   // 处理规则变更
   const handleRuleChange = (index: number, field: keyof ModelTypeRule, value: any) => {
     const updatedRules = [...localRules];
-    
+
     if (field === 'types') {
       updatedRules[index] = {
         ...updatedRules[index],
@@ -67,7 +67,7 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
         [field]: value,
       };
     }
-    
+
     setLocalRules(updatedRules);
   };
 
@@ -126,7 +126,7 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
   const handleTypeChange = (index: number, type: ModelType, checked: boolean) => {
     const rule = localRules[index];
     let newTypes = [...rule.types];
-    
+
     if (checked) {
       if (!newTypes.includes(type)) {
         newTypes.push(type);
@@ -138,14 +138,14 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
         newTypes = [ModelType.Chat];
       }
     }
-    
+
     handleRuleChange(index, 'types', newTypes);
   };
 
   // 处理新规则类型选择变化
   const handleNewTypeChange = (type: ModelType, checked: boolean) => {
     let newTypes = [...newRule.types];
-    
+
     if (checked) {
       if (!newTypes.includes(type)) {
         newTypes.push(type);
@@ -157,7 +157,7 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
         newTypes = [ModelType.Chat];
       }
     }
-    
+
     handleNewRuleChange('types', newTypes);
   };
 
@@ -177,8 +177,8 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">模型类型管理</Typography>
-          <Button 
-            color={editMode ? "primary" : "secondary"} 
+          <Button
+            color={editMode ? "primary" : "secondary"}
             onClick={toggleEditMode}
           >
             {editMode ? "完成编辑" : "编辑规则"}
@@ -194,7 +194,7 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
               规则按顺序匹配，第一条匹配成功的规则将被应用。
             </Typography>
-            
+
             {/* 规则列表 */}
             <Box sx={{ mb: 3 }}>
               {localRules.map((rule, index) => (
@@ -253,7 +253,7 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
                 </Box>
               ))}
             </Box>
-            
+
             {/* 添加新规则 */}
             <Box
               sx={{
@@ -367,7 +367,7 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
                 尚未配置任何类型匹配规则，将使用默认规则。
               </Alert>
             )}
-            
+
             {/* 测试区域 */}
             {modelId && provider && (
               <Box sx={{ mt: 4, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
@@ -382,9 +382,9 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
                     <strong>提供商:</strong> {provider}
                   </Typography>
                 </Box>
-                <Button 
-                  variant="outlined" 
-                  color="primary" 
+                <Button
+                  variant="outlined"
+                  color="primary"
                   onClick={testRules}
                   size="small"
                 >
@@ -421,4 +421,4 @@ const ModelTypeManagement: React.FC<ModelTypeManagementProps> = ({
   );
 };
 
-export default ModelTypeManagement; 
+export default ModelTypeManagement;

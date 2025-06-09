@@ -14,7 +14,7 @@ export const useModelComboSync = () => {
   const syncModelCombos = async () => {
     try {
       const combos = await modelComboService.getAllCombos();
-      
+
       // 将模型组合转换为模型格式
       const comboModels = combos
         .filter(combo => combo.enabled)
@@ -58,7 +58,7 @@ export const useModelComboSync = () => {
       EventEmitter.off(EVENT_NAMES.MODEL_COMBO_UPDATED, handleComboChange);
       EventEmitter.off(EVENT_NAMES.MODEL_COMBO_DELETED, handleComboChange);
     };
-  }, [dispatch]);
+  }, [dispatch, syncModelCombos]);
 
   return { syncModelCombos };
 };

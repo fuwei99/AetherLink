@@ -11,6 +11,7 @@ import { EventEmitter, EVENT_NAMES } from '../../services/EventEmitter';
 import { getAppropriateTag } from '../../config/reasoningTags';
 import { extractReasoningMiddleware } from '../../middlewares/extractReasoningMiddleware';
 import { createAbortController, isAbortError } from '../../utils/abortController';
+import { ChunkType } from '../../types/chunk';
 import type { Model } from '../../types';
 
 /**
@@ -211,7 +212,7 @@ export class OpenAIStreamProcessor {
       //  修复流式输出问题：优先使用onChunk发送text.delta事件
       if (this.onChunk) {
         this.onChunk({
-          type: 'text.delta',
+          type: ChunkType.TEXT_DELTA,
           text: chunk.textDelta,
           messageId: this.messageId,
           blockId: this.blockId,
@@ -303,7 +304,7 @@ export class OpenAIStreamProcessor {
         //  修复流式输出问题：发送text.complete事件
         if (this.onChunk) {
           this.onChunk({
-            type: 'text.complete',
+            type: ChunkType.TEXT_COMPLETE,
             text: reasoningAsContent
           });
         } else if (this.onUpdate) {

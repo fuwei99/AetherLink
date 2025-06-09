@@ -34,6 +34,7 @@ import { getDefaultThinkingEffort } from '../../utils/settingsUtils';
 import { getStreamOutputSetting } from '../../utils/settingsUtils';
 import { AbstractBaseProvider } from '../baseProvider';
 import type { Message, Model, MCPTool, MCPToolResponse, MCPCallToolResponse } from '../../types';
+import { ChunkType } from '../../types/chunk';
 import { parseAndCallTools, parseToolUse, removeToolUseTags } from '../../utils/mcpToolParser';
 
 /**
@@ -874,20 +875,22 @@ export class OpenAIProvider extends BaseOpenAIProvider {
         onChunk
       );
 
-      if (false) { // 保留原有逻辑结构
-        console.log('[OpenAIProvider] 未检测到 onChunk 回调，使用 streamCompletion 保持推理内容（组合模型兼容）');
+      // 注释：保留原有逻辑结构以备将来使用
+      // 如果需要使用 streamCompletion 保持推理内容（组合模型兼容），可以取消注释以下代码：
+      /*
+      console.log('[OpenAIProvider] 未检测到 onChunk 回调，使用 streamCompletion 保持推理内容（组合模型兼容）');
 
-        // 调用流式完成函数（保持原有逻辑，用于组合模型）
-        result = await streamCompletion(
-          this.client,
-          this.model.id,
-          currentMessages,
-          params.temperature,
-          params.max_tokens || params.max_completion_tokens,
-          enhancedCallback,
-          iterationParams
-        );
-      }
+      // 调用流式完成函数（保持原有逻辑，用于组合模型）
+      result = await streamCompletion(
+        this.client,
+        this.model.id,
+        currentMessages,
+        params.temperature,
+        params.max_tokens || params.max_completion_tokens,
+        enhancedCallback,
+        iterationParams
+      );
+      */
 
       console.log(`[OpenAIProvider] 流式响应结果类型: ${typeof result}, hasToolCalls: ${typeof result === 'object' && (result as any)?.hasToolCalls}`);
 
@@ -1177,7 +1180,7 @@ export class OpenAIProvider extends BaseOpenAIProvider {
           console.log(`[OpenAIProvider] 非流式：发送思考内容，长度: ${finalReasoning.length}`);
           // 发送思考完成事件（非流式时直接发送完整内容）
           onChunk({
-            type: 'thinking.complete',
+            type: ChunkType.THINKING_COMPLETE,
             text: finalReasoning,
             thinking_millsec: 0
           });
@@ -1187,7 +1190,7 @@ export class OpenAIProvider extends BaseOpenAIProvider {
           console.log(`[OpenAIProvider] 非流式：发送普通文本，长度: ${finalContent.length}`);
           // 发送文本完成事件（非流式时直接发送完整内容）
           onChunk({
-            type: 'text.complete',
+            type: ChunkType.TEXT_COMPLETE,
             text: finalContent
           });
         }

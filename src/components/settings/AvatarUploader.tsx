@@ -1,16 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Box, 
-  Button, 
-  Dialog, 
-  DialogActions, 
-  DialogContent, 
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
   DialogTitle,
   Slider,
   Typography
 } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import { CloudUpload as CloudUploadIcon, Camera as PhotoCameraIcon } from 'lucide-react';
 
 interface AvatarUploaderProps {
   open: boolean;
@@ -20,9 +19,9 @@ interface AvatarUploaderProps {
   title?: string;
 }
 
-const AvatarUploader: React.FC<AvatarUploaderProps> = ({ 
-  open, 
-  onClose, 
+const AvatarUploader: React.FC<AvatarUploaderProps> = ({
+  open,
+  onClose,
   onSave,
   currentAvatar,
   title = '上传头像'
@@ -72,32 +71,32 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     tempImage.onload = () => {
       const canvas = canvasRef.current!;
       const ctx = canvas.getContext('2d')!;
-      
+
       // 设置画布大小
       canvas.width = 200;
       canvas.height = 200;
-      
+
       // 清除画布
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       // 计算缩放后的尺寸
       const size = Math.min(tempImage.width, tempImage.height);
       const sx = (tempImage.width - size) / 2;
       const sy = (tempImage.height - size) / 2;
-      
+
       // 绘制裁剪后的图像
       ctx.drawImage(
         tempImage,
         sx, sy, size, size,
         0, 0, canvas.width, canvas.height
       );
-      
+
       // 转换为 data URL
       const dataUrl = canvas.toDataURL('image/png');
       onSave(dataUrl);
       onClose();
     };
-    
+
     tempImage.src = image;
   };
 
@@ -111,10 +110,10 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
           {!image ? (
-            <Box 
-              sx={{ 
-                width: 200, 
-                height: 200, 
+            <Box
+              sx={{
+                width: 200,
+                height: 200,
                 border: '2px dashed #ccc',
                 borderRadius: '50%',
                 display: 'flex',
@@ -126,7 +125,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
               onClick={handleSelectFile}
             >
               <Box sx={{ textAlign: 'center' }}>
-                <PhotoCameraIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+                <PhotoCameraIcon size={48} color="var(--mui-palette-text-secondary)" />
                 <Typography variant="body2" color="text.secondary">
                   点击上传图片
                 </Typography>
@@ -159,8 +158,8 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
                   aria-labelledby="zoom-slider"
                 />
               </Box>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 startIcon={<CloudUploadIcon />}
                 onClick={handleSelectFile}
                 sx={{ mt: 1 }}
@@ -169,7 +168,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
               </Button>
             </>
           )}
-          
+
           <input
             type="file"
             ref={fileInputRef}
@@ -177,16 +176,16 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
             accept="image/*"
             onChange={handleFileChange}
           />
-          
+
           {/* 隐藏的画布用于处理图像 */}
           <canvas ref={canvasRef} style={{ display: 'none' }} />
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>取消</Button>
-        <Button 
-          onClick={handleSave} 
-          color="primary" 
+        <Button
+          onClick={handleSave}
+          color="primary"
           variant="contained"
           disabled={!image}
         >
@@ -197,4 +196,4 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   );
 };
 
-export default AvatarUploader; 
+export default AvatarUploader;

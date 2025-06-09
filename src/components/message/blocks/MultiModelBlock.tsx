@@ -11,8 +11,7 @@ import {
 
   Divider
 } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import { Copy as ContentCopyIcon, ArrowLeftRight as CompareArrowsIcon } from 'lucide-react';
 import { styled } from '@mui/material/styles';
 import { useDeepMemo } from '../../../hooks/useMemoization';
 import { MessageBlockStatus } from '../../../shared/types/newMessage';
@@ -132,7 +131,7 @@ const MultiModelBlock: React.FC<Props> = ({ block }) => {
                   }}
                   color={copied ? "success" : "default"}
                 >
-                  <ContentCopyIcon fontSize="small" />
+                  <ContentCopyIcon size={16} />
                 </IconButton>
               </Box>
               <Markdown content={response.content || ''} allowHtml={false} />
@@ -180,7 +179,7 @@ const MultiModelBlock: React.FC<Props> = ({ block }) => {
                 }}
                 color={copied ? "success" : "default"}
               >
-                <ContentCopyIcon fontSize="small" />
+                <ContentCopyIcon size={16} />
               </IconButton>
             </Box>
             <Markdown content={response.content || ''} allowHtml={false} />
@@ -210,10 +209,8 @@ const MultiModelBlock: React.FC<Props> = ({ block }) => {
           }}
         >
           <CompareArrowsIcon
-            sx={{
-              mr: 1,
-              color: theme.palette.info.main
-            }}
+            color={theme.palette.info.main}
+            style={{ marginRight: 8 }}
           />
 
           <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
@@ -231,7 +228,7 @@ const MultiModelBlock: React.FC<Props> = ({ block }) => {
             color={copied ? "success" : "default"}
             disabled={!activeResponse?.content}
           >
-            <ContentCopyIcon fontSize="small" />
+            <ContentCopyIcon size={16} />
           </IconButton>
         </Box>
 

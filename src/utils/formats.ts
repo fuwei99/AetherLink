@@ -40,3 +40,24 @@ export function convertMathFormula(text: string): string {
 
   return text;
 }
+
+/**
+ * 移除文件名中的特殊字符
+ */
+export function removeSpecialCharactersForFileName(fileName: string): string {
+  // 移除或替换不安全的文件名字符
+  let result = fileName
+    .replace(/[<>:"/\\|?*]/g, '') // 移除Windows不允许的字符
+    .replace(/^\.+/, '') // 移除开头的点
+    .replace(/\.+$/, '') // 移除结尾的点
+    .replace(/\s+/g, ' ') // 将多个空格替换为单个空格
+    .trim(); // 移除前后空格
+
+  // 移除控制字符（避免ESLint警告）
+  result = result.split('').filter(char => {
+    const code = char.charCodeAt(0);
+    return code >= 32 && code !== 127 && (code < 128 || code > 159);
+  }).join('');
+
+  return result.slice(0, 100) || 'Untitled'; // 限制长度并提供默认名称
+}

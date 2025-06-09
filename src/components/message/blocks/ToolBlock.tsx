@@ -10,10 +10,10 @@ import {
   Divider
 } from '@mui/material';
 import {
-  ExpandMore as ExpandMoreIcon,
-  ContentCopy as ContentCopyIcon,
+  ChevronDown as ExpandMoreIcon,
+  Copy as ContentCopyIcon,
   Code as CodeIcon
-} from '@mui/icons-material';
+} from 'lucide-react';
 import { styled } from '@mui/material/styles';
 
 import { MessageBlockStatus } from '../../../shared/types/newMessage';
@@ -212,8 +212,9 @@ const ToolBlock: React.FC<Props> = ({ block }) => {
         }}
       >
         <CodeIcon
-          sx={{
-            mr: 1,
+          size={16}
+          style={{
+            marginRight: '8px',
             color: theme.palette.info.main
           }}
         />
@@ -251,7 +252,8 @@ const ToolBlock: React.FC<Props> = ({ block }) => {
         </Typography>
 
         <ExpandMoreIcon
-          sx={{
+          size={20}
+          style={{
             transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s'
           }}

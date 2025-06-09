@@ -13,12 +13,7 @@ import {
   Alert,
   alpha
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import InfoIcon from '@mui/icons-material/Info';
-import ComputerIcon from '@mui/icons-material/Computer';
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, Clock as AccessTimeIcon, MapPin as LocationOnIcon, Info as InfoIcon, Monitor as ComputerIcon } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../shared/store';
 import { updateSettings } from '../shared/store/slices/settingsSlice';
 import {
@@ -113,7 +108,7 @@ const SystemPromptVariablesPanel: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
           {variableConfig.enableTimeVariable && (
             <Chip
-              icon={<AccessTimeIcon sx={{ fontSize: '0.8rem' }} />}
+              icon={<AccessTimeIcon size={13} />}
               label="时间"
               size="small"
               color="primary"
@@ -123,7 +118,7 @@ const SystemPromptVariablesPanel: React.FC = () => {
           )}
           {variableConfig.enableLocationVariable && (
             <Chip
-              icon={<LocationOnIcon sx={{ fontSize: '0.8rem' }} />}
+              icon={<LocationOnIcon size={13} />}
               label="位置"
               size="small"
               color="primary"
@@ -133,7 +128,7 @@ const SystemPromptVariablesPanel: React.FC = () => {
           )}
           {variableConfig.enableOSVariable && (
             <Chip
-              icon={<ComputerIcon sx={{ fontSize: '0.8rem' }} />}
+              icon={<ComputerIcon size={13} />}
               label="系统"
               size="small"
               color="primary"
@@ -179,7 +174,7 @@ const SystemPromptVariablesPanel: React.FC = () => {
               label={
                 <Box>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    <AccessTimeIcon sx={{ fontSize: '1rem', mr: 0.5, verticalAlign: 'middle' }} />
+                    <AccessTimeIcon size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />
                     时间变量
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
@@ -211,7 +206,7 @@ const SystemPromptVariablesPanel: React.FC = () => {
               label={
                 <Box>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    <LocationOnIcon sx={{ fontSize: '1rem', mr: 0.5, verticalAlign: 'middle' }} />
+                    <LocationOnIcon size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />
                     位置变量
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
@@ -255,7 +250,7 @@ const SystemPromptVariablesPanel: React.FC = () => {
               label={
                 <Box>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    <ComputerIcon sx={{ fontSize: '1rem', mr: 0.5, verticalAlign: 'middle' }} />
+                    <ComputerIcon size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />
                     操作系统变量
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>

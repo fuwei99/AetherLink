@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Paper, IconButton, Collapse, Chip } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import LinkIcon from '@mui/icons-material/Link';
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, Link as LinkIcon } from 'lucide-react';
 import type { KnowledgeReferenceMessageBlock } from '../../../shared/types/newMessage';
 import { styled } from '@mui/material/styles';
 
@@ -337,4 +335,4 @@ const KnowledgeReferenceBlock: React.FC<KnowledgeReferenceBlockProps> = ({ block
   );
 };
 
-export default React.memo(KnowledgeReferenceBlock); 
+export default React.memo(KnowledgeReferenceBlock);

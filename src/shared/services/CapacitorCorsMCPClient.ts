@@ -35,7 +35,7 @@ export class CapacitorCorsMCPClient {
   private sseConnectionId: string | null = null;
   private options: CapacitorCorsMCPClientOptions;
   private requestId = 0;
-  private pendingRequests = new Map<string, { resolve: Function; reject: Function }>();
+  private pendingRequests = new Map<string, { resolve: (value: any) => void; reject: (reason?: any) => void }>();
   private messageEndpoint: string | null = null; // SSE消息发送端点
 
   constructor(options: CapacitorCorsMCPClientOptions) {

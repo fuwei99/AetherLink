@@ -13,9 +13,7 @@ import {
   Toolbar,
   IconButton
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import MenuIcon from '@mui/icons-material/Menu';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { ArrowLeft, Menu, Settings } from 'lucide-react';
 import { ModelSelector } from '../ChatPage/components/ModelSelector';
 
 const TopToolbarTestPage: React.FC = () => {
@@ -90,8 +88,8 @@ const TopToolbarTestPage: React.FC = () => {
         zIndex: 10,
         flexShrink: 0
       }}>
-        <ArrowBackIcon
-          sx={{ mr: 2, cursor: 'pointer' }}
+        <ArrowLeft
+          style={{ marginRight: '16px', cursor: 'pointer' }}
           onClick={handleBack}
         />
         <Typography variant="h6" color="primary" sx={{ flexGrow: 1 }}>
@@ -142,7 +140,7 @@ const TopToolbarTestPage: React.FC = () => {
             <Toolbar sx={{ justifyContent: 'space-between', minHeight: '56px !important' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <IconButton edge="start" color="inherit" size="small">
-                  <MenuIcon />
+                  <Menu />
                 </IconButton>
                 <Typography variant="h6" noWrap component="div">
                   对话
@@ -161,7 +159,7 @@ const TopToolbarTestPage: React.FC = () => {
                 />
                 
                 <IconButton color="inherit" onClick={() => navigate('/settings')}>
-                  <SettingsIcon />
+                  <Settings />
                 </IconButton>
               </Box>
             </Toolbar>

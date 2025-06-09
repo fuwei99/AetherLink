@@ -14,11 +14,7 @@ import {
   alpha,
   Chip
 } from '@mui/material';
-import {
-  ExpandMore as ExpandMoreIcon,
-  Launch as LaunchIcon,
-  Search as SearchIcon
-} from '@mui/icons-material';
+import { ChevronDown as ExpandMoreIcon, ExternalLink as LaunchIcon, Search as SearchIcon } from 'lucide-react';
 import type { WebSearchResult } from '../shared/types';
 
 interface SearchResultsCollapsibleProps {
@@ -94,7 +90,7 @@ const SearchResultsCollapsible: React.FC<SearchResultsCollapsibleProps> = ({
         onClick={handleToggle}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <SearchIcon sx={{ fontSize: 18 }} />
+          <SearchIcon size={18} />
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, gap: 1 }}>
             <Typography variant="body2" fontWeight={500} component="span">
               找到 {results.length} 篇参考资料
@@ -120,7 +116,7 @@ const SearchResultsCollapsible: React.FC<SearchResultsCollapsibleProps> = ({
               transition: 'transform 0.2s ease'
             }}
           >
-            <ExpandMoreIcon sx={{ fontSize: 18 }} />
+            <ExpandMoreIcon size={18} />
           </IconButton>
         </Box>
       </CardContent>
@@ -219,7 +215,7 @@ const SearchResultsCollapsible: React.FC<SearchResultsCollapsibleProps> = ({
                       }
                     }}
                   >
-                    <LaunchIcon sx={{ fontSize: 16 }} />
+                    <LaunchIcon size={16} />
                   </IconButton>
                 </ListItemSecondaryAction>
               </ListItem>

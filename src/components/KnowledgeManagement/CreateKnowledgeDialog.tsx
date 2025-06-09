@@ -19,8 +19,7 @@ import {
   IconButton,
   Divider,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import { getAvailableEmbeddingModels, getModelDimensions } from '../../shared/services/MobileEmbeddingService';
 import { MobileEmbeddingService } from '../../shared/services/MobileEmbeddingService';
 import {

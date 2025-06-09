@@ -11,7 +11,7 @@ import {
   Card,
   CardContent
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { RotateCcw } from 'lucide-react';
 import type { RootState } from '../shared/store';
 import { regenerateMessage } from '../shared/store/thunks/messageThunk';
 import type { Model } from '../shared/types';
@@ -83,7 +83,7 @@ const RegenerateWithCurrentModelTest: React.FC = () => {
 
       // 模拟重新生成（这里只是测试逻辑，不实际执行）
       const testTopicId = assistantMessage.topicId;
-      
+
       // 实际调用重新生成函数
       await dispatch(regenerateMessage(assistantMessage.id, testTopicId, currentModel) as any);
 
@@ -104,7 +104,7 @@ const RegenerateWithCurrentModelTest: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         重新生成功能测试
       </Typography>
-      
+
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         测试重新生成消息时是否使用顶部模型选择器当前选择的模型
       </Typography>
@@ -117,7 +117,7 @@ const RegenerateWithCurrentModelTest: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             当前状态
           </Typography>
-          
+
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" color="text.secondary">
               当前选择的模型:
@@ -171,7 +171,7 @@ const RegenerateWithCurrentModelTest: React.FC = () => {
       <Box sx={{ mb: 3 }}>
         <Button
           variant="contained"
-          startIcon={<RefreshIcon />}
+          startIcon={<RotateCcw size={16} />}
           onClick={testRegenerate}
           disabled={isLoading || !currentModel || !assistantMessage}
           size="large"
@@ -182,7 +182,7 @@ const RegenerateWithCurrentModelTest: React.FC = () => {
 
       {/* 测试结果 */}
       {testResult && (
-        <Alert 
+        <Alert
           severity={testResult.startsWith('✅') ? 'success' : 'error'}
           sx={{ mb: 2 }}
         >

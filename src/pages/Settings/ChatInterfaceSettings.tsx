@@ -18,8 +18,7 @@ import {
   Divider,
   alpha
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import InfoIcon from '@mui/icons-material/Info';
+import { ArrowLeft, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
 import { updateSettings } from '../../shared/store/settingsSlice';
@@ -182,7 +181,7 @@ const ChatInterfaceSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
           <Typography
             variant="h6"
@@ -241,7 +240,7 @@ const ChatInterfaceSettings: React.FC = () => {
               </Typography>
               <Tooltip title="配置AI思考过程的显示方式和行为">
                 <IconButton size="small" sx={{ ml: 1 }}>
-                  <InfoIcon fontSize="small" />
+                  <Info size={16} />
                 </IconButton>
               </Tooltip>
             </Box>
@@ -327,7 +326,7 @@ const ChatInterfaceSettings: React.FC = () => {
             <Typography variant="subtitle1">多模型对比显示</Typography>
             <Tooltip title="配置多模型对比时的布局方式">
               <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
+                <Info size={16} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -429,7 +428,7 @@ const ChatInterfaceSettings: React.FC = () => {
             <Typography variant="subtitle1">工具调用设置</Typography>
             <Tooltip title="配置工具调用的显示详情">
               <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
+                <Info size={16} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -458,7 +457,7 @@ const ChatInterfaceSettings: React.FC = () => {
             <Typography variant="subtitle1">引用设置</Typography>
             <Tooltip title="配置引用的显示详情">
               <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
+                <Info size={16} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -487,7 +486,7 @@ const ChatInterfaceSettings: React.FC = () => {
             <Typography variant="subtitle1">头像和名称显示</Typography>
             <Tooltip title="自定义聊天界面中用户和模型的头像及名称显示">
               <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
+                <Info size={16} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -569,7 +568,7 @@ const ChatInterfaceSettings: React.FC = () => {
             <Typography variant="subtitle1">消息气泡宽度设置</Typography>
             <Tooltip title="自定义聊天界面中消息气泡的宽度范围，适配不同设备屏幕">
               <IconButton size="small" sx={{ ml: 1 }}>
-                <InfoIcon fontSize="small" />
+                <Info size={16} />
               </IconButton>
             </Tooltip>
           </Box>

@@ -15,10 +15,7 @@ import {
   Paper,
   alpha
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import TuneIcon from '@mui/icons-material/Tune';
-import PersonIcon from '@mui/icons-material/Person';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { ArrowLeft as ArrowBackIcon, Sliders as TuneIcon, User as PersonIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../shared/store';
@@ -30,7 +27,7 @@ import type { Assistant } from '../../../shared/types/Assistant';
 const AssistantSettings: React.FC = () => {
   const navigate = useNavigate();
   const [selectedAssistant, setSelectedAssistant] = useState<Assistant | null>(null);
-  
+
   // 从Redux获取当前助手和助手列表
   const currentAssistant = useSelector((state: RootState) => state.assistants.currentAssistant);
   const allAssistants = useSelector((state: RootState) => state.assistants.assistants);
@@ -54,8 +51,8 @@ const AssistantSettings: React.FC = () => {
 
   const handleOpenModelSettings = () => {
     if (selectedAssistant) {
-      navigate('/settings/assistant-model-settings', { 
-        state: { assistant: selectedAssistant } 
+      navigate('/settings/assistant-model-settings', {
+        state: { assistant: selectedAssistant }
       });
     }
   };
@@ -93,7 +90,7 @@ const AssistantSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowBackIcon size={24} />
           </IconButton>
           <Typography
             variant="h6"
@@ -271,7 +268,7 @@ const AssistantSettings: React.FC = () => {
                       color: '#9333EA',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                     }}>
-                      {assistant.emoji || <PersonIcon />}
+                      {assistant.emoji || <PersonIcon size={20} />}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
@@ -365,7 +362,7 @@ const AssistantSettings: React.FC = () => {
                   color: '#06b6d4',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                 }}>
-                  <TuneIcon />
+                  <TuneIcon size={20} />
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
@@ -387,7 +384,7 @@ const AssistantSettings: React.FC = () => {
                   </Typography>
                 }
               />
-              <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+              <ChevronRightIcon size={20} color="var(--mui-palette-text-secondary)" />
             </ListItemButton>
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
@@ -399,7 +396,7 @@ const AssistantSettings: React.FC = () => {
                   bgcolor: 'rgba(0,0,0,0.05)',
                   color: 'text.disabled'
                 }}>
-                  <TuneIcon />
+                  <TuneIcon size={20} />
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
@@ -421,7 +418,7 @@ const AssistantSettings: React.FC = () => {
                   </Typography>
                 }
               />
-              <ChevronRightIcon sx={{ color: 'text.disabled' }} />
+              <ChevronRightIcon size={20} color="var(--mui-palette-text-disabled)" />
             </ListItemButton>
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
@@ -432,7 +429,7 @@ const AssistantSettings: React.FC = () => {
                   bgcolor: 'rgba(0,0,0,0.05)',
                   color: 'text.disabled'
                 }}>
-                  <TuneIcon />
+                  <TuneIcon size={20} />
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
@@ -454,7 +451,7 @@ const AssistantSettings: React.FC = () => {
                   </Typography>
                 }
               />
-              <ChevronRightIcon sx={{ color: 'text.disabled' }} />
+              <ChevronRightIcon size={20} color="var(--mui-palette-text-disabled)" />
             </ListItemButton>
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
@@ -465,7 +462,7 @@ const AssistantSettings: React.FC = () => {
                   bgcolor: 'rgba(0,0,0,0.05)',
                   color: 'text.disabled'
                 }}>
-                  <TuneIcon />
+                  <TuneIcon size={20} />
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
@@ -487,7 +484,7 @@ const AssistantSettings: React.FC = () => {
                   </Typography>
                 }
               />
-              <ChevronRightIcon sx={{ color: 'text.disabled' }} />
+              <ChevronRightIcon size={20} color="var(--mui-palette-text-disabled)" />
             </ListItemButton>
           </List>
         </Paper>

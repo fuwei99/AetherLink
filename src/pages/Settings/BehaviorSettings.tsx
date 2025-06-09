@@ -16,9 +16,7 @@ import {
   ListItemText,
   Avatar
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SendIcon from '@mui/icons-material/Send';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import { ArrowLeft, Send, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
 import { setSendWithEnter, setEnableNotifications } from '../../shared/store/settingsSlice';
@@ -64,7 +62,7 @@ const BehaviorSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
           <Typography
             variant="h6"
@@ -153,7 +151,7 @@ const BehaviorSettings: React.FC = () => {
                           width: 40,
                           height: 40
                         }}>
-                          <SendIcon />
+                          <Send size={20} />
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
@@ -199,12 +197,12 @@ const BehaviorSettings: React.FC = () => {
                           width: 40,
                           height: 40
                         }}>
-                          <NotificationsIcon />
+                          <Bell size={20} />
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
                         primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>启用通知</Typography>}
-                        secondary="当收到新消息或有重要更新时接收通知提醒"
+                        secondary="当AI助手回复完成时，显示系统通知"
                       />
                     </Box>
                   }

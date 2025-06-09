@@ -18,10 +18,12 @@ import {
   ListItemText,
   ListItemIcon
 } from '@mui/material';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
-import FileDownloadDoneIcon from '@mui/icons-material/FileDownloadDone';
-import ChatIcon from '@mui/icons-material/Chat';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
+import {
+  Upload as FileUploadIcon,
+  CheckCircle as FileDownloadDoneIcon,
+  MessageSquare as ChatIcon,
+  Bot as SmartToyIcon
+} from 'lucide-react';
 import { importExternalBackupFromFile } from '../../utils/restoreUtils';
 
 interface ImportExternalBackupDialogProps {
@@ -207,7 +209,9 @@ const ImportExternalBackupDialog: React.FC<ImportExternalBackupDialogProps> = ({
         {importResult && importResult.success && (
           <>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-              <FileDownloadDoneIcon sx={{ fontSize: 48, color: 'success.main', mb: 1 }} />
+              <Box sx={{ mb: 1 }}>
+                <FileDownloadDoneIcon size={48} style={{ color: '#4caf50' }} />
+              </Box>
               <Typography variant="h6" color="success.main">
                 导入成功
               </Typography>

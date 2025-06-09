@@ -18,7 +18,7 @@ export class DexieStorageService extends Dexie {
   assistants!: Dexie.Table<Assistant, string>;
   topics!: Dexie.Table<ChatTopic & { _lastMessageTimeNum?: number }, string>;
   settings!: Dexie.Table<any, string>;
-  images!: Dexie.Table<Blob, string>;
+  images!: Dexie.Table<{ id: string; blob: Blob }, string>;
   imageMetadata!: Dexie.Table<any, string>;
   metadata!: Dexie.Table<any, string>;
   message_blocks!: Dexie.Table<MessageBlock, string>;
@@ -691,13 +691,14 @@ export class DexieStorageService extends Dexie {
 
   async saveImage(blob: Blob, metadata: any): Promise<string> {
     const id = metadata.id || uuid();
-    await this.images.put(blob, id);
+    await this.images.put({ id, blob });
     await this.imageMetadata.put({ ...metadata, id });
     return id;
   }
 
   async getImageBlob(id: string): Promise<Blob | undefined> {
-    return this.images.get(id);
+    const imageRecord = await this.images.get(id);
+    return imageRecord?.blob;
   }
 
   async getImageMetadata(id: string): Promise<any> {
@@ -725,8 +726,8 @@ export class DexieStorageService extends Dexie {
       // 将base64转换为Blob
       const blob = this.base64ToBlob(base64Data);
 
-      // 保存Blob到images表
-      await this.images.put(blob, id);
+      // 保存Blob到images表 - 修复：images表存储包含id和blob的对象
+      await this.images.put({ id, blob });
 
       // 保存元数据到imageMetadata表
       const imageMetadata = {

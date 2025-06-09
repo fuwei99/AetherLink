@@ -9,6 +9,8 @@ import type { Model, FileType } from '../../types';
 import { logApiRequest, logApiResponse, log } from '../../services/LoggerService';
 import { mobileFileStorage } from '../../services/MobileFileStorageService';
 import { withRetry } from '../../utils/retryUtils';
+import { FileProcessingUtils } from '../../utils/fileProcessingUtils';
+import { createClient } from './client';
 
 // 文件大小常量
 const MB = 1024 * 1024;
@@ -65,24 +67,10 @@ export class GeminiFileService {
       throw new Error('API密钥未设置');
     }
 
-    // 创建 Gemini SDK 实例
-    this.sdk = new GoogleGenAI({
-      vertexai: false,
-      apiKey: model.apiKey,
-      httpOptions: {
-        baseUrl: this.getBaseURL()
-      }
-    });
+    // 使用统一的客户端创建函数
+    this.sdk = createClient(model);
 
-    console.log(`[GeminiFileService] 初始化文件服务，模型: ${this.model.id}, baseURL: ${this.getBaseURL()}`);
-  }
-
-  /**
-   * 获取基础 URL
-   */
-  private getBaseURL(): string {
-    const baseUrl = this.model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
-    return baseUrl.replace(/\/v1beta\/?$/, '');
+    console.log(`[GeminiFileService] 初始化文件服务，模型: ${this.model.id}`);
   }
 
   /**
@@ -110,7 +98,7 @@ export class GeminiFileService {
         fileName: file.origin_name,
         fileSize: file.size,
         fileType: file.ext,
-        baseUrl: this.getBaseURL()
+        model: this.model.id
       });
 
       // 获取文件的 base64 数据
@@ -120,8 +108,8 @@ export class GeminiFileService {
       const uploadResult = await withRetry(
         async () => {
           // 创建 Blob 对象用于上传
-          const base64Data = fileContent.includes(',') ? fileContent.split(',')[1] : fileContent;
-          const binaryData = this.base64ToArrayBuffer(base64Data);
+          const cleanBase64 = FileProcessingUtils.cleanBase64Data(fileContent);
+          const binaryData = this.base64ToArrayBuffer(cleanBase64);
           const blob = new Blob([binaryData], { type: 'application/pdf' });
 
           // 使用 SDK 上传文件
@@ -161,12 +149,7 @@ export class GeminiFileService {
    * 将 base64 转换为 ArrayBuffer
    */
   private base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
+    return FileProcessingUtils.base64ToArrayBuffer(base64);
   }
 
   /**
@@ -194,24 +177,7 @@ export class GeminiFileService {
    */
   async getBase64File(file: FileType): Promise<{ data: string; mimeType: string }> {
     try {
-      let base64Data = file.base64Data;
-      if (!base64Data) {
-        // 从文件存储服务读取
-        const fileContent = await mobileFileStorage.readFile(file.id);
-        base64Data = fileContent;
-      }
-
-      if (!base64Data) {
-        throw new Error('无法获取文件内容');
-      }
-
-      // 移除 data URL 前缀（如果存在）
-      const cleanBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-
-      return {
-        data: cleanBase64,
-        mimeType: file.mimeType || 'application/pdf'
-      };
+      return await FileProcessingUtils.getFileBase64(file);
     } catch (error) {
       console.error('[GeminiFileService] 获取文件 base64 失败:', error);
       throw error;

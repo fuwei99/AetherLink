@@ -12,7 +12,7 @@ import {
   Alert,
   useTheme
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { X as CloseIcon } from 'lucide-react';
 import type { ChatTopic, Assistant } from '../shared/types/Assistant';
 import { TopicService } from '../shared/services/TopicService';
 import { updateTopic } from '../shared/store/slices/assistantsSlice';

@@ -1,207 +1,118 @@
 import React from 'react';
-import { Box, Typography, Alert, Link, Collapse, IconButton, Button } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import SettingsIcon from '@mui/icons-material/Settings';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Alert, Box, Typography, Divider } from '@mui/material';
 import type { ErrorMessageBlock } from '../../../shared/types/newMessage';
-import { getErrorType } from '../../../shared/utils/error';
-import { isApiKeyError, retryApiKeyError, showApiKeyConfigHint } from '../../../shared/utils/apiKeyErrorHandler';
 
 interface Props {
   block: ErrorMessageBlock;
-  messageId?: string;
-  topicId?: string;
-  onRegenerate?: () => void;
 }
 
 /**
- * 错误块组件
+ * 错误块组件 - 简化版本（类似电脑版）
  * 负责渲染错误信息
  */
-const ErrorBlock: React.FC<Props> = ({ block, messageId, topicId, onRegenerate }) => {
-  const [expanded, setExpanded] = React.useState(false);
-  const [retrying, setRetrying] = React.useState(false);
-
+const ErrorBlock: React.FC<Props> = ({ block }) => {
   // HTTP错误状态码
   const HTTP_ERROR_CODES = [400, 401, 403, 404, 429, 500, 502, 503, 504];
 
-  // 获取错误类型
-  const errorType = block.error ? getErrorType(block.error) : 'unknown';
+  // 获取用户友好的错误消息
+  const getUserFriendlyMessage = () => {
+    // 优先显示实际的错误消息
+    const errorMessage = block.error?.message || block.message || block.content;
 
-  // 获取错误状态码
-  const errorStatus = block.error?.status || block.error?.code;
+    if (errorMessage) {
+      return errorMessage;
+    }
 
-  // 获取错误消息 - 支持多种错误格式
-  const errorMessage = block.error?.message ||
-                      block.message ||
-                      (block as any).content ||
-                      '发生错误，请重试';
+    // 如果是HTTP错误码，返回对应的错误消息
+    if (block.error && HTTP_ERROR_CODES.includes(block.error?.status)) {
+      const httpErrorMessages: Record<number, string> = {
+        400: '请求错误，请检查请求参数是否正确。如果修改了模型设置，请重置到默认设置',
+        401: '身份验证失败，请检查 API 密钥是否正确',
+        403: '禁止访问，请翻译具体报错信息查看原因，或联系服务商询问被禁止原因',
+        404: '模型不存在或者请求路径错误',
+        429: '请求速率超过限制，请稍后再试',
+        500: '服务器错误，请稍后再试',
+        502: '网关错误，请稍后再试',
+        503: '服务不可用，请稍后再试',
+        504: '网关超时，请稍后再试'
+      };
+      return httpErrorMessages[block.error.status] || '未知HTTP错误';
+    }
 
-  // 获取错误详情 - 支持多种详情格式
-  const errorDetails = block.error?.details ||
-                      block.details ||
-                      (block.error && typeof block.error === 'object' ? JSON.stringify(block.error, null, 2) : '') ||
-                      '';
+    // 默认错误消息
+    return '发生错误，请重试';
+  };
 
-  // 检测是否为 API Key 错误
-  const isApiKeyErr = block.error ? isApiKeyError(block.error) : false;
+  // 获取API响应内容
+  const getApiResponse = () => {
+    // 只从真正的响应字段获取内容，不包括错误消息
+    const response = block.error?.response ||
+                    block.error?.data ||
+                    block.error?.details;
 
-  // 获取错误建议
-  const getErrorSuggestion = () => {
-    // 如果是HTTP错误码
-    if (errorStatus && HTTP_ERROR_CODES.includes(Number(errorStatus))) {
-      // 根据HTTP状态码返回建议
-      switch (Number(errorStatus)) {
-        case 400: return '请求格式错误，请检查输入。';
-        case 401: return '认证失败，请检查API密钥。';
-        case 403: return '没有权限访问该资源。';
-        case 404: return '请求的资源不存在。';
-        case 429: return '请求频率过高，请稍后重试。';
-        case 500: return '服务器内部错误，请稍后重试。';
-        case 502: return '网关错误，请稍后重试。';
-        case 503: return '服务不可用，请稍后重试。';
-        case 504: return '网关超时，请稍后重试。';
-        default: return `HTTP错误: ${errorStatus}`;
+    if (!response) return null;
+
+    // 如果是对象，格式化为JSON
+    if (typeof response === 'object') {
+      try {
+        return JSON.stringify(response, null, 2);
+      } catch {
+        return String(response);
       }
     }
 
-    // 根据错误类型提供建议
-    switch (errorType) {
-      case 'network':
-        return '请检查您的网络连接，或稍后重试。';
-      case 'auth':
-        return '请检查您的API密钥或认证信息是否正确。';
-      case 'timeout':
-        return '请求超时，请稍后重试。';
-      case 'rate_limit':
-        return '请求频率过高，请稍后重试。';
-      case 'server':
-        return '服务器错误，请稍后重试。';
-      case 'api':
-        return 'API调用错误，请检查参数或稍后重试。';
-      default:
-        return '请尝试重新生成回复或联系支持团队。';
-    }
-  };
-
-  // 切换展开/折叠状态
-  const toggleExpanded = () => {
-    setExpanded(!expanded);
-  };
-
-  // 处理重试
-  const handleRetry = async () => {
-    if (!messageId || !topicId) {
-      console.error('[ErrorBlock] 缺少 messageId 或 topicId，无法重试');
-      return;
+    // 如果是字符串，但不是简单的错误消息，才显示
+    const responseStr = String(response);
+    // 排除简单的错误消息，只显示结构化的响应
+    if (responseStr.includes('{') || responseStr.includes('[') || responseStr.length > 100) {
+      return responseStr;
     }
 
-    setRetrying(true);
-    try {
-      await retryApiKeyError(messageId, topicId);
-    } catch (error) {
-      console.error('[ErrorBlock] 重试失败:', error);
-    } finally {
-      setRetrying(false);
-    }
+    return null;
   };
 
-  // 处理打开设置
-  const handleOpenSettings = () => {
-    showApiKeyConfigHint();
-  };
+  const apiResponse = getApiResponse();
 
   return (
-    <Box sx={{ my: 1 }}>
+    <Box sx={{ margin: '15px 0 8px' }}>
       <Alert
         severity="error"
-        variant="outlined"
-        action={
-          errorDetails ? (
-            <IconButton
-              aria-label={expanded ? "收起详情" : "展开详情"}
-              size="small"
-              onClick={toggleExpanded}
-            >
-              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-          ) : null
-        }
+        sx={{
+          padding: '10px',
+          fontSize: '12px'
+        }}
       >
-        <Typography variant="body2">
-          {errorMessage}
+        {/* 用户友好的错误消息 */}
+        <Typography variant="body2" sx={{ fontSize: '12px', mb: apiResponse ? 1 : 0 }}>
+          {getUserFriendlyMessage()}
         </Typography>
 
-        <Typography variant="body2" sx={{ mt: 0.5, color: 'text.secondary' }}>
-          {getErrorSuggestion()}
-        </Typography>
-
-        {errorStatus && (
-          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.secondary' }}>
-            错误代码: {errorStatus}
-          </Typography>
-        )}
-
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
-          {errorDetails && (
+        {/* API响应内容 */}
+        {apiResponse && (
+          <>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="caption" sx={{ fontSize: '11px', color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              API响应:
+            </Typography>
             <Box
               component="pre"
               sx={{
-                mt: 1,
-                p: 1,
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                borderRadius: 1,
-                fontSize: '0.75rem',
+                fontSize: '10px',
+                fontFamily: 'monospace',
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                padding: '8px',
+                borderRadius: '4px',
                 overflow: 'auto',
-                maxHeight: '200px'
+                maxHeight: '150px',
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word'
               }}
             >
-              {errorDetails}
+              {apiResponse}
             </Box>
-          )}
-        </Collapse>
-
-        <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-          {isApiKeyErr && messageId && topicId ? (
-            // API Key 错误的特殊按钮
-            <>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<SettingsIcon />}
-                onClick={handleOpenSettings}
-                sx={{ fontSize: '0.75rem' }}
-              >
-                检查配置
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<RefreshIcon />}
-                onClick={handleRetry}
-                disabled={retrying}
-                sx={{ fontSize: '0.75rem' }}
-              >
-                {retrying ? '重试中...' : '重试'}
-              </Button>
-            </>
-          ) : (
-            // 普通错误的重新生成按钮
-            <Link
-              component="button"
-              variant="caption"
-              onClick={() => {
-                // 调用重新生成回调
-                if (onRegenerate) {
-                  onRegenerate();
-                }
-              }}
-            >
-              重新生成
-            </Link>
-          )}
-        </Box>
+          </>
+        )}
       </Alert>
     </Box>
   );

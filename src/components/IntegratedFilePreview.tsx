@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Collapse, IconButton, Typography, useTheme } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import FilePreview from './FilePreview';
 import type { FileStatus } from './FilePreview';
 import type { FileContent, ImageContent } from '../shared/types';
@@ -42,10 +41,8 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
         width: '100%',
         marginBottom: '8px',
         borderRadius: '12px',
-        backgroundColor: theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.03)'
-          : 'rgba(0, 0, 0, 0.02)',
-        border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
+        backgroundColor: theme.palette.background.paper,
+        border: `1px solid ${theme.palette.divider}`,
         overflow: 'hidden',
         transition: 'all 0.3s ease'
       }}
@@ -57,10 +54,8 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '8px 12px',
-          backgroundColor: theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.02)'
-            : 'rgba(0, 0, 0, 0.02)',
-          borderBottom: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`
+          backgroundColor: theme.palette.action.hover,
+          borderBottom: `1px solid ${theme.palette.divider}`
         }}
       >
         <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 500 }}>
@@ -134,7 +129,7 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
                     },
                   }}
                 >
-                  <ExpandMoreIcon sx={{ fontSize: 10, transform: 'rotate(45deg)' }} />
+                  <ExpandMoreIcon size={10} style={{ transform: 'rotate(45deg)' }} />
                 </IconButton>
               </Box>
             ))}
@@ -221,7 +216,7 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
                         },
                       }}
                     >
-                      <ExpandMoreIcon sx={{ fontSize: 10, transform: 'rotate(45deg)' }} />
+                      <ExpandMoreIcon size={10} style={{ transform: 'rotate(45deg)' }} />
                     </IconButton>
                   </Box>
                 ))}

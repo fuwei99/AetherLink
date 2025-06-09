@@ -12,8 +12,7 @@ import {
   alpha,
   Paper
 } from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { Info as InfoOutlinedIcon, Settings as SettingsIcon } from 'lucide-react';
 import { ModelType } from '../../shared/types';
 import type { ModelTypeRule } from '../../shared/types';
 import { getModelTypeDisplayName, defaultModelTypeRules } from '../../shared/data/modelTypeRules';

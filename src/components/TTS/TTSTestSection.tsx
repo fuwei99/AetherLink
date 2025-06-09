@@ -5,7 +5,7 @@ import {
   TextField,
   Button,
 } from '@mui/material';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import { Volume2 as VolumeUpIcon } from 'lucide-react';
 
 interface TTSTestSectionProps {
   testText: string;

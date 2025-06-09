@@ -12,14 +12,14 @@ import {
 import {
   ZoomIn as ZoomInIcon,
   ZoomOut as ZoomOutIcon,
-  RotateLeft as RotateLeftIcon,
-  RotateRight as RotateRightIcon,
-  Flip as FlipHorizontalIcon,
-  SwapVert as FlipVerticalIcon,
+  RotateCcw as RotateLeftIcon,
+  RotateCw as RotateRightIcon,
+  FlipHorizontal as FlipHorizontalIcon,
+  FlipVertical as FlipVerticalIcon,
   Download as DownloadIcon,
-  Close as CloseIcon,
-  RestartAlt as ResetIcon
-} from '@mui/icons-material';
+  X as CloseIcon,
+  RotateCcw as ResetIcon
+} from 'lucide-react';
 
 interface AdvancedImagePreviewProps {
   src: string;

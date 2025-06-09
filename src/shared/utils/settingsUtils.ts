@@ -101,7 +101,8 @@ export function getAppSettings(): Record<string, any> {
     contextLength: 16000,
     contextCount: 5,
     mathRenderer: 'KaTeX',
-    defaultThinkingEffort: 'medium'
+    defaultThinkingEffort: 'medium',
+    thinkingBudget: 1024  // 默认思考预算为1024 tokens
   };
 }
 
@@ -129,6 +130,20 @@ export function getDefaultThinkingEffort(): string {
   } catch (error) {
     console.error('读取思维链长度设置失败:', error);
     return 'medium';
+  }
+}
+
+/**
+ * 获取思考预算设置
+ * @returns 思考预算值
+ */
+export function getThinkingBudget(): number {
+  try {
+    const appSettings = getAppSettings();
+    return appSettings.thinkingBudget || 1024;
+  } catch (error) {
+    console.error('读取思考预算设置失败:', error);
+    return 1024;
   }
 }
 

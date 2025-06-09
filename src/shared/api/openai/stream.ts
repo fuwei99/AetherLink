@@ -6,6 +6,7 @@
 import { logApiRequest } from '../../services/LoggerService';
 import { EventEmitter, EVENT_NAMES } from '../../services/EventEmitter';
 import { hasToolUseTags } from '../../utils/mcpToolParser';
+import { ChunkType } from '../../types/chunk';
 
 /**
  * 流式完成请求
@@ -219,7 +220,7 @@ export async function streamCompletion(
                   // 发送思考内容事件
                   if (onChunk) {
                     onChunk({
-                      type: 'thinking.delta',
+                      type: ChunkType.THINKING_DELTA,
                       text: thinkContent,
                       thinking_millsec: Date.now() - reasoningStartTime
                     });
@@ -242,7 +243,7 @@ export async function streamCompletion(
                   // 发送思考内容片段事件
                   if (onChunk) {
                     onChunk({
-                      type: 'thinking.delta',
+                      type: ChunkType.THINKING_DELTA,
                       text: contentBuffer,
                       thinking_millsec: Date.now() - reasoningStartTime
                     });
@@ -258,10 +259,52 @@ export async function streamCompletion(
         // 处理完成原因
         const finishReason = chunk.choices[0]?.finish_reason;
         if (finishReason) {
+          // 在处理完成之前，确保缓冲区中的所有内容都已处理
+          if (contentBuffer.length > 0) {
+            if (isInThinkTag) {
+              // 如果还在思考标签内，将剩余内容作为思考内容
+              thinkBuffer += contentBuffer;
+              fullReasoning += contentBuffer;
+              if (onChunk) {
+                onChunk({
+                  type: ChunkType.THINKING_DELTA,
+                  text: contentBuffer,
+                  thinking_millsec: Date.now() - reasoningStartTime
+                });
+              }
+            } else {
+              // 否则作为普通内容处理
+              fullContent += contentBuffer;
+              if (onUpdate) {
+                onUpdate(contentBuffer);
+              }
+
+              EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_DELTA, {
+                text: contentBuffer,
+                isFirstChunk: isFirstChunk,
+                chunkLength: contentBuffer.length,
+                fullContentLength: fullContent.length,
+                timestamp: Date.now()
+              });
+
+              if (isFirstChunk && contentBuffer.trim()) {
+                EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_FIRST_CHUNK, {
+                  text: contentBuffer,
+                  fullContent: contentBuffer,
+                  timestamp: Date.now()
+                });
+                isFirstChunk = false;
+              }
+            }
+            contentBuffer = '';
+          }
+
           // 如果有推理内容但还没记录结束时间，现在记录
           if (hasReasoningContent && reasoningEndTime === 0) {
             reasoningEndTime = Date.now();
           }
+
+          console.log(`[streamCompletion] 流式响应完成，最终内容长度: ${fullContent.length}, 推理长度: ${fullReasoning.length}`);
 
           // 发送完成事件
           EventEmitter.emit(EVENT_NAMES.STREAM_TEXT_COMPLETE, {

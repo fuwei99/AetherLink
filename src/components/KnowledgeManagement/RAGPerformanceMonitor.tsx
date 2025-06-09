@@ -18,13 +18,13 @@ import {
   ListItemIcon
 } from '@mui/material';
 import {
-  Speed as SpeedIcon,
-  AutoAwesome as AutoAwesomeIcon,
+  Zap as SpeedIcon,
+  Sparkles as AutoAwesomeIcon,
   TrendingUp as TrendingUpIcon,
-  Assessment as AssessmentIcon,
+  BarChart as AssessmentIcon,
   Timer as TimerIcon,
   Search as SearchIcon
-} from '@mui/icons-material';
+} from 'lucide-react';
 
 interface PerformanceMetrics {
   searchTime: number;
@@ -57,20 +57,20 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
     const simpleSearches = metrics.filter(m => m.mode === 'simple');
     const enhancedSearches = metrics.filter(m => m.mode === 'enhanced');
 
-    const avgSimpleTime = simpleSearches.length > 0 
-      ? simpleSearches.reduce((sum, m) => sum + m.searchTime, 0) / simpleSearches.length 
+    const avgSimpleTime = simpleSearches.length > 0
+      ? simpleSearches.reduce((sum, m) => sum + m.searchTime, 0) / simpleSearches.length
       : 0;
 
-    const avgEnhancedTime = enhancedSearches.length > 0 
-      ? enhancedSearches.reduce((sum, m) => sum + m.searchTime, 0) / enhancedSearches.length 
+    const avgEnhancedTime = enhancedSearches.length > 0
+      ? enhancedSearches.reduce((sum, m) => sum + m.searchTime, 0) / enhancedSearches.length
       : 0;
 
-    const avgSimpleResults = simpleSearches.length > 0 
-      ? simpleSearches.reduce((sum, m) => sum + m.resultsCount, 0) / simpleSearches.length 
+    const avgSimpleResults = simpleSearches.length > 0
+      ? simpleSearches.reduce((sum, m) => sum + m.resultsCount, 0) / simpleSearches.length
       : 0;
 
-    const avgEnhancedResults = enhancedSearches.length > 0 
-      ? enhancedSearches.reduce((sum, m) => sum + m.resultsCount, 0) / enhancedSearches.length 
+    const avgEnhancedResults = enhancedSearches.length > 0
+      ? enhancedSearches.reduce((sum, m) => sum + m.resultsCount, 0) / enhancedSearches.length
       : 0;
 
     setAverageMetrics({
@@ -92,7 +92,7 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
     if (averageMetrics.simpleSearchTime === 0 || averageMetrics.enhancedSearchTime === 0) {
       return null;
     }
-    
+
     const improvement = ((averageMetrics.enhancedSearchTime - averageMetrics.simpleSearchTime) / averageMetrics.simpleSearchTime) * 100;
     return improvement;
   };
@@ -158,13 +158,13 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
                     {averageMetrics.simpleSearchTime.toFixed(0)}ms
                   </Typography>
                 </Box>
-                <LinearProgress 
-                  variant="determinate" 
+                <LinearProgress
+                  variant="determinate"
                   value={Math.min((averageMetrics.simpleSearchTime / 2000) * 100, 100)}
                   color={getPerformanceColor(averageMetrics.simpleSearchTime)}
                 />
               </Box>
-              
+
               <Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                   <Box display="flex" alignItems="center" gap={1}>
@@ -175,8 +175,8 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
                     {averageMetrics.enhancedSearchTime.toFixed(0)}ms
                   </Typography>
                 </Box>
-                <LinearProgress 
-                  variant="determinate" 
+                <LinearProgress
+                  variant="determinate"
                   value={Math.min((averageMetrics.enhancedSearchTime / 2000) * 100, 100)}
                   color={getPerformanceColor(averageMetrics.enhancedSearchTime)}
                 />
@@ -240,14 +240,14 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
                     性能对比分析
                   </Typography>
                 </Box>
-                
+
                 <Box display="flex" gap={2} alignItems="center">
                   <Chip
                     label={`总搜索次数: ${averageMetrics.totalSearches}`}
                     size="small"
                     variant="outlined"
                   />
-                  
+
                   {speedImprovement > 0 ? (
                     <Chip
                       label={`增强RAG慢 ${Math.abs(speedImprovement).toFixed(1)}%`}
@@ -261,7 +261,7 @@ export const RAGPerformanceMonitor: React.FC<RAGPerformanceMonitorProps> = ({
                       color="success"
                     />
                   )}
-                  
+
                   {averageMetrics.enhancedResultsCount > averageMetrics.simpleResultsCount && (
                     <Chip
                       label={`结果质量提升 ${((averageMetrics.enhancedResultsCount - averageMetrics.simpleResultsCount) / averageMetrics.simpleResultsCount * 100).toFixed(1)}%`}

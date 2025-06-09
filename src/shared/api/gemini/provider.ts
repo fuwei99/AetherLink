@@ -1,44 +1,33 @@
-/**
- * Gemini Provider - 电脑版完整实现
- * 基于电脑版架构重新设计，支持完整的功能
- */
 import {
   GoogleGenAI,
-  HarmBlockThreshold,
-  HarmCategory,
   FinishReason,
-  Modality,
   GenerateContentResponse
 } from '@google/genai';
 import type {
   Content,
   FunctionCall,
-  GenerateContentConfig,
   Part,
   PartUnion,
-  SafetySetting,
-  ThinkingConfig,
   Tool
 } from '@google/genai';
-import type { Message, Model, MCPTool, FileType } from '../../types';
+import type { Message, Model, MCPTool } from '../../types';
+import { ChunkType } from '../../types/chunk';
 import { getMainTextContent } from '../../utils/messageUtils';
-import store from '../../store';
+
 import {
-  isGeminiReasoningModel,
-  isGenerateImageModel,
   isGemmaModel,
   isWebSearchModel
 } from '../../config/models';
 import { takeRight } from 'lodash';
-import axios from 'axios';
-import OpenAI from 'openai';
 import { filterUserRoleStartMessages, filterEmptyMessages } from '../../utils/messageUtils/filters';
 import { withRetry } from '../../utils/retryUtils';
-import { MobileFileStorageService } from '../../services/MobileFileStorageService';
-import { createGeminiFileService } from './fileService';
 
-// 常量定义
-const MB = 1024 * 1024;
+import { GeminiConfigBuilder } from './configBuilder';
+import { createGeminiEmbeddingService } from './embeddingService';
+import { createGeminiMessageContentService } from './messageContentService';
+import { fetchModels, createClient, testConnection } from './client';
+
+
 
 
 
@@ -62,36 +51,7 @@ interface MCPCallToolResponse {
   content: string;
 }
 
-// 工具函数
-function findImageBlocks(message: Message): any[] {
-  try {
-    if (!message.blocks || !Array.isArray(message.blocks)) {
-      return [];
-    }
-    const state = store.getState();
-    return message.blocks
-      .map(blockId => state.messageBlocks.entities[blockId])
-      .filter(block => block && block.type === 'image');
-  } catch (error) {
-    console.error('[findImageBlocks] 失败:', error);
-    return [];
-  }
-}
 
-function findFileBlocks(message: Message): any[] {
-  try {
-    if (!message.blocks || !Array.isArray(message.blocks)) {
-      return [];
-    }
-    const state = store.getState();
-    return message.blocks
-      .map(blockId => state.messageBlocks.entities[blockId])
-      .filter(block => block && block.type === 'file');
-  } catch (error) {
-    console.error('[findFileBlocks] 失败:', error);
-    return [];
-  }
-}
 
 // 基础Provider类
 export abstract class BaseProvider {
@@ -100,17 +60,7 @@ export abstract class BaseProvider {
 
   constructor(model: Model) {
     this.model = model;
-    this.sdk = new GoogleGenAI({ 
-      vertexai: false, 
-      apiKey: model.apiKey, 
-      httpOptions: { baseUrl: this.getBaseURL() } 
-    });
-  }
-
-  public getBaseURL(): string {
-    const baseUrl = this.model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
-    // 确保 baseUrl 不以 /v1beta 结尾，避免重复
-    return baseUrl.replace(/\/v1beta\/?$/, '');
+    this.sdk = createClient(model);
   }
 
   protected getAssistantSettings(assistant: any) {
@@ -125,98 +75,11 @@ export abstract class BaseProvider {
     return {
       contextCount: assistant?.settings?.contextCount || 10,
       maxTokens: maxTokens,
-      streamOutput: streamOutput,
-      temperature: this.getTemperature(assistant),
-      topP: this.getTopP(assistant)
+      streamOutput: streamOutput
     };
   }
 
-  protected getTemperature(assistant?: any, model?: Model): number {
-    return assistant?.settings?.temperature || assistant?.temperature || model?.temperature || 0.7;
-  }
 
-  protected getTopP(assistant?: any, model?: Model): number {
-    return assistant?.settings?.topP || assistant?.topP || (model as any)?.topP || 0.95;
-  }
-
-  protected getCustomParameters(assistant?: any): any {
-    return assistant?.settings?.customParameters || {};
-  }
-
-  /**
-   * 获取Gemini专属参数
-   * @param assistant 助手配置（可选）
-   */
-  protected getGeminiSpecificParameters(assistant?: any): any {
-    const params: any = {};
-
-    // Candidate Count
-    if (assistant?.candidateCount !== undefined && assistant.candidateCount !== 1) {
-      params.candidateCount = assistant.candidateCount;
-    }
-
-    // Response Modalities
-    if (assistant?.responseModalities && Array.isArray(assistant.responseModalities)) {
-      if (JSON.stringify(assistant.responseModalities) !== JSON.stringify(['TEXT'])) {
-        params.responseModalities = assistant.responseModalities.map((modality: string) => {
-          switch (modality) {
-            case 'TEXT': return 'TEXT';
-            case 'IMAGE': return 'IMAGE';
-            case 'AUDIO': return 'AUDIO';
-            default: return 'TEXT';
-          }
-        });
-      }
-    }
-
-    // Speech Config
-    if (assistant?.enableSpeech) {
-      params.speechConfig = {
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: assistant.speechLanguage === 'zh-CN' ? 'zh-CN-Wavenet-A' : 'en-US-Wavenet-A'
-          }
-        }
-      };
-    }
-
-    // Thinking Config 已在 getBudgetToken 方法中处理，这里不再重复处理
-
-    // Media Resolution (影响图像处理的token消耗)
-    if (assistant?.mediaResolution && assistant.mediaResolution !== 'medium') {
-      // 这个参数通常在处理图像时使用，不是直接的API参数
-      // 但我们可以存储它以便在图像处理时使用
-      params.mediaResolution = assistant.mediaResolution;
-    }
-
-    // 通用参数
-    // Top-K
-    if (assistant?.topK !== undefined && assistant.topK !== 40) {
-      params.topK = assistant.topK;
-    }
-
-    // Frequency Penalty (Gemini可能不直接支持，但可以尝试)
-    if (assistant?.frequencyPenalty !== undefined && assistant.frequencyPenalty !== 0) {
-      params.frequencyPenalty = assistant.frequencyPenalty;
-    }
-
-    // Presence Penalty (Gemini可能不直接支持，但可以尝试)
-    if (assistant?.presencePenalty !== undefined && assistant.presencePenalty !== 0) {
-      params.presencePenalty = assistant.presencePenalty;
-    }
-
-    // Seed
-    if (assistant?.seed !== undefined && assistant.seed !== null) {
-      params.seed = assistant.seed;
-    }
-
-    // Stop Sequences
-    if (assistant?.stopSequences && Array.isArray(assistant.stopSequences) && assistant.stopSequences.length > 0) {
-      params.stopSequences = assistant.stopSequences;
-    }
-
-    return params;
-  }
 
   protected createAbortController(_messageId?: string, _autoCleanup = false) {
     const abortController = new AbortController();
@@ -231,7 +94,7 @@ export abstract class BaseProvider {
   public convertMcpTools<T>(mcpTools: MCPTool[]): T[] {
     return mcpTools.map((tool) => {
       let toolName = tool.id || tool.name;
-      
+
       // 清理工具名称
       if (/^\d/.test(toolName)) toolName = `mcp_${toolName}`;
       toolName = toolName.replace(/[^a-zA-Z0-9_.-]/g, '_');
@@ -286,229 +149,29 @@ export abstract class BaseProvider {
   }
 }
 
+
+
 // Gemini Provider实现
 export default class GeminiProvider extends BaseProvider {
   constructor(provider: any) {
     const model = {
       id: provider.models?.[0]?.id || 'gemini-pro',
       apiKey: provider.apiKey,
-      baseUrl: provider.apiHost,
-      temperature: 0.7,
-      maxTokens: 2048
+      baseUrl: provider.apiHost
     } as Model;
     super(model);
   }
 
-  /**
-   * 获取安全设置
-   */
-  private getSafetySettings(): SafetySetting[] {
-    const safetyThreshold = 'OFF' as HarmBlockThreshold;
-    return [
-      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: safetyThreshold },
-      { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: safetyThreshold },
-      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: safetyThreshold },
-      { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: safetyThreshold },
-      { category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY, threshold: HarmBlockThreshold.BLOCK_NONE }
-    ];
-  }
+
+
+
 
   /**
-   * 获取推理配置
-   */
-  private getBudgetToken(assistant: any, model: Model) {
-    if (isGeminiReasoningModel(model)) {
-      // 检查是否启用思维链
-      const enableThinking = assistant?.enableThinking;
-      const thinkingBudget = assistant?.thinkingBudget || 0;
-
-      if (!enableThinking || thinkingBudget === 0) {
-        return {
-          thinkingConfig: {
-            includeThoughts: false,
-            thinkingBudget: 0
-          } as ThinkingConfig
-        };
-      }
-
-      // 使用用户设置的thinkingBudget，范围0-24576
-      const budget = Math.max(0, Math.min(thinkingBudget, 24576));
-
-      return {
-        thinkingConfig: {
-          thinkingBudget: budget,
-          includeThoughts: true
-        } as ThinkingConfig
-      };
-    }
-    return {};
-  }
-
-  /**
-   * 处理PDF文件 - 模拟电脑版实现
-   * 参考电脑版的 handlePdfFile 方法逻辑
-   */
-  private async handlePdfFile(file: FileType): Promise<Part> {
-    const smallFileSize = 20 * MB;
-    const isSmallFile = file.size < smallFileSize;
-
-    if (isSmallFile) {
-      // 小文件使用 base64 - 模拟电脑版的 window.api.gemini.base64File
-      try {
-        const fileService = createGeminiFileService(this.model);
-        const { data, mimeType } = await fileService.getBase64File(file);
-        return {
-          inlineData: {
-            data,
-            mimeType
-          } as Part['inlineData']
-        };
-      } catch (error) {
-        console.error('[GeminiProvider] 获取base64失败，使用文件内置数据:', error);
-        const base64Data = file.base64Data || '';
-        const cleanBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-        return {
-          inlineData: {
-            data: cleanBase64,
-            mimeType: 'application/pdf'
-          } as Part['inlineData']
-        };
-      }
-    }
-
-    // 大文件处理 - 模拟电脑版的逻辑
-    try {
-      const fileService = createGeminiFileService(this.model);
-
-      // 1. 先检索已上传的文件 - 模拟电脑版的 window.api.gemini.retrieveFile
-      const fileMetadata = await fileService.retrieveFile(file);
-
-      if (fileMetadata) {
-        console.log(`[GeminiProvider] 使用已上传的文件: ${fileMetadata.uri}`);
-        return {
-          fileData: {
-            fileUri: fileMetadata.uri,
-            mimeType: fileMetadata.mimeType
-          } as Part['fileData']
-        };
-      }
-
-      // 2. 如果文件不存在，上传到 Gemini - 模拟电脑版的 window.api.gemini.uploadFile
-      console.log(`[GeminiProvider] 上传新文件: ${file.origin_name}`);
-      const uploadResult = await fileService.uploadFile(file);
-
-      return {
-        fileData: {
-          fileUri: uploadResult.uri,
-          mimeType: uploadResult.mimeType
-        } as Part['fileData']
-      };
-    } catch (error) {
-      console.error('[GeminiProvider] 文件上传失败，回退到base64:', error);
-      // 回退策略 - 使用 base64
-      const base64Data = file.base64Data || '';
-      const cleanBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-      return {
-        inlineData: {
-          data: cleanBase64,
-          mimeType: 'application/pdf'
-        } as Part['inlineData']
-      };
-    }
-  }
-
-  /**
-   * 获取消息内容
+   * 获取消息内容 - 使用专门的消息内容服务
    */
   private async getMessageContents(message: Message): Promise<Content> {
-    const role = message.role === 'user' ? 'user' : 'model';
-    const parts: Part[] = [];
-
-    // 获取用户文本内容
-    const textContent = await this.getMessageContent(message);
-
-    // 只有当文本内容不为空时才添加文本part
-    if (textContent && textContent.trim()) {
-      parts.push({ text: textContent.trim() });
-    }
-
-    // 处理图片块
-    const imageBlocks = findImageBlocks(message);
-
-    for (const imageBlock of imageBlocks) {
-      if (imageBlock.metadata?.generateImageResponse?.images) {
-        for (const imageUrl of imageBlock.metadata.generateImageResponse.images) {
-          if (imageUrl?.startsWith('data:')) {
-            const matches = imageUrl.match(/^data:(.+);base64,(.*)$/);
-            if (matches && matches.length === 3) {
-              parts.push({
-                inlineData: {
-                  data: matches[2],
-                  mimeType: matches[1]
-                } as Part['inlineData']
-              });
-            }
-          }
-        }
-      }
-    }
-
-    // 处理文件块 - 模拟电脑版的文件处理逻辑
-    const fileBlocks = findFileBlocks(message);
-
-    for (const fileBlock of fileBlocks) {
-      const file = fileBlock.file;
-      if (!file) {
-        continue;
-      }
-
-      // 处理图片文件 - 模拟电脑版第176-184行
-      if (file.type === 'image') {
-        try {
-          const base64Data = await this.getBase64Image(file);
-          parts.push({
-            inlineData: {
-              data: base64Data.base64,
-              mimeType: base64Data.mime
-            } as Part['inlineData']
-          });
-        } catch (error) {
-          console.error(`[GeminiProvider.getMessageContents] 处理图片文件失败:`, error);
-        }
-      }
-
-      // 处理PDF文件 - 模拟电脑版第186-189行
-      if (file.ext === '.pdf') {
-        try {
-          const pdfPart = await this.handlePdfFile(file);
-          parts.push(pdfPart);
-          continue;
-        } catch (error) {
-          console.error(`[GeminiProvider.getMessageContents] 处理PDF文件失败:`, error);
-        }
-      }
-
-      // 处理文本和文档文件 - 模拟电脑版第190-195行
-      if (['text', 'document'].includes(file.type)) {
-        try {
-          const fileContent = await this.readFileContent(file);
-          if (fileContent) {
-            parts.push({
-              text: file.origin_name + '\n' + fileContent.trim()
-            });
-          }
-        } catch (error) {
-          console.error(`[GeminiProvider.getMessageContents] 处理文本文件失败:`, error);
-        }
-      }
-    }
-
-    // 确保至少有一个part，避免空parts数组导致API错误
-    if (parts.length === 0) {
-      parts.push({ text: '' });
-    }
-
-    return { role, parts };
+    const messageContentService = createGeminiMessageContentService(this.model);
+    return messageContentService.getMessageContents(message);
   }
 
   /**
@@ -518,87 +181,12 @@ export default class GeminiProvider extends BaseProvider {
     return getMainTextContent(message);
   }
 
-  /**
-   * 获取图片的 base64 数据 - 模拟电脑版的 window.api.file.base64Image
-   */
-  private async getBase64Image(file: FileType): Promise<{ base64: string; mime: string }> {
-    try {
-      const fileService = createGeminiFileService(this.model);
-      const result = await fileService.getBase64File(file);
-      return {
-        base64: result.data,
-        mime: result.mimeType
-      };
-    } catch (error) {
-      console.error('[GeminiProvider] 获取图片base64失败:', error);
-      // 回退到文件内置数据
-      const base64Data = file.base64Data || '';
-      const cleanBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-      const mimeType = file.mimeType || `image/${file.ext?.slice(1) || 'png'}`;
-      return {
-        base64: cleanBase64,
-        mime: mimeType
-      };
-    }
-  }
+
+
+
 
   /**
-   * 读取文件内容 - 模拟电脑版的 window.api.file.read
-   */
-  private async readFileContent(file: FileType): Promise<string> {
-    try {
-      // 从移动端文件存储读取
-      const mobileFileStorage = MobileFileStorageService.getInstance();
-      return await mobileFileStorage.readFile(file.id);
-    } catch (error) {
-      console.error('[GeminiProvider] 读取文件内容失败:', error);
-      return `[无法读取文件内容: ${file.origin_name}]`;
-    }
-  }
-
-  /**
-   * 获取图像文件内容
-   */
-  private async getImageFileContents(message: Message): Promise<Content> {
-    const role = message.role === 'user' ? 'user' : 'model';
-    const content = getMainTextContent(message);
-    const parts: Part[] = [];
-
-    // 只有当文本内容不为空时才添加文本part
-    if (content && content.trim()) {
-      parts.push({ text: content.trim() });
-    }
-
-    const imageBlocks = findImageBlocks(message);
-
-    for (const imageBlock of imageBlocks) {
-      if (imageBlock.metadata?.generateImageResponse?.images) {
-        for (const imageUrl of imageBlock.metadata.generateImageResponse.images) {
-          if (imageUrl?.startsWith('data:')) {
-            const matches = imageUrl.match(/^data:(.+);base64,(.*)$/);
-            if (matches && matches.length === 3) {
-              parts.push({
-                inlineData: {
-                  data: matches[2],
-                  mimeType: matches[1]
-                } as Part['inlineData']
-              });
-            }
-          }
-        }
-      }
-    }
-
-    // 确保至少有一个part
-    if (parts.length === 0) {
-      parts.push({ text: '' });
-    }
-
-    return { role, parts };
-  }
-
-  /**
-   * 核心completions方法 - 电脑版风格
+   * 核心completions方法 - 专注于聊天功能
    */
   public async completions({
     messages,
@@ -608,25 +196,6 @@ export default class GeminiProvider extends BaseProvider {
     onFilterMessages
   }: CompletionsParams): Promise<void> {
     const model = assistant.model || this.model;
-    let canGenerateImage = false;
-
-    console.log(`[Gemini Provider] 检查图像生成能力 - 模型ID: ${model.id}, isGenerateImageModel: ${isGenerateImageModel(model)}, enableGenerateImage: ${assistant.enableGenerateImage}`);
-
-    if (isGenerateImageModel(model)) {
-      if (model.id === 'gemini-2.0-flash-exp') {
-        canGenerateImage = assistant.enableGenerateImage!;
-      } else {
-        canGenerateImage = true;
-      }
-    }
-
-    console.log(`[Gemini Provider] 图像生成决策 - canGenerateImage: ${canGenerateImage}`);
-
-    if (canGenerateImage) {
-      console.log(`[Gemini Provider] 调用图像生成方法`);
-      await this.generateImageByChat({ messages, assistant, onChunk });
-      return;
-    }
 
     const { contextCount, maxTokens, streamOutput } = this.getAssistantSettings(assistant);
 
@@ -673,23 +242,9 @@ export default class GeminiProvider extends BaseProvider {
       });
     }
 
-    const generateContentConfig: GenerateContentConfig = {
-      safetySettings: this.getSafetySettings(),
-      systemInstruction: isGemmaModel(model) ? undefined : systemInstruction,
-      temperature: this.getTemperature(assistant, model),
-      topP: this.getTopP(assistant, model),
-      maxOutputTokens: maxTokens,
-      tools: tools,
-      ...this.getBudgetToken(assistant, model),
-      ...this.getCustomParameters(assistant),
-      ...this.getGeminiSpecificParameters(assistant) // 添加Gemini专属参数
-    };
-
-    // 为图像生成模型添加必要的配置
-    if (isGenerateImageModel(model)) {
-      generateContentConfig.responseModalities = [Modality.TEXT, Modality.IMAGE];
-      generateContentConfig.responseMimeType = 'text/plain';
-    }
+    // 使用 GeminiConfigBuilder 构建配置
+    const configBuilder = new GeminiConfigBuilder(assistant, model, maxTokens, systemInstruction, tools);
+    const generateContentConfig = configBuilder.build();
 
     // 添加调试日志显示使用的参数
     console.log(`[GeminiProvider] API请求参数:`, {
@@ -704,7 +259,7 @@ export default class GeminiProvider extends BaseProvider {
       systemInstructionLength: typeof generateContentConfig.systemInstruction === 'string'
         ? generateContentConfig.systemInstruction.length
         : 0,
-      geminiSpecificParams: this.getGeminiSpecificParameters(assistant),
+      geminiSpecificParams: 'moved to configBuilder',
       assistantInfo: assistant ? {
         id: assistant.id,
         name: assistant.name,
@@ -756,8 +311,8 @@ export default class GeminiProvider extends BaseProvider {
         const time_completion_millsec = new Date().getTime() - start_time_millsec;
 
         if (stream.text?.length) {
-          onChunk({ type: 'TEXT_DELTA', text: stream.text });
-          onChunk({ type: 'TEXT_COMPLETE', text: stream.text });
+          onChunk({ type: ChunkType.TEXT_DELTA, text: stream.text });
+          onChunk({ type: ChunkType.TEXT_COMPLETE, text: stream.text });
         }
 
         stream.candidates?.forEach((candidate) => {
@@ -769,18 +324,18 @@ export default class GeminiProvider extends BaseProvider {
               }
               const text = part.text || '';
               if (part.thought) {
-                onChunk({ type: 'THINKING_DELTA', text });
-                onChunk({ type: 'THINKING_COMPLETE', text });
+                onChunk({ type: ChunkType.THINKING_DELTA, text });
+                onChunk({ type: ChunkType.THINKING_COMPLETE, text });
               } else if (part.text) {
-                onChunk({ type: 'TEXT_DELTA', text });
-                onChunk({ type: 'TEXT_COMPLETE', text });
+                onChunk({ type: ChunkType.TEXT_DELTA, text });
+                onChunk({ type: ChunkType.TEXT_COMPLETE, text });
               }
             });
           }
         });
 
         onChunk({
-          type: 'BLOCK_COMPLETE',
+          type: ChunkType.BLOCK_COMPLETE,
           response: {
             text: stream.text,
             usage: {
@@ -811,13 +366,7 @@ export default class GeminiProvider extends BaseProvider {
             time_first_token_millsec = new Date().getTime();
           }
 
-          // 处理图像响应（如果是图像生成模型）
-          if (isGenerateImageModel(model)) {
-            const generateImage = this.processGeminiImageResponse(chunk, onChunk);
-            if (generateImage?.images?.length) {
-              onChunk({ type: 'IMAGE_COMPLETE', image: generateImage });
-            }
-          }
+          // 图像生成已在上面的决策逻辑中处理，这里不需要重复处理
 
           if (chunk.candidates?.[0]?.content?.parts && chunk.candidates[0].content.parts.length > 0) {
             const parts = chunk.candidates[0].content.parts;
@@ -830,7 +379,7 @@ export default class GeminiProvider extends BaseProvider {
                   time_first_token_millsec = new Date().getTime();
                 }
                 thinkingContent += part.text;
-                onChunk({ type: 'thinking.delta', text: part.text || '' });
+                onChunk({ type: ChunkType.THINKING_DELTA, text: part.text || '' });
               } else {
                 // 正常内容 - 修复电脑版的bug
                 if (time_first_token_millsec == 0) {
@@ -840,7 +389,7 @@ export default class GeminiProvider extends BaseProvider {
                 //  修复：当遇到正常文本且有思考内容时，发送THINKING_COMPLETE
                 if (thinkingContent) {
                   onChunk({
-                    type: 'thinking.complete',
+                    type: ChunkType.THINKING_COMPLETE,
                     text: thinkingContent,
                     thinking_millsec: new Date().getTime() - time_first_token_millsec
                   });
@@ -848,14 +397,14 @@ export default class GeminiProvider extends BaseProvider {
                 }
 
                 content += part.text;
-                onChunk({ type: 'text.delta', text: part.text });
+                onChunk({ type: ChunkType.TEXT_DELTA, text: part.text });
               }
             }
           }
 
           if (chunk.candidates?.[0]?.finishReason) {
             if (content) {
-              onChunk({ type: 'text.complete', text: content });
+              onChunk({ type: ChunkType.TEXT_COMPLETE, text: content });
             }
             if (chunk.usageMetadata) {
               finalUsage.prompt_tokens += chunk.usageMetadata.promptTokenCount || 0;
@@ -865,7 +414,7 @@ export default class GeminiProvider extends BaseProvider {
             if (chunk.candidates?.[0]?.groundingMetadata) {
               const groundingMetadata = chunk.candidates?.[0]?.groundingMetadata;
               onChunk({
-                type: 'LLM_WEB_SEARCH_COMPLETE',
+                type: ChunkType.LLM_WEB_SEARCH_COMPLETE,
                 llm_web_search: {
                   results: groundingMetadata,
                   source: 'gemini'
@@ -889,7 +438,7 @@ export default class GeminiProvider extends BaseProvider {
         }
 
         onChunk({
-          type: 'BLOCK_COMPLETE',
+          type: ChunkType.BLOCK_COMPLETE,
           response: {
             usage: finalUsage,
             metrics: finalMetrics
@@ -901,7 +450,7 @@ export default class GeminiProvider extends BaseProvider {
     // const start_time_millsec = new Date().getTime();
 
     if (!streamOutput) {
-      onChunk({ type: 'LLM_RESPONSE_CREATED' });
+      onChunk({ type: ChunkType.LLM_RESPONSE_CREATED });
       const response = await withRetry(
         () => chat.sendMessage({
           message: messageContents as PartUnion,
@@ -915,7 +464,7 @@ export default class GeminiProvider extends BaseProvider {
       return await processStream(response, 0).then(cleanup);
     }
 
-    onChunk({ type: 'LLM_RESPONSE_CREATED' });
+    onChunk({ type: ChunkType.LLM_RESPONSE_CREATED });
     const userMessagesStream = await withRetry(
       () => chat.sendMessageStream({
         message: messageContents as PartUnion,
@@ -930,136 +479,9 @@ export default class GeminiProvider extends BaseProvider {
     await processStream(userMessagesStream, 0).finally(cleanup);
   }
 
-  /**
-   * 图像生成方法
-   */
-  public async generateImageByChat({ messages, assistant, onChunk }: {
-    messages: Message[];
-    assistant: any;
-    onChunk: (chunk: any) => void;
-  }): Promise<void> {
-    const model = assistant.model || this.model;
-    const { contextCount, maxTokens } = this.getAssistantSettings(assistant);
 
-    const userMessages = takeRight(messages, contextCount + 2);
-    const userLastMessage = userMessages.pop();
-    const { abortController } = this.createAbortController(userLastMessage?.id, true);
-    const { signal } = abortController;
 
-    const generateContentConfig: GenerateContentConfig = {
-      responseModalities: [Modality.TEXT, Modality.IMAGE],
-      responseMimeType: 'text/plain',
-      safetySettings: this.getSafetySettings(),
-      temperature: this.getTemperature(assistant, model),
-      topP: this.getTopP(assistant, model),
-      maxOutputTokens: maxTokens,
-      abortSignal: signal,
-      ...this.getCustomParameters(assistant)
-    };
 
-    const history: Content[] = [];
-    try {
-      for (const message of userMessages) {
-        history.push(await this.getImageFileContents(message));
-      }
-
-      let time_first_token_millsec = 0;
-      const start_time_millsec = new Date().getTime();
-      onChunk({ type: 'LLM_RESPONSE_CREATED' });
-
-      const chat = this.sdk.chats.create({
-        model: model.id,
-        config: generateContentConfig,
-        history: history
-      });
-
-      let content = '';
-      const finalUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
-      const userMessage: Content = await this.getImageFileContents(userLastMessage!);
-
-      const response = await withRetry(
-        () => chat.sendMessageStream({
-          message: userMessage.parts!,
-          config: {
-            ...generateContentConfig,
-            abortSignal: signal
-          }
-        }),
-        'Gemini Image Generation'
-      );
-
-      for await (const chunk of response as AsyncGenerator<GenerateContentResponse>) {
-        if (time_first_token_millsec == 0) {
-          time_first_token_millsec = new Date().getTime();
-        }
-
-        if (chunk.text !== undefined) {
-          content += chunk.text;
-          onChunk({ type: 'TEXT_DELTA', text: chunk.text });
-        }
-
-        // 处理图像响应
-        const generateImage = this.processGeminiImageResponse(chunk, onChunk);
-        if (generateImage?.images?.length) {
-          onChunk({ type: 'IMAGE_COMPLETE', image: generateImage });
-        }
-
-        if (chunk.candidates?.[0]?.finishReason) {
-          if (content) {
-            onChunk({ type: 'TEXT_COMPLETE', text: content });
-          }
-          if (chunk.usageMetadata) {
-            finalUsage.prompt_tokens = chunk.usageMetadata.promptTokenCount || 0;
-            finalUsage.completion_tokens = chunk.usageMetadata.candidatesTokenCount || 0;
-            finalUsage.total_tokens = chunk.usageMetadata.totalTokenCount || 0;
-          }
-        }
-      }
-
-      onChunk({
-        type: 'BLOCK_COMPLETE',
-        response: {
-          usage: finalUsage,
-          metrics: {
-            completion_tokens: finalUsage.completion_tokens,
-            time_completion_millsec: new Date().getTime() - start_time_millsec,
-            time_first_token_millsec: time_first_token_millsec - start_time_millsec
-          }
-        }
-      });
-    } catch (error) {
-      console.error('[generateImageByChat] error', error);
-      onChunk({ type: 'ERROR', error });
-    }
-  }
-
-  /**
-   * 处理Gemini图像响应
-   */
-  private processGeminiImageResponse(
-    chunk: GenerateContentResponse,
-    onChunk: (chunk: any) => void
-  ): { type: 'base64'; images: string[] } | undefined {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) return;
-
-    const images = parts
-      .filter((part: Part) => part.inlineData)
-      .map((part: Part) => {
-        if (!part.inlineData) return null;
-
-        onChunk({ type: 'IMAGE_CREATED' });
-        const dataPrefix = `data:${part.inlineData.mimeType || 'image/png'};base64,`;
-        return part.inlineData.data?.startsWith('data:')
-          ? part.inlineData.data
-          : dataPrefix + part.inlineData.data;
-      });
-
-    return {
-      type: 'base64',
-      images: images.filter((image) => image !== null)
-    };
-  }
 
   /**
    * 翻译方法
@@ -1082,7 +504,7 @@ export default class GeminiProvider extends BaseProvider {
           model: model.id,
           config: {
             maxOutputTokens: maxTokens,
-            temperature: this.getTemperature(assistant, model),
+            temperature: assistant?.settings?.temperature || assistant?.temperature || model?.temperature || 0.7,
             systemInstruction: isGemmaModel(model) ? undefined : assistant.prompt
           },
           contents: [{ role: 'user', parts: [{ text: _content }] }]
@@ -1097,7 +519,7 @@ export default class GeminiProvider extends BaseProvider {
         model: model.id,
         config: {
           maxOutputTokens: maxTokens,
-          temperature: this.getTemperature(assistant, model),
+          temperature: assistant?.settings?.temperature || assistant?.temperature || model?.temperature || 0.7,
           systemInstruction: isGemmaModel(model) ? undefined : assistant.prompt
         },
         contents: [{ role: 'user', parts: [{ text: content }] }]
@@ -1200,7 +622,6 @@ export default class GeminiProvider extends BaseProvider {
         model: model.id,
         config: {
           systemInstruction: isGemmaModel(model) ? undefined : systemMessage.content,
-          temperature: this.getTemperature(assistant, model),
           httpOptions: { timeout: 20 * 1000 },
           abortSignal: signal
         },
@@ -1226,25 +647,13 @@ export default class GeminiProvider extends BaseProvider {
       return { valid: false, error: new Error('No model found') };
     }
 
-    let config: GenerateContentConfig = { maxOutputTokens: 1 };
-
-    if (isGeminiReasoningModel(model)) {
-      config = {
-        ...config,
-        thinkingConfig: {
-          includeThoughts: false,
-          thinkingBudget: 0
-        } as ThinkingConfig
-      };
-    }
-
-    if (isGenerateImageModel(model)) {
-      config = {
-        ...config,
-        responseModalities: [Modality.TEXT, Modality.IMAGE],
-        responseMimeType: 'text/plain'
-      };
-    }
+    // 使用 GeminiConfigBuilder 构建配置，但设置最小的 maxTokens 用于测试
+    const testAssistant = {
+      enableThinking: false,
+      thinkingBudget: 0
+    };
+    const configBuilder = new GeminiConfigBuilder(testAssistant, model, 1, undefined, []);
+    const config = configBuilder.build();
 
     try {
       if (!stream) {
@@ -1279,36 +688,34 @@ export default class GeminiProvider extends BaseProvider {
     }
   }
 
-  /**
-   * 获取模型列表
-   */
-  public async models(): Promise<OpenAI.Models.Model[]> {
-    try {
-      const api = this.getBaseURL() + '/v1beta/models';
-      const { data } = await axios.get(api, { params: { key: this.model.apiKey } });
 
-      return data.models.map((m: any) => ({
-        id: m.name.replace('models/', ''),
-        name: m.displayName,
-        description: m.description,
-        object: 'model',
-        created: Date.now(),
-        owned_by: 'gemini'
-      }) as OpenAI.Models.Model);
-    } catch (error) {
-      return [];
+
+  /**
+   * 获取文本嵌入
+   */
+  public async getEmbedding(
+    text: string,
+    options?: {
+      taskType?: 'RETRIEVAL_QUERY' | 'RETRIEVAL_DOCUMENT' | 'SEMANTIC_SIMILARITY' | 'CLASSIFICATION' | 'CLUSTERING';
+      title?: string;
     }
+  ): Promise<number[]> {
+    const embeddingService = createGeminiEmbeddingService(this.model);
+    const result = await embeddingService.getEmbedding({
+      text,
+      model: this.model,
+      taskType: options?.taskType,
+      title: options?.title
+    });
+    return result.embedding;
   }
 
   /**
    * 获取嵌入维度
    */
   public async getEmbeddingDimensions(model: Model): Promise<number> {
-    const data = await this.sdk.models.embedContent({
-      model: model.id,
-      contents: [{ role: 'user', parts: [{ text: 'hi' }] }]
-    });
-    return data.embeddings?.[0]?.values?.length || 0;
+    const embeddingService = createGeminiEmbeddingService(model);
+    return embeddingService.getEmbeddingDimensions(model);
   }
 
   /**
@@ -1336,14 +743,11 @@ export default class GeminiProvider extends BaseProvider {
       //  关键修复：使用systemPrompt参数作为prompt
       prompt: options?.systemPrompt || '',
       settings: {
-        temperature: this.model.temperature || 0.7,
-        topP: (this.model as any).topP || 0.95,
-        maxTokens: this.model.maxTokens || 2048,
         streamOutput: true
       },
       enableWebSearch: options?.enableWebSearch || false,
-      // 对于图像生成模型，默认启用图像生成
-      enableGenerateImage: isGenerateImageModel(this.model)
+      // 图像生成功能由上层决策处理
+      enableGenerateImage: false
     };
 
     //  修复：如果有传入的assistant但没有prompt，使用systemPrompt
@@ -1359,53 +763,80 @@ export default class GeminiProvider extends BaseProvider {
       assistantPromptLength: assistant.prompt?.length || 0
     });
 
-    let result = '';
+    // 按照电脑版的方式：直接使用 SDK 的流式响应
+    let content = '';
     let reasoning = '';
     let reasoningTime = 0;
-    const mcpTools = options?.mcpTools || [];
 
-    await this.completions({
-      messages,
-      assistant,
-      mcpTools,
-      onChunk: (chunk: any) => {
-        // 支持新的chunk类型格式
-        if (chunk.type === 'text.delta' && chunk.text) {
-          result += chunk.text;
-          // 传递增量文本，让前端自己累积
-          options?.onUpdate?.(chunk.text, reasoning);
-        } else if (chunk.type === 'thinking.delta' && chunk.text) {
-          reasoning += chunk.text;
-          // 对于思考内容，传递累积的思考内容
-          options?.onUpdate?.(result, reasoning);
-        } else if (chunk.type === 'thinking.complete') {
-          reasoningTime = chunk.thinking_millsec || 0;
-        }
+    // 转换消息格式 - 使用现有的方法
+    const messageContentService = createGeminiMessageContentService(this.model);
+    const userLastMessage = messages[messages.length - 1];
+    const messageContents = await messageContentService.getMessageContents(userLastMessage);
 
-        // 直接传递chunk给onChunk回调
-        options?.onChunk?.(chunk);
-      },
-      onFilterMessages: () => {}
+    // 构建配置 - 使用现有的方法
+    const configBuilder = new GeminiConfigBuilder(assistant, this.model, 4096, assistant.prompt, []);
+    const config = configBuilder.build();
+
+    // 直接使用 SDK 的流式响应，按照电脑版的方式
+    const response = await this.sdk.models.generateContentStream({
+      model: this.model.id,
+      contents: [messageContents],
+      config
     });
 
-    if (reasoning) {
-      return { content: result, reasoning, reasoningTime };
+    // 按照电脑版的方式处理流式响应
+    for await (const chunk of response) {
+      if (chunk.candidates?.[0]?.content?.parts) {
+        const parts = chunk.candidates[0].content.parts;
+        for (const part of parts) {
+          if (part.text) {
+            if (part.thought) {
+              // 思考内容
+              reasoning += part.text;
+              // 如果有 onChunk，发送 THINKING_DELTA
+              options?.onChunk?.({ type: ChunkType.THINKING_DELTA, text: part.text });
+              // 兼容 onUpdate
+              options?.onUpdate?.(content, reasoning);
+            } else {
+              // 正常文本内容
+              content += part.text;
+              // 如果有 onChunk，发送 TEXT_DELTA
+              options?.onChunk?.({ type: ChunkType.TEXT_DELTA, text: part.text });
+              // 兼容 onUpdate
+              options?.onUpdate?.(content, reasoning);
+            }
+          }
+        }
+      }
+
+      // 处理完成状态
+      if (chunk.candidates?.[0]?.finishReason) {
+        // 在完成时发送 THINKING_COMPLETE 和 TEXT_COMPLETE
+        if (reasoning) {
+          options?.onChunk?.({ type: ChunkType.THINKING_COMPLETE, text: reasoning });
+        }
+        if (content) {
+          options?.onChunk?.({ type: ChunkType.TEXT_COMPLETE, text: content });
+        }
+        break;
+      }
     }
-    return result;
+
+    return { content, reasoning, reasoningTime };
   }
 
   /**
    * 兼容性方法：testConnection
    */
   public async testConnection(): Promise<boolean> {
-    return (await this.check(this.model)).valid;
+    return testConnection(this.model);
   }
 
   /**
    * 兼容性方法：getModels
    */
   public async getModels(): Promise<any[]> {
-    return this.models();
+    return fetchModels(this.model);
   }
 }
 

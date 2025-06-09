@@ -10,7 +10,7 @@ import {
   IconButton,
   FormHelperText,
 } from '@mui/material';
-import { Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from '@mui/icons-material';
+import { Eye as VisibilityIcon, EyeOff as VisibilityOffIcon } from 'lucide-react';
 
 // 硅基流动TTS配置接口
 export interface SiliconFlowTTSSettings {

@@ -1,6 +1,9 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { getStorageItem } from '../shared/utils/storage';
+import { useSelector } from 'react-redux'; // 导入 useSelector
+import type { RootState } from '../shared/store'; // 导入 RootState 类型
+import { statusBarService } from '../shared/services/StatusBarService'; // 导入 statusBarService
 // 使用懒加载导入组件
 const ChatPage = lazy(() => import('../pages/ChatPage'));
 const WelcomePage = lazy(() => import('../pages/WelcomePage'));
@@ -58,6 +61,8 @@ const LoadingFallback = () => (
 // 路由提供者组件
 const AppRouter: React.FC = () => {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean | null>(null);
+  const theme = useSelector((state: RootState) => state.settings.theme);
+  const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
 
   useEffect(() => {
     async function checkFirstTimeUser() {
@@ -72,6 +77,25 @@ const AppRouter: React.FC = () => {
 
     checkFirstTimeUser();
   }, []);
+
+  // 监听主题变化并初始化状态栏
+  useEffect(() => {
+    const currentTheme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
+    statusBarService.initialize(currentTheme, themeStyle);
+
+    // 监听系统主题变化
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      if (theme === 'system') {
+        statusBarService.updateTheme(e.matches ? 'dark' : 'light', themeStyle);
+      }
+    };
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    };
+  }, [theme, themeStyle]); // 依赖项包括 theme 和 themeStyle
 
   if (isFirstTimeUser === null) {
     // 显示加载状态

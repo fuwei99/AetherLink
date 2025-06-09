@@ -14,11 +14,7 @@ import {
   AccordionSummary,
   AccordionDetails
 } from '@mui/material';
-import {
-  ExpandMore as ExpandMoreIcon,
-  Cloud as CloudIcon,
-  Help as HelpIcon
-} from '@mui/icons-material';
+import { ChevronDown, Cloud, HelpCircle } from 'lucide-react';
 import type { WebDavConfig } from '../../../../../shared/types';
 import { WebDavBackupService } from '../../../../../shared/services/WebDavBackupService';
 import { validateWebDavConfig } from '../../../../../shared/utils/webdavUtils';
@@ -142,7 +138,7 @@ const WebDavConfigDialog: React.FC<WebDavConfigDialogProps> = ({
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <CloudIcon sx={{ mr: 1 }} />
+          <Cloud style={{ marginRight: 8 }} size={20} />
           WebDAV 服务器配置
         </Box>
       </DialogTitle>
@@ -215,9 +211,9 @@ const WebDavConfigDialog: React.FC<WebDavConfigDialogProps> = ({
         </Box>
 
         <Accordion sx={{ mt: 3 }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <AccordionSummary expandIcon={<ChevronDown size={18} />}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <HelpIcon sx={{ mr: 1, fontSize: 20 }} />
+              <HelpCircle style={{ marginRight: 8 }} size={20} />
               <Typography variant="subtitle2">配置说明</Typography>
             </Box>
           </AccordionSummary>

@@ -1,4 +1,5 @@
 import type { MCPTool, MCPToolResponse, MCPCallToolResponse } from '../types';
+import { ChunkType } from '../types/chunk';
 import { mcpService } from '../services/MCPService';
 import { nanoid } from './index';
 
@@ -267,7 +268,7 @@ export async function parseAndCallTools(
   // 发送工具调用开始事件
   if (onChunk && currentToolResponses.length > 0) {
     onChunk({
-      type: 'mcp_tool_in_progress',
+      type: ChunkType.MCP_TOOL_IN_PROGRESS,
       responses: currentToolResponses.map(tr => ({ ...tr, status: 'invoking' as const }))
     });
   }
@@ -338,7 +339,7 @@ export async function parseAndCallTools(
     }));
 
     onChunk({
-      type: 'mcp_tool_complete',
+      type: ChunkType.MCP_TOOL_COMPLETE,
       responses: completedResponses
     });
   }

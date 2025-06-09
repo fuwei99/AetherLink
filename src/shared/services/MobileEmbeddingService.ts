@@ -8,6 +8,7 @@ import { isEmbeddingModel } from '../config/models';
 import { getEmbeddingDimensions } from '../config/embeddingModels';
 import { universalFetch } from '../utils/universalFetch';
 import store from '../store';
+import { createGeminiEmbeddingService } from '../api/gemini/embeddingService';
 
 /**
  * 获取模型的维度
@@ -16,6 +17,14 @@ import store from '../store';
  */
 export function getModelDimensions(modelId: string): number {
   return getEmbeddingDimensions(modelId);
+}
+
+/**
+ * 检查是否为 Gemini 嵌入模型
+ */
+function isGeminiEmbeddingModel(model: Model): boolean {
+  // 只根据用户选择的供应商来判断，不根据模型名字
+  return model.provider === 'gemini';
 }
 
 /**
@@ -77,7 +86,18 @@ export class MobileEmbeddingService {
    */
   public async getEmbeddingDimensions(modelId: string): Promise<number> {
     try {
-      // 使用测试文本获取真实维度
+      const model = this.getModelById(modelId);
+      if (!model) {
+        throw new Error(`未找到嵌入模型: ${modelId}`);
+      }
+
+      // 如果是 Gemini 模型，使用专门的 Gemini 嵌入服务
+      if (isGeminiEmbeddingModel(model)) {
+        const geminiService = createGeminiEmbeddingService(model);
+        return await geminiService.getEmbeddingDimensions(model);
+      }
+
+      // 其他模型使用测试文本获取真实维度
       const testVector = await this.getEmbedding('test', modelId);
       return testVector.length;
     } catch (error) {
@@ -110,6 +130,29 @@ export class MobileEmbeddingService {
       const model = this.getModelById(modelId);
       if (!model) {
         throw new Error(`未找到嵌入模型: ${modelId}`);
+      }
+
+      // 如果用户选择的是 Gemini 供应商，使用专门的 Gemini 嵌入服务
+      if (isGeminiEmbeddingModel(model)) {
+        const geminiService = createGeminiEmbeddingService(model);
+        const result = await geminiService.getEmbedding({
+          text,
+          model,
+          taskType: 'SEMANTIC_SIMILARITY'
+        });
+
+        // 缓存结果
+        this.embeddingCache.set(cacheKey, result.embedding);
+
+        // 限制缓存大小
+        if (this.embeddingCache.size > 100) {
+          const oldestKey = this.embeddingCache.keys().next().value;
+          if (oldestKey) {
+            this.embeddingCache.delete(oldestKey);
+          }
+        }
+
+        return result.embedding;
       }
 
       if (!model.apiKey) {

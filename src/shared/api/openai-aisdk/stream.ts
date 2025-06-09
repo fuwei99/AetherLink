@@ -6,6 +6,7 @@ import { streamText } from 'ai';
 import { logApiRequest } from '../../services/LoggerService';
 import { EventEmitter, EVENT_NAMES } from '../../services/EventEmitter';
 import { hasToolUseTags } from '../../utils/mcpToolParser';
+import { ChunkType } from '../../types/chunk';
 import { getAppropriateTag } from '../../config/reasoningTags';
 import type { Model } from '../../types';
 
@@ -26,7 +27,7 @@ export async function streamCompletionAISDK(
   onChunk?: (chunk: any) => void
 ): Promise<string> {
   console.log('[AI SDK streamCompletion] 开始流式响应...');
-  
+
   try {
     // 获取中断信号
     const signal = additionalParams?.signal;
@@ -37,16 +38,16 @@ export async function streamCompletionAISDK(
     // 获取模型信息和推理标签
     const model = additionalParams?.model || { id: modelId, provider: 'openai-aisdk' } as Model;
     const reasoningTag = getAppropriateTag(model);
-    
+
     console.log(`[AI SDK streamCompletion] 模型: ${modelId}, 温度: ${temperature}, 最大令牌: ${maxTokens}`);
     console.log(`[AI SDK streamCompletion] 推理模式: ${enableReasoning ? '启用' : '禁用'}, 标签: ${reasoningTag}`);
-    
+
     // 准备消息
     const processedMessages = messages.map(msg => ({
       role: msg.role,
       content: msg.content
     }));
-    
+
     // 记录API请求
     logApiRequest('OpenAI AI SDK Chat Completions Stream', 'INFO', {
       provider: 'openai-aisdk',
@@ -56,7 +57,7 @@ export async function streamCompletionAISDK(
       maxTokens,
       timestamp: Date.now()
     });
-    
+
     // 使用AI SDK创建流式文本生成
     const result = await streamText({
       model: aiSdkClient(modelId),
@@ -65,9 +66,9 @@ export async function streamCompletionAISDK(
       maxTokens: maxTokens || 2000,
       abortSignal: signal
     });
-    
+
     console.log('[AI SDK streamCompletion] 流式响应已创建，开始处理数据...');
-    
+
     let fullContent = '';
     let fullReasoning = '';
     let contentBuffer = ''; // 缓冲区，用于处理跨chunk的标签
@@ -166,7 +167,7 @@ export async function streamCompletionAISDK(
                 // 发送思考内容片段事件
                 if (onChunk) {
                   onChunk({
-                    type: 'thinking.delta',
+                    type: ChunkType.THINKING_DELTA,
                     text: safeThinkContent,
                     thinking_millsec: Date.now() - reasoningStartTime
                   });
@@ -203,9 +204,9 @@ export async function streamCompletionAISDK(
         }
       }
     }
-    
+
     console.log(`[AI SDK streamCompletion] 流式响应完成，总长度: ${fullContent.length}`);
-    
+
     // 发送完成事件
     EventEmitter.emit(EVENT_NAMES.STREAM_COMPLETE, {
       provider: 'openai-aisdk',
@@ -214,7 +215,7 @@ export async function streamCompletionAISDK(
       reasoning: fullReasoning,
       timestamp: Date.now()
     });
-    
+
     // 检查是否包含工具使用标签
     if (hasToolUseTags(fullContent)) {
       console.log('[AI SDK streamCompletion] 检测到工具使用标签');
@@ -223,12 +224,12 @@ export async function streamCompletionAISDK(
         model: modelId
       });
     }
-    
+
     return fullContent;
-    
+
   } catch (error: any) {
     console.error('[AI SDK streamCompletion] 流式响应失败:', error);
-    
+
     // 发送错误事件
     EventEmitter.emit(EVENT_NAMES.STREAM_ERROR, {
       provider: 'openai-aisdk',
@@ -236,7 +237,7 @@ export async function streamCompletionAISDK(
       error: error.message,
       timestamp: Date.now()
     });
-    
+
     throw error;
   }
 }

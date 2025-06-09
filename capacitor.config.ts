@@ -52,7 +52,7 @@ const config: CapacitorConfig = {
       iosSplashResourceName: 'Splash' // iOS启动画面资源
     },
     EdgeToEdge: {
-      backgroundColor: '#ffffff' // 默认背景色，将由StatusBarService动态更新
+      backgroundColor: '#ffffff' // 【Android 15 底部导航栏默认背景颜色】：白色，运行时由StatusBarService动态更新
     }
   }
 };

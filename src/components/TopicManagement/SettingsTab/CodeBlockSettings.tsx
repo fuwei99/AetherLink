@@ -5,17 +5,16 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Switch,
   FormControl,
   Select,
   MenuItem,
   Typography,
-  Divider,
   Collapse,
   IconButton,
   ListSubheader
 } from '@mui/material';
-import { Code, ChevronDown, ChevronUp, Edit, Palette } from 'lucide-react';
+import CustomSwitch from '../../CustomSwitch'; // 导入 CustomSwitch 组件
+import { ChevronDown, ChevronUp, Edit, Palette } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../../shared/store';
 import {
   setCodeStyle,
@@ -101,33 +100,57 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
 
   return (
     <>
-      <Divider sx={{ my: 1 }} />
-
       {/* 代码块设置标题 */}
       <ListItem
         component="div"
         onClick={() => setExpanded(!expanded)}
         sx={{
           px: 2,
-          py: 1.5,
+          py: 0.5,
           cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
+          position: 'relative',
+          zIndex: 1,
+          // 优化触摸响应
+          touchAction: 'manipulation',
+          userSelect: 'none',
+          // 移动端优化
+          '@media (hover: none)': {
+            '&:active': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              transform: 'scale(0.98)',
+              transition: 'all 0.1s ease-out'
+            }
+          },
+          // 桌面端优化
+          '@media (hover: hover)': {
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+              transform: 'none !important',
+              boxShadow: 'none !important'
+            },
+            '&:focus': {
+              backgroundColor: 'transparent !important'
+            },
+            '&:active': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+            }
+          },
+          '& *': {
+            pointerEvents: 'none', // 防止子元素干扰点击
+            '&:hover': {
+              backgroundColor: 'transparent !important',
+              transform: 'none !important'
+            }
+          }
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          <Code size={20} color="#1976d2" style={{ marginRight: 12 }} />
-          <Box>
-            <Typography variant="body2" fontWeight="medium">
-              代码块设置
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              配置代码显示和编辑功能
-            </Typography>
-          </Box>
-        </Box>
-        <IconButton size="small" sx={{ padding: '4px', ml: '4px' }}>
+        <ListItemText
+          primary="代码块设置"
+          secondary="配置代码显示和编辑功能"
+          primaryTypographyProps={{ fontWeight: 'medium', fontSize: '0.95rem', lineHeight: 1.2 }}
+          secondaryTypographyProps={{ fontSize: '0.75rem', lineHeight: 1.2 }}
+        />
+        <IconButton edge="end" size="small" sx={{ padding: '2px' }}>
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </IconButton>
       </ListItem>
@@ -261,11 +284,9 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
               primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
               secondaryTypographyProps={{ variant: 'caption' }}
             />
-            <Switch
+            <CustomSwitch
               checked={codeEditor}
               onChange={(e) => dispatch(setCodeEditor(e.target.checked))}
-              color="primary"
-              size="small"
             />
           </ListItem>
 
@@ -278,11 +299,9 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
               secondaryTypographyProps={{ variant: 'caption' }}
               sx={{ pl: 4.5 }}
             />
-            <Switch
+            <CustomSwitch
               checked={codeShowLineNumbers}
               onChange={(e) => dispatch(setCodeShowLineNumbers(e.target.checked))}
-              color="primary"
-              size="small"
             />
           </ListItem>
 
@@ -295,11 +314,9 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
               secondaryTypographyProps={{ variant: 'caption' }}
               sx={{ pl: 4.5 }}
             />
-            <Switch
+            <CustomSwitch
               checked={codeCollapsible}
               onChange={(e) => dispatch(setCodeCollapsible(e.target.checked))}
-              color="primary"
-              size="small"
             />
           </ListItem>
 
@@ -312,11 +329,9 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
               secondaryTypographyProps={{ variant: 'caption' }}
               sx={{ pl: 4.5 }}
             />
-            <Switch
+            <CustomSwitch
               checked={codeWrappable}
               onChange={(e) => dispatch(setCodeWrappable(e.target.checked))}
-              color="primary"
-              size="small"
             />
           </ListItem>
 
@@ -329,11 +344,9 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
               secondaryTypographyProps={{ variant: 'caption' }}
               sx={{ pl: 4.5 }}
             />
-            <Switch
+            <CustomSwitch
               checked={codeDefaultCollapsed}
               onChange={(e) => dispatch(setCodeDefaultCollapsed(e.target.checked))}
-              color="primary"
-              size="small"
             />
           </ListItem>
 

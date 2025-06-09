@@ -20,11 +20,11 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  MenuBook as MenuBookIcon,
+  BookOpen as MenuBookIcon,
   Search as SearchIcon,
-  Description as DocumentIcon,
-  Close as CloseIcon,
-} from '@mui/icons-material';
+  FileText as DocumentIcon,
+  X as CloseIcon,
+} from 'lucide-react';
 import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeService';
 import { dexieStorage } from '../../shared/services/DexieStorageService';
 
@@ -288,7 +288,7 @@ const KnowledgeSelector: React.FC<KnowledgeSelectorProps> = ({
                 {searchResults.map((result, index) => (
                   <ListItem key={index} sx={{ py: 1 }}>
                     <ListItemIcon>
-                      <DocumentIcon fontSize="small" />
+                      <DocumentIcon size={16} />
                     </ListItemIcon>
                     <ListItemText
                       primary={

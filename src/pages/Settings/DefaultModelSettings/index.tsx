@@ -15,7 +15,7 @@ import {
   TextField,
   Button
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../../shared/store';
@@ -123,7 +123,7 @@ const DefaultModelSettingsPage: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
           <Typography
             variant="h6"

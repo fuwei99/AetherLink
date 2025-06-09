@@ -1,8 +1,6 @@
 import React from 'react';
 import { Box, CircularProgress, Typography, Paper, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
+import { X as CloseIcon, CheckCircle as CheckCircleIcon, AlertCircle as ErrorIcon } from 'lucide-react';
 
 export type ScraperStatus = 'parsing' | 'success' | 'error' | 'idle';
 
@@ -13,11 +11,11 @@ interface UrlScraperStatusProps {
   onClose: () => void;
 }
 
-const UrlScraperStatus: React.FC<UrlScraperStatusProps> = ({ 
-  status, 
-  url, 
+const UrlScraperStatus: React.FC<UrlScraperStatusProps> = ({
+  status,
+  url,
   error,
-  onClose 
+  onClose
 }) => {
   // 根据不同状态显示不同的组件
   const renderStatusContent = () => {
@@ -34,7 +32,7 @@ const UrlScraperStatus: React.FC<UrlScraperStatusProps> = ({
       case 'success':
         return (
           <>
-            <CheckCircleIcon color="success" sx={{ mr: 1 }} />
+            <CheckCircleIcon color="green" style={{ marginRight: 8 }} />
             <Typography variant="body2">
               网页内容已解析，发送以将其添加到您的消息
             </Typography>
@@ -43,7 +41,7 @@ const UrlScraperStatus: React.FC<UrlScraperStatusProps> = ({
       case 'error':
         return (
           <>
-            <ErrorIcon color="error" sx={{ mr: 1 }} />
+            <ErrorIcon color="red" style={{ marginRight: 8 }} />
             <Typography variant="body2" color="error">
               {error || '网页解析失败'}
             </Typography>
@@ -88,4 +86,4 @@ const UrlScraperStatus: React.FC<UrlScraperStatusProps> = ({
   );
 };
 
-export default UrlScraperStatus; 
+export default UrlScraperStatus;

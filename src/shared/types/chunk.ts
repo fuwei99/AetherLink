@@ -20,41 +20,38 @@ interface ResponseError {
   type?: string;
 }
 
-// 定义数据块类型常量
-export const ChunkTypeValues = {
-  BLOCK_CREATED: 'block_created',
-  BLOCK_IN_PROGRESS: 'block_in_progress',
-  EXTERNEL_TOOL_IN_PROGRESS: 'externel_tool_in_progress',
-  WEB_SEARCH_IN_PROGRESS: 'web_search_in_progress',
-  WEB_SEARCH_COMPLETE: 'web_search_complete',
-  KNOWLEDGE_SEARCH_IN_PROGRESS: 'knowledge_search_in_progress',
-  KNOWLEDGE_SEARCH_COMPLETE: 'knowledge_search_complete',
-  MCP_TOOL_IN_PROGRESS: 'mcp_tool_in_progress',
-  MCP_TOOL_COMPLETE: 'mcp_tool_complete',
-  EXTERNEL_TOOL_COMPLETE: 'externel_tool_complete',
-  LLM_RESPONSE_CREATED: 'llm_response_created',
-  LLM_RESPONSE_IN_PROGRESS: 'llm_response_in_progress',
-  TEXT_DELTA: 'text.delta',
-  TEXT_COMPLETE: 'text.complete',
-  AUDIO_DELTA: 'audio.delta',
-  AUDIO_COMPLETE: 'audio.complete',
-  IMAGE_CREATED: 'image.created',
-  IMAGE_DELTA: 'image.delta',
-  IMAGE_COMPLETE: 'image.complete',
-  THINKING_DELTA: 'thinking.delta',
-  THINKING_COMPLETE: 'thinking.complete',
-  LLM_WEB_SEARCH_IN_PROGRESS: 'llm_websearch_in_progress',
-  LLM_WEB_SEARCH_COMPLETE: 'llm_websearch_complete',
-  LLM_RESPONSE_COMPLETE: 'llm_response_complete',
-  BLOCK_COMPLETE: 'block_complete',
-  ERROR: 'error',
-  SEARCH_IN_PROGRESS_UNION: 'search_in_progress_union',
-  SEARCH_COMPLETE_UNION: 'search_complete_union',
-  UNKNOWN: 'unknown'
-} as const;
-
-// 定义ChunkType类型
-export type ChunkType = typeof ChunkTypeValues[keyof typeof ChunkTypeValues];
+// 统一的数据块类型枚举
+export enum ChunkType {
+  BLOCK_CREATED = 'block_created',
+  BLOCK_IN_PROGRESS = 'block_in_progress',
+  EXTERNEL_TOOL_IN_PROGRESS = 'externel_tool_in_progress',
+  WEB_SEARCH_IN_PROGRESS = 'web_search_in_progress',
+  WEB_SEARCH_COMPLETE = 'web_search_complete',
+  KNOWLEDGE_SEARCH_IN_PROGRESS = 'knowledge_search_in_progress',
+  KNOWLEDGE_SEARCH_COMPLETE = 'knowledge_search_complete',
+  MCP_TOOL_IN_PROGRESS = 'mcp_tool_in_progress',
+  MCP_TOOL_COMPLETE = 'mcp_tool_complete',
+  EXTERNEL_TOOL_COMPLETE = 'externel_tool_complete',
+  LLM_RESPONSE_CREATED = 'llm_response_created',
+  LLM_RESPONSE_IN_PROGRESS = 'llm_response_in_progress',
+  TEXT_DELTA = 'text.delta',
+  TEXT_COMPLETE = 'text.complete',
+  AUDIO_DELTA = 'audio.delta',
+  AUDIO_COMPLETE = 'audio.complete',
+  IMAGE_CREATED = 'image.created',
+  IMAGE_DELTA = 'image.delta',
+  IMAGE_COMPLETE = 'image.complete',
+  THINKING_DELTA = 'thinking.delta',
+  THINKING_COMPLETE = 'thinking.complete',
+  LLM_WEB_SEARCH_IN_PROGRESS = 'llm_websearch_in_progress',
+  LLM_WEB_SEARCH_COMPLETE = 'llm_websearch_complete',
+  LLM_RESPONSE_COMPLETE = 'llm_response_complete',
+  BLOCK_COMPLETE = 'block_complete',
+  ERROR = 'error',
+  SEARCH_IN_PROGRESS_UNION = 'search_in_progress_union',
+  SEARCH_COMPLETE_UNION = 'search_complete_union',
+  UNKNOWN = 'unknown'
+}
 
 export interface LLMResponseCreatedChunk {
   /**
@@ -65,7 +62,7 @@ export interface LLMResponseCreatedChunk {
   /**
    * 数据块类型
    */
-  type: 'llm_response_created'
+  type: ChunkType.LLM_RESPONSE_CREATED
 }
 
 export interface LLMResponseInProgressChunk {
@@ -73,7 +70,7 @@ export interface LLMResponseInProgressChunk {
    * 数据块类型
    */
   response?: Response
-  type: 'llm_response_in_progress'
+  type: ChunkType.LLM_RESPONSE_IN_PROGRESS
 }
 
 export interface TextDeltaChunk {
@@ -110,7 +107,7 @@ export interface TextDeltaChunk {
   /**
    * 数据块类型
    */
-  type: 'text.delta'
+  type: ChunkType.TEXT_DELTA
 }
 
 export interface TextCompleteChunk {
@@ -127,7 +124,7 @@ export interface TextCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'text.complete'
+  type: ChunkType.TEXT_COMPLETE
 }
 
 export interface AudioDeltaChunk {
@@ -139,21 +136,21 @@ export interface AudioDeltaChunk {
   /**
    * 数据块类型
    */
-  type: 'audio.delta'
+  type: ChunkType.AUDIO_DELTA
 }
 
 export interface AudioCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'audio.complete'
+  type: ChunkType.AUDIO_COMPLETE
 }
 
 export interface ImageCreatedChunk {
   /**
    * 数据块类型
    */
-  type: 'image.created'
+  type: ChunkType.IMAGE_CREATED
 }
 
 export interface ImageDeltaChunk {
@@ -165,14 +162,14 @@ export interface ImageDeltaChunk {
   /**
    * 数据块类型
    */
-  type: 'image.delta'
+  type: ChunkType.IMAGE_DELTA
 }
 
 export interface ImageCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'image.complete'
+  type: ChunkType.IMAGE_COMPLETE
 
   /**
    * 图片内容
@@ -194,7 +191,7 @@ export interface ThinkingDeltaChunk {
   /**
    * 数据块类型
    */
-  type: 'thinking.delta'
+  type: ChunkType.THINKING_DELTA
 }
 
 export interface ThinkingCompleteChunk {
@@ -211,14 +208,14 @@ export interface ThinkingCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'thinking.complete'
+  type: ChunkType.THINKING_COMPLETE
 }
 
 export interface WebSearchInProgressChunk {
   /**
    * 数据块类型
    */
-  type: 'web_search_in_progress'
+  type: ChunkType.WEB_SEARCH_IN_PROGRESS
 }
 
 export interface WebSearchCompleteChunk {
@@ -235,14 +232,14 @@ export interface WebSearchCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'web_search_complete'
+  type: ChunkType.WEB_SEARCH_COMPLETE
 }
 
 export interface LLMWebSearchInProgressChunk {
   /**
    * 数据块类型
    */
-  type: 'llm_websearch_in_progress'
+  type: ChunkType.LLM_WEB_SEARCH_IN_PROGRESS
 }
 
 export interface LLMWebSearchCompleteChunk {
@@ -254,14 +251,14 @@ export interface LLMWebSearchCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'llm_websearch_complete'
+  type: ChunkType.LLM_WEB_SEARCH_COMPLETE
 }
 
 export interface ExternalToolInProgressChunk {
   /**
    * 数据块类型
    */
-  type: 'externel_tool_in_progress'
+  type: ChunkType.EXTERNEL_TOOL_IN_PROGRESS
 }
 
 export interface ExternalToolCompleteChunk {
@@ -272,7 +269,7 @@ export interface ExternalToolCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'externel_tool_complete'
+  type: ChunkType.EXTERNEL_TOOL_COMPLETE
 }
 
 export interface LLMResponseCompleteChunk {
@@ -284,27 +281,27 @@ export interface LLMResponseCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'llm_response_complete'
+  type: ChunkType.LLM_RESPONSE_COMPLETE
 }
 
 export interface ErrorChunk {
   error: ResponseError
 
-  type: 'error'
+  type: ChunkType.ERROR
 }
 
 export interface BlockCreatedChunk {
   /**
    * 数据块类型
    */
-  type: 'block_created'
+  type: ChunkType.BLOCK_CREATED
 }
 
 export interface BlockInProgressChunk {
   /**
    * 数据块类型
    */
-  type: 'block_in_progress'
+  type: ChunkType.BLOCK_IN_PROGRESS
 
   /**
    * 响应对象
@@ -321,7 +318,7 @@ export interface BlockCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'block_complete'
+  type: ChunkType.BLOCK_COMPLETE
 
   /**
    * 错误信息
@@ -333,7 +330,7 @@ export interface MCPToolInProgressChunk {
   /**
    * 数据块类型
    */
-  type: 'mcp_tool_in_progress'
+  type: ChunkType.MCP_TOOL_IN_PROGRESS
 
   /**
    * 工具响应列表
@@ -345,7 +342,7 @@ export interface MCPToolCompleteChunk {
   /**
    * 数据块类型
    */
-  type: 'mcp_tool_complete'
+  type: ChunkType.MCP_TOOL_COMPLETE
 
   /**
    * 工具响应列表

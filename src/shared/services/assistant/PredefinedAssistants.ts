@@ -1,9 +1,11 @@
 import React from 'react';
-import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import CodeIcon from '@mui/icons-material/Code';
-import TranslateIcon from '@mui/icons-material/Translate';
-import EditNoteIcon from '@mui/icons-material/EditNote';
+import {
+  Smile,
+  Sparkles,
+  Code,
+  Languages,
+  Edit
+} from 'lucide-react';
 
 import {
   DEFAULT_ASSISTANT_PROMPT,
@@ -23,7 +25,7 @@ export const baseAssistants: Assistant[] = [
     id: 'default',
     name: '默认助手',
     description: '通用型AI助手，可以回答各种问题',
-    icon: React.createElement(EmojiEmotionsIcon, { sx: { color: '#FFD700' } }),
+    icon: React.createElement(Smile, { size: 20, color: '#FFD700' }),
     emoji: '😀',
     isSystem: true,
     topicIds: [],
@@ -35,7 +37,7 @@ export const baseAssistants: Assistant[] = [
     id: 'web-analysis',
     name: '网页分析助手',
     description: '帮助分析各种网页内容',
-    icon: React.createElement(AutoAwesomeIcon, { sx: { color: '#1E90FF' } }),
+    icon: React.createElement(Sparkles, { size: 20, color: '#1E90FF' }),
     emoji: '🌐',
     isSystem: true,
     topicIds: [],
@@ -47,7 +49,7 @@ export const baseAssistants: Assistant[] = [
     id: 'code-assistant',
     name: '编程助手',
     description: '专业的编程助手，能够解答各种编程问题并提供代码示例',
-    icon: React.createElement(CodeIcon, { sx: { color: '#4CAF50' } }),
+    icon: React.createElement(Code, { size: 20, color: '#4CAF50' }),
     emoji: '💻',
     isSystem: true,
     topicIds: [],
@@ -59,7 +61,7 @@ export const baseAssistants: Assistant[] = [
     id: 'translate-assistant',
     name: '翻译助手',
     description: '专业的翻译助手，可以在不同语言之间进行准确的翻译',
-    icon: React.createElement(TranslateIcon, { sx: { color: '#9C27B0' } }),
+    icon: React.createElement(Languages, { size: 20, color: '#9C27B0' }),
     emoji: '🌍',
     isSystem: true,
     topicIds: [],
@@ -71,7 +73,7 @@ export const baseAssistants: Assistant[] = [
     id: 'writing-assistant',
     name: '写作助手',
     description: '专业的写作助手，可以帮助改进文章、报告和其他文本内容',
-    icon: React.createElement(EditNoteIcon, { sx: { color: '#FF5722' } }),
+    icon: React.createElement(Edit, { size: 20, color: '#FF5722' }),
     emoji: '✍️',
     isSystem: true,
     topicIds: [],

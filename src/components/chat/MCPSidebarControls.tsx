@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Switch,
   FormControlLabel,
   Divider,
   List,
@@ -24,8 +23,9 @@ import {
   Collapse,
   IconButton
 } from '@mui/material';
+import CustomSwitch from '../CustomSwitch'; // 导入 CustomSwitch 组件
 import {
-  Wrench, ChevronDown, ChevronUp, Settings, Database, Globe, Brain, Code
+  ChevronDown, ChevronUp, Settings, Database, Globe, Brain, Code
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { MCPServer, MCPServerType } from '../../shared/types';
@@ -35,7 +35,6 @@ import {
   createOptimizedClickHandler,
   createOptimizedSwitchHandler,
   listItemOptimization,
-  switchOptimization
 } from '../TopicManagement/SettingsTab/scrollOptimization';
 
 interface MCPSidebarControlsProps {
@@ -155,7 +154,6 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
           }
         }}
       >
-        <Wrench size={20} color="#1976d2" style={{ marginRight: 12 }} />
         <ListItemText
           primary="MCP 工具"
           secondary={
@@ -163,14 +161,8 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
               ? `${activeServers.length} 个服务器运行中 | 模式: ${mcpMode === 'function' ? '函数调用' : '提示词注入'}`
               : `模式: ${mcpMode === 'function' ? '函数调用' : '提示词注入'}`
           }
-          primaryTypographyProps={{
-            fontWeight: 'medium',
-            sx: { mt: 1, mb: 0.25 }
-          }}
-          secondaryTypographyProps={{
-            fontSize: '0.75rem',
-            sx: { mt: 0.5, mb: 0.5 }
-          }}
+          primaryTypographyProps={{ fontWeight: 'medium', fontSize: '0.95rem', lineHeight: 1.2 }}
+          secondaryTypographyProps={{ fontSize: '0.75rem', lineHeight: 1.2 }}
         />
         <ListItemSecondaryAction sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {hasActiveServers && (
@@ -182,7 +174,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
               sx={{ mr: 1 }}
             />
           )}
-          <IconButton edge="end" size="small" sx={{ padding: '4px' }}>
+          <IconButton edge="end" size="small" sx={{ padding: '2px' }}>
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </IconButton>
         </ListItemSecondaryAction>
@@ -201,10 +193,9 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
           <Box sx={{ mb: 2 }}>
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={toolsEnabled}
                   onChange={(e) => onToolsToggle?.(e.target.checked)}
-                  color="primary"
                 />
               }
               label={
@@ -380,14 +371,11 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
                             }
                           />
                           <ListItemSecondaryAction>
-                            <Switch
+                            <CustomSwitch
                               checked={server.isActive}
                               onChange={createOptimizedSwitchHandler((checked) =>
                                 handleToggleServer(server.id, checked)
                               )}
-                              color="primary"
-                              size="small"
-                              sx={switchOptimization}
                               disabled={!toolsEnabled}
                             />
                           </ListItemSecondaryAction>

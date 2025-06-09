@@ -18,12 +18,12 @@ import {
   alpha
 } from '@mui/material';
 import {
-  Launch as LaunchIcon,
-  ContentCopy as CopyIcon,
-  Close as CloseIcon,
-  Language as LanguageIcon,
-  Article as ArticleIcon
-} from '@mui/icons-material';
+  ExternalLink as LaunchIcon,
+  Copy as CopyIcon,
+  X as CloseIcon,
+  Globe as LanguageIcon,
+  FileText as ArticleIcon
+} from 'lucide-react';
 import type { Citation } from '../shared/types';
 
 interface CitationsListProps {
@@ -116,9 +116,9 @@ const CitationsList: React.FC<CitationsListProps> = ({ citations }) => {
                   }}
                 >
                   {citation.type === 'websearch' ? (
-                    <LanguageIcon sx={{ fontSize: 12 }} />
+                    <LanguageIcon size={12} />
                   ) : (
-                    <ArticleIcon sx={{ fontSize: 12 }} />
+                    <ArticleIcon size={12} />
                   )}
                 </Avatar>
               ))}
@@ -135,7 +135,7 @@ const CitationsList: React.FC<CitationsListProps> = ({ citations }) => {
             </Box>
 
             {/* 展开图标 */}
-            <LaunchIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            <LaunchIcon size={16} style={{ color: '#666' }} />
           </Box>
         </CardContent>
       </Card>
@@ -272,9 +272,9 @@ const CitationsList: React.FC<CitationsListProps> = ({ citations }) => {
                     }}
                   >
                     {citation.type === 'websearch' ? (
-                      <LanguageIcon sx={{ fontSize: 16 }} />
+                      <LanguageIcon size={16} />
                     ) : (
-                      <ArticleIcon sx={{ fontSize: 16 }} />
+                      <ArticleIcon size={16} />
                     )}
                   </Avatar>
 
@@ -307,7 +307,7 @@ const CitationsList: React.FC<CitationsListProps> = ({ citations }) => {
                         handleOpenUrl(citation.url);
                       }}
                     >
-                      <LaunchIcon sx={{ fontSize: 16 }} />
+                      <LaunchIcon size={16} />
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>

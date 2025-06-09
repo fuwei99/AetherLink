@@ -19,12 +19,7 @@ import {
   alpha,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DownloadIcon from '@mui/icons-material/Download';
-import StorageIcon from '@mui/icons-material/Storage';
-import AddIcon from '@mui/icons-material/Add';
-import LaunchIcon from '@mui/icons-material/Launch';
+import { ArrowLeft as ArrowBackIcon, Trash2 as DeleteIcon, Download as DownloadIcon, Database as StorageIcon, Plus as AddIcon, ExternalLink as LaunchIcon } from 'lucide-react';
 import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeService';
 import { dexieStorage } from '../../shared/services/DexieStorageService';
 import CreateKnowledgeDialog from '../../components/KnowledgeManagement/CreateKnowledgeDialog';
@@ -277,7 +272,7 @@ const KnowledgeSettings: React.FC = () => {
                 gap: 1
               }}
             >
-              <StorageIcon sx={{ color: '#059669' }} />
+              <StorageIcon size={20} color="#059669" />
               知识库统计
             </Typography>
             <Typography

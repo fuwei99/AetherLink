@@ -13,13 +13,15 @@ import {
   Button,
   Collapse
 } from '@mui/material';
-import ForumIcon from '@mui/icons-material/Forum';
-import PersonIcon from '@mui/icons-material/Person';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import {
+  MessageSquare as ForumIcon,
+  User as PersonIcon,
+  CheckCircle as CheckCircleIcon,
+  ChevronDown as ExpandMoreIcon,
+  ChevronUp as ExpandLessIcon,
+  Trash2 as CleaningServicesIcon,
+  RefreshCw as RefreshIcon
+} from 'lucide-react';
 import { TopicStatsService } from '../../shared/services/TopicStatsService';
 import { useSelector } from 'react-redux';
 
@@ -49,7 +51,7 @@ export const TopicStatsDisplay: React.FC = () => {
     // 根据实际状态结构返回assistants数组
     return state.assistants?.assistants || [];
   }) as Assistant[];
-  
+
   // 加载话题统计数据
   const loadStats = async () => {
     setLoading(true);
@@ -67,7 +69,7 @@ export const TopicStatsDisplay: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   // 清理无效话题
   const cleanupInvalidTopics = async () => {
     setCleaning(true);
@@ -82,12 +84,12 @@ export const TopicStatsDisplay: React.FC = () => {
       setCleaning(false);
     }
   };
-  
+
   // 初始加载
   useEffect(() => {
     loadStats();
   }, []);
-  
+
   return (
     <Paper
       elevation={0}
@@ -102,27 +104,27 @@ export const TopicStatsDisplay: React.FC = () => {
       }}
     >
       {/* 标题栏 */}
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'space-between',
           cursor: 'pointer'
         }}
         onClick={() => setExpanded(!expanded)}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <ForumIcon sx={{ mr: 1, color: 'primary.main' }} />
+          <ForumIcon color="#1976d2" style={{ marginRight: 8 }} />
           <Typography variant="subtitle1" fontWeight="medium">
             话题统计
           </Typography>
         </Box>
-        
+
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {!loading && stats && (
-            <Chip 
-              label={`共 ${stats.totalCount} 个话题`} 
-              size="small" 
+            <Chip
+              label={`共 ${stats.totalCount} 个话题`}
+              size="small"
               color={stats.invalidCount > 0 ? "warning" : "success"}
               sx={{ mr: 1 }}
             />
@@ -130,11 +132,11 @@ export const TopicStatsDisplay: React.FC = () => {
           {loading ? <CircularProgress size={20} /> : (expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />)}
         </Box>
       </Box>
-      
+
       {/* 展开内容 */}
       <Collapse in={expanded}>
         <Divider sx={{ my: 1.5 }} />
-        
+
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
             <CircularProgress size={24} />
@@ -147,17 +149,17 @@ export const TopicStatsDisplay: React.FC = () => {
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   <CheckCircleIcon color={stats.invalidCount > 0 ? "warning" : "success"} />
                 </ListItemIcon>
-                <ListItemText 
+                <ListItemText
                   primary={`有效话题: ${stats.validCount}/${stats.totalCount}`}
                   secondary={stats.invalidCount > 0 ? `发现 ${stats.invalidCount} 个无效话题` : undefined}
                 />
               </ListItem>
-              
+
               {/* 按助手统计的话题数 */}
               <Typography variant="caption" color="text.secondary" sx={{ pl: 2, mt: 1, display: 'block' }}>
                 各助手话题数:
               </Typography>
-              
+
               {Object.entries(stats.byAssistantId).map(([assistantId, count]) => {
                 const assistant = assistants.find((a: Assistant) => a.id === assistantId);
                 return (
@@ -174,14 +176,14 @@ export const TopicStatsDisplay: React.FC = () => {
                   </ListItem>
                 );
               })}
-              
+
               {Object.keys(stats.byAssistantId).length === 0 && (
                 <Typography variant="caption" color="text.secondary" sx={{ pl: 4, py: 1, display: 'block' }}>
                   没有分配给助手的话题
                 </Typography>
               )}
             </List>
-            
+
             {/* 操作按钮 */}
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
               {stats.invalidCount > 0 && (
@@ -196,7 +198,7 @@ export const TopicStatsDisplay: React.FC = () => {
                   {cleaning ? <CircularProgress size={20} /> : '清理无效话题'}
                 </Button>
               )}
-              
+
               <Button
                 startIcon={<RefreshIcon />}
                 size="small"
@@ -216,4 +218,4 @@ export const TopicStatsDisplay: React.FC = () => {
       </Collapse>
     </Paper>
   );
-}; 
+};

@@ -23,6 +23,7 @@ import MCPSidebarControls from '../../chat/MCPSidebarControls';
 import ThrottleLevelSelector from './ThrottleLevelSelector';
 import ContextSettings from './ContextSettings';
 import CodeBlockSettings from './CodeBlockSettings';
+import InputSettings from './InputSettings';
 
 
 interface Setting {
@@ -42,11 +43,13 @@ interface SettingsTabProps {
   onMaxOutputTokensChange?: (value: number) => void;
   onMathRendererChange?: (value: MathRendererType) => void;
   onThinkingEffortChange?: (value: ThinkingOption) => void;
+  onThinkingBudgetChange?: (value: number) => void;
   initialContextLength?: number;
   initialContextCount?: number;
   initialMaxOutputTokens?: number;
   initialMathRenderer?: MathRendererType;
   initialThinkingEffort?: ThinkingOption;
+  initialThinkingBudget?: number;
   mcpMode?: 'prompt' | 'function';
   toolsEnabled?: boolean;
   onMCPModeChange?: (mode: 'prompt' | 'function') => void;
@@ -64,11 +67,13 @@ export default function SettingsTab({
   onMaxOutputTokensChange,
   onMathRendererChange,
   onThinkingEffortChange,
+  onThinkingBudgetChange,
   initialContextLength = 16000,
   initialContextCount = 5,
   initialMaxOutputTokens = 4096,
   initialMathRenderer = 'KaTeX',
   initialThinkingEffort = 'medium',
+  initialThinkingBudget = 1024,
   mcpMode = 'function',
   toolsEnabled = true,
   onMCPModeChange,
@@ -82,6 +87,7 @@ export default function SettingsTab({
   const [maxOutputTokens, setMaxOutputTokens] = useState<number>(initialMaxOutputTokens);
   const [mathRenderer, setMathRenderer] = useState<MathRendererType>(initialMathRenderer);
   const [thinkingEffort, setThinkingEffort] = useState<ThinkingOption>(initialThinkingEffort);
+  const [thinkingBudget, setThinkingBudget] = useState<number>(initialThinkingBudget);
   const [userAvatar, setUserAvatar] = useState<string>("");
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
 
@@ -96,6 +102,7 @@ export default function SettingsTab({
         if (appSettings.maxOutputTokens) setMaxOutputTokens(appSettings.maxOutputTokens);
         if (appSettings.mathRenderer) setMathRenderer(appSettings.mathRenderer);
         if (appSettings.defaultThinkingEffort) setThinkingEffort(appSettings.defaultThinkingEffort);
+        if (appSettings.thinkingBudget) setThinkingBudget(appSettings.thinkingBudget);
 
 
       }
@@ -283,12 +290,19 @@ export default function SettingsTab({
 
       {/* 使用SettingGroups渲染设置分组 */}
       <SettingGroups groups={settingGroups} onSettingChange={handleSettingChange} />
+      <Divider sx={{ my: 0.5 }} />
+
+      {/* 输入设置 */}
+      <InputSettings />
+      <Divider sx={{ my: 0.5 }} />
 
       {/* 节流强度选择器 */}
       <ThrottleLevelSelector />
+      <Divider sx={{ my: 0.5 }} />
 
       {/* 代码块设置 */}
       <CodeBlockSettings onSettingChange={handleSettingChange} />
+      <Divider sx={{ my: 0.5 }} />
 
       {/* 可折叠的上下文设置 */}
       <ContextSettings
@@ -297,6 +311,7 @@ export default function SettingsTab({
         maxOutputTokens={maxOutputTokens}
         mathRenderer={mathRenderer}
         thinkingEffort={thinkingEffort}
+        thinkingBudget={thinkingBudget}
         onContextLengthChange={(value) => {
           setContextLength(value);
           if (onContextLengthChange) {
@@ -403,8 +418,24 @@ export default function SettingsTab({
             console.error('保存思维链长度设置失败', error);
           }
         }}
+        onThinkingBudgetChange={(value) => {
+          setThinkingBudget(value);
+          if (onThinkingBudgetChange) {
+            onThinkingBudgetChange(value);
+          }
+          // 保存到localStorage
+          try {
+            const appSettingsJSON = localStorage.getItem('appSettings');
+            const appSettings = appSettingsJSON ? JSON.parse(appSettingsJSON) : {};
+            localStorage.setItem('appSettings', JSON.stringify({
+              ...appSettings,
+              thinkingBudget: value
+            }));
+          } catch (error) {
+            console.error('保存思考预算设置失败', error);
+          }
+        }}
       />
-
       <Divider sx={{ my: 0.5 }} />
 
       {/* MCP 工具控制 */}

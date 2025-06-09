@@ -16,12 +16,12 @@ import {
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  AccessTime as AccessTimeIcon,
-  Speed as SpeedIcon,
-  AttachMoney as CostIcon,
-  Psychology as ReasoningIcon
-} from '@mui/icons-material';
+  AlertCircle as ErrorIcon,
+  Clock as AccessTimeIcon,
+  Zap as SpeedIcon,
+  DollarSign as CostIcon,
+  Brain as ReasoningIcon
+} from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../../shared/store';
@@ -196,7 +196,7 @@ const ModelComparisonBlock: React.FC<ModelComparisonBlockProps> = ({ block }) =>
                       {modelInfo.name}
                     </Typography>
                     {block.selectedModelId === `${result.modelId}-${index}` && (
-                      <CheckCircleIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                      <CheckCircleIcon size={16} style={{ color: '#4caf50' }} />
                     )}
                   </Box>
                 }
@@ -249,7 +249,7 @@ const ModelComparisonBlock: React.FC<ModelComparisonBlockProps> = ({ block }) =>
                 {result.reasoning && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      <ReasoningIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                      <ReasoningIcon size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
                       推理过程
                     </Typography>
                     <Paper

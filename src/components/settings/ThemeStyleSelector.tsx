@@ -13,11 +13,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setThemeStyle } from '../../shared/store/settingsSlice';
 import { themeConfigs, getThemePreviewColors } from '../../shared/config/themes';
 import type { ThemeStyle } from '../../shared/config/themes';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PaletteIcon from '@mui/icons-material/Palette';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import MinimizeIcon from '@mui/icons-material/Minimize';
-import ColorLensIcon from '@mui/icons-material/ColorLens';
+import {
+  CheckCircle as CheckCircleIcon,
+  Palette as PaletteIcon,
+  Sparkles as AutoAwesomeIcon,
+  Minus as MinimizeIcon,
+  Palette as ColorLensIcon
+} from 'lucide-react';
 
 // 主题图标映射
 const themeIcons: Record<ThemeStyle, React.ReactNode> = {
@@ -78,9 +80,9 @@ const ThemeStyleSelector: React.FC<ThemeStyleSelectorProps> = ({ compact = false
                 }}
               >
                 <CheckCircleIcon
-                  sx={{
+                  size={20}
+                  style={{
                     color: currentTheme.palette.primary.main,
-                    fontSize: 20,
                   }}
                 />
               </Box>

@@ -32,12 +32,13 @@ import {
   Checkbox
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AddIcon from '@mui/icons-material/Add';
-import SettingsIcon from '@mui/icons-material/Settings';
-
-import StorageIcon from '@mui/icons-material/Storage';
-import HttpIcon from '@mui/icons-material/Http';
+import {
+  ArrowLeft as ArrowBackIcon,
+  Plus as AddIcon,
+  Settings as SettingsIcon,
+  Database as StorageIcon,
+  Globe as HttpIcon
+} from 'lucide-react';
 
 import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
@@ -394,11 +395,9 @@ const MCPServerSettings: React.FC = () => {
             }}
           >
             <Box sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center' }}>
-              <SettingsIcon sx={{
-                fontSize: { xs: 40, sm: 48 },
-                color: 'primary.main',
-                mb: { xs: 1.5, sm: 2 }
-              }} />
+              <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                <SettingsIcon size={48} style={{ color: '#9333EA' }} />
+              </Box>
               <Typography
                 variant="h6"
                 gutterBottom

@@ -28,12 +28,7 @@ import {
   Paper,
   alpha
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SaveIcon from '@mui/icons-material/Save';
-import RestoreIcon from '@mui/icons-material/Restore';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
+import { ArrowLeft as ArrowBackIcon, Save as SaveIcon, RotateCcw as RestoreIcon, Plus as AddIcon, Trash2 as DeleteIcon, Sliders as TuneOutlinedIcon } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { updateAssistant } from '../../../shared/store/slices/assistantsSlice';
@@ -90,10 +85,10 @@ const AssistantModelSettings: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  
+
   // 从路由状态获取助手信息
   const assistant = location.state?.assistant as Assistant;
-  
+
   // 本地状态
   const [temperature, setTemperature] = useState(DEFAULT_TEMPERATURE);
   const [topP, setTopP] = useState(DEFAULT_TOP_P);
@@ -951,7 +946,7 @@ const AssistantModelSettings: React.FC = () => {
           <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', py: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <TuneOutlinedIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                <TuneOutlinedIcon size={20} color="var(--mui-palette-primary-main)" />
                 <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
                   上下文设置 (快速访问)
                 </Typography>

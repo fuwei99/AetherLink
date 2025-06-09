@@ -11,23 +11,20 @@ import {
   Avatar
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import LanguageIcon from '@mui/icons-material/Language';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import SettingsIcon from '@mui/icons-material/Settings';
-import KeyboardIcon from '@mui/icons-material/Keyboard';
-import StorageIcon from '@mui/icons-material/Storage';
-import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
-import ExtensionIcon from '@mui/icons-material/Extension';
-import InfoIcon from '@mui/icons-material/Info';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
-import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
-import TuneIcon from '@mui/icons-material/Tune';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import CodeIcon from '@mui/icons-material/Code';
-import ForumIcon from '@mui/icons-material/Forum';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+import {
+  ArrowLeft as ArrowBackIcon,
+  Globe as LanguageIcon,
+  Bot as SmartToyIcon,
+  Settings as SettingsIcon,
+  Keyboard as KeyboardIcon,
+  Database as StorageIcon,
+  Mic as RecordVoiceOverIcon,
+  Puzzle as ExtensionIcon,
+  Info as InfoIcon
+} from 'lucide-react';
+import { ChevronRight as ChevronRightIcon, Palette as FormatColorFillIcon } from 'lucide-react';
+import { Settings as SettingsApplicationsIcon, Sliders as TuneIcon, Wand2 as AutoFixHighIcon, GitBranch } from 'lucide-react';
+import { Code as CodeIcon, MessageSquare as ForumIcon, BookOpen as MenuBookIcon } from 'lucide-react';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,7 +53,7 @@ const SettingsPage: React.FC = () => {
         { id: 'default-model-settings', title: '默认模型', description: '选择默认模型和自动化选项', icon: <TuneIcon />, path: '/settings/default-model-settings', color: '#4f46e5' },
         { id: 'agent-prompts', title: '智能体提示词集合', description: '浏览和使用内置的丰富提示词模板', icon: <AutoFixHighIcon />, path: '/settings/agent-prompts', color: '#0ea5e9' },
         { id: 'ai-debate', title: 'AI辩论设置', description: '配置AI互相辩论讨论功能', icon: <ForumIcon />, path: '/settings/ai-debate', color: '#e11d48' },
-        { id: 'model-combo', title: '模型组合', description: '创建和管理多模型组合', icon: <SmartToyIcon />, path: '/settings/model-combo', color: '#f43f5e' },
+        { id: 'model-combo', title: '模型组合', description: '创建和管理多模型组合', icon: <GitBranch />, path: '/settings/model-combo', color: '#f43f5e' },
         { id: 'web-search', title: '网络搜索', description: '配置网络搜索和相关服务', icon: <LanguageIcon />, path: '/settings/web-search', color: '#3b82f6' },
         { id: 'mcp-server', title: 'MCP 服务器', description: '高级服务器配置', icon: <SettingsIcon />, path: '/settings/mcp-server', color: '#10b981' },
       ]
@@ -243,7 +240,7 @@ const SettingsPage: React.FC = () => {
                           {item.description}
                         </Typography>
                       </Box>
-                      <ChevronRightIcon sx={{ color: (theme) => alpha(theme.palette.primary.main, 0.5), ml: 1 }} />
+                      <ChevronRightIcon size={20} style={{ color: '#1976d2', opacity: 0.5, marginLeft: 8 }} />
                     </Box>
                   </ListItemButton>
                 </Paper>

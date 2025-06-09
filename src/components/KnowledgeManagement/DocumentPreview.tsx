@@ -9,10 +9,7 @@ import {
   Stack,
   Tooltip,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import DescriptionIcon from '@mui/icons-material/Description';
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import { X as CloseIcon, FileText as DescriptionIcon, Calendar as DateRangeIcon, Quote as FormatQuoteIcon } from 'lucide-react';
 import type { KnowledgeDocument } from '../../shared/types/KnowledgeBase';
 
 interface DocumentPreviewProps {
@@ -55,7 +52,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
       <Stack spacing={2} sx={{ mb: 2 }}>
         {document.metadata.fileName && (
           <Box display="flex" alignItems="center">
-            <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} fontSize="small" />
+            <DescriptionIcon size={16} color="var(--mui-palette-primary-main)" style={{ marginRight: 8 }} />
             <Typography variant="body2">
               文件名: {document.metadata.fileName}
             </Typography>
@@ -64,7 +61,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
 
         {document.metadata.source && (
           <Box display="flex" alignItems="center">
-            <FormatQuoteIcon sx={{ mr: 1, color: 'primary.main' }} fontSize="small" />
+            <FormatQuoteIcon size={16} color="var(--mui-palette-primary-main)" style={{ marginRight: 8 }} />
             <Typography variant="body2">
               来源: {document.metadata.source}
             </Typography>
@@ -73,7 +70,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
 
         {document.metadata.timestamp && (
           <Box display="flex" alignItems="center">
-            <DateRangeIcon sx={{ mr: 1, color: 'primary.main' }} fontSize="small" />
+            <DateRangeIcon size={16} color="var(--mui-palette-primary-main)" style={{ marginRight: 8 }} />
             <Typography variant="body2">
               创建时间: {formatTimestamp(document.metadata.timestamp)}
             </Typography>
@@ -81,11 +78,11 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
         )}
 
         {document.metadata.chunkIndex !== undefined && (
-          <Chip 
-            label={`片段 #${document.metadata.chunkIndex + 1}`} 
-            size="small" 
-            color="primary" 
-            variant="outlined" 
+          <Chip
+            label={`片段 #${document.metadata.chunkIndex + 1}`}
+            size="small"
+            color="primary"
+            variant="outlined"
             sx={{ alignSelf: 'flex-start' }}
           />
         )}
@@ -110,7 +107,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
       >
         {document.content}
       </Paper>
-      
+
       <Tooltip title={`文档ID: ${document.id}`}>
         <Typography variant="caption" color="text.secondary" sx={{ mt: 2, fontSize: '0.7rem' }}>
           文档ID: {document.id.substring(0, 8)}...
@@ -120,4 +117,4 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
   );
 };
 
-export default DocumentPreview; 
+export default DocumentPreview;

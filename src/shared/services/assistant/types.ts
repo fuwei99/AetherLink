@@ -1,6 +1,5 @@
 import type { Assistant, SerializableAssistant, ChatTopic } from '../../types/Assistant';
-import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { Smile, Sparkles } from 'lucide-react';
 import React from 'react';
 import { uuid } from '../../utils';
 import { DEFAULT_TOPIC_PROMPT } from '../../config/prompts';
@@ -16,11 +15,11 @@ export function deserializeAssistant(serializableAsst: SerializableAssistant): A
   let icon;
   try {
     if (serializableAsst.name.includes('默认助手')) {
-      icon = React.createElement(EmojiEmotionsIcon, { sx: { color: '#FFD700' } });
+      icon = React.createElement(Smile, { size: 20, color: '#FFD700' });
     } else if (serializableAsst.name.includes('消息器') || serializableAsst.name.includes('顽天助手')) {
-      icon = React.createElement(AutoAwesomeIcon, { sx: { color: '#1E90FF' } });
+      icon = React.createElement(Sparkles, { size: 20, color: '#1E90FF' });
     } else {
-      icon = React.createElement(EmojiEmotionsIcon, { sx: { color: '#4CAF50' } });
+      icon = React.createElement(Smile, { size: 20, color: '#4CAF50' });
     }
   } catch (error) {
     console.error('创建助手图标失败，使用默认图标:', error);

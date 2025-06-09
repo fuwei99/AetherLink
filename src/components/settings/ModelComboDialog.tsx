@@ -25,8 +25,7 @@ import {
   Autocomplete,
   Avatar
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Plus as AddIcon, Trash2 as DeleteIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
 

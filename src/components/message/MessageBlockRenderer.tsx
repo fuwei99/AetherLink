@@ -199,7 +199,7 @@ const MessageBlockRenderer: React.FC<Props> = ({
                 blockComponent = <CitationBlock key={block.id} block={block} />;
                 break;
               case MessageBlockType.ERROR:
-                blockComponent = <ErrorBlock key={block.id} block={block} messageId={message.id} topicId={message.topicId} />;
+                blockComponent = <ErrorBlock key={block.id} block={block} />;
                 break;
               case MessageBlockType.TRANSLATION:
                 blockComponent = <TranslationBlock key={block.id} block={block} />;

@@ -7,14 +7,16 @@ import {
   Slider,
   Tooltip
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import RotateLeftIcon from '@mui/icons-material/RotateLeft';
-import RotateRightIcon from '@mui/icons-material/RotateRight';
-import DownloadIcon from '@mui/icons-material/Download';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import {
+  X as CloseIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
+  RotateCcw as RotateLeftIcon,
+  RotateCw as RotateRightIcon,
+  Download as DownloadIcon,
+  ChevronLeft as NavigateBeforeIcon,
+  ChevronRight as NavigateNextIcon
+} from 'lucide-react';
 
 interface ImageViewerProps {
   open: boolean;

@@ -15,7 +15,7 @@ import {
   Avatar,
   alpha
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../shared/store';
 import { addProvider } from '../../shared/store/settingsSlice';
@@ -160,7 +160,7 @@ const AddProviderPage: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
           <Typography
             variant="h6"

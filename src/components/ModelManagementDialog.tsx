@@ -19,10 +19,7 @@ import {
   AccordionDetails,
   Chip
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import SearchIcon from '@mui/icons-material/Search';
+import { Plus as AddIcon, Minus as RemoveIcon, ChevronDown as ExpandMoreIcon, Search as SearchIcon } from 'lucide-react';
 import { alpha } from '@mui/material/styles';
 import { fetchModels } from '../shared/services/APIService';
 import type { Model } from '../shared/types';
@@ -292,7 +289,7 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
             debouncedSetSearchTerm(newSearchValue); // 防抖更新实际搜索
           }}
           InputProps={{
-            startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+            startAdornment: <SearchIcon size={20} color="var(--mui-palette-text-secondary)" style={{ marginRight: 8 }} />,
             sx: { borderRadius: 2 }
           }}
         />

@@ -19,8 +19,7 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { generateImage } from '../../shared/services/APIService';
@@ -40,20 +39,20 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
   onImageGenerated
 }) => {
   const dispatch = useDispatch();
-  
+
   // 从Redux获取支持图像生成的模型
-  const models = useSelector((state: RootState) => 
-    state.settings.models?.filter(model => 
+  const models = useSelector((state: RootState) =>
+    state.settings.models?.filter(model =>
       model.enabled && (model.modelTypes?.includes(ModelType.ImageGen) || model.imageGeneration || model.capabilities?.imageGeneration)
     ) || []
   );
 
   // 从providers获取支持图像生成的模型
-  const providersModels = useSelector((state: RootState) => 
+  const providersModels = useSelector((state: RootState) =>
     state.settings.providers
       .filter(provider => provider.isEnabled)
-      .flatMap(provider => 
-        provider.models.filter(model => 
+      .flatMap(provider =>
+        provider.models.filter(model =>
           model.enabled && (model.modelTypes?.includes(ModelType.ImageGen) || model.imageGeneration || model.capabilities?.imageGeneration)
         )
       )
@@ -61,10 +60,10 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
 
   // 合并两个模型列表并去重
   const availableModels = [...models, ...providersModels]
-    .filter((model, index, self) => 
+    .filter((model, index, self) =>
       index === self.findIndex(m => m.id === model.id)
     );
-  
+
   // 状态
   const [selectedModelId, setSelectedModelId] = useState('');
   const [prompt, setPrompt] = useState('');
@@ -77,7 +76,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
   const [randomSeed, setRandomSeed] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // 图像尺寸选项
   const imageSizeOptions = [
     { value: '512x512', label: '512x512' },
@@ -86,14 +85,14 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
     { value: '1024x1536', label: '1024x1536 (竖向)' },
     { value: '1536x1024', label: '1536x1024 (横向)' }
   ];
-  
+
   // 初始化默认选择的模型
   useEffect(() => {
     if (availableModels.length > 0 && !selectedModelId) {
       setSelectedModelId(availableModels[0].id);
     }
   }, [availableModels, selectedModelId]);
-  
+
   // 重置表单
   const resetForm = () => {
     setPrompt('');
@@ -105,7 +104,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
     setRandomSeed(true);
     setError(null);
   };
-  
+
   // 处理对话框关闭
   const handleClose = () => {
     if (!isGenerating) {
@@ -113,23 +112,23 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
       onClose();
     }
   };
-  
+
   // 生成图像
   const handleGenerateImage = async () => {
     if (!prompt.trim()) {
       setError('请输入提示词');
       return;
     }
-    
+
     const selectedModel = availableModels.find(m => m.id === selectedModelId);
     if (!selectedModel) {
       setError('请选择有效的模型');
       return;
     }
-    
+
     setIsGenerating(true);
     setError(null);
-    
+
     try {
       // 准备参数
       const params: ImageGenerationParams = {
@@ -139,21 +138,21 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
         steps: steps,
         guidanceScale: guidance,
       };
-      
+
       // 添加种子如果不是随机
       if (!randomSeed && seed !== null) {
         params.seed = seed;
       }
-      
+
       // 调用生成API
       const generatedImage = await generateImage(selectedModel, params);
-      
+
       // 保存到Redux状态
       dispatch(addGeneratedImage(generatedImage));
-      
+
       // 调用回调函数将图像添加到聊天中
       onImageGenerated(generatedImage.url);
-      
+
       // 关闭对话框
       handleClose();
     } catch (error: any) {
@@ -162,10 +161,10 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
       setIsGenerating(false);
     }
   };
-  
+
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleClose}
       fullWidth
       maxWidth="sm"
@@ -187,19 +186,19 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
       >
         <span>图像生成</span>
       </DialogTitle>
-      
+
       <DialogContent sx={{ p: 2 }}>
         {/* 错误提示 */}
         {error && (
-          <Alert 
-            severity="error" 
+          <Alert
+            severity="error"
             sx={{ mb: 2 }}
             onClose={() => setError(null)}
           >
             {error}
           </Alert>
         )}
-        
+
         {/* 模型选择 */}
         <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
           <InputLabel>选择模型</InputLabel>
@@ -221,7 +220,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
             ))}
           </Select>
         </FormControl>
-        
+
         {/* 提示词输入 */}
         <TextField
           label="提示词"
@@ -235,7 +234,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
           sx={{ mb: 2 }}
           disabled={isGenerating}
         />
-        
+
         {/* 负面提示词 */}
         <TextField
           label="负面提示词(可选)"
@@ -249,7 +248,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
           sx={{ mb: 2 }}
           disabled={isGenerating}
         />
-        
+
         {/* 图像尺寸选择 */}
         <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
           <InputLabel>图像尺寸</InputLabel>
@@ -266,11 +265,11 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
             ))}
           </Select>
         </FormControl>
-        
+
         {/* 高级选项 */}
         <Box sx={{ mb: 2 }}>
-          <Button 
-            variant="text" 
+          <Button
+            variant="text"
             onClick={() => setShowAdvanced(!showAdvanced)}
             endIcon={showAdvanced ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             disabled={isGenerating}
@@ -278,7 +277,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
           >
             高级选项
           </Button>
-          
+
           <Collapse in={showAdvanced}>
             <Box sx={{ mt: 1, p: 2, bgcolor: '#f9f9f9', borderRadius: 1 }}>
               {/* 推理步数 */}
@@ -296,7 +295,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
                   disabled={isGenerating}
                 />
               </Box>
-              
+
               {/* 引导系数 */}
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>
@@ -312,7 +311,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
                   disabled={isGenerating}
                 />
               </Box>
-              
+
               {/* 随机种子 */}
               <FormControlLabel
                 control={
@@ -324,7 +323,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
                 }
                 label="随机种子"
               />
-              
+
               {/* 种子输入 */}
               {!randomSeed && (
                 <TextField
@@ -342,10 +341,10 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
           </Collapse>
         </Box>
       </DialogContent>
-      
+
       <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
-        <Button 
-          onClick={handleClose} 
+        <Button
+          onClick={handleClose}
           color="inherit"
           disabled={isGenerating}
         >
@@ -365,4 +364,4 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
   );
 };
 
-export default ImageGenerationDialog; 
+export default ImageGenerationDialog;

@@ -106,6 +106,10 @@ interface SettingsState {
     customLocation?: string;
     enableOSVariable?: boolean;
   };
+
+  // 长文本粘贴为文件功能设置
+  pasteLongTextAsFile?: boolean; // 是否启用长文本粘贴为文件
+  pasteLongTextThreshold?: number; // 长文本阈值（字符数）
 }
 
 
@@ -199,6 +203,10 @@ const getInitialState = (): SettingsState => {
       customLocation: '',
       enableOSVariable: false
     },
+
+    // 长文本粘贴为文件功能默认设置
+    pasteLongTextAsFile: false, // 默认关闭长文本粘贴为文件
+    pasteLongTextThreshold: 1500, // 默认阈值1500字符
   };
 
   // 设置默认模型
@@ -327,6 +335,14 @@ export const loadSettings = createAsyncThunk('settings/load', async () => {
           customLocation: '',
           enableOSVariable: false
         };
+      }
+
+      // 如果没有长文本粘贴为文件设置，使用默认值
+      if (savedSettings.pasteLongTextAsFile === undefined) {
+        savedSettings.pasteLongTextAsFile = false;
+      }
+      if (savedSettings.pasteLongTextThreshold === undefined) {
+        savedSettings.pasteLongTextThreshold = 1500;
       }
 
       return {
@@ -605,6 +621,14 @@ const settingsSlice = createSlice({
     setCodeDefaultCollapsed: (state, action: PayloadAction<boolean>) => {
       state.codeDefaultCollapsed = action.payload;
     },
+
+    // 长文本粘贴为文件功能设置 actions
+    setPasteLongTextAsFile: (state, action: PayloadAction<boolean>) => {
+      state.pasteLongTextAsFile = action.payload;
+    },
+    setPasteLongTextThreshold: (state, action: PayloadAction<number>) => {
+      state.pasteLongTextThreshold = action.payload;
+    },
   },
   extraReducers: (builder) => {
     // 处理加载设置
@@ -685,6 +709,9 @@ export const {
   setCodeCollapsible,
   setCodeWrappable,
   setCodeDefaultCollapsed,
+  // 长文本粘贴为文件功能控制
+  setPasteLongTextAsFile,
+  setPasteLongTextThreshold,
 } = settingsSlice.actions;
 
 // 重用现有的action creators，但添加异步保存

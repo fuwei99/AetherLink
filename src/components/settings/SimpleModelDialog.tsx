@@ -17,7 +17,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-import PhotoIcon from '@mui/icons-material/Photo';
+import { Image as PhotoIcon } from 'lucide-react';
 import type { Model } from '../../shared/types';
 import { ModelType } from '../../shared/types';
 import { matchModelTypes } from '../../shared/data/modelTypeRules';

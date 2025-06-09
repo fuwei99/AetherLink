@@ -111,8 +111,26 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
   // 获取当前选中模型的复合值
   const getCurrentValue = React.useCallback((): string => {
     if (!selectedModel) return '';
+
+    // 首先尝试在 availableModels 中找到完全匹配的模型（id + provider）
+    const exactMatch = availableModels.find(m =>
+      m.id === selectedModel.id &&
+      (m.provider || '') === (selectedModel.provider || '')
+    );
+
+    if (exactMatch) {
+      return getCompositeValue(exactMatch);
+    }
+
+    // 如果没有找到完全匹配，尝试只匹配 id，但优先选择第一个匹配的
+    const idMatch = availableModels.find(m => m.id === selectedModel.id);
+    if (idMatch) {
+      return getCompositeValue(idMatch);
+    }
+
+    // 如果都没找到，返回原始的复合值（可能导致不匹配，但至少不会崩溃）
     return getCompositeValue(selectedModel);
-  }, [selectedModel, getCompositeValue]);
+  }, [selectedModel, getCompositeValue, availableModels]);
 
   // 计算动态字体大小函数
   const getDynamicFontSize = (text: string): string => {

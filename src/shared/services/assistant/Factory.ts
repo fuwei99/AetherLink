@@ -1,7 +1,6 @@
 import type { Assistant } from '../../types/Assistant';
 import React from 'react';
-import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { Smile, Sparkles } from 'lucide-react';
 import { uuid } from '../../utils';
 import { getDefaultTopic } from './types';
 import { AssistantManager } from './AssistantManager';
@@ -32,7 +31,7 @@ export class AssistantFactory {
         id: uuid(),
         name: '默认助手',
         description: '通用型AI助手，可以回答各种问题',
-        icon: React.createElement(EmojiEmotionsIcon, { sx: { color: '#FFD700' } }),
+        icon: React.createElement(Smile, { size: 20, color: '#FFD700' }),
         isSystem: true,
         topicIds: [],
         topics: [],
@@ -42,7 +41,7 @@ export class AssistantFactory {
         id: uuid(),
         name: '网页分析助手',
         description: '帮助分析各种网页内容',
-        icon: React.createElement(AutoAwesomeIcon, { sx: { color: '#1E90FF' } }),
+        icon: React.createElement(Sparkles, { size: 20, color: '#1E90FF' }),
         isSystem: true,
         topicIds: [],
         topics: [],
@@ -91,13 +90,13 @@ export class AssistantFactory {
     try {
       // 如果没有提供系统提示词，使用默认值
       const finalPrompt = systemPrompt || DEFAULT_SYSTEM_PROMPT;
-      
+
       // 创建助手ID
       const assistantId = uuid();
-      
+
       // 创建默认话题
       const defaultTopic = getDefaultTopic(assistantId);
-      
+
       return {
         id: assistantId,
         name: name || '新助手',

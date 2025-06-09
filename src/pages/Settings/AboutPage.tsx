@@ -14,8 +14,7 @@ import {
   Fade,
   Slide,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ChatIcon from '@mui/icons-material/Chat';
+import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // QQ群链接
@@ -76,7 +75,7 @@ const AboutPage: React.FC = () => {
               },
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
           <Typography
             variant="h6"
@@ -187,7 +186,7 @@ const AboutPage: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <ChatIcon sx={{ mr: 1, fontSize: 22, color: '#9333ea', animation: 'chatIconPulse 2.2s infinite' }} />
+                  <MessageCircle size={22} style={{ marginRight: 8, color: '#9333ea' }} />
                   <Typography variant="subtitle1" fontWeight="medium" sx={{ color: '#7c3aed', fontWeight: 700 }}>
                     用户交流群
                   </Typography>
@@ -201,7 +200,7 @@ const AboutPage: React.FC = () => {
                     variant="contained"
                     size="small"
                     onClick={handleJoinQQGroup}
-                    startIcon={<ChatIcon fontSize="small" />}
+                    startIcon={<MessageCircle size={20} />}
                     sx={{
                       background: 'linear-gradient(90deg,#a18cd1,#fbc2eb,#9333ea)',
                       color: '#fff',

@@ -11,11 +11,13 @@ import {
   IconButton,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import ChatIcon from '@mui/icons-material/Chat';
-import StorageIcon from '@mui/icons-material/Storage';
-import SettingsIcon from '@mui/icons-material/Settings';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import {
+  MessageSquare as ChatIcon,
+  Database as StorageIcon,
+  Settings as SettingsIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon
+} from 'lucide-react';
 
 interface SidebarDrawerProps {
   open: boolean;
@@ -69,7 +71,7 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
         </IconButton>
       </DrawerHeader>
       <Divider />
-      
+
       {/* 主导航 */}
       <List>
         {mainNavItems.map((item) => (
@@ -93,12 +95,12 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
           </ListItem>
         ))}
       </List>
-      
+
       <Divider />
-      
+
       {/* 可以在这里添加额外的导航区域，如收藏夹等 */}
     </Drawer>
   );
 };
 
-export default SidebarDrawer; 
+export default SidebarDrawer;

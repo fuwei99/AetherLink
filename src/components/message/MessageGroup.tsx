@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { Box, Paper, Typography, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ChevronDown as ExpandMoreIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { useSelector } from 'react-redux';
@@ -175,11 +175,11 @@ const MessageGroup: React.FC<MessageGroupProps> = ({
 
         {onToggleExpand && (
           <ExpandMoreIcon
-            sx={{
+            size={20}
+            style={{
               transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.3s ease',
-              fontSize: '1.2rem',
-              color: 'text.secondary',
+              color: '#757575'
             }}
           />
         )}

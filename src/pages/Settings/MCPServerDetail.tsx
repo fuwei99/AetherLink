@@ -29,17 +29,18 @@ import {
   Checkbox
 } from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SaveIcon from '@mui/icons-material/Save';
-import TestIcon from '@mui/icons-material/PlayArrow';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-
-import StorageIcon from '@mui/icons-material/Storage';
-import HttpIcon from '@mui/icons-material/Http';
-import SettingsIcon from '@mui/icons-material/Settings';
-import BuildIcon from '@mui/icons-material/Build';
-import DescriptionIcon from '@mui/icons-material/Description';
-import FolderIcon from '@mui/icons-material/Folder';
+import {
+  ArrowLeft as ArrowBackIcon,
+  Save as SaveIcon,
+  Play as TestIcon,
+  ChevronDown as ExpandMoreIcon,
+  Database as StorageIcon,
+  Globe as HttpIcon,
+  Settings as SettingsIcon,
+  Wrench as BuildIcon,
+  FileText as DescriptionIcon,
+  Folder as FolderIcon
+} from 'lucide-react';
 import type { MCPServer, MCPServerType, MCPTool, MCPPrompt, MCPResource } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
 

@@ -3,12 +3,12 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  Switch,
   FormControl,
   Select,
   MenuItem,
   Divider
 } from '@mui/material';
+import CustomSwitch from '../../CustomSwitch'; // 导入 CustomSwitch 组件
 import { getAppSettings } from '../../../shared/utils/settingsUtils';
 import { useAppSelector } from '../../../shared/store';
 
@@ -105,13 +105,11 @@ export default function SettingItem({ setting, onChange }: SettingItemProps) {
       );
     }
 
-    // 默认使用开关
+    // 使用自定义开关
     return (
-      <Switch
+      <CustomSwitch
         checked={value as boolean}
-        edge="end"
         onChange={handleSwitchChange}
-        size="small"
       />
     );
   };

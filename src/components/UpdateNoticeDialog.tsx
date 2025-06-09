@@ -9,8 +9,7 @@ import {
   Box,
   Paper
 } from '@mui/material';
-import ChatIcon from '@mui/icons-material/Chat';
-import CloseIcon from '@mui/icons-material/Close';
+import { MessageCircle, X } from 'lucide-react';
 
 // QQ群链接
 const QQ_GROUP_URL = 'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=V-b46WoBNLIM4oc34JMULwoyJ3hyrKac&authKey=q%2FSwCcxda4e55ygtwp3h9adQXhqBLZ9wJdvM0QxTjXQkbxAa2tHoraOGy2fiibyY&noverify=0&group_code=930126592';
@@ -74,7 +73,7 @@ const UpdateNoticeDialog: React.FC = () => {
         justifyContent: 'space-between'
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <ChatIcon color="primary" sx={{ mr: 1 }} />
+          <MessageCircle color="primary" size={24} style={{ marginRight: 8 }} />
           <Typography variant="h6" component="div" fontWeight="bold">
             AetherLink 最新消息
           </Typography>
@@ -85,7 +84,7 @@ const UpdateNoticeDialog: React.FC = () => {
           sx={{ minWidth: 'auto', p: 0.5 }}
           color="inherit"
         >
-          <CloseIcon fontSize="small" />
+          <X size={20} />
         </Button>
       </DialogTitle>
       

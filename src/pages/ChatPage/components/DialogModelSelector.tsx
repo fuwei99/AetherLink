@@ -17,9 +17,7 @@ import {
   Avatar,
   useMediaQuery
 } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckIcon from '@mui/icons-material/Check';
+import { ChevronDown as KeyboardArrowDownIcon, X as CloseIcon, Check as CheckIcon } from 'lucide-react';
 import type { Model } from '../../../shared/types';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../shared/store';

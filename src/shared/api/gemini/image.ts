@@ -2,12 +2,37 @@
  * Gemini 图像生成 API
  * 基于 Google Generative AI SDK 实现，支持真正的图像生成功能
  */
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Part } from '@google/generative-ai';
 import type { Model, ImageGenerationParams } from '../../types';
 import { logApiRequest, logApiResponse, log } from '../../services/LoggerService';
 import { isGenerateImageModel } from '../../config/models';
 import { withRetry } from '../../utils/retryUtils';
+import { GeminiConfigBuilder } from './configBuilder';
+
+/**
+ * 创建图像生成专用的助手配置
+ */
+function createImageAssistant(): any {
+  return {
+    settings: {
+      // 图像生成使用较低的温度以获得更一致的结果
+      temperature: 0.7
+    }
+  };
+}
+
+/**
+ * 统一的图像生成错误处理
+ */
+function handleImageGenerationError(error: any, model: Model, context: string): never {
+  log('ERROR', `${context}失败: ${error.message || '未知错误'}`, {
+    model: model.id,
+    provider: model.provider,
+    error
+  });
+  throw error;
+}
 
 /**
  * 处理Gemini图像响应
@@ -67,28 +92,7 @@ export async function generateImage(
 
     // 创建 Gemini 客户端
     const genAI = new GoogleGenerativeAI(apiKey);
-    const geminiModel = genAI.getGenerativeModel({
-      model: model.id,
-      // 添加安全设置
-      safetySettings: [
-        {
-          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-          threshold: HarmBlockThreshold.BLOCK_NONE
-        },
-        {
-          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-          threshold: HarmBlockThreshold.BLOCK_NONE
-        },
-        {
-          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-          threshold: HarmBlockThreshold.BLOCK_NONE
-        },
-        {
-          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-          threshold: HarmBlockThreshold.BLOCK_NONE
-        }
-      ]
-    });
+    const geminiModel = genAI.getGenerativeModel({ model: model.id });
 
     // 记录API请求
     logApiRequest('Gemini Image Generation', 'INFO', {
@@ -101,15 +105,20 @@ export async function generateImage(
     // 构建图像生成提示词
     const imagePrompt = `Generate an image based on this description: ${params.prompt}`;
 
+    // 使用 GeminiConfigBuilder 构建配置
+    const imageAssistant = createImageAssistant();
+    const configBuilder = new GeminiConfigBuilder(imageAssistant, model, 8192, undefined, []);
+    const config = configBuilder.build();
+
     // 发送请求，在这里传递图像生成配置，并添加重试机制
     const result = await withRetry(
       () => geminiModel.generateContent({
         contents: [{ role: 'user', parts: [{ text: imagePrompt }] }],
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-          responseMimeType: 'text/plain',
-          responseModalities: ['TEXT', 'IMAGE']
+          temperature: config.temperature,
+          maxOutputTokens: config.maxOutputTokens,
+          responseMimeType: config.responseMimeType || 'text/plain',
+          responseModalities: config.responseModalities || ['TEXT', 'IMAGE']
         } as any // 使用 any 类型来支持 responseModalities
       }),
       'Gemini Image Generation API',
@@ -135,14 +144,7 @@ export async function generateImage(
 
     return imageResult.images;
   } catch (error: any) {
-    // 记录错误
-    log('ERROR', `Gemini图像生成失败: ${error.message || '未知错误'}`, {
-      model: model.id,
-      provider: model.provider,
-      error
-    });
-
-    throw error;
+    handleImageGenerationError(error, model, 'Gemini图像生成');
   }
 }
 
@@ -198,16 +200,9 @@ export async function generateImageByChat(
 
     return imageUrls;
   } catch (error: any) {
-    log('ERROR', `Gemini聊天中图像生成失败: ${error.message || '未知错误'}`, {
-      model: model.id,
-      provider: model.provider,
-      error
-    });
-
     if (onUpdate) {
       onUpdate(`Gemini 图像生成失败: ${error.message || '未知错误'}`);
     }
-
-    throw error;
+    handleImageGenerationError(error, model, 'Gemini聊天中图像生成');
   }
 }

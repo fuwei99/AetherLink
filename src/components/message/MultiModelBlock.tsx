@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Tabs, 
-  Tab, 
-  Typography, 
-  Paper, 
-  Chip, 
-  IconButton, 
+import {
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  Paper,
+  Chip,
+  IconButton,
   Collapse,
   useTheme
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import GridViewIcon from '@mui/icons-material/GridView';
-import ViewAgendaIcon from '@mui/icons-material/ViewAgenda';
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, Grid3X3 as GridViewIcon, List as ViewAgendaIcon } from 'lucide-react';
 import type { MultiModelMessageBlock } from '../../shared/types/newMessage.ts';
 import { MessageBlockStatus } from '../../shared/types/newMessage.ts';
 import Markdown from './Markdown';
@@ -60,8 +57,8 @@ const MultiModelBlock: React.FC<MultiModelBlockProps> = ({ block }) => {
   const renderTabMode = () => (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={selectedModel} 
+        <Tabs
+          value={selectedModel}
           onChange={handleChangeModel}
           variant="scrollable"
           scrollButtons="auto"
@@ -72,10 +69,10 @@ const MultiModelBlock: React.FC<MultiModelBlockProps> = ({ block }) => {
           }}
         >
           {block.responses.map((response) => (
-            <Tab 
+            <Tab
               key={response.modelId}
               label={response.modelName}
-              sx={{ 
+              sx={{
                 fontSize: '0.8rem',
                 minHeight: 'auto',
                 py: 0.5
@@ -104,13 +101,13 @@ const MultiModelBlock: React.FC<MultiModelBlockProps> = ({ block }) => {
   const renderGridMode = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {block.responses.map((response) => (
-        <Paper 
+        <Paper
           key={response.modelId}
           elevation={0}
-          sx={{ 
+          sx={{
             p: 2,
-            backgroundColor: theme.palette.mode === 'dark' 
-              ? 'rgba(255, 255, 255, 0.05)' 
+            backgroundColor: theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.05)'
               : 'rgba(0, 0, 0, 0.02)',
             borderRadius: '8px',
             position: 'relative'
@@ -122,34 +119,34 @@ const MultiModelBlock: React.FC<MultiModelBlockProps> = ({ block }) => {
                 {response.modelName}
               </Typography>
               {response.status === MessageBlockStatus.PROCESSING && (
-                <Chip 
-                  label="处理中" 
-                  size="small" 
-                  color="primary" 
-                  variant="outlined" 
+                <Chip
+                  label="处理中"
+                  size="small"
+                  color="primary"
+                  variant="outlined"
                   sx={{ ml: 1, height: 20 }}
                 />
               )}
               {response.status === MessageBlockStatus.ERROR && (
-                <Chip 
-                  label="错误" 
-                  size="small" 
-                  color="error" 
-                  variant="outlined" 
+                <Chip
+                  label="错误"
+                  size="small"
+                  color="error"
+                  variant="outlined"
                   sx={{ ml: 1, height: 20 }}
                 />
               )}
             </Box>
-            
-            <IconButton 
-              size="small" 
+
+            <IconButton
+              size="small"
               onClick={() => toggleExpand(response.modelId)}
               sx={{ p: 0.5 }}
             >
-              {expandedModels[response.modelId] ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+              {expandedModels[response.modelId] ? <ExpandLessIcon size={16} /> : <ExpandMoreIcon size={16} />}
             </IconButton>
           </Box>
-          
+
           <Collapse in={expandedModels[response.modelId]}>
             <Markdown content={response.content} allowHtml={false} />
           </Collapse>
@@ -160,8 +157,8 @@ const MultiModelBlock: React.FC<MultiModelBlockProps> = ({ block }) => {
 
   return (
     <Box sx={{ marginY: 2 }}>
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -171,12 +168,12 @@ const MultiModelBlock: React.FC<MultiModelBlockProps> = ({ block }) => {
         <Typography variant="caption" sx={{ color: theme.palette.primary.main }}>
           多模型响应 ({block.responses.length})
         </Typography>
-        <IconButton 
-          size="small" 
+        <IconButton
+          size="small"
           onClick={toggleDisplayMode}
           sx={{ p: 0.5 }}
         >
-          {displayMode === 'tabs' ? <GridViewIcon fontSize="small" /> : <ViewAgendaIcon fontSize="small" />}
+          {displayMode === 'tabs' ? <GridViewIcon size={16} /> : <ViewAgendaIcon size={16} />}
         </IconButton>
       </Box>
 
@@ -185,4 +182,4 @@ const MultiModelBlock: React.FC<MultiModelBlockProps> = ({ block }) => {
   );
 };
 
-export default MultiModelBlock; 
+export default MultiModelBlock;

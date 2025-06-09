@@ -17,17 +17,19 @@ import {
   Alert,
   LinearProgress
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import WarningIcon from '@mui/icons-material/Warning';
-import StorageIcon from '@mui/icons-material/Storage';
-import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
-import LinkIcon from '@mui/icons-material/Link';
-import LinkOffIcon from '@mui/icons-material/LinkOff';
-import ReplayIcon from '@mui/icons-material/Replay';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import BuildIcon from '@mui/icons-material/Build';
-import ConstructionIcon from '@mui/icons-material/Construction';
-import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import {
+  CheckCircle as CheckCircleIcon,
+  AlertTriangle as WarningIcon,
+  Database as StorageIcon,
+  Trash2 as CleaningServicesIcon,
+  Link as LinkIcon,
+  Link2Off as LinkOffIcon,
+  RotateCcw as ReplayIcon,
+  Trash as DeleteSweepIcon,
+  Wrench as BuildIcon,
+  Construction as ConstructionIcon,
+  AlertTriangle as ReportProblemIcon
+} from 'lucide-react';
 import { cleanupOldDatabases, getDatabaseStatus, type DatabaseStatus } from '../../../../../shared/services/storageService';
 import { TopicStatsService } from '../../../../../shared/services/TopicStatsService';
 import { AssistantService } from '../../../../../shared/services';
@@ -215,7 +217,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
         borderColor: 'divider',
         pb: 2
       }}>
-        <StorageIcon sx={{ color: '#10B981' }} />
+        <StorageIcon color="#10B981" />
         <Typography variant="h6">数据库诊断与修复</Typography>
       </DialogTitle>
 
@@ -250,7 +252,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
               <List dense>
                 <ListItem>
                   <ListItemIcon sx={{ minWidth: 36 }}>
-                    <StorageIcon fontSize="small" color="primary" />
+                    <StorageIcon size={16} color="#1976d2" />
                   </ListItemIcon>
                   <ListItemText
                     primary="当前数据库"
@@ -261,9 +263,9 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
                 <ListItem>
                   <ListItemIcon sx={{ minWidth: 36 }}>
                     {diagnosticResult.databases.length > 1 ? (
-                      <WarningIcon fontSize="small" color="warning" />
+                      <WarningIcon size={16} color="#ed6c02" />
                     ) : (
-                      <CheckCircleIcon fontSize="small" color="success" />
+                      <CheckCircleIcon size={16} color="#2e7d32" />
                     )}
                   </ListItemIcon>
                   <ListItemText
@@ -278,7 +280,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
 
                 <ListItem>
                   <ListItemIcon sx={{ minWidth: 36 }}>
-                    <CheckCircleIcon fontSize="small" color="success" />
+                    <CheckCircleIcon size={16} color="#2e7d32" />
                   </ListItemIcon>
                   <ListItemText
                     primary="数据存储"
@@ -294,7 +296,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
 
                 <ListItem>
                   <ListItemIcon sx={{ minWidth: 36 }}>
-                    <CheckCircleIcon fontSize="small" color="success" />
+                    <CheckCircleIcon size={16} color="#2e7d32" />
                   </ListItemIcon>
                   <ListItemText
                     primary="话题数量"
@@ -304,7 +306,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
 
                 <ListItem>
                   <ListItemIcon sx={{ minWidth: 36 }}>
-                    <CheckCircleIcon fontSize="small" color="success" />
+                    <CheckCircleIcon size={16} color="#2e7d32" />
                   </ListItemIcon>
                   <ListItemText
                     primary="助手数量"
@@ -347,9 +349,9 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
                   <ListItem>
                     <ListItemIcon sx={{ minWidth: 36 }}>
                       {repairResult.found > 0 ? (
-                        <WarningIcon fontSize="small" color="warning" />
+                        <WarningIcon size={16} color="#ed6c02" />
                       ) : (
-                        <CheckCircleIcon fontSize="small" color="success" />
+                        <CheckCircleIcon size={16} color="#2e7d32" />
                       )}
                     </ListItemIcon>
                     <ListItemText
@@ -360,7 +362,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
 
                   <ListItem>
                     <ListItemIcon sx={{ minWidth: 36 }}>
-                      <CheckCircleIcon fontSize="small" color="success" />
+                      <CheckCircleIcon size={16} color="#2e7d32" />
                     </ListItemIcon>
                     <ListItemText
                       primary="已清理数据库"
@@ -370,7 +372,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
 
                   <ListItem>
                     <ListItemIcon sx={{ minWidth: 36 }}>
-                      <CheckCircleIcon fontSize="small" color="success" />
+                      <CheckCircleIcon size={16} color="#2e7d32" />
                     </ListItemIcon>
                     <ListItemText
                       primary="当前使用数据库"
@@ -414,7 +416,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
                 <List dense>
                   <ListItem>
                     <ListItemIcon sx={{ minWidth: 36 }}>
-                      <CleaningServicesIcon fontSize="small" color="primary" />
+                      <CleaningServicesIcon size={16} color="#1976d2" />
                     </ListItemIcon>
                     <ListItemText
                       primary="已清理无效话题"
@@ -424,7 +426,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
 
                   <ListItem>
                     <ListItemIcon sx={{ minWidth: 36 }}>
-                      <CheckCircleIcon fontSize="small" color="success" />
+                      <CheckCircleIcon size={16} color="#2e7d32" />
                     </ListItemIcon>
                     <ListItemText
                       primary="剩余话题数量"
@@ -464,7 +466,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
                 <List dense>
                   <ListItem>
                     <ListItemIcon sx={{ minWidth: 36 }}>
-                      <LinkIcon fontSize="small" color="primary" />
+                      <LinkIcon size={16} color="#1976d2" />
                     </ListItemIcon>
                     <ListItemText
                       primary="已修复助手数量"
@@ -474,7 +476,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
 
                   <ListItem>
                     <ListItemIcon sx={{ minWidth: 36 }}>
-                      <LinkOffIcon fontSize="small" color="warning" />
+                      <LinkOffIcon size={16} color="#ed6c02" />
                     </ListItemIcon>
                     <ListItemText
                       primary="已移除无效引用"
@@ -484,7 +486,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
 
                   <ListItem>
                     <ListItemIcon sx={{ minWidth: 36 }}>
-                      <CheckCircleIcon fontSize="small" color="success" />
+                      <CheckCircleIcon size={16} color="#2e7d32" />
                     </ListItemIcon>
                     <ListItemText
                       primary="助手总数"
@@ -542,7 +544,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
             variant="outlined"
             onClick={runDiagnostic}
             disabled={isLoading || isRepairing || isCleaningTopics || isFixingReferences}
-            startIcon={<ReplayIcon />}
+            startIcon={<ReplayIcon size={16} />}
             sx={{
               borderColor: '#10B981',
               color: '#10B981',
@@ -559,7 +561,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
             variant="outlined"
             onClick={cleanupInvalidTopics}
             disabled={isLoading || isRepairing || isCleaningTopics || isFixingReferences}
-            startIcon={<DeleteSweepIcon />}
+            startIcon={<DeleteSweepIcon size={16} />}
             sx={{
               borderColor: '#3B82F6',
               color: '#3B82F6',
@@ -576,7 +578,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
             variant="outlined"
             onClick={fixAssistantTopicReferences}
             disabled={isLoading || isRepairing || isCleaningTopics || isFixingReferences}
-            startIcon={<BuildIcon />}
+            startIcon={<BuildIcon size={16} />}
             sx={{
               borderColor: '#8B5CF6',
               color: '#8B5CF6',
@@ -593,7 +595,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
             variant="contained"
             onClick={repairDatabase}
             disabled={isLoading || isRepairing || isCleaningTopics || isFixingReferences || !!(diagnosticResult && diagnosticResult.databases.length <= 1)}
-            startIcon={<ConstructionIcon />}
+            startIcon={<ConstructionIcon size={16} />}
             sx={{
               bgcolor: '#10B981',
               '&:hover': {
@@ -609,7 +611,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
               variant="contained"
               onClick={rebuildDatabase}
               disabled={isLoading || isRepairing || isCleaningTopics || isFixingReferences}
-              startIcon={<ReportProblemIcon />}
+              startIcon={<ReportProblemIcon size={16} />}
               sx={{
                 bgcolor: '#EF4444',
                 '&:hover': {

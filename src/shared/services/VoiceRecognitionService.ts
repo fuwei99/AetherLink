@@ -27,7 +27,7 @@ class VoiceRecognitionService {
   private constructor() {
     // 检测是否在Web环境中
     this.isWebEnvironment = typeof window !== 'undefined' &&
-                           !window.hasOwnProperty('Capacitor');
+                           !Object.prototype.hasOwnProperty.call(window, 'Capacitor');
 
 
 
@@ -35,11 +35,11 @@ class VoiceRecognitionService {
     if (this.isWebEnvironment && (window.SpeechRecognition || window.webkitSpeechRecognition)) {
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
       this.webSpeechRecognition = new SpeechRecognitionAPI();
-      
+
       if (this.webSpeechRecognition) {
         this.webSpeechRecognition.continuous = true;
         this.webSpeechRecognition.interimResults = true;
-        
+
         this.webSpeechRecognition.onresult = (event) => {
           if (this.provider !== 'capacitor') return;
 
@@ -73,15 +73,15 @@ class VoiceRecognitionService {
         };
       }
     }
-    
+
     // 初始化时从存储加载提供者
     this.loadProvider();
-    
+
     // 为Capacitor添加语音识别事件监听
     if (!this.isWebEnvironment) {
       SpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
         if (this.provider !== 'capacitor') return;
-        
+
         if (data.matches && data.matches.length > 0 && this.partialResultsCallback) {
           this.partialResultsCallback(data.matches[0]);
         }
@@ -295,7 +295,7 @@ class VoiceRecognitionService {
               this.errorCallback(new Error(`语音识别错误: ${event.error}`));
             }
           };
-          
+
           this.webSpeechRecognition.lang = options?.language || 'zh-CN';
           try {
             this.webSpeechRecognition.start();
@@ -338,28 +338,28 @@ class VoiceRecognitionService {
       this.recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.mediaRecorder = new MediaRecorder(this.recordingStream);
       this.audioChunks = [];
-      
+
       this.mediaRecorder.addEventListener('dataavailable', (event) => {
         this.audioChunks.push(event.data);
       });
-      
+
       this.mediaRecorder.addEventListener('stop', async () => {
         try {
           // 创建音频Blob
           const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-          
+
           // 停止所有轨道
           if (this.recordingStream) {
             this.recordingStream.getTracks().forEach(track => track.stop());
             this.recordingStream = null;
           }
-          
+
           // 加载Whisper设置
           await this.loadWhisperSettings();
-          
+
           // 调用Whisper API转录
           const transcription = await openAIWhisperService.transcribeAudio(audioBlob);
-          
+
           // 如果有部分结果回调，发送结果
           if (this.partialResultsCallback && transcription.text) {
             this.partialResultsCallback(transcription.text);
@@ -376,10 +376,10 @@ class VoiceRecognitionService {
           this.mediaRecorder = null;
         }
       });
-      
+
       // 开始录制
       this.mediaRecorder.start();
-      
+
       // 设置定时器自动停止录制
       this.recordingTimeoutId = window.setTimeout(() => {
         this.stopWhisperRecording();
@@ -420,7 +420,7 @@ class VoiceRecognitionService {
       const language = await getStorageItem<string>('whisper_language');
       const temperature = Number(await getStorageItem<string>('whisper_temperature') || '0');
       const responseFormat = await getStorageItem<string>('whisper_response_format') || 'json';
-      
+
       openAIWhisperService.setApiKey(apiKey);
       openAIWhisperService.setModel(model);
       if (language) {
@@ -447,7 +447,7 @@ class VoiceRecognitionService {
       if (this.listeningStateCallback) {
         this.listeningStateCallback('stopped');
       }
-      
+
       if (this.provider === 'capacitor') {
         if (this.isWebEnvironment && this.webSpeechRecognition) {
           try {
@@ -509,7 +509,7 @@ class VoiceRecognitionService {
       if (this.isWebEnvironment) {
         // 常见语言代码列表
         return [
-          'zh-CN', 'en-US', 'fr-FR', 'de-DE', 'ja-JP', 'ko-KR', 
+          'zh-CN', 'en-US', 'fr-FR', 'de-DE', 'ja-JP', 'ko-KR',
           'es-ES', 'it-IT', 'pt-BR', 'ru-RU'
         ];
       } else {

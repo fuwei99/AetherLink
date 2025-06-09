@@ -21,15 +21,17 @@ import {
   useTheme
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import SequentialIcon from '@mui/icons-material/Timeline';
+import {
+  ArrowLeft,
+  Plus,
+  Edit,
+  Trash2,
+  Bot,
+  Wand2,
+  ArrowLeftRight,
+  GitBranch,
+  ArrowRight
+} from 'lucide-react';
 
 import { modelComboService } from '../../shared/services/ModelComboService';
 import type { ModelComboConfig, ModelComboTemplate, ModelComboStrategy } from '../../shared/types/ModelCombo';
@@ -138,12 +140,12 @@ const ModelComboSettings: React.FC = () => {
 
   const getStrategyIcon = (strategy: ModelComboStrategy) => {
     switch (strategy) {
-      case 'routing': return <SmartToyIcon />;
-      case 'ensemble': return <AccountTreeIcon />;
-      case 'comparison': return <CompareArrowsIcon />;
-      case 'cascade': return <AutoFixHighIcon />;
-      case 'sequential': return <SequentialIcon />;
-      default: return <SmartToyIcon />;
+      case 'routing': return <Bot size={20} />;
+      case 'ensemble': return <GitBranch size={20} />;
+      case 'comparison': return <ArrowLeftRight size={20} />;
+      case 'cascade': return <Wand2 size={20} />;
+      case 'sequential': return <ArrowRight size={20} />;
+      default: return <Bot size={20} />;
     }
   };
 
@@ -198,7 +200,7 @@ const ModelComboSettings: React.FC = () => {
             aria-label="back"
             sx={{ color: (theme) => theme.palette.primary.main }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={24} />
           </IconButton>
           <Typography
             variant="h6"
@@ -320,7 +322,7 @@ const ModelComboSettings: React.FC = () => {
                     }}>
                       <Button
                         size={isMobile ? "small" : "small"}
-                        startIcon={<AddIcon />}
+                        startIcon={<Plus size={16} />}
                         onClick={() => handleCreateFromTemplate(template)}
                         sx={{
                           ml: 'auto',
@@ -360,11 +362,14 @@ const ModelComboSettings: React.FC = () => {
                 borderColor: 'divider',
               }}
             >
-              <SmartToyIcon sx={{
-                fontSize: isMobile ? 36 : 48,
-                color: 'text.secondary',
-                mb: isMobile ? 1 : 2
-              }} />
+              <Bot
+                size={isMobile ? 36 : 48}
+                color="currentColor"
+                style={{
+                  color: 'var(--mui-palette-text-secondary)',
+                  marginBottom: isMobile ? 8 : 16
+                }}
+              />
               <Typography
                 variant={isMobile ? "subtitle1" : "h6"}
                 color="text.secondary"
@@ -385,7 +390,7 @@ const ModelComboSettings: React.FC = () => {
               </Typography>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
+                startIcon={<Plus size={16} />}
                 onClick={handleCreateCombo}
                 size={isMobile ? "small" : "medium"}
                 sx={{ fontSize: isMobile ? '0.8rem' : undefined }}
@@ -477,26 +482,20 @@ const ModelComboSettings: React.FC = () => {
                         onClick={() => handleEditCombo(combo)}
                         color="primary"
                         sx={{
-                          p: isMobile ? 0.5 : undefined,
-                          '& .MuiSvgIcon-root': {
-                            fontSize: isMobile ? '1rem' : undefined
-                          }
+                          p: isMobile ? 0.5 : undefined
                         }}
                       >
-                        <EditIcon />
+                        <Edit size={isMobile ? 16 : 20} />
                       </IconButton>
                       <IconButton
                         size={isMobile ? "small" : "small"}
                         onClick={() => handleDeleteCombo(combo)}
                         color="error"
                         sx={{
-                          p: isMobile ? 0.5 : undefined,
-                          '& .MuiSvgIcon-root': {
-                            fontSize: isMobile ? '1rem' : undefined
-                          }
+                          p: isMobile ? 0.5 : undefined
                         }}
                       >
-                        <DeleteIcon />
+                        <Trash2 size={isMobile ? 16 : 20} />
                       </IconButton>
                     </CardActions>
                   </Card>
@@ -517,14 +516,11 @@ const ModelComboSettings: React.FC = () => {
           bottom: isMobile ? 12 : 16,
           right: isMobile ? 12 : 16,
           width: isMobile ? 48 : undefined,
-          height: isMobile ? 48 : undefined,
-          '& .MuiSvgIcon-root': {
-            fontSize: isMobile ? '1.2rem' : undefined
-          }
+          height: isMobile ? 48 : undefined
         }}
         onClick={handleCreateCombo}
       >
-        <AddIcon />
+        <Plus size={isMobile ? 20 : 24} />
       </Fab>
 
       {/* 创建/编辑对话框 */}

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, CircularProgress, IconButton } from '@mui/material';
-import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { Maximize2 as ZoomOutMapIcon, AlertCircle as ErrorOutlineIcon } from 'lucide-react';
 
 interface LazyImageProps {
   src: string;
@@ -137,7 +136,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
             color: 'text.secondary',
           }}
         >
-          <ErrorOutlineIcon />
+          <ErrorOutlineIcon size={24} />
           <Box sx={{ mt: 1, fontSize: '0.75rem' }}>图片加载失败</Box>
         </Box>
       ) : (
@@ -176,7 +175,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
                 padding: 0.5,
               }}
             >
-              <ZoomOutMapIcon fontSize="small" />
+              <ZoomOutMapIcon size={16} />
             </IconButton>
           )}
         </Box>

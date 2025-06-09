@@ -36,15 +36,27 @@ const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({
   const language = match?.[1] ?? 'text';
   const isCodeBlock = !!match || children?.includes('\n');
 
+  // 创建适配的代码块对象 - 使用 useMemo 来稳定对象引用
+  // 注意：必须在所有条件判断之前调用 Hook
+  const codeBlock: CodeMessageBlock = useMemo(() => ({
+    id: id || `code-${children.slice(0, 50).replace(/\W/g, '')}-${language}`,
+    messageId: 'markdown',
+    type: 'code' as const,
+    content: children,
+    language: language,
+    createdAt: new Date().toISOString(),
+    status: 'success' as const
+  }), [id, children, language]);
+
   // 注意：数学公式由 Markdown 层面的插件处理
   // CodeBlock 专注于代码渲染
 
   // 如果不是代码块，返回行内代码
   if (!isCodeBlock) {
     return (
-      <code 
-        className={className} 
-        style={{ 
+      <code
+        className={className}
+        style={{
           textWrap: 'wrap',
           fontFamily: 'monospace',
           backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
@@ -58,17 +70,6 @@ const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({
   }
 
   // 移除数学公式特殊处理，统一由 Markdown 层面处理
-
-  // 创建适配的代码块对象 - 使用 useMemo 来稳定对象引用
-  const codeBlock: CodeMessageBlock = useMemo(() => ({
-    id: id || `code-${children.slice(0, 50).replace(/\W/g, '')}-${language}`,
-    messageId: 'markdown',
-    type: 'code' as const,
-    content: children,
-    language: language,
-    createdAt: new Date().toISOString(),
-    status: 'success' as const
-  }), [id, children, language]);
 
   // 根据设置选择使用哪个代码块组件
   if (useEnhancedCodeBlock) {

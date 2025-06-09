@@ -18,12 +18,12 @@ import {
 } from '@mui/material';
 import {
   Cloud as CloudIcon,
-  CloudSync as CloudSyncIcon,
+  CloudUpload as CloudSyncIcon,
   Settings as SettingsIcon,
   CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Sync as SyncIcon
-} from '@mui/icons-material';
+  AlertCircle as ErrorIcon,
+  RefreshCw as SyncIcon
+} from 'lucide-react';
 import type { WebDavConfig, WebDavSyncState } from '../../../../../shared/types';
 import { WebDavBackupService } from '../../../../../shared/services/WebDavBackupService';
 import {
@@ -46,7 +46,7 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
     webdavPass: '',
     webdavPath: '/AetherLink'
   });
-  
+
   const [syncState, setSyncState] = useState<WebDavSyncState>({
     syncing: false,
     lastSyncTime: null,
@@ -100,10 +100,10 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
   const handleSyncSettingChange = async (field: keyof WebDavSyncState, value: any) => {
     const newSyncState = { ...syncState, [field]: value };
     setSyncState(newSyncState);
-    
+
     try {
       await webdavService.updateSyncState({ [field]: value });
-      
+
       // 如果是自动同步设置变更
       if (field === 'autoSync' || field === 'syncInterval') {
         if (newSyncState.autoSync && newSyncState.syncInterval > 0) {
@@ -185,7 +185,7 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
               size="small"
             />
           )}
-          
+
           {syncState.lastSyncError && (
             <Chip
               icon={<ErrorIcon />}
@@ -194,7 +194,7 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
               size="small"
             />
           )}
-          
+
           {syncState.lastSyncTime && !syncState.syncing && !syncState.lastSyncError && (
             <Chip
               icon={<CheckCircleIcon />}
@@ -203,7 +203,7 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
               size="small"
             />
           )}
-          
+
           {!syncState.lastSyncTime && !syncState.syncing && !syncState.lastSyncError && (
             <Chip
               label="未同步"
@@ -219,7 +219,7 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <CloudIcon sx={{ mr: 1, color: 'primary.main' }} />
+        <CloudIcon size={24} color="var(--mui-palette-primary-main)" style={{ marginRight: 8 }} />
         <Typography variant="h6">
           WebDAV 云备份设置
         </Typography>
@@ -281,7 +281,7 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
             variant="outlined"
             onClick={testConnection}
             disabled={testing || saving}
-            startIcon={testing ? <CircularProgress size={20} /> : <SettingsIcon />}
+            startIcon={testing ? <CircularProgress size={20} /> : <SettingsIcon size={20} />}
           >
             {testing ? '测试中...' : '测试连接'}
           </Button>
@@ -290,7 +290,7 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
             variant="contained"
             onClick={saveConfig}
             disabled={testing || saving}
-            startIcon={saving ? <CircularProgress size={20} /> : <CloudSyncIcon />}
+            startIcon={saving ? <CircularProgress size={20} /> : <CloudSyncIcon size={20} />}
           >
             {saving ? '保存中...' : '保存配置'}
           </Button>
@@ -299,7 +299,7 @@ const WebDavSettings: React.FC<WebDavSettingsProps> = ({ onConfigChange }) => {
         {config.webdavHost && (
           <>
             <Divider sx={{ my: 2 }} />
-            
+
             <Typography variant="subtitle1" gutterBottom>
               自动同步设置
             </Typography>

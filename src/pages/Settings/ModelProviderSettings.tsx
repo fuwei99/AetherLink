@@ -1072,7 +1072,7 @@ const ModelProviderSettings: React.FC = () => {
                 {provider.isSystem && (
                   <Button
                     variant="outlined"
-                    startIcon={<AddIcon />}
+                    startIcon={<Plus size={16} />}
                     onClick={() => window.location.href = '/settings/model-combo'}
                     sx={{ mt: 2 }}
                   >
@@ -1127,7 +1127,7 @@ const ModelProviderSettings: React.FC = () => {
             display: 'flex',
             alignItems: 'center'
           }}>
-            {testResult?.success ? <VerifiedIcon sx={{mr: 1}}/> : null}
+            {testResult?.success ? <CheckCircle size={20} style={{marginRight: 8}} color="#2e7d32" /> : null}
             API测试结果
           </DialogTitle>
           <DialogContent>
@@ -1394,7 +1394,7 @@ const ModelProviderSettings: React.FC = () => {
                   }
                 }}
               >
-                <DeleteIcon />
+                <Trash2 size={20} />
               </IconButton>
             </Box>
           ))}
@@ -1418,7 +1418,7 @@ const ModelProviderSettings: React.FC = () => {
               sx={{ flex: 1 }}
             />
             <Button
-              startIcon={<AddIcon />}
+              startIcon={<Plus size={16} />}
               onClick={handleAddHeader}
               disabled={!newHeaderKey.trim() || !newHeaderValue.trim()}
               sx={{

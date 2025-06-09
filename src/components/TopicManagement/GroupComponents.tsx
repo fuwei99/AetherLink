@@ -1,23 +1,25 @@
 import { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
+import {
+  Box,
+  Typography,
   IconButton,
   Collapse,
   TextField,
   Menu,
   MenuItem
 } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import {
+  ChevronDown as KeyboardArrowDownIcon,
+  ChevronRight as KeyboardArrowRightIcon,
+  Plus as AddIcon,
+  Edit as EditIcon,
+  Trash2 as DeleteIcon,
+  MoreVertical as MoreVertIcon
+} from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { 
-  toggleGroupExpanded, 
-  updateGroup, 
+import {
+  toggleGroupExpanded,
+  updateGroup,
   deleteGroup,
   reorderItemsInGroup
 } from '../../shared/store/slices/groupsSlice';
@@ -35,41 +37,41 @@ export function GroupHeader({ group, onAddItemClick }: GroupHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(group.name);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  
+
   const handleToggleExpand = () => {
     dispatch(toggleGroupExpanded(group.id));
   };
-  
+
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     setMenuAnchorEl(event.currentTarget);
   };
-  
+
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
   };
-  
+
   const handleEditClick = () => {
     setIsEditing(true);
     handleMenuClose();
   };
-  
+
   const handleDeleteClick = () => {
     dispatch(deleteGroup(group.id));
     handleMenuClose();
   };
-  
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEditName(e.target.value);
   };
-  
+
   const handleNameBlur = () => {
     if (editName.trim()) {
       dispatch(updateGroup({ id: group.id, changes: { name: editName.trim() } }));
     }
     setIsEditing(false);
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleNameBlur();
@@ -78,14 +80,14 @@ export function GroupHeader({ group, onAddItemClick }: GroupHeaderProps) {
       setIsEditing(false);
     }
   };
-  
+
   const handleAddClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onAddItemClick();
   };
-  
+
   return (
-    <Box 
+    <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -98,8 +100,8 @@ export function GroupHeader({ group, onAddItemClick }: GroupHeaderProps) {
       }}
       onClick={handleToggleExpand}
     >
-      <IconButton 
-        size="small" 
+      <IconButton
+        size="small"
         sx={{ padding: '2px', mr: 0.5 }}
         onClick={(e) => {
           e.stopPropagation();
@@ -108,7 +110,7 @@ export function GroupHeader({ group, onAddItemClick }: GroupHeaderProps) {
       >
         {group.expanded ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowRightIcon fontSize="small" />}
       </IconButton>
-      
+
       {isEditing ? (
         <TextField
           size="small"
@@ -118,7 +120,7 @@ export function GroupHeader({ group, onAddItemClick }: GroupHeaderProps) {
           onKeyDown={handleKeyDown}
           autoFocus
           variant="outlined"
-          sx={{ 
+          sx={{
             flexGrow: 1,
             '& .MuiOutlinedInput-root': {
               height: '28px',
@@ -129,10 +131,10 @@ export function GroupHeader({ group, onAddItemClick }: GroupHeaderProps) {
           onClick={(e) => e.stopPropagation()}
         />
       ) : (
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            flexGrow: 1, 
+        <Typography
+          variant="body2"
+          sx={{
+            flexGrow: 1,
             fontWeight: 500,
             fontSize: '0.875rem',
             color: 'text.secondary'
@@ -141,34 +143,34 @@ export function GroupHeader({ group, onAddItemClick }: GroupHeaderProps) {
           {group.name}
         </Typography>
       )}
-      
-      <IconButton 
-        size="small" 
+
+      <IconButton
+        size="small"
         sx={{ padding: '2px' }}
         onClick={handleAddClick}
       >
         <AddIcon fontSize="small" />
       </IconButton>
-      
-      <IconButton 
-        size="small" 
+
+      <IconButton
+        size="small"
         sx={{ padding: '2px' }}
         onClick={handleMenuOpen}
       >
         <MoreVertIcon fontSize="small" />
       </IconButton>
-      
+
       <Menu
         anchorEl={menuAnchorEl}
         open={Boolean(menuAnchorEl)}
         onClose={handleMenuClose}
       >
         <MenuItem onClick={handleEditClick}>
-          <EditIcon fontSize="small" sx={{ mr: 1 }} />
+          <EditIcon size={16} style={{ marginRight: 8 }} />
           编辑分组
         </MenuItem>
         <MenuItem onClick={handleDeleteClick}>
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+          <DeleteIcon size={16} style={{ marginRight: 8 }} />
           删除分组
         </MenuItem>
       </Menu>
@@ -205,32 +207,32 @@ interface DraggableGroupProps {
 // 可拖拽的分组组件
 export function DraggableGroup({ group, children, onAddItem }: DraggableGroupProps) {
   const dispatch = useDispatch();
-  
+
   const handleDragEnd = (result: any) => {
     if (!result.destination) {
       return;
     }
-    
+
     const sourceIndex = result.source.index;
     const destinationIndex = result.destination.index;
-    
+
     if (sourceIndex === destinationIndex) {
       return;
     }
-    
+
     // 获取当前项目顺序
     const currentItems = Array.from(group.items);
     // 移动项目
     const [removed] = currentItems.splice(sourceIndex, 1);
     currentItems.splice(destinationIndex, 0, removed);
-    
+
     // 分发重新排序操作
-    dispatch(reorderItemsInGroup({ 
-      groupId: group.id, 
-      newOrder: currentItems 
+    dispatch(reorderItemsInGroup({
+      groupId: group.id,
+      newOrder: currentItems
     }));
   };
-  
+
   return (
     <GroupContainer group={group} onAddItem={onAddItem}>
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -281,8 +283,8 @@ interface CreateGroupButtonProps {
 // 创建分组按钮组件
 export function CreateGroupButton({ type, onClick }: CreateGroupButtonProps) {
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -298,10 +300,10 @@ export function CreateGroupButton({ type, onClick }: CreateGroupButtonProps) {
       }}
       onClick={onClick}
     >
-      <AddIcon fontSize="small" sx={{ mr: 1 }} />
+      <AddIcon size={16} style={{ marginRight: 8 }} />
       <Typography variant="body2">
         创建{type === 'assistant' ? '助手' : '话题'}分组
       </Typography>
     </Box>
   );
-} 
+}

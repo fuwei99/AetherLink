@@ -11,7 +11,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft } from 'lucide-react';
 import DocumentManager from '../../components/KnowledgeManagement/DocumentManager';
 import { KnowledgeSearch } from '../../components/KnowledgeManagement/KnowledgeSearch';
 import { useKnowledge } from '../../components/KnowledgeManagement/KnowledgeProvider';
@@ -82,7 +82,7 @@ const KnowledgeBaseDetail: React.FC = () => {
     <Container>
       <Box display="flex" alignItems="center" mb={2} position="sticky" top={0} bgcolor="background.paper" zIndex={1}>
         <IconButton onClick={handleGoBack} size="small" sx={{ mr: 1 }}>
-          <ArrowBackIcon />
+          <ArrowLeft size={20} />
         </IconButton>
         <Typography variant="h5" component="h1" sx={{ flexGrow: 1 }}>
           {selectedKnowledgeBase?.name || '知识库详情'}

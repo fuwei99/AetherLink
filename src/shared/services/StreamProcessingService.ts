@@ -10,6 +10,7 @@ import type {
   ThinkingCompleteChunk,
   BlockCompleteChunk
 } from '../types/chunk';
+import { ChunkType } from '../types/chunk';
 
 // 流处理器回调接口 - 简化版本，参考最佳实例
 export interface StreamProcessorCallbacks {
@@ -32,29 +33,29 @@ export function createStreamProcessor(callbacks: StreamProcessorCallbacks = {}) 
   return (chunk: Chunk) => {
     try {
       // 1. 处理完成信号
-      if (chunk.type === 'block_complete') {
+      if (chunk.type === ChunkType.BLOCK_COMPLETE) {
         callbacks.onComplete?.(AssistantMessageStatus.SUCCESS, (chunk as BlockCompleteChunk).response);
         return;
       }
 
       // 2. 处理错误块
-      if (chunk.type === 'error') {
+      if (chunk.type === ChunkType.ERROR) {
         callbacks.onError?.(chunk.error);
         return;
       }
 
       // 3. 处理数据块 - 简化逻辑，参考最佳实例
-      if (chunk.type === 'text.delta' && callbacks.onTextChunk) {
+      if (chunk.type === ChunkType.TEXT_DELTA && callbacks.onTextChunk) {
         callbacks.onTextChunk((chunk as TextDeltaChunk).text);
       }
-      if (chunk.type === 'text.complete' && callbacks.onTextComplete) {
+      if (chunk.type === ChunkType.TEXT_COMPLETE && callbacks.onTextComplete) {
         callbacks.onTextComplete((chunk as TextCompleteChunk).text);
       }
-      if (chunk.type === 'thinking.delta' && callbacks.onThinkingChunk) {
+      if (chunk.type === ChunkType.THINKING_DELTA && callbacks.onThinkingChunk) {
         const thinkingChunk = chunk as ThinkingDeltaChunk;
         callbacks.onThinkingChunk(thinkingChunk.text, thinkingChunk.thinking_millsec);
       }
-      if (chunk.type === 'thinking.complete' && callbacks.onThinkingComplete) {
+      if (chunk.type === ChunkType.THINKING_COMPLETE && callbacks.onThinkingComplete) {
         const thinkingChunk = chunk as ThinkingCompleteChunk;
         callbacks.onThinkingComplete(thinkingChunk.text, thinkingChunk.thinking_millsec);
       }

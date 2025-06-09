@@ -16,12 +16,12 @@ import {
   alpha
 } from '@mui/material';
 import {
-  Language as LanguageIcon,
+  Globe as LanguageIcon,
   Settings as SettingsIcon,
   Check as CheckIcon,
-  Close as CloseIcon,
-  Refresh as RefreshIcon
-} from '@mui/icons-material';
+  X as CloseIcon,
+  RefreshCw as RefreshIcon
+} from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../shared/store';
@@ -160,7 +160,7 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
           pb: 1
         }}
       >
-        <LanguageIcon color="primary" />
+        <LanguageIcon color="#1976d2" />
         <Typography variant="h6" component="span">
           选择搜索提供商
         </Typography>
@@ -208,7 +208,7 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
               />
               {(!enabled || !currentProvider) && (
                 <ListItemSecondaryAction>
-                  <CheckIcon color="primary" />
+                  <CheckIcon color="#1976d2" />
                 </ListItemSecondaryAction>
               )}
             </ListItemButton>
@@ -266,7 +266,7 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
                       />
                       {isSelected && (
                         <ListItemSecondaryAction>
-                          <CheckIcon color="primary" />
+                          <CheckIcon color="#1976d2" />
                         </ListItemSecondaryAction>
                       )}
                     </ListItemButton>
@@ -290,7 +290,7 @@ const WebSearchProviderSelector: React.FC<WebSearchProviderSelectorProps> = ({
               }}
             >
               <ListItemIcon>
-                <SettingsIcon color="action" />
+                <SettingsIcon color="#757575" />
               </ListItemIcon>
               <ListItemText
                 primary="搜索设置"

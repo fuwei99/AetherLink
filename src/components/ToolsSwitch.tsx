@@ -1,6 +1,6 @@
 import React from 'react';
 import { Switch, FormControlLabel, Tooltip, Box } from '@mui/material';
-import BuildIcon from '@mui/icons-material/Build';
+import { Wrench as BuildIcon } from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
 
 interface ToolsSwitchProps {
@@ -20,24 +20,21 @@ const ToolsSwitch: React.FC<ToolsSwitchProps> = ({
 }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-  
+
   return (
     <Tooltip title="控制是否在API请求中包含工具调用功能">
-      <Box sx={{ 
-        display: 'flex', 
+      <Box sx={{
+        display: 'flex',
         alignItems: 'center',
         backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
         borderRadius: '16px',
         padding: '2px 8px',
         margin: '0 4px'
       }}>
-        <BuildIcon 
-          fontSize="small" 
-          sx={{ 
-            color: enabled ? (isDarkMode ? '#90caf9' : '#1976d2') : (isDarkMode ? '#aaa' : '#777'),
-            marginRight: '4px',
-            fontSize: '18px'
-          }} 
+        <BuildIcon
+          size={18}
+          color={enabled ? (isDarkMode ? '#90caf9' : '#1976d2') : (isDarkMode ? '#aaa' : '#777')}
+          style={{ marginRight: '4px' }}
         />
         <FormControlLabel
           control={

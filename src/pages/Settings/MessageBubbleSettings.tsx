@@ -16,8 +16,7 @@ import {
   FormControlLabel,
   Switch
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import InfoIcon from '@mui/icons-material/Info';
+import { ArrowLeft, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
 import { updateSettings } from '../../shared/store/settingsSlice';
@@ -83,7 +82,7 @@ const MessageBubbleSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft />
           </IconButton>
           <Typography
             variant="h6"
@@ -142,7 +141,7 @@ const MessageBubbleSettings: React.FC = () => {
               </Typography>
               <Tooltip title="设置信息气泡的功能和显示方式">
                 <IconButton size="small" sx={{ ml: 1 }}>
-                  <InfoIcon fontSize="small" />
+                  <Info />
                 </IconButton>
               </Tooltip>
             </Box>

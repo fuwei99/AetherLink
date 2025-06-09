@@ -1,9 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Box, IconButton, Tooltip, Snackbar, useTheme, Chip } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import CodeIcon from '@mui/icons-material/Code';
+import { Copy as ContentCopyIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, Code as CodeIcon } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import {
   vscDarkPlus,
@@ -241,7 +238,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ block }) => {
           onClick={toggleCollapse}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CodeIcon fontSize="small" sx={{ color: isDarkMode ? '#888' : '#666' }} />
+            <CodeIcon size={16} color={isDarkMode ? '#888' : '#666'} />
             <span style={{
               color: isDarkMode ? '#ccc' : '#666',
               fontSize: '14px'
@@ -249,7 +246,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ block }) => {
               {getLanguageDisplayName(block.language)} 代码 ({block.content.split('\n').length} 行)
             </span>
           </Box>
-          <ExpandMoreIcon fontSize="small" sx={{ color: isDarkMode ? '#888' : '#666' }} />
+          <ExpandMoreIcon size={16} color={isDarkMode ? '#888' : '#666'} />
         </Box>
       ) : (
         // 展开状态：显示完整代码（带语法高亮）- 移除中间层包装

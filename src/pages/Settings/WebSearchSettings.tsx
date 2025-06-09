@@ -27,12 +27,7 @@ import {
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import LanguageIcon from '@mui/icons-material/Language';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { ArrowLeft as ArrowBackIcon, Plus as AddIcon, Trash2 as DeleteIcon, Edit as EditIcon, Globe as LanguageIcon, Info as InfoOutlinedIcon } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { WebSearchProvider, WebSearchCustomProvider } from '../../shared/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -231,7 +226,7 @@ const WebSearchSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowBackIcon size={24} />
           </IconButton>
           <Typography
             variant="h6"
@@ -245,7 +240,7 @@ const WebSearchSettings: React.FC = () => {
               color: (theme) => theme.palette.text.primary,
             }}
           >
-            <LanguageIcon sx={{ color: '#3b82f6' }} /> 网络搜索设置
+            <LanguageIcon size={24} color="#3b82f6" style={{ marginRight: 8 }} /> 网络搜索设置
           </Typography>
         </Toolbar>
       </AppBar>
@@ -302,7 +297,7 @@ const WebSearchSettings: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Typography sx={{ mr: 1 }}>启用网络搜索</Typography>
                   <Tooltip title="开启后，AI可以通过网络搜索获取最新信息">
-                    <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                    <InfoOutlinedIcon size={16} color="var(--mui-palette-text-secondary)" />
                   </Tooltip>
                 </Box>
               }
@@ -442,14 +437,14 @@ const WebSearchSettings: React.FC = () => {
                   <CardActions>
                     <Button
                       size="small"
-                      startIcon={<EditIcon />}
+                      startIcon={<EditIcon size={16} />}
                       onClick={() => handleEditProvider(provider)}
                     >
                       编辑
                     </Button>
                     <Button
                       size="small"
-                      startIcon={<DeleteIcon />}
+                      startIcon={<DeleteIcon size={16} />}
                       color="error"
                       onClick={() => handleDeleteProvider(provider.id)}
                     >
@@ -463,7 +458,7 @@ const WebSearchSettings: React.FC = () => {
 
           {webSearchSettings.provider === 'custom' && (
             <Button
-              startIcon={<AddIcon />}
+              startIcon={<AddIcon size={16} />}
               variant="outlined"
               sx={{ mt: 2 }}
               onClick={handleAddCustomProvider}
@@ -620,7 +615,7 @@ const WebSearchSettings: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Typography sx={{ mr: 1 }}>启用智能搜索</Typography>
                   <Tooltip title="自动应用最佳实践设置，包括高级搜索深度、内容块优化等">
-                    <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                    <InfoOutlinedIcon size={16} color="var(--mui-palette-text-secondary)" />
                   </Tooltip>
                 </Box>
               }
@@ -744,7 +739,7 @@ const WebSearchSettings: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Typography sx={{ mr: 1 }}>包含原始内容</Typography>
                     <Tooltip title="获取完整的网页内容，用于深度分析">
-                      <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                      <InfoOutlinedIcon size={16} color="var(--mui-palette-text-secondary)" />
                     </Tooltip>
                   </Box>
                 }
@@ -762,7 +757,7 @@ const WebSearchSettings: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Typography sx={{ mr: 1 }}>包含AI答案摘要</Typography>
                     <Tooltip title="Tavily生成的基于搜索结果的答案摘要">
-                      <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                      <InfoOutlinedIcon size={16} color="var(--mui-palette-text-secondary)" />
                     </Tooltip>
                   </Box>
                 }
@@ -780,7 +775,7 @@ const WebSearchSettings: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Typography sx={{ mr: 1 }}>启用查询验证</Typography>
                     <Tooltip title="验证查询长度和格式，提供优化建议">
-                      <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                      <InfoOutlinedIcon size={16} color="var(--mui-palette-text-secondary)" />
                     </Tooltip>
                   </Box>
                 }
@@ -798,7 +793,7 @@ const WebSearchSettings: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Typography sx={{ mr: 1 }}>启用结果后处理</Typography>
                     <Tooltip title="基于相关性分数过滤和排序搜索结果">
-                      <InfoOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                      <InfoOutlinedIcon size={16} color="var(--mui-palette-text-secondary)" />
                     </Tooltip>
                   </Box>
                 }

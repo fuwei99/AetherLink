@@ -21,11 +21,11 @@ import {
   Chip
 } from '@mui/material';
 import {
-  Delete as DeleteIcon,
+  Trash2 as DeleteIcon,
   Download as DownloadIcon,
-  Refresh as RefreshIcon,
+  RefreshCw as RefreshIcon,
   CloudDownload as CloudDownloadIcon
-} from '@mui/icons-material';
+} from 'lucide-react';
 import type { WebDavConfig, WebDavBackupFile } from '../../../../../shared/types';
 import { WebDavBackupService } from '../../../../../shared/services/WebDavBackupService';
 import { formatFileSize, formatDateTime, parseBackupFileName } from '../../../../../shared/utils/webdavUtils';
@@ -77,8 +77,8 @@ const WebDavBackupManager: React.FC<WebDavBackupManagerProps> = ({
   };
 
   const handleSelectFile = (fileName: string) => {
-    setSelectedFiles(prev => 
-      prev.includes(fileName) 
+    setSelectedFiles(prev =>
+      prev.includes(fileName)
         ? prev.filter(f => f !== fileName)
         : [...prev, fileName]
     );
@@ -105,7 +105,7 @@ const WebDavBackupManager: React.FC<WebDavBackupManagerProps> = ({
           throw new Error(result.error || `删除文件 ${fileName} 失败`);
         }
       }
-      
+
       await loadFiles();
       setSelectedFiles([]);
     } catch (error) {
@@ -138,7 +138,7 @@ const WebDavBackupManager: React.FC<WebDavBackupManagerProps> = ({
 
   const renderFileType = (fileName: string) => {
     const { type, isValid } = parseBackupFileName(fileName);
-    
+
     if (!isValid) {
       return <Chip label="未知" size="small" color="default" />;
     }
@@ -166,7 +166,7 @@ const WebDavBackupManager: React.FC<WebDavBackupManagerProps> = ({
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CloudDownloadIcon sx={{ mr: 1 }} />
+            <CloudDownloadIcon style={{ marginRight: 8 }} />
             WebDAV 备份管理
           </Box>
           <Button
@@ -203,7 +203,7 @@ const WebDavBackupManager: React.FC<WebDavBackupManagerProps> = ({
               <Typography variant="body2" color="textSecondary">
                 共 {files.length} 个备份文件
               </Typography>
-              
+
               {selectedFiles.length > 0 && (
                 <Button
                   startIcon={<DeleteIcon />}

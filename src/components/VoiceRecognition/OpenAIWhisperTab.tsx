@@ -13,8 +13,7 @@ import {
   Alert,
   Slider,
 } from '@mui/material';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { Eye as Visibility, EyeOff as VisibilityOff } from 'lucide-react';
 import type { OpenAIWhisperSettings } from '../../shared/types/voice';
 import { openAIWhisperService } from '../../shared/services/OpenAIWhisperService';
 
@@ -24,28 +23,28 @@ interface OpenAIWhisperTabProps {
 }
 
 const OpenAIWhisperTab: React.FC<OpenAIWhisperTabProps> = ({ settings, onSettingsChange }) => {
-  
+
   const handleChange = <K extends keyof OpenAIWhisperSettings>(key: K, value: OpenAIWhisperSettings[K]) => {
     onSettingsChange({
       ...settings,
       [key]: value
     });
   };
-  
+
   const toggleShowApiKey = () => {
     handleChange('showApiKey', !settings.showApiKey);
   };
-  
+
   return (
     <Box sx={{ py: 1 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
         OpenAI Whisper 语音识别设置
       </Typography>
-      
+
       <Alert severity="info" sx={{ mb: 3 }}>
         OpenAI Whisper是一个强大的语音识别模型，支持多种语言。您需要有OpenAI的API密钥才能使用此功能。
       </Alert>
-      
+
       {/* API密钥输入 */}
       <TextField
         fullWidth
@@ -70,7 +69,7 @@ const OpenAIWhisperTab: React.FC<OpenAIWhisperTabProps> = ({ settings, onSetting
           ),
         }}
       />
-      
+
       {/* 模型选择 */}
       <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
         <InputLabel>Whisper模型</InputLabel>
@@ -89,7 +88,7 @@ const OpenAIWhisperTab: React.FC<OpenAIWhisperTabProps> = ({ settings, onSetting
           目前只有whisper-1一个模型可用
         </FormHelperText>
       </FormControl>
-      
+
       {/* 语言选择 */}
       <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
         <InputLabel>语言</InputLabel>
@@ -112,7 +111,7 @@ const OpenAIWhisperTab: React.FC<OpenAIWhisperTabProps> = ({ settings, onSetting
           指定音频的语言可以提高转录准确性，留空则自动检测
         </FormHelperText>
       </FormControl>
-      
+
       {/* 温度参数 */}
       <Box sx={{ mb: 3 }}>
         <Typography id="temperature-slider" gutterBottom>
@@ -132,7 +131,7 @@ const OpenAIWhisperTab: React.FC<OpenAIWhisperTabProps> = ({ settings, onSetting
           较高的值会使输出更加随机，较低的值则使输出更加确定。建议设置为0以获得最准确的结果。
         </FormHelperText>
       </Box>
-      
+
       {/* 响应格式 */}
       <FormControl fullWidth margin="normal" sx={{ mb: 3 }}>
         <InputLabel>响应格式</InputLabel>
@@ -155,4 +154,4 @@ const OpenAIWhisperTab: React.FC<OpenAIWhisperTabProps> = ({ settings, onSetting
   );
 };
 
-export default OpenAIWhisperTab; 
+export default OpenAIWhisperTab;

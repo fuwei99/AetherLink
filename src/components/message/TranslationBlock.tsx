@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography, Button, Chip, useTheme } from '@mui/material';
 import type { TranslationMessageBlock } from '../../shared/types/newMessage.ts';
 import Markdown from './Markdown';
-import { SwapHoriz } from '@mui/icons-material';
+import { ArrowLeftRight as SwapHoriz } from 'lucide-react';
 
 interface TranslationBlockProps {
   block: TranslationMessageBlock;
@@ -23,9 +23,9 @@ const TranslationBlock: React.FC<TranslationBlockProps> = ({ block }) => {
   return (
     <Box sx={{ marginTop: 2 }}>
       {/* 标题栏 */}
-      <Box 
-        sx={{ 
-          display: 'flex', 
+      <Box
+        sx={{
+          display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           mb: 1
@@ -35,16 +35,16 @@ const TranslationBlock: React.FC<TranslationBlockProps> = ({ block }) => {
           <Typography variant="caption" sx={{ color: theme.palette.primary.main }}>
             翻译
           </Typography>
-          <Chip 
-            label={`${block.sourceLanguage} → ${block.targetLanguage}`} 
-            size="small" 
+          <Chip
+            label={`${block.sourceLanguage} → ${block.targetLanguage}`}
+            size="small"
             variant="outlined"
             sx={{ height: 20 }}
           />
         </Box>
-        <Button 
+        <Button
           startIcon={<SwapHoriz />}
-          size="small" 
+          size="small"
           onClick={toggleShowSource}
           sx={{ minWidth: 'auto', px: 1, py: 0 }}
         >
@@ -53,10 +53,10 @@ const TranslationBlock: React.FC<TranslationBlockProps> = ({ block }) => {
       </Box>
 
       {/* 内容区域 */}
-      <Box 
+      <Box
         sx={{
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? 'rgba(255, 255, 255, 0.05)' 
+          backgroundColor: theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.05)'
             : 'rgba(0, 0, 0, 0.02)',
           borderRadius: '8px',
           padding: 2,
@@ -73,4 +73,4 @@ const TranslationBlock: React.FC<TranslationBlockProps> = ({ block }) => {
   );
 };
 
-export default TranslationBlock; 
+export default TranslationBlock;

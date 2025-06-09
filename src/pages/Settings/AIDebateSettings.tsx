@@ -25,16 +25,15 @@ import {
   alpha
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  ArrowBack as ArrowBackIcon,
-  Forum as ForumIcon,
-  SmartToy as SmartToyIcon,
-  Save as SaveIcon,
-  FolderOpen as FolderOpenIcon,
-  ContentCopy as ContentCopyIcon
-} from '@mui/icons-material';
+  Plus,
+  Trash2,
+  Edit,
+  ArrowLeft,
+  Bot,
+  Save,
+  FolderOpen,
+  Copy
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../shared/store';
@@ -744,9 +743,8 @@ const AIDebateSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowLeft size={20} />
           </IconButton>
-          <ForumIcon sx={{ mr: 1, color: '#e11d48' }} />
           <Typography
             variant="h6"
             component="div"
@@ -804,7 +802,7 @@ const AIDebateSettings: React.FC = () => {
                 alignItems: 'center'
               }}
             >
-              <SmartToyIcon sx={{ mr: 1, color: '#06b6d4' }} />
+              <Bot size={20} color="#06b6d4" />
               基本设置
             </Typography>
             <Typography
@@ -937,7 +935,7 @@ const AIDebateSettings: React.FC = () => {
                 alignItems: 'center'
               }}
             >
-              <SmartToyIcon sx={{ mr: 1, color: '#8b5cf6' }} />
+              <Bot size={20} color="#8b5cf6" />
               快速配置
             </Typography>
             <Typography
@@ -1043,7 +1041,7 @@ const AIDebateSettings: React.FC = () => {
               </Box>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
+                startIcon={<Plus size={16} />}
                 onClick={handleAddRole}
                 sx={{
                   background: 'linear-gradient(90deg, #9333EA, #754AB4)',
@@ -1089,7 +1087,7 @@ const AIDebateSettings: React.FC = () => {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, minWidth: 0 }}>
-                    <SmartToyIcon sx={{ mr: 1, color: role.color || '#2196f3', fontSize: '1rem' }} />
+                    <Bot size={16} color={role.color || '#2196f3'} />
                     <Box sx={{ minWidth: 0, flexGrow: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -1120,10 +1118,10 @@ const AIDebateSettings: React.FC = () => {
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 2 }}>
                     <IconButton size="small" onClick={() => handleEditRole(role)} title="编辑角色">
-                      <EditIcon fontSize="small" />
+                      <Edit size={16} />
                     </IconButton>
                     <IconButton size="small" onClick={() => handleDeleteRole(role.id)} color="error" title="删除角色">
-                      <DeleteIcon fontSize="small" />
+                      <Trash2 size={16} />
                     </IconButton>
                   </Box>
                 </Box>
@@ -1168,7 +1166,7 @@ const AIDebateSettings: React.FC = () => {
               </Box>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
+                startIcon={<Plus size={16} />}
                 onClick={handleCreateGroup}
                 sx={{
                   background: 'linear-gradient(90deg, #f59e0b, #d97706)',
@@ -1212,7 +1210,7 @@ const AIDebateSettings: React.FC = () => {
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, minWidth: 0 }}>
-                      <FolderOpenIcon sx={{ mr: 1, color: 'text.secondary', fontSize: '1rem' }} />
+                      <FolderOpen size={16} color="text.secondary" />
                       <Box sx={{ minWidth: 0, flexGrow: 1 }}>
                         <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                           {group.name}
@@ -1233,7 +1231,7 @@ const AIDebateSettings: React.FC = () => {
                         加载
                       </Button>
                       <IconButton size="small" onClick={() => handleEditGroup(group)} title="编辑">
-                        <EditIcon fontSize="small" />
+                        <Edit size={16} />
                       </IconButton>
                       <IconButton
                         size="small"
@@ -1241,7 +1239,7 @@ const AIDebateSettings: React.FC = () => {
                         title="保存当前配置到此分组"
                         color="primary"
                       >
-                        <SaveIcon fontSize="small" />
+                        <Save size={16} />
                       </IconButton>
                       <IconButton size="small" onClick={() => {
                         setEditingGroup(null);
@@ -1249,7 +1247,7 @@ const AIDebateSettings: React.FC = () => {
                         setNewGroupDescription(`基于 ${group.name} 创建的副本`);
                         setGroupDialogOpen(true);
                       }} title="复制">
-                        <ContentCopyIcon fontSize="small" />
+                        <Copy size={16} />
                       </IconButton>
                       <IconButton
                         size="small"
@@ -1257,7 +1255,7 @@ const AIDebateSettings: React.FC = () => {
                         color="error"
                         title="删除"
                       >
-                        <DeleteIcon fontSize="small" />
+                        <Trash2 size={16} />
                       </IconButton>
                     </Box>
                   </Box>
@@ -1410,7 +1408,7 @@ const AIDebateSettings: React.FC = () => {
             onClick={handleSaveGroup}
             variant="contained"
             disabled={!newGroupName.trim()}
-            startIcon={<SaveIcon />}
+            startIcon={<Save size={20} />}
           >
             {editingGroup ? '保存修改' : '创建分组'}
           </Button>

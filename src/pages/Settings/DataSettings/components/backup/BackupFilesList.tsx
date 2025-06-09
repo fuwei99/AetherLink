@@ -13,10 +13,12 @@ import {
   Tooltip,
   Button
 } from '@mui/material';
-import RestoreIcon from '@mui/icons-material/Restore';
-import DeleteIcon from '@mui/icons-material/Delete';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import {
+  RotateCcw as RestoreIcon,
+  Trash2 as DeleteIcon,
+  ExternalLink as OpenInNewIcon,
+  RefreshCw as RefreshIcon
+} from 'lucide-react';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
 import { performFullRestore } from '../../utils/restoreUtils';
@@ -286,7 +288,7 @@ const BackupFilesList: React.FC<BackupFilesListProps> = ({
         </Typography>
 
         <Button
-          startIcon={<RefreshIcon />}
+          startIcon={<RefreshIcon size={16} />}
           onClick={handleRefresh}
           size="small"
           disabled={loading}
@@ -414,7 +416,7 @@ const BackupFilesList: React.FC<BackupFilesListProps> = ({
                       {processingFile === file.name ? (
                         <CircularProgress size={20} sx={{ color: '#9333EA' }} />
                       ) : (
-                        <RestoreIcon fontSize="small" />
+                        <RestoreIcon size={16} />
                       )}
                     </IconButton>
                   </Tooltip>
@@ -430,7 +432,7 @@ const BackupFilesList: React.FC<BackupFilesListProps> = ({
                         ml: 0.5
                       }}
                     >
-                      <OpenInNewIcon fontSize="small" />
+                      <OpenInNewIcon size={16} />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="删除备份">
@@ -445,7 +447,7 @@ const BackupFilesList: React.FC<BackupFilesListProps> = ({
                         ml: 0.5
                       }}
                     >
-                      <DeleteIcon fontSize="small" />
+                      <DeleteIcon size={16} />
                     </IconButton>
                   </Tooltip>
                 </ListItemSecondaryAction>

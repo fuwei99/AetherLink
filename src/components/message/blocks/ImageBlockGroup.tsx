@@ -1,8 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Grid, Modal, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { X as CloseIcon, ChevronLeft as NavigateBeforeIcon, ChevronRight as NavigateNextIcon } from 'lucide-react';
 import LazyImage from '../../common/LazyImage';
 import { useDeepMemo } from '../../../hooks/useMemoization';
 

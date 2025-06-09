@@ -14,7 +14,7 @@ import {
   Switch,
   Box,
 } from '@mui/material';
-import { Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from '@mui/icons-material';
+import { Eye as VisibilityIcon, EyeOff as VisibilityOffIcon } from 'lucide-react';
 
 // Azure TTS配置接口
 export interface AzureTTSSettings {

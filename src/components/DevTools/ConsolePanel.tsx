@@ -12,13 +12,13 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  PlayArrow as PlayArrowIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
+  Play as PlayArrowIcon,
+  AlertCircle as ErrorIcon,
+  AlertTriangle as WarningIcon,
   Info as InfoIcon,
-  BugReport as BugReportIcon,
+  Bug as BugReportIcon,
   Terminal as TerminalIcon,
-} from '@mui/icons-material';
+} from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
 import EnhancedConsoleService from '../../shared/services/EnhancedConsoleService';
 import type { ConsoleEntry, ConsoleLevel, ConsoleFilter } from '../../shared/services/EnhancedConsoleService';
@@ -38,7 +38,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ autoScroll = true }) => {
   const [command, setCommand] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  
+
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const consoleService = EnhancedConsoleService.getInstance();
 
@@ -109,15 +109,15 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ autoScroll = true }) => {
   const getConsoleIcon = (level: ConsoleLevel) => {
     switch (level) {
       case 'error':
-        return <ErrorIcon fontSize="small" />;
+        return <ErrorIcon size={16} />;
       case 'warn':
-        return <WarningIcon fontSize="small" />;
+        return <WarningIcon size={16} />;
       case 'info':
-        return <InfoIcon fontSize="small" />;
+        return <InfoIcon size={16} />;
       case 'debug':
-        return <BugReportIcon fontSize="small" />;
+        return <BugReportIcon size={16} />;
       default:
-        return <TerminalIcon fontSize="small" />;
+        return <TerminalIcon size={16} />;
     }
   };
 
@@ -136,7 +136,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ autoScroll = true }) => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <SearchIcon size={16} />
                 </InputAdornment>
               ),
             }}
@@ -303,7 +303,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ autoScroll = true }) => {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton size="small" onClick={executeCommand} disabled={!command.trim()}>
-                  <PlayArrowIcon />
+                  <PlayArrowIcon size={16} />
                 </IconButton>
               </InputAdornment>
             ),

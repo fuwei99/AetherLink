@@ -26,10 +26,7 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AddIcon from '@mui/icons-material/Add';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { ArrowLeft as ArrowBackIcon, Plus as AddIcon, ChevronRight as ChevronRightIcon, Settings as SettingsIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
 import { setModelSelectorStyle, reorderProviders, updateProvider } from '../../shared/store/settingsSlice';
@@ -37,10 +34,7 @@ import type { ModelProvider } from '../../shared/config/defaultModels';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
 import { reorderArray } from '../../shared/utils/dragUtils';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import FormattedAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
-import ViewAgendaIcon from '@mui/icons-material/ViewAgenda';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { Bot as SmartToyIcon, AlignLeft as FormattedAlignLeftIcon, List as ViewAgendaIcon, GripVertical as DragIndicatorIcon } from 'lucide-react';
 
 /**
  * 默认模型设置组件
@@ -342,9 +336,9 @@ const DefaultModelSettings: React.FC = () => {
                               },
                             }}
                           >
-                            <SettingsIcon fontSize="small" />
+                            <SettingsIcon size={16} />
                           </IconButton>
-                          <ChevronRightIcon sx={{ color: (theme) => alpha(theme.palette.primary.main, 0.5) }} />
+                          <ChevronRightIcon size={20} style={{ color: 'rgba(79, 70, 229, 0.5)' }} />
                         </ListItemButton>
                       )}
                     </Draggable>
@@ -406,7 +400,7 @@ const DefaultModelSettings: React.FC = () => {
                   primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>默认模型设置</Typography>}
                   secondary="设置默认使用的模型和自动化选项"
                 />
-                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+                <ChevronRightIcon size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
               </ListItemButton>
             </ListItem>
 
@@ -463,7 +457,7 @@ const DefaultModelSettings: React.FC = () => {
                   primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>添加模型服务商</Typography>}
                   secondary="设置新的模型服务商"
                 />
-                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+                <ChevronRightIcon size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
               </ListItemButton>
             </ListItem>
           </List>

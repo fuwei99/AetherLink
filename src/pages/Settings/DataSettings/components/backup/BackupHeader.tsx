@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Avatar, Divider } from '@mui/material';
-import CloudSyncIcon from '@mui/icons-material/CloudSync';
+import { Cloud } from 'lucide-react';
 
 /**
  * 备份头部组件
@@ -19,7 +19,7 @@ const BackupHeader: React.FC = () => {
             boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
           }}
         >
-          <CloudSyncIcon />
+          <Cloud size={24} />
         </Avatar>
         <Box>
           <Typography

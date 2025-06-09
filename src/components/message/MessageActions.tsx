@@ -32,10 +32,12 @@ import {
   Send,
   Plus,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import type { Message, MessageVersion } from '../../shared/types/newMessage.ts';
 import MessageEditor from './MessageEditor';
+import ExportMenu from './ExportMenu';
 import { TTSService } from '../../shared/services/TTSService';
 import { getMainTextContent } from '../../shared/utils/messageUtils';
 import { formatDistanceToNow } from 'date-fns';
@@ -107,11 +109,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
 }) => {
   const isUser = message.role === 'user';
   const theme = useTheme();
-  
+
   // 获取版本切换样式设置
   const settings = useAppSelector((state) => state.settings);
   const versionSwitchStyle = (settings as any).versionSwitchStyle || 'popup';
-  
+
   // 检查是否显示小功能气泡
   const showMicroBubbles = settings.showMicroBubbles !== false;
 
@@ -131,6 +133,10 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
   // 版本切换弹出框状态
   const [versionAnchorEl, setVersionAnchorEl] = useState<null | HTMLElement>(null);
   const versionPopoverOpen = Boolean(versionAnchorEl);
+
+  // 导出菜单状态
+  const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
+  const exportMenuOpen = Boolean(exportAnchorEl);
 
   // 确认对话框状态
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -162,14 +168,14 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
     const initializeTTS = async () => {
       try {
         const ttsService = TTSService.getInstance();
-        
+
         // 使用TTSService的全局配置初始化
         const success = await ttsService.initializeConfig();
-        
+
         if (success) {
           // 标记本地配置已加载
           ttsConfigRef.current.loaded = true;
-          
+
           // 从存储获取启用状态
           const enabled = await getStorageItem<string>('enable_tts');
           const isEnabled = enabled !== 'false'; // 默认启用
@@ -417,23 +423,23 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
   // 获取当前版本索引 - 用于箭头式切换
   const currentVersionIndex = useMemo(() => {
     if (!message.versions || message.versions.length === 0) return -1;
-    
+
     if (message.currentVersionId) {
       return message.versions.findIndex(v => v.id === message.currentVersionId);
     }
-    
+
     return -1; // -1 表示当前是最新版本
   }, [message.versions, message.currentVersionId]);
-  
+
   // 计算总版本数（包括最新版本）
   const totalVersions = useMemo(() => {
     return (message.versions?.length || 0) + 1;
   }, [message.versions]);
-  
+
   // 箭头式切换 - 前一个版本
   const handlePreviousVersion = useCallback(() => {
     if (!message.versions || message.versions.length === 0) return;
-    
+
     if (currentVersionIndex === -1) {
       // 当前是最新版本，切换到最后一个历史版本
       const lastVersion = message.versions[message.versions.length - 1];
@@ -448,11 +454,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
       }
     }
   }, [message.versions, currentVersionIndex, onSwitchVersion]);
-  
+
   // 箭头式切换 - 后一个版本
   const handleNextVersion = useCallback(() => {
     if (!message.versions || message.versions.length === 0) return;
-    
+
     if (currentVersionIndex === -1) {
       // 已经是最新版本，无需操作
       return;
@@ -475,7 +481,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
     if (onSwitchVersion) {
       onSwitchVersion(versionId);
     }
-    
+
     // 关闭弹窗
     setVersionAnchorEl(null);
   }, [onSwitchVersion]);
@@ -486,7 +492,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
       // 传递特殊标记'latest'表示切换到最新版本
       onSwitchVersion('latest');
     }
-    
+
     // 关闭弹窗
     setVersionAnchorEl(null);
   }, [onSwitchVersion]);
@@ -497,16 +503,26 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
       // 使用特殊标记'create'表示创建新版本
       onSwitchVersion('create');
     }
-    
+
     // 关闭弹窗
     setVersionAnchorEl(null);
   }, [onSwitchVersion]);
+
+  // 导出功能处理
+  const handleExportClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    setExportAnchorEl(event.currentTarget);
+    handleMenuClose();
+  }, [handleMenuClose]);
+
+  const handleExportMenuClose = useCallback(() => {
+    setExportAnchorEl(null);
+  }, []);
 
   // 删除特定版本 - 保留原有函数
   const handleDeleteVersion = useCallback((versionId: string, event: React.MouseEvent) => {
     // 阻止事件冒泡，避免触发切换版本
     event.stopPropagation();
-    
+
     if (onSwitchVersion) {
       // 使用特殊前缀'delete:'表示删除版本
       onSwitchVersion(`delete:${versionId}`);
@@ -530,7 +546,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
   const getVersionSourceText = useCallback((version: MessageVersion) => {
     const source = version.metadata?.source;
     if (!source) return '';
-    
+
     switch (source) {
       case 'regenerate':
         return '重新生成';
@@ -554,8 +570,8 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
             <>
               {versionSwitchStyle === 'arrows' ? (
                 // 箭头式版本切换
-                <Box sx={{ 
-                  display: 'flex', 
+                <Box sx={{
+                  display: 'flex',
                   alignItems: 'center',
                   backgroundColor: themeColors.aiBubbleColor,
                   borderRadius: '10px',
@@ -569,11 +585,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                     borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)'
                   }
                 }}>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     onClick={handlePreviousVersion}
                     disabled={currentVersionIndex <= 0 && message.currentVersionId !== undefined}
-                    sx={{ 
+                    sx={{
                       padding: 0,
                       opacity: currentVersionIndex <= 0 && message.currentVersionId !== undefined ? 0.3 : 0.7,
                       '&:hover': { opacity: 1 },
@@ -582,11 +598,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                   >
                     <ChevronLeft size={12} />
                   </IconButton>
-                  
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontSize: '10px', 
+
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '10px',
                       fontWeight: 'medium',
                       color: themeColors.textColor,
                       mx: 0.5,
@@ -595,12 +611,12 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                   >
                     {message.currentVersionId ? currentVersionIndex + 1 : totalVersions}/{totalVersions}
                   </Typography>
-                  
-                  <IconButton 
-                    size="small" 
+
+                  <IconButton
+                    size="small"
                     onClick={handleNextVersion}
                     disabled={currentVersionIndex === -1}
-                    sx={{ 
+                    sx={{
                       padding: 0,
                       opacity: currentVersionIndex === -1 ? 0.3 : 0.7,
                       '&:hover': { opacity: 1 },
@@ -672,13 +688,13 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                 color: themeColors.textColor,
                 boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                 borderRadius: '10px',
-                border: versionSwitchStyle === 'arrows' ? 
+                border: versionSwitchStyle === 'arrows' ?
                   `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)'}` : 'none',
                 '&:hover': {
                   opacity: 1,
                   cursor: 'pointer',
                   backgroundColor: themeColors.aiBubbleActiveColor,
-                  borderColor: versionSwitchStyle === 'arrows' ? 
+                  borderColor: versionSwitchStyle === 'arrows' ?
                     (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)') : undefined
                 },
                 '& .MuiChip-icon': {
@@ -850,12 +866,12 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
         <Box sx={{ p: 0.5 }}>
           <Typography variant="subtitle2" sx={{ px: 0.5, py: 0.25, fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
             <span>消息版本历史</span>
-            <Button 
-              size="small" 
+            <Button
+              size="small"
               startIcon={<Plus size={13} />}
               onClick={handleCreateVersion}
-              variant="outlined" 
-              color="primary" 
+              variant="outlined"
+              color="primary"
               sx={{ fontSize: '0.7rem', py: 0.1, px: 0.5, minWidth: 'auto', height: '20px' }}
             >
               保存当前
@@ -863,11 +879,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
           </Typography>
           {/* 版本数量指示器 */}
           {message.versions && message.versions.length > 5 && (
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                display: 'block', 
-                textAlign: 'center', 
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                textAlign: 'center',
                 color: theme.palette.text.secondary,
                 fontSize: '0.7rem',
                 mb: 0.5
@@ -876,12 +892,12 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
               显示 5/{message.versions.length + 1} 个版本，滑动查看更多
             </Typography>
           )}
-          <List 
-            dense 
-            sx={{ 
+          <List
+            dense
+            sx={{
               // 计算最大高度 = 单个项目高度(约28px) * 5 = 140px
-              maxHeight: '140px', 
-              overflow: 'auto', 
+              maxHeight: '140px',
+              overflow: 'auto',
               py: 0,
               // 添加滚动条样式
               '&::-webkit-scrollbar': {
@@ -929,11 +945,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <span>{`版本 ${index + 1}${isCurrentVersion ? ' (当前)' : ''}`}</span>
                         {sourceText && (
-                          <Chip 
+                          <Chip
                             label={sourceText}
                             size="small"
-                            sx={{ 
-                              height: 14, 
+                            sx={{
+                              height: 14,
                               fontSize: '0.6rem',
                               backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                               '& .MuiChip-label': { px: 0.5, py: 0 }
@@ -1001,9 +1017,9 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
           </List>
           {/* 滑动提示箭头 - 当有超过5个版本时显示 */}
           {message.versions && message.versions.length > 5 && (
-            <Box 
-              sx={{ 
-                display: 'flex', 
+            <Box
+              sx={{
+                display: 'flex',
                 justifyContent: 'center',
                 mt: 0.5,
                 opacity: 0.7,
@@ -1038,6 +1054,10 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
       >
         <MenuItem onClick={handleCopyContent}>复制内容</MenuItem>
         <MenuItem onClick={handleSaveContent}>保存内容</MenuItem>
+        <MenuItem onClick={handleExportClick} sx={{ display: 'flex', alignItems: 'center' }}>
+          <FileText size={16} style={{ marginRight: '8px' }} />
+          导出信息
+        </MenuItem>
         <MenuItem onClick={handleEditClick}>编辑</MenuItem>
 
         {/* 用户消息特有功能 */}
@@ -1088,6 +1108,14 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* 导出菜单 */}
+      <ExportMenu
+        message={message}
+        anchorEl={exportAnchorEl}
+        open={exportMenuOpen}
+        onClose={handleExportMenuClose}
+      />
     </>
   );
 }, (prevProps, nextProps) => {

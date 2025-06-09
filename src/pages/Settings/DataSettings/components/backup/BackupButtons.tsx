@@ -1,14 +1,16 @@
 import React from 'react';
 import { Box, Button, CircularProgress } from '@mui/material';
-import BackupIcon from '@mui/icons-material/Backup';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import SaveAltIcon from '@mui/icons-material/SaveAlt';
-import SettingsIcon from '@mui/icons-material/Settings';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import StorageIcon from '@mui/icons-material/Storage';
-import CloudSyncIcon from '@mui/icons-material/CloudSync';
-import CloudIcon from '@mui/icons-material/Cloud';
+import {
+  Upload as BackupIcon,
+  Download as FileDownloadIcon,
+  CloudDownload as CloudDownloadIcon,
+  Save as SaveAltIcon,
+  Settings as SettingsIcon,
+  Trash2 as DeleteSweepIcon,
+  Database as StorageIcon,
+  CloudUpload as CloudSyncIcon,
+  Cloud as CloudIcon
+} from 'lucide-react';
 import { alpha } from '@mui/material/styles';
 
 interface BackupButtonsProps {

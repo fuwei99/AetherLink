@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, IconButton, Dialog, DialogContent, CircularProgress } from '@mui/material';
-import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { Maximize2 as ZoomOutMapIcon, AlertCircle as ErrorOutlineIcon } from 'lucide-react';
 import type { ImageMessageBlock } from '../../../shared/types/newMessage';
 import { dexieStorage } from '../../../shared/services/DexieStorageService';
 

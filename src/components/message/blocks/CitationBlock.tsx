@@ -9,10 +9,7 @@ import {
   useTheme,
   Chip
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import LinkIcon from '@mui/icons-material/Link';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { ChevronDown as ExpandMoreIcon, Copy as ContentCopyIcon, Link as LinkIcon, ExternalLink as OpenInNewIcon } from 'lucide-react';
 import { styled } from '@mui/material/styles';
 import { useDeepMemo } from '../../../hooks/useMemoization';
 import { MessageBlockStatus } from '../../../shared/types/newMessage';
@@ -115,10 +112,9 @@ const CitationBlock: React.FC<Props> = ({ block }) => {
         }}
       >
         <LinkIcon
-          sx={{
-            mr: 1,
-            color: theme.palette.primary.main
-          }}
+          size={20}
+          color={theme.palette.primary.main}
+          style={{ marginRight: 8 }}
         />
 
         <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
@@ -141,11 +137,12 @@ const CitationBlock: React.FC<Props> = ({ block }) => {
             sx={{ mr: 1 }}
             color={copied ? "success" : "default"}
           >
-            <ContentCopyIcon fontSize="small" />
+            <ContentCopyIcon size={16} />
           </IconButton>
 
           <ExpandMoreIcon
-            sx={{
+            size={20}
+            style={{
               transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.2s'
             }}
@@ -199,7 +196,7 @@ const CitationBlock: React.FC<Props> = ({ block }) => {
                             }}
                           >
                             {source.url.length > 50 ? `${source.url.substring(0, 50)}...` : source.url}
-                            <OpenInNewIcon sx={{ ml: 0.5, fontSize: '0.9rem' }} />
+                            <OpenInNewIcon size={14} style={{ marginLeft: 4 }} />
                           </Link>
                         )}
                       </Box>

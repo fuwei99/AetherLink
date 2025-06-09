@@ -102,6 +102,9 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   const showQuickPhraseButton = useSelector((state: RootState) => state.settings.showQuickPhraseButton ?? true);
   const currentAssistant = useSelector((state: RootState) => state.assistants.currentAssistant);
 
+  // 获取长文本粘贴设置
+  const settings = useSelector((state: RootState) => state.settings);
+
   // URL解析功能
   const {
     detectedUrl,
@@ -285,28 +288,28 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   // 处理输入框激活
   const handleInputFocus = () => {
     setIsActivated(true);
-    
+
     // iOS设备特殊处理
     if (isIOS && textareaRef.current) {
       // 延迟执行，确保输入法已弹出
       setTimeout(() => {
         // 滚动到输入框位置
         textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
+
         // 额外处理：尝试滚动页面到底部
         window.scrollTo({
           top: document.body.scrollHeight,
           behavior: 'smooth'
         });
-        
+
         // iOS特有：确保输入框在可视区域内
         const viewportHeight = window.innerHeight;
         const keyboardHeight = viewportHeight * 0.4; // 估计键盘高度约为视口的40%
-        
+
         if (textareaRef.current) {
           const inputRect = textareaRef.current.getBoundingClientRect();
           const inputBottom = inputRect.bottom;
-          
+
           // 如果输入框底部被键盘遮挡，则滚动页面
           if (inputBottom > viewportHeight - keyboardHeight) {
             const scrollAmount = inputBottom - (viewportHeight - keyboardHeight) + 20; // 额外20px空间
@@ -458,6 +461,123 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     setIsActivated(true); // 插入短语后激活输入框
   };
 
+  // 剪贴板粘贴事件处理函数
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    // 获取长文本粘贴设置
+    const pasteLongTextAsFile = settings.pasteLongTextAsFile ?? false;
+    const pasteLongTextThreshold = settings.pasteLongTextThreshold ?? 1500;
+
+    // 优先处理文本粘贴（长文本转文件功能）
+    const textData = clipboardData.getData('text');
+    if (textData && pasteLongTextAsFile && textData.length > pasteLongTextThreshold) {
+      e.preventDefault(); // 阻止默认粘贴行为
+
+      try {
+        setUploadingMedia(true);
+
+        // 使用移动端文件存储服务创建文件
+        const { MobileFileStorageService } = await import('../shared/services/MobileFileStorageService');
+        const fileStorageService = MobileFileStorageService.getInstance();
+
+        const fileName = `粘贴的文本_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.txt`;
+
+        // 将文本转换为 base64 (支持中文等多字节字符)
+        const encoder = new TextEncoder();
+        const data = encoder.encode(textData);
+        const base64Data = btoa(String.fromCharCode(...data));
+
+        const fileData = {
+          name: fileName,
+          size: new Blob([textData], { type: 'text/plain' }).size,
+          mimeType: 'text/plain',
+          base64Data: `data:text/plain;base64,${base64Data}`
+        };
+
+        const fileRecord = await fileStorageService.uploadFile(fileData);
+
+        // 转换为 FileContent 格式
+        const fileContent = {
+          name: fileRecord.origin_name,
+          mimeType: fileRecord.mimeType || 'text/plain',
+          extension: fileRecord.ext || '.txt',
+          size: fileRecord.size,
+          base64Data: fileRecord.base64Data,
+          url: fileRecord.path || '',
+          fileId: fileRecord.id,
+          fileRecord: fileRecord
+        };
+
+        setFiles(prev => [...prev, fileContent]);
+
+        toastManager.show({
+          message: `长文本已转换为文件: ${fileName}`,
+          type: 'success',
+          duration: 3000
+        });
+      } catch (error) {
+        console.error('长文本转文件失败:', error);
+        toastManager.show({
+          message: '长文本转文件失败，请重试',
+          type: 'error',
+          duration: 3000
+        });
+      } finally {
+        setUploadingMedia(false);
+      }
+      return;
+    }
+
+    // 处理图片粘贴
+    const items = Array.from(clipboardData.items);
+    const imageItems = items.filter(item => item.type.startsWith('image/'));
+
+    if (imageItems.length === 0) return;
+
+    e.preventDefault(); // 阻止默认粘贴行为
+
+    try {
+      setUploadingMedia(true);
+
+      for (const item of imageItems) {
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64Data = event.target?.result as string;
+            const newImage: ImageContent = {
+              id: `${Date.now()}-${Math.random()}`,
+              url: base64Data,
+              base64Data: base64Data,
+              mimeType: file.type,
+              name: `粘贴的图片_${Date.now()}.${file.type.split('/')[1]}`,
+              size: file.size
+            };
+            setImages(prev => [...prev, newImage]);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      toastManager.show({
+        message: `成功粘贴 ${imageItems.length} 张图片`,
+        type: 'success',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('粘贴图片处理失败:', error);
+      toastManager.show({
+        message: '粘贴图片失败，请重试',
+        type: 'error',
+        duration: 3000
+      });
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
 
 
   // 使用配置文件获取图标
@@ -604,6 +724,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             onClick={handleInputClick}
+            onPaste={handlePaste}
             disabled={isLoading && !allowConsecutiveMessages}
           />
 

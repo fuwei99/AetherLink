@@ -12,7 +12,8 @@ import { isGenerateImageModel } from '../../config/models';
 // 导出客户端模块
 export {
   createClient,
-  testConnection
+  testConnection,
+  fetchModels
 } from './client.ts';
 
 // 导出提供商模块
@@ -20,6 +21,14 @@ export {
   BaseProvider
 } from './provider';
 export { default as GeminiProvider } from './provider';
+
+// 导出嵌入服务模块
+export {
+  GeminiEmbeddingService,
+  createGeminiEmbeddingService,
+  getGeminiEmbedding,
+  getGeminiEmbeddingDimensions
+} from './embeddingService';
 
 // 创建Provider实例的工厂函数
 export function createProvider(model: Model): GeminiProvider {
@@ -89,9 +98,6 @@ export function createGeminiAPI(model: Model) {
         model: model,
         prompt: options?.systemPrompt || '',
         settings: {
-          temperature: model.temperature || 0.7,
-          topP: (model as any).topP || 0.95,
-          maxTokens: model.maxTokens || 2048,
           streamOutput: true
         },
         enableWebSearch: options?.enableWebSearch || false,
@@ -203,6 +209,25 @@ export function createGeminiAPI(model: Model) {
     },
 
     /**
+     * 获取文本嵌入
+     */
+    getEmbedding: async (text: string, options?: {
+      taskType?: 'RETRIEVAL_QUERY' | 'RETRIEVAL_DOCUMENT' | 'SEMANTIC_SIMILARITY' | 'CLASSIFICATION' | 'CLUSTERING';
+      title?: string;
+    }) => {
+      console.log(`[gemini/index.ts] 通过API适配器获取嵌入 - 模型ID: ${model.id}, 文本长度: ${text.length}`);
+      return provider.getEmbedding(text, options);
+    },
+
+    /**
+     * 获取嵌入维度
+     */
+    getEmbeddingDimensions: async () => {
+      console.log(`[gemini/index.ts] 通过API适配器获取嵌入维度 - 模型ID: ${model.id}`);
+      return provider.getEmbeddingDimensions(model);
+    },
+
+    /**
      * 测试API连接
      */
     testConnection: () => provider.check(model)
@@ -225,9 +250,6 @@ export const sendChatRequest = async (
     model: model,
     prompt: '',
     settings: {
-      temperature: model.temperature || 0.7,
-      topP: (model as any).topP || 0.95,
-      maxTokens: model.maxTokens || 2048,
       streamOutput: true
     },
     // 对于图像生成模型，默认启用图像生成
@@ -252,18 +274,3 @@ export const sendChatRequest = async (
   return result;
 };
 
-/**
- * 获取模型列表
- */
-export const fetchModels = async (provider: any): Promise<any[]> => {
-  console.log(`[gemini/index.ts] 获取Gemini模型列表`);
-  const geminiProvider = createProvider({
-    id: provider.id,
-    name: provider.name || 'Gemini',
-    apiKey: provider.apiKey,
-    baseUrl: provider.baseUrl || 'https://generativelanguage.googleapis.com/v1beta',
-    provider: 'gemini'
-  });
-
-  return geminiProvider.models();
-};

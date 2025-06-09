@@ -18,12 +18,12 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
-  ArrowBack as ArrowBackIcon,
-  Delete as DeleteIcon,
+  ArrowLeft as ArrowBackIcon,
+  Trash2 as DeleteIcon,
   Settings as SettingsIcon,
   Terminal as TerminalIcon,
-  NetworkCheck as NetworkCheckIcon,
-} from '@mui/icons-material';
+  Wifi as NetworkCheckIcon,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
@@ -36,7 +36,7 @@ const DevToolsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   const [tabValue, setTabValue] = useState(0);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -79,13 +79,13 @@ const DevToolsPage: React.FC = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             开发者工具
           </Typography>
-          
+
           <Tooltip title="设置">
             <IconButton color="inherit" onClick={() => setSettingsOpen(true)}>
               <SettingsIcon />
             </IconButton>
           </Tooltip>
-          
+
           <Tooltip title="清除">
             <IconButton color="inherit" onClick={() => setClearDialogOpen(true)}>
               <DeleteIcon />

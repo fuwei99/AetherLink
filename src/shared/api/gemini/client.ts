@@ -5,6 +5,8 @@
 import { GoogleGenAI } from '@google/genai';
 import type { Model } from '../../types';
 import { logApiRequest } from '../../services/LoggerService';
+import axios from 'axios';
+import type OpenAI from 'openai';
 
 /**
  * 创建Gemini客户端 - 电脑版实现
@@ -105,4 +107,80 @@ export function supportsWebSearch(model: Model): boolean {
  */
 export function supportsReasoning(model: Model): boolean {
   return model.capabilities?.reasoning === true;
+}
+
+/**
+ * 获取可用的 Gemini 模型列表
+ * @param model 模型配置
+ * @returns 模型列表
+ */
+export async function fetchModels(model: Model): Promise<OpenAI.Model[]> {
+  try {
+    const apiKey = model.apiKey;
+    const baseUrl = model.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+
+    if (!apiKey) {
+      throw new Error('API密钥未设置');
+    }
+
+    // 清理 baseUrl
+    const cleanBaseUrl = baseUrl.replace(/\/v1beta\/?$/, '');
+    const modelsUrl = `${cleanBaseUrl}/v1beta/models`;
+
+    // 记录 API 请求
+    logApiRequest('Gemini Models List', 'INFO', {
+      method: 'GET',
+      url: modelsUrl
+    });
+
+    // 发送请求获取模型列表
+    const response = await axios.get(modelsUrl, {
+      params: {
+        key: apiKey
+      },
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    // 转换为 OpenAI 兼容格式
+    const models: OpenAI.Model[] = response.data.models?.map((geminiModel: any) => ({
+      id: geminiModel.name?.replace('models/', '') || geminiModel.name,
+      object: 'model' as const,
+      created: Date.now(),
+      owned_by: 'google'
+    })) || [];
+
+    return models;
+  } catch (error: any) {
+    console.error('获取 Gemini 模型列表失败:', error);
+
+    // 返回默认模型列表作为回退
+    return [
+      {
+        id: 'gemini-pro',
+        object: 'model' as const,
+        created: Date.now(),
+        owned_by: 'google'
+      },
+      {
+        id: 'gemini-pro-vision',
+        object: 'model' as const,
+        created: Date.now(),
+        owned_by: 'google'
+      },
+      {
+        id: 'gemini-1.5-pro',
+        object: 'model' as const,
+        created: Date.now(),
+        owned_by: 'google'
+      },
+      {
+        id: 'gemini-1.5-flash',
+        object: 'model' as const,
+        created: Date.now(),
+        owned_by: 'google'
+      }
+    ];
+  }
 }

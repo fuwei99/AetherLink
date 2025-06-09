@@ -19,10 +19,10 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Http as HttpIcon,
-  Clear as ClearIcon,
-  ExpandMore as ExpandMoreIcon,
-} from '@mui/icons-material';
+  Globe as HttpIcon,
+  X as ClearIcon,
+  ChevronDown as ExpandMoreIcon,
+} from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
 import EnhancedNetworkService from '../../shared/services/EnhancedNetworkService';
@@ -41,7 +41,7 @@ const NetworkPanel: React.FC = () => {
   });
   const [selectedEntry, setSelectedEntry] = useState<NetworkEntry | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  
+
   const networkService = EnhancedNetworkService.getInstance();
 
   useEffect(() => {
@@ -70,14 +70,14 @@ const NetworkPanel: React.FC = () => {
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <HttpIcon />
+          <HttpIcon size={20} />
           网络请求详情
           <IconButton
             size="small"
             onClick={() => setShowDetails(false)}
             sx={{ ml: 'auto' }}
           >
-            <ClearIcon />
+            <ClearIcon size={16} />
           </IconButton>
         </Box>
       </DialogTitle>
@@ -120,7 +120,7 @@ const NetworkPanel: React.FC = () => {
             </Box>
 
             <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon size={16} />}>
                 <Typography>请求头</Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -132,7 +132,7 @@ const NetworkPanel: React.FC = () => {
 
             {selectedEntry.requestPayload && (
               <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon size={16} />}>
                   <Typography>请求体</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -146,7 +146,7 @@ const NetworkPanel: React.FC = () => {
             )}
 
             <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon size={16} />}>
                 <Typography>响应头</Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -158,7 +158,7 @@ const NetworkPanel: React.FC = () => {
 
             {selectedEntry.responseData && (
               <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon size={16} />}>
                   <Typography>响应体</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -189,7 +189,7 @@ const NetworkPanel: React.FC = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <SearchIcon size={16} />
                 </InputAdornment>
               ),
             }}

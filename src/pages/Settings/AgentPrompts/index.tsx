@@ -14,11 +14,7 @@ import {
   Paper,
   alpha
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SearchIcon from '@mui/icons-material/Search';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { ArrowLeft as ArrowBackIcon, Search as SearchIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, Copy as ContentCopyIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAgentPromptCategories, searchAgentPrompts } from '../../../shared/config/agentPrompts';
 import type { AgentPrompt, AgentPromptCategory } from '../../../shared/types/AgentPrompt';
@@ -95,7 +91,7 @@ const AgentPromptsSettings: React.FC = () => {
           </Typography>
           <Button
             size="small"
-            startIcon={<ContentCopyIcon sx={{ fontSize: '0.7rem' }} />}
+            startIcon={<ContentCopyIcon size={12} />}
             onClick={() => handleCopyPrompt(prompt)}
             color={copiedPromptId === prompt.id ? 'success' : 'primary'}
             variant="outlined"
@@ -173,7 +169,7 @@ const AgentPromptsSettings: React.FC = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
             {category.prompts.length} 个提示词
           </Typography>
-          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          {isExpanded ? <ExpandLessIcon size={20} /> : <ExpandMoreIcon size={20} />}
         </Box>
 
         <Collapse in={isExpanded}>
@@ -224,7 +220,7 @@ const AgentPromptsSettings: React.FC = () => {
               color: (theme) => theme.palette.primary.main,
             }}
           >
-            <ArrowBackIcon />
+            <ArrowBackIcon size={24} />
           </IconButton>
           <Typography
             variant="h6"
@@ -295,7 +291,7 @@ const AgentPromptsSettings: React.FC = () => {
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon />
+                      <SearchIcon size={20} />
                     </InputAdornment>
                   ),
                 }

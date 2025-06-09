@@ -14,7 +14,7 @@ import {
   ListItemText,
   ListItemSecondaryAction
 } from '@mui/material';
-import { ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { MathRendererType } from '../../../shared/types';
 import type { ThinkingOption } from '../../../shared/config/reasoningConfig';
 
@@ -24,11 +24,13 @@ interface ContextSettingsProps {
   maxOutputTokens: number;
   mathRenderer: MathRendererType;
   thinkingEffort: ThinkingOption;
+  thinkingBudget: number;
   onContextLengthChange: (value: number) => void;
   onContextCountChange: (value: number) => void;
   onMaxOutputTokensChange: (value: number) => void;
   onMathRendererChange: (value: MathRendererType) => void;
   onThinkingEffortChange: (value: ThinkingOption) => void;
+  onThinkingBudgetChange: (value: number) => void;
 }
 
 /**
@@ -40,11 +42,13 @@ export default function ContextSettings({
   maxOutputTokens,
   mathRenderer,
   thinkingEffort,
+  thinkingBudget,
   onContextLengthChange,
   onContextCountChange,
   onMaxOutputTokensChange,
   onMathRendererChange,
-  onThinkingEffortChange
+  onThinkingEffortChange,
+  onThinkingBudgetChange
 }: ContextSettingsProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -79,6 +83,14 @@ export default function ContextSettings({
     onMaxOutputTokensChange(value);
     // 触发自定义事件通知其他组件
     window.dispatchEvent(new CustomEvent('maxOutputTokensChanged', { detail: value }));
+  };
+
+  // 处理思考预算变化
+  const handleThinkingBudgetChange = (_event: Event, newValue: number | number[]) => {
+    const value = newValue as number;
+    onThinkingBudgetChange(value);
+    // 触发自定义事件通知其他组件
+    window.dispatchEvent(new CustomEvent('thinkingBudgetChanged', { detail: value }));
   };
 
   // 处理数学渲染器变化
@@ -132,21 +144,14 @@ export default function ContextSettings({
           }
         }}
       >
-        <Settings size={20} color="#1976d2" style={{ marginRight: 12 }} />
         <ListItemText
           primary="上下文设置"
           secondary={`长度: ${contextLength === 64000 ? '不限' : contextLength} 字符 | 消息数: ${contextCount === 100 ? '最大' : contextCount} 条 | 输出: ${maxOutputTokens} tokens`}
-          primaryTypographyProps={{
-            fontWeight: 'medium',
-            sx: { mt: 1, mb: 0.25 } // 增加上边距，添加下边距
-          }}
-          secondaryTypographyProps={{
-            fontSize: '0.75rem',
-            sx: { mt: 0.5, mb: 0.5 } // 增加上下边距
-          }}
+          primaryTypographyProps={{ fontWeight: 'medium', fontSize: '0.95rem', lineHeight: 1.2 }}
+          secondaryTypographyProps={{ fontSize: '0.75rem', lineHeight: 1.2 }}
         />
         <ListItemSecondaryAction>
-          <IconButton edge="end" size="small" sx={{ padding: '4px' }}>
+          <IconButton edge="end" size="small" sx={{ padding: '2px' }}>
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </IconButton>
         </ListItemSecondaryAction>
@@ -336,6 +341,78 @@ export default function ContextSettings({
               {thinkingEffort === 'medium' && '平衡思考深度和响应速度，适合大多数场景'}
               {thinkingEffort === 'high' && '深度思考，适合复杂问题分析'}
               {thinkingEffort === 'auto' && '根据问题复杂度自动调整思考深度'}
+            </Typography>
+          </Box>
+
+          {/* 思考预算设置 */}
+          <Box sx={{ mb: 3 }}>
+            {/* 标题和当前值 */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" fontWeight="medium" sx={{ mb: 0.5 }}>
+                思考预算: {thinkingBudget} tokens
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                设置Gemini 2.5 Pro模型的思考预算，范围128-32768 tokens
+              </Typography>
+            </Box>
+
+            {/* 滑块控制 */}
+            <Box sx={{ mb: 2 }}>
+              <Slider
+                value={thinkingBudget}
+                onChange={handleThinkingBudgetChange}
+                min={128}
+                max={32768}
+                step={128}
+                marks={[
+                  { value: 128, label: '128' },
+                  { value: 1024, label: '1K' },
+                  { value: 4096, label: '4K' },
+                  { value: 16384, label: '16K' },
+                  { value: 32768, label: '32K' }
+                ]}
+                sx={{
+                  '& .MuiSlider-markLabel': {
+                    fontSize: '0.65rem',
+                    whiteSpace: 'nowrap'
+                  },
+                  '& .MuiSlider-mark': {
+                    height: 8
+                  }
+                }}
+              />
+            </Box>
+
+            {/* 精确输入 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 'fit-content' }}>
+                精确值:
+              </Typography>
+              <TextField
+                type="number"
+                value={thinkingBudget}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  if (!isNaN(value) && value >= 128 && value <= 32768) {
+                    onThinkingBudgetChange(value);
+                    // 触发自定义事件通知其他组件
+                    window.dispatchEvent(new CustomEvent('thinkingBudgetChanged', { detail: value }));
+                  }
+                }}
+                size="small"
+                sx={{ width: 120 }}
+                slotProps={{
+                  htmlInput: { min: 128, max: 32768 }
+                }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                tokens
+              </Typography>
+            </Box>
+
+            {/* 说明文字 */}
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}>
+              思考预算控制模型的思考深度。较高的值允许更深入的思考，但会增加响应时间。
             </Typography>
           </Box>
 

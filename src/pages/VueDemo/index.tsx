@@ -1,6 +1,6 @@
 import React from 'react';
 import { Typography, Paper, Box, Divider, AppBar, Toolbar, IconButton } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft as ArrowBackIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import VueComponentBridge from '../../components/VueComponents/VueComponentBridge';
 import VueCapacitorBridge from './VueCapacitorBridge';
@@ -13,15 +13,15 @@ const VueDemoPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
-      flexGrow: 1, 
-      display: 'flex', 
-      flexDirection: 'column', 
+    <Box sx={{
+      flexGrow: 1,
+      display: 'flex',
+      flexDirection: 'column',
       height: '100vh',
       overflow: 'hidden',
     }}>
       {/* 顶部导航栏 */}
-      <AppBar 
+      <AppBar
         position="fixed"
         elevation={0}
         sx={{
@@ -43,11 +43,11 @@ const VueDemoPage: React.FC = () => {
           >
             <ArrowBackIcon />
           </IconButton>
-          <Typography 
-            variant="h6" 
-            component="div" 
-            sx={{ 
-              flexGrow: 1, 
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              flexGrow: 1,
               fontWeight: 600,
               color: '#42b983',  // Vue绿色
             }}
@@ -58,16 +58,16 @@ const VueDemoPage: React.FC = () => {
       </AppBar>
 
       {/* 可滚动内容区 */}
-      <Box 
-        sx={{ 
-          flexGrow: 1, 
+      <Box
+        sx={{
+          flexGrow: 1,
           overflow: 'auto',  // 关键设置：允许内容滚动
           px: 2,
           py: 2,
           mt: 8,  // 为顶部AppBar留出空间
         }}
       >
-        <Box sx={{ maxWidth: '800px', mx: 'auto', pb: 6 }}>  
+        <Box sx={{ maxWidth: '800px', mx: 'auto', pb: 6 }}>
           <Paper sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>
               基础Vue组件
@@ -103,4 +103,4 @@ const VueDemoPage: React.FC = () => {
   );
 };
 
-export default VueDemoPage; 
+export default VueDemoPage;

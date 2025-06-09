@@ -7,10 +7,7 @@ import {
   ListItemText,
   ListItemSecondaryAction
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import SettingItem from './SettingItem';
 import { animationOptimization, createOptimizedClickHandler } from './scrollOptimization';
 
@@ -53,16 +50,6 @@ export default function SettingGroups({ groups, onSettingChange }: SettingGroups
   };
 
   // 获取分组图标
-  const getGroupIcon = (groupId: string) => {
-    switch (groupId) {
-      case 'general':
-        return <SettingsOutlinedIcon sx={{ color: 'primary.main' }} />;
-      case 'context':
-        return <TuneOutlinedIcon sx={{ color: 'primary.main' }} />;
-      default:
-        return <SettingsOutlinedIcon sx={{ color: 'primary.main' }} />;
-    }
-  };
 
   // 获取分组描述
   const getGroupDescription = (group: SettingGroup) => {
@@ -125,16 +112,15 @@ export default function SettingGroups({ groups, onSettingChange }: SettingGroups
               }
             }}
           >
-            {getGroupIcon(group.id)}
             <ListItemText
               primary={group.title}
               secondary={getGroupDescription(group)}
-              primaryTypographyProps={{ fontWeight: 'medium', sx: { ml: 1.5 }, fontSize: '0.95rem', lineHeight: 1.2 }}
-              secondaryTypographyProps={{ fontSize: '0.75rem', sx: { ml: 1.5 }, lineHeight: 1.2 }}
+              primaryTypographyProps={{ fontWeight: 'medium', fontSize: '0.95rem', lineHeight: 1.2 }}
+              secondaryTypographyProps={{ fontSize: '0.75rem', lineHeight: 1.2 }}
             />
             <ListItemSecondaryAction>
               <IconButton edge="end" size="small" sx={{ padding: '2px' }}>
-                {expandedGroups[group.id] ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                {expandedGroups[group.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </IconButton>
             </ListItemSecondaryAction>
           </ListItem>
