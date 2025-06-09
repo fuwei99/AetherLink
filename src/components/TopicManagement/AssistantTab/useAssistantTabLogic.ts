@@ -89,6 +89,7 @@ export function useAssistantTabLogic(
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editAssistantName, setEditAssistantName] = useState('');
   const [editAssistantPrompt, setEditAssistantPrompt] = useState('');
+  const [editAssistantAvatar, setEditAssistantAvatar] = useState('');
   const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null); //  新增：保存正在编辑的助手
 
   // 提示词选择器状态
@@ -96,6 +97,9 @@ export function useAssistantTabLogic(
 
   // 图标选择器状态
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
+
+  // 头像上传器状态
+  const [avatarUploaderOpen, setAvatarUploaderOpen] = useState(false);
 
 
 
@@ -210,6 +214,7 @@ export function useAssistantTabLogic(
     setEditingAssistant(selectedMenuAssistant);
     setEditAssistantName(selectedMenuAssistant.name);
     setEditAssistantPrompt(selectedMenuAssistant.systemPrompt || '');
+    setEditAssistantAvatar(selectedMenuAssistant.avatar || '');
     setEditDialogOpen(true);
     handleCloseAssistantMenu();
   };
@@ -218,6 +223,7 @@ export function useAssistantTabLogic(
   const handleCloseEditDialog = () => {
     setEditDialogOpen(false);
     setEditingAssistant(null); // 清理编辑状态
+    setEditAssistantAvatar(''); // 清理头像状态
   };
 
   // 保存编辑后的助手
@@ -228,7 +234,8 @@ export function useAssistantTabLogic(
       const updatedAssistant = {
         ...editingAssistant,
         name: editAssistantName,
-        systemPrompt: editAssistantPrompt
+        systemPrompt: editAssistantPrompt,
+        avatar: editAssistantAvatar
       };
 
       // 直接保存到数据库，确保数据持久化
@@ -465,6 +472,26 @@ export function useAssistantTabLogic(
     setSelectedMenuAssistant(null);
   };
 
+  // 打开头像上传器
+  const handleOpenAvatarUploader = () => {
+    setAvatarUploaderOpen(true);
+  };
+
+  // 关闭头像上传器
+  const handleCloseAvatarUploader = () => {
+    setAvatarUploaderOpen(false);
+  };
+
+  // 保存头像
+  const handleSaveAvatar = (avatarDataUrl: string) => {
+    setEditAssistantAvatar(avatarDataUrl);
+  };
+
+  // 移除头像
+  const handleRemoveAvatar = () => {
+    setEditAssistantAvatar('');
+  };
+
   // 搜索相关处理函数
   const handleSearchClick = useCallback(() => {
     setShowSearch(true);
@@ -502,9 +529,11 @@ export function useAssistantTabLogic(
     editDialogOpen,
     editAssistantName,
     editAssistantPrompt,
+    editAssistantAvatar,
     editingAssistant,
     promptSelectorOpen,
     iconPickerOpen,
+    avatarUploaderOpen,
     // 搜索相关状态
     searchQuery,
     debouncedSearchQuery,
@@ -542,6 +571,10 @@ export function useAssistantTabLogic(
     handleSelectPrompt,
     handleOpenIconPicker,
     handleCloseIconPicker,
+    handleOpenAvatarUploader,
+    handleCloseAvatarUploader,
+    handleSaveAvatar,
+    handleRemoveAvatar,
     // 搜索相关处理函数
     handleSearchClick,
     handleCloseSearch,

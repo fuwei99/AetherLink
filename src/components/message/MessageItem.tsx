@@ -27,6 +27,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     isCompact,
     loading,
     modelAvatar: messageData.modelAvatar,
+    assistantAvatar: messageData.assistantAvatar,
     userAvatar: messageData.userAvatar,
     showUserAvatar: messageData.showUserAvatar,
     showUserName: messageData.showUserName,

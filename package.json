@@ -117,6 +117,7 @@
     "mermaid": "^11.6.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.43.1",
     "node-fetch": "^2.7.0",
+    "node-html-parser": "^7.0.1",
     "notistack": "^3.0.2",
     "ofetch": "^1.4.1",
     "openai": "^4.98.0",

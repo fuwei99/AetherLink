@@ -1,6 +1,5 @@
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
-import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 import { themeConfigs, type ThemeStyle } from '../config/themes';
 
 /**
@@ -43,14 +42,9 @@ export class StatusBarService {
 
     // --- Native Platform Only ---
     try {
-      // Android平台：启用edge-to-edge支持
+      // Android平台：EdgeToEdge已禁用，避免与底部导航栏冲突
       if (Capacitor.getPlatform() === 'android') {
-        try {
-          await EdgeToEdge.enable();
-          console.log('[StatusBarService] Android edge-to-edge已启用');
-        } catch (e) {
-          console.warn('[StatusBarService] Android edge-to-edge 启用失败，可能插件未安装或配置:', e);
-        }
+        console.log('[StatusBarService] Android EdgeToEdge已禁用');
       }
 
       // 设置状态栏不覆盖WebView
@@ -81,12 +75,11 @@ export class StatusBarService {
 
     if (!Capacitor.isNativePlatform()) {
       // Web 平台：更新 CSS 变量和 meta 标签
-      // 此时 this.currentThemeStyle 已经是最新值，updateWebStatusBar 内部逻辑会正确
       this.updateWebStatusBar();
       return;
     }
 
-    // 增加初始化检查（可选，但更安全）
+    // 检查是否已初始化
     if (!this.isInitialized) {
       console.warn("[StatusBarService] updateTheme called before initialize on native platform. Skipping.");
       return;
@@ -195,78 +188,47 @@ export class StatusBarService {
   }
 
   /**
-   * 获取EdgeToEdge插件的insets信息 (仅Android)
+   * 获取当前主题配置和颜色信息
    */
-  public async getEdgeToEdgeInsets() {
-    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') {
+  private getThemeColors(): { themeConfig: any; backgroundColor: string; isDark: boolean } | null {
+    const themeConfig = themeConfigs[this.currentThemeStyle];
+    if (!themeConfig) {
+      console.error(`[StatusBarService] Theme config not found for style: ${this.currentThemeStyle}`);
       return null;
     }
 
-    try {
-      const insets = await EdgeToEdge.getInsets();
-      console.log('[StatusBarService] EdgeToEdge insets:', insets);
-      return insets;
-    } catch (error) {
-      console.error('[StatusBarService] 获取EdgeToEdge insets失败:', error);
-      return null;
-    }
-  }
+    const isDark = this.currentTheme === 'dark';
+    const backgroundColor = isDark ? themeConfig.colors.background.dark : '#FFFFFF';
 
-  /**
-   * 禁用EdgeToEdge模式 (仅Android)
-   */
-  public async disableEdgeToEdge(): Promise<void> {
-    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') {
-      return;
-    }
-
-    try {
-      await EdgeToEdge.disable();
-      console.log('[StatusBarService] EdgeToEdge已禁用');
-    } catch (error) {
-      console.error('[StatusBarService] 禁用EdgeToEdge失败:', error);
-      throw error;
-    }
+    return { themeConfig, backgroundColor, isDark };
   }
 
   /**
    * 抽取 Native 平台设置样式的公共逻辑，供 initialize 和 updateTheme 复用
    */
   private async applyNativeThemeStyle(): Promise<void> {
-    // 获取当前主题配置，使用最新的 this.currentThemeStyle
-    const themeConfig = themeConfigs[this.currentThemeStyle];
-    if (!themeConfig) {
-      console.error(`[StatusBarService] Theme config not found for style: ${this.currentThemeStyle}`);
-      return;
-    }
+    const themeColors = this.getThemeColors();
+    if (!themeColors) return;
 
-    let backgroundColor: string;
-    // 使用最新的 this.currentTheme
-    if (this.currentTheme === 'dark') {
+    const { backgroundColor, isDark } = themeColors;
+
+    // 设置状态栏样式
+    if (isDark) {
       // 深色模式：黑底白字
       await StatusBar.setStyle({ style: Style.Dark }); // 文字/图标为浅色
-      // 使用当前主题的深色背景色
-      backgroundColor = themeConfig.colors.background.dark;
     } else {
       // 浅色模式：白底黑字
       await StatusBar.setStyle({ style: Style.Light }); // 文字/图标为深色
-      backgroundColor = '#FFFFFF'; // 背景色为白色
     }
 
     // 设置状态栏背景色
     await StatusBar.setBackgroundColor({ color: backgroundColor });
 
-    // Android平台：同时设置EdgeToEdge背景色以保持一致性
-    // 【重要】这里设置的背景色会影响Android 15的底部导航栏区域颜色
+    // Android平台：EdgeToEdge已禁用，不设置底部导航栏背景色
     if (Capacitor.getPlatform() === 'android') {
-      try {
-        await EdgeToEdge.setBackgroundColor({ color: backgroundColor });
-      } catch (e) {
-        console.warn('[StatusBarService] EdgeToEdge.setBackgroundColor failed:', e);
-      }
+      console.log('[StatusBarService] EdgeToEdge已禁用，跳过底部导航栏背景色设置');
     }
   }
-
 
   /**
    * Web 平台状态栏处理
@@ -274,15 +236,10 @@ export class StatusBarService {
    */
   private updateWebStatusBar(): void {
     try {
-      // 确保使用最新的 this. 状态
-      const currentStyle = this.currentThemeStyle; // 直接用 this.
-      const currentThemeMode = this.currentTheme; // 直接用 this.
+      const themeColors = this.getThemeColors();
+      if (!themeColors) return;
 
-      const themeConfig = themeConfigs[currentStyle];
-      if (!themeConfig) {
-        console.error(`[StatusBarService] Web: Theme config not found for style: ${currentStyle}`);
-        return;
-      }
+      const { backgroundColor, isDark } = themeColors;
 
       // 更新 theme-color meta 标签（影响浏览器状态栏）
       let themeColorMeta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement;
@@ -300,26 +257,15 @@ export class StatusBarService {
         document.head.appendChild(appleStatusBarMeta);
       }
 
-      // 使用与原生平台一致的颜色配置
-      let statusBarColor: string;
-      // 确保使用最新的 this. 状态
-      if (currentThemeMode === 'dark') {
-        // 深色模式：黑底白字，使用当前主题的深色背景色
-        statusBarColor = themeConfig.colors.background.dark;
-        appleStatusBarMeta.content = 'black'; // 与深色背景一致
-      } else {
-        // 浅色模式：白底黑字
-        statusBarColor = '#FFFFFF';
-        appleStatusBarMeta.content = 'default';
-      }
-
-      themeColorMeta.content = statusBarColor;
+      // 设置状态栏颜色和样式
+      themeColorMeta.content = backgroundColor;
+      appleStatusBarMeta.content = isDark ? 'black' : 'default';
 
       // 更新 CSS 变量用于安全区域
       document.documentElement.style.setProperty('--status-bar-height', 'env(safe-area-inset-top, 20px)');
-      document.documentElement.style.setProperty('--status-bar-color', statusBarColor);
+      document.documentElement.style.setProperty('--status-bar-color', backgroundColor);
 
-      console.log(`[StatusBarService] Web 状态栏已更新: ${currentThemeMode}, 风格: ${currentStyle}, 颜色: ${statusBarColor}`);
+      console.log(`[StatusBarService] Web 状态栏已更新: ${this.currentTheme}, 风格: ${this.currentThemeStyle}, 颜色: ${backgroundColor}`);
     } catch (error) {
       console.error('[StatusBarService] Web 状态栏更新失败:', error);
     }

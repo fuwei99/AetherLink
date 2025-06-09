@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { fullScrollOptimization } from './SettingsTab/scrollOptimization';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -15,12 +14,12 @@ export default function TabPanel(props: TabPanelProps) {
   const { children, value, index } = props;
 
   return (
-    <div
+    <Box
       role="tabpanel"
       hidden={value !== index}
       id={`sidebar-tabpanel-${index}`}
       aria-labelledby={`sidebar-tab-${index}`}
-      style={{
+      sx={{
         height: 'calc(100% - 48px)',
         overflow: 'auto',
         padding: '10px',
@@ -33,19 +32,28 @@ export default function TabPanel(props: TabPanelProps) {
         transform: 'translateZ(0)', // 启用硬件加速
         // 滚动条样式优化
         scrollbarWidth: 'thin', // Firefox 细滚动条
+        // 自定义滚动条样式
+        '&::-webkit-scrollbar': {
+          width: '4px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'transparent',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'rgba(0, 0, 0, 0.2)',
+          borderRadius: '2px',
+          '&:hover': {
+            background: 'rgba(0, 0, 0, 0.3)',
+          },
+        },
+        // 防止过度滚动
+        overscrollBehavior: 'contain',
+        // 防止内容溢出导致的滚动问题
+        minHeight: 'fit-content',
       }}
     >
-      <Box
-        sx={{
-          // 防止内容溢出导致的滚动问题
-          minHeight: 'fit-content',
-          // 应用完整的滚动优化
-          ...fullScrollOptimization,
-        }}
-      >
-        {children}
-      </Box>
-    </div>
+      {children}
+    </Box>
   );
 }
 

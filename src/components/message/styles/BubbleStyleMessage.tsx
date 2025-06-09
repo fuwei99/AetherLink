@@ -17,6 +17,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
   isCompact = false,
   loading,
   modelAvatar,
+  assistantAvatar,
   userAvatar,
   showUserAvatar,
   showUserName,
@@ -127,11 +128,11 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
           ) : (
             // AI消息显示头像和模型信息
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-              {/* 模型头像 - 根据设置控制显示 */}
+              {/* 助手/模型头像 - 根据设置控制显示，优先使用助手头像 */}
               {showModelAvatar && (
-                modelAvatar ? (
+                (assistantAvatar || modelAvatar) ? (
                   <Avatar
-                    src={modelAvatar}
+                    src={(assistantAvatar || modelAvatar) || undefined}
                     sx={{
                       width: 24,
                       height: 24,

@@ -16,7 +16,8 @@ import {
   Snackbar,
   Alert,
   InputAdornment,
-  IconButton
+  IconButton,
+  Avatar
 } from '@mui/material';
 import {
   Plus,
@@ -30,7 +31,8 @@ import {
   ArrowDownAZ,
   Trash,
   Search,
-  X
+  X,
+  User
 } from 'lucide-react';
 import type { Assistant } from '../../../shared/types/Assistant';
 import VirtualizedAssistantGroups from './VirtualizedAssistantGroups';
@@ -42,6 +44,7 @@ import AssistantIconPicker from './AssistantIconPicker';
 import { useAssistantTabLogic } from './useAssistantTabLogic';
 import type { Group } from '../../../shared/types';
 import AgentPromptSelector from '../../AgentPromptSelector';
+import AvatarUploader from '../../settings/AvatarUploader';
 
 // 组件属性定义
 interface AssistantTabProps {
@@ -81,8 +84,10 @@ export default function AssistantTab({
     editDialogOpen,
     editAssistantName,
     editAssistantPrompt,
+    editAssistantAvatar,
     promptSelectorOpen,
     iconPickerOpen,
+    avatarUploaderOpen,
     // 搜索相关状态
     searchQuery,
     showSearch,
@@ -118,6 +123,10 @@ export default function AssistantTab({
     handleSelectPrompt,
     handleOpenIconPicker,
     handleCloseIconPicker,
+    handleOpenAvatarUploader,
+    handleCloseAvatarUploader,
+    handleSaveAvatar,
+    handleRemoveAvatar,
     // 搜索相关处理函数
     handleSearchClick,
     handleCloseSearch,
@@ -146,19 +155,21 @@ export default function AssistantTab({
             value={searchQuery}
             onChange={handleSearchChange}
             autoFocus
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search size={18} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={handleCloseSearch}>
-                    <X size={18} />
-                  </IconButton>
-                </InputAdornment>
-              )
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={18} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={handleCloseSearch}>
+                      <X size={18} />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }
             }}
           />
         ) : (
@@ -332,6 +343,49 @@ export default function AssistantTab({
             onChange={handleEditNameChange}
             sx={{ mb: 2 }}
           />
+
+          {/* 助手头像设置区域 */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              助手头像
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar
+                src={editAssistantAvatar}
+                sx={{
+                  width: 60,
+                  height: 60,
+                  bgcolor: editAssistantAvatar ? 'transparent' : 'primary.main',
+                  fontSize: '1.5rem'
+                }}
+              >
+                {!editAssistantAvatar && (editAssistantName.charAt(0) || '助')}
+              </Avatar>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<User size={16} />}
+                  onClick={handleOpenAvatarUploader}
+                  sx={{ minWidth: 120 }}
+                >
+                  上传头像
+                </Button>
+                {editAssistantAvatar && (
+                  <Button
+                    variant="text"
+                    size="small"
+                    color="error"
+                    onClick={handleRemoveAvatar}
+                    sx={{ minWidth: 120 }}
+                  >
+                    移除头像
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          </Box>
+
           <Box sx={{ position: 'relative' }}>
             <TextField
               margin="dense"
@@ -382,6 +436,15 @@ export default function AssistantTab({
         onClose={handleCloseIconPicker}
         onSelectEmoji={handleSelectEmoji}
         currentEmoji={selectedMenuAssistant?.emoji}
+      />
+
+      {/* 助手头像上传器 */}
+      <AvatarUploader
+        open={avatarUploaderOpen}
+        onClose={handleCloseAvatarUploader}
+        onSave={handleSaveAvatar}
+        currentAvatar={editAssistantAvatar}
+        title="设置助手头像"
       />
 
       {/* 通知提示 */}

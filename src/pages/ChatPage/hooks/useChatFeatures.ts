@@ -250,7 +250,7 @@ export const useChatFeatures = (
     }
   };
 
-  // 🚀 新增：基于搜索结果让AI进行回复（在同一个消息块内追加内容）
+  // 🚀 改造：基于搜索结果让AI进行回复，使用供应商原生onChunk回调
   const handleAIResponseAfterSearch = async (
     originalQuery: string,
     searchResults: any[],
@@ -262,7 +262,7 @@ export const useChatFeatures = (
     if (!topic || !model || searchResults.length === 0 || !existingMessageId || !existingMainTextBlockId) return;
 
     try {
-      console.log(`[useChatFeatures] 开始基于搜索结果生成AI回复，追加到现有消息`);
+      console.log(`[useChatFeatures] 开始基于搜索结果生成AI回复，使用供应商原生回调`);
 
       // 构建包含搜索结果的提示词
       let searchContext = `用户问题：${originalQuery}\n\n`;
@@ -283,42 +283,78 @@ export const useChatFeatures = (
       // 在现有内容后添加分隔符和AI分析标题
       const aiAnalysisHeader = '\n\n---\n\n## 🤖 AI 智能分析\n\n';
 
-      // 先更新块内容，添加AI分析标题
+      // 先添加分析标题到内容中
+      const contentWithHeader = currentContent + aiAnalysisHeader;
       await TopicService.updateMessageBlockFields(existingMainTextBlockId, {
-        content: currentContent + aiAnalysisHeader,
+        content: contentWithHeader,
         status: MessageBlockStatus.PROCESSING
       });
 
-      // 调用AI API
+      // 构建消息数组
+      const messages = [
+        {
+          id: 'search-context',
+          role: 'user' as const,
+          content: searchContext,
+          assistantId: topic.assistantId,
+          topicId: topic.id,
+          createdAt: new Date().toISOString(),
+          status: 'success',
+          blocks: []
+        }
+      ];
+
+      console.log(`[useChatFeatures] 使用供应商原生回调处理AI分析`);
+
+      // 使用现有的助手响应处理系统，但需要特殊处理内容前缀
+      await handleAIAnalysisWithNativeCallbacks(
+        messages,
+        model,
+        existingMessageId,
+        existingMainTextBlockId,
+        contentWithHeader
+      );
+
+      console.log(`[useChatFeatures] AI搜索结果分析完成`);
+
+    } catch (error) {
+      console.error('[useChatFeatures] AI搜索结果分析失败:', error);
+    }
+  };
+
+  // 🚀 简化：使用供应商原生回调处理AI分析
+  const handleAIAnalysisWithNativeCallbacks = async (
+    messages: any[],
+    model: any,
+    _messageId: string,
+    blockId: string,
+    contentPrefix: string
+  ) => {
+    try {
+      // 直接调用API并手动处理响应，使用累积方式而不是替换
       const { sendChatRequest } = await import('../../../shared/api');
 
-      // 构建消息历史
-      const messages = [{
-        role: 'user' as const,
-        content: searchContext
-      }];
+      let accumulatedContent = '';
 
-      console.log(`[useChatFeatures] 调用AI API进行搜索结果分析`);
-
-      // 调用AI API
       const response = await sendChatRequest({
         messages,
         modelId: model.id,
         onChunk: async (content: string) => {
-          // 实时更新块内容：搜索结果 + AI分析标题 + AI回复内容
-          const updatedContent = currentContent + aiAnalysisHeader + content;
+          // 累积内容而不是替换
+          accumulatedContent += content;
+          const fullContent = contentPrefix + accumulatedContent;
 
-          // 同时更新数据库和Redux状态
-          await TopicService.updateMessageBlockFields(existingMainTextBlockId, {
-            content: updatedContent,
+          // 更新块内容
+          await TopicService.updateMessageBlockFields(blockId, {
+            content: fullContent,
             status: MessageBlockStatus.PROCESSING
           });
 
-          // 强制更新Redux状态以触发UI重新渲染
+          // 更新Redux状态
           dispatch(updateOneBlock({
-            id: existingMainTextBlockId,
+            id: blockId,
             changes: {
-              content: updatedContent,
+              content: fullContent,
               status: MessageBlockStatus.PROCESSING,
               updatedAt: new Date().toISOString()
             }
@@ -327,34 +363,32 @@ export const useChatFeatures = (
       });
 
       // 处理最终响应
-      let finalAIContent = '';
+      let finalContent = '';
       if (response.success && response.content) {
-        finalAIContent = response.content;
+        finalContent = response.content;
       } else if (response.error) {
-        finalAIContent = `AI分析失败: ${response.error}`;
+        finalContent = `AI分析失败: ${response.error}`;
       }
 
-      // 更新最终内容和状态
-      const finalContent = currentContent + aiAnalysisHeader + finalAIContent;
-      await TopicService.updateMessageBlockFields(existingMainTextBlockId, {
-        content: finalContent,
+      // 更新最终状态
+      const finalFullContent = contentPrefix + finalContent;
+      await TopicService.updateMessageBlockFields(blockId, {
+        content: finalFullContent,
         status: MessageBlockStatus.SUCCESS
       });
 
-      // 更新消息状态为成功
-      store.dispatch({
-        type: 'normalizedMessages/updateMessageStatus',
-        payload: {
-          topicId: topic.id,
-          messageId: existingMessageId,
-          status: AssistantMessageStatus.SUCCESS
+      dispatch(updateOneBlock({
+        id: blockId,
+        changes: {
+          content: finalFullContent,
+          status: MessageBlockStatus.SUCCESS,
+          updatedAt: new Date().toISOString()
         }
-      });
-
-      console.log(`[useChatFeatures] AI搜索结果分析完成`);
+      }));
 
     } catch (error) {
-      console.error('[useChatFeatures] AI搜索结果分析失败:', error);
+      console.error('[handleAIAnalysisWithNativeCallbacks] 处理失败:', error);
+      throw error;
     }
   };
 

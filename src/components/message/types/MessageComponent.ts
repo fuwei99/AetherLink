@@ -18,16 +18,17 @@ export interface BaseMessageStyleProps {
   showAvatar?: boolean;
   isCompact?: boolean;
   loading: boolean;
+  assistantAvatar?: string | null;
   modelAvatar: string | null;
   userAvatar: string | null;
   showUserAvatar: boolean;
   showUserName: boolean;
   showModelAvatar: boolean;
   showModelName: boolean;
-  showMessageDivider: boolean;
-  settings: any;
-  themeColors: any;
-  themeStyle: string;
+  showMessageDivider?: boolean;
+  settings?: any;
+  themeColors?: any;
+  themeStyle?: string;
   theme: Theme;
   getProviderName: (providerId: string) => string;
   messageIndex?: number;
@@ -61,3 +62,4 @@ export interface ModelInfoProps {
   createdAt: string;
   getProviderName: (providerId: string) => string;
 }
+

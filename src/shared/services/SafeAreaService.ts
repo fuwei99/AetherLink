@@ -1,8 +1,7 @@
 /**
  * 安全区域管理服务
- * 处理 Android 15 底部导航栏重叠问题和各平台的安全区域
+ * 处理各平台的安全区域，主要用于iOS设备
  */
-// import { SafeArea, initialize } from '@capacitor-community/safe-area'; // 暂时禁用
 import { initialize } from '@capacitor-community/safe-area';
 import { Capacitor } from '@capacitor/core';
 
@@ -71,102 +70,15 @@ export class SafeAreaService {
    */
   private async initializeNativeSafeArea(): Promise<void> {
     try {
-      // 暂时禁用SafeArea插件，避免与键盘弹出时的动态变化冲突
-      console.log('[SafeAreaService] 暂时禁用SafeArea插件，使用回退值');
-
-      // 直接使用回退值，不启用插件
+      // 对于Android，使用回退值（避免与StatusBarService的EdgeToEdge配置冲突）
+      // 对于iOS，使用回退值（提供基本的安全区域支持）
       this.setFallbackInsets();
-
-      console.log('[SafeAreaService] 原生安全区域初始化完成（使用回退值）:', this.currentInsets);
-
-      /* 原来的插件启用代码，暂时注释掉
-      await SafeArea.enable({
-        config: {
-          customColorsForSystemBars: false, // 不自定义颜色，避免与StatusBarService冲突
-          offset: 0
-        }
-      });
-
-      console.log('[SafeAreaService] SafeArea 插件已启用');
-
-      // 等待一小段时间让插件设置CSS变量
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // 新版本的插件会自动将安全区域值注入到 CSS 变量中
-      // 我们需要从 CSS 变量中读取这些值
-      this.readSafeAreaFromCSS();
-
-      // 启动CSS变量监听器，以便在值变化时更新
-      this.startCSSWatcher();
-
-      console.log('[SafeAreaService] 原生安全区域获取成功:', this.currentInsets);
-      */
-
+      console.log('[SafeAreaService] 原生安全区域初始化完成:', this.currentInsets);
     } catch (error) {
       console.error('[SafeAreaService] 原生安全区域获取失败:', error);
-      // 不再抛出错误，而是使用回退值
       this.setFallbackInsets();
     }
   }
-
-  /**
-   * 从CSS变量中读取安全区域值 - 暂时禁用
-   */
-  /*
-  private readSafeAreaFromCSS(): void {
-    const root = document.documentElement;
-    const computedStyle = window.getComputedStyle(root);
-
-    // 尝试从 --safe-area-inset-* 变量读取
-    const topValue = computedStyle.getPropertyValue('--safe-area-inset-top').trim();
-    const rightValue = computedStyle.getPropertyValue('--safe-area-inset-right').trim();
-    const bottomValue = computedStyle.getPropertyValue('--safe-area-inset-bottom').trim();
-    const leftValue = computedStyle.getPropertyValue('--safe-area-inset-left').trim();
-
-    this.currentInsets = {
-      top: this.parsePxValue(topValue) || 0,
-      right: this.parsePxValue(rightValue) || 0,
-      bottom: this.parsePxValue(bottomValue) || 0,
-      left: this.parsePxValue(leftValue) || 0
-    };
-
-    // 如果所有值都是0，可能是插件还没有设置值，使用回退值
-    if (this.currentInsets.top === 0 && this.currentInsets.bottom === 0) {
-      this.setFallbackInsets();
-    }
-  }
-  */
-
-  /**
-   * 启动CSS变量监听器 - 暂时禁用
-   */
-  /*
-  private startCSSWatcher(): void {
-    // 清除之前的定时器
-    if (this.cssWatchTimer) {
-      clearInterval(this.cssWatchTimer);
-    }
-
-    // 每500ms检查一次CSS变量是否有变化
-    this.cssWatchTimer = window.setInterval(() => {
-      const previousInsets = { ...this.currentInsets };
-      this.readSafeAreaFromCSS();
-
-      // 检查是否有变化
-      const hasChanged =
-        previousInsets.top !== this.currentInsets.top ||
-        previousInsets.right !== this.currentInsets.right ||
-        previousInsets.bottom !== this.currentInsets.bottom ||
-        previousInsets.left !== this.currentInsets.left;
-
-      if (hasChanged) {
-        console.log('[SafeAreaService] 安全区域已更新:', this.currentInsets);
-        this.applySafeAreaToCSS();
-        this.notifyListeners();
-      }
-    }, 500);
-  }
-  */
 
   /**
    * 初始化 Web 平台安全区域
@@ -204,16 +116,16 @@ export class SafeAreaService {
   private setFallbackInsets(): void {
     // 根据平台设置默认值
     if (Capacitor.getPlatform() === 'android') {
-      // Android 默认值，特别考虑 Android 15
-      this.currentInsets = { top: 24, right: 0, bottom: 48, left: 0 };
+      // Android：不设置底部安全区域（由StatusBarService处理）
+      this.currentInsets = { top: 24, right: 0, bottom: 0, left: 0 };
     } else if (Capacitor.getPlatform() === 'ios') {
-      // iOS 默认值，考虑刘海屏
+      // iOS：设置典型的安全区域值（刘海屏和底部安全区域）
       this.currentInsets = { top: 44, right: 0, bottom: 34, left: 0 };
     } else {
-      // Web 默认值
+      // Web：无安全区域
       this.currentInsets = { top: 0, right: 0, bottom: 0, left: 0 };
     }
-    
+
     console.log('[SafeAreaService] 使用回退安全区域值:', this.currentInsets);
   }
 
@@ -233,14 +145,9 @@ export class SafeAreaService {
     root.style.setProperty('--safe-area-top', `${this.currentInsets.top}px`);
     root.style.setProperty('--safe-area-bottom', `${this.currentInsets.bottom}px`);
     
-    // 特别为 Android 15 底部导航栏设置变量
-    if (Capacitor.getPlatform() === 'android' && this.currentInsets.bottom > 0) {
-      root.style.setProperty('--android-nav-bar-height', `${this.currentInsets.bottom}px`);
-      root.style.setProperty('--chat-input-bottom-padding', `${this.currentInsets.bottom + 8}px`);
-    } else {
-      root.style.setProperty('--android-nav-bar-height', '0px');
-      root.style.setProperty('--chat-input-bottom-padding', '8px');
-    }
+    // 设置聊天输入框底部边距（主要用于iOS）
+    const chatInputPadding = this.currentInsets.bottom > 0 ? this.currentInsets.bottom + 8 : 8;
+    root.style.setProperty('--chat-input-bottom-padding', `${chatInputPadding}px`);
     
     // 为聊天界面设置专用变量
     root.style.setProperty('--chat-container-padding-top', `${this.currentInsets.top}px`);
@@ -293,21 +200,6 @@ export class SafeAreaService {
       }
     };
   }
-
-  /**
-   * 通知所有监听器 - 暂时禁用
-   */
-  /*
-  private notifyListeners(): void {
-    this.listeners.forEach(callback => {
-      try {
-        callback(this.currentInsets);
-      } catch (error) {
-        console.error('[SafeAreaService] 监听器回调失败:', error);
-      }
-    });
-  }
-  */
 
   /**
    * 检查是否已初始化

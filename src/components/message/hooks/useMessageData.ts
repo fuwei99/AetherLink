@@ -11,6 +11,7 @@ import { dexieStorage } from '../../../shared/services/DexieStorageService';
 export const useMessageData = (message: Message) => {
   const theme = useTheme();
   const [modelAvatar, setModelAvatar] = useState<string | null>(null);
+  const [assistantAvatar, setAssistantAvatar] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [showMessageDivider, setShowMessageDivider] = useState<boolean>(true);
 
@@ -130,6 +131,33 @@ export const useMessageData = (message: Message) => {
     };
   }, []);
 
+  // 获取助手头像
+  useEffect(() => {
+    const fetchAssistantAvatar = async () => {
+      if (message.role === 'assistant' && message.assistantId) {
+        try {
+          // 从数据库获取助手信息
+          const assistant = await dexieStorage.getAssistant(message.assistantId);
+
+          if (assistant?.avatar) {
+            // 如果助手有自定义头像，使用它
+            setAssistantAvatar(assistant.avatar);
+          } else {
+            // 如果没有自定义头像，清空状态
+            setAssistantAvatar(null);
+          }
+        } catch (error) {
+          console.error('获取助手头像失败:', error);
+          setAssistantAvatar(null);
+        }
+      } else {
+        setAssistantAvatar(null);
+      }
+    };
+
+    fetchAssistantAvatar();
+  }, [message.role, message.assistantId]);
+
   // 尝试获取模型头像
   useEffect(() => {
     const fetchModelAvatar = async () => {
@@ -170,6 +198,7 @@ export const useMessageData = (message: Message) => {
   return {
     blocks,
     modelAvatar,
+    assistantAvatar,
     userAvatar,
     showMessageDivider,
     settings,

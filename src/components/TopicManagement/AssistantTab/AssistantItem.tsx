@@ -58,8 +58,13 @@ const AssistantItem = memo(function AssistantItem({
     return assistant.topics?.length || assistant.topicIds?.length || 0;
   }, [assistant.topics?.length, assistant.topicIds?.length]);
 
-  // 缓存头像显示内容 - 支持Lucide图标
+  // 缓存头像显示内容 - 支持自定义头像、Lucide图标和emoji
   const avatarContent = useMemo(() => {
+    // 如果有自定义头像，直接返回null（让Avatar组件使用src属性）
+    if (assistant.avatar) {
+      return null;
+    }
+
     const iconOrEmoji = assistant.emoji || assistant.name.charAt(0);
 
     // 如果是Lucide图标名称，渲染Lucide图标
@@ -75,7 +80,7 @@ const AssistantItem = memo(function AssistantItem({
 
     // 否则显示emoji或首字母
     return iconOrEmoji;
-  }, [assistant.emoji, assistant.name, isSelected]);
+  }, [assistant.avatar, assistant.emoji, assistant.name, isSelected]);
 
   // 缓存样式对象，避免每次渲染都创建新对象
   const avatarSx = useMemo(() => ({
@@ -111,7 +116,14 @@ const AssistantItem = memo(function AssistantItem({
       }}
     >
       <ListItemAvatar>
-        <Avatar sx={avatarSx}>
+        <Avatar
+          src={assistant.avatar}
+          sx={{
+            ...avatarSx,
+            // 如果有自定义头像，调整背景色
+            bgcolor: assistant.avatar ? 'transparent' : (isSelected ? 'primary.main' : 'grey.300')
+          }}
+        >
           {avatarContent}
         </Avatar>
       </ListItemAvatar>
@@ -159,6 +171,7 @@ const AssistantItem = memo(function AssistantItem({
     prevProps.assistant.id === nextProps.assistant.id &&
     prevProps.assistant.name === nextProps.assistant.name &&
     prevProps.assistant.emoji === nextProps.assistant.emoji &&
+    prevProps.assistant.avatar === nextProps.assistant.avatar &&
     prevProps.isSelected === nextProps.isSelected &&
     (prevProps.assistant.topics?.length || 0) === (nextProps.assistant.topics?.length || 0) &&
     (prevProps.assistant.topicIds?.length || 0) === (nextProps.assistant.topicIds?.length || 0)

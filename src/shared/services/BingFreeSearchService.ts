@@ -6,6 +6,7 @@
 import { CorsBypass } from 'capacitor-cors-bypass-enhanced';
 import { Capacitor } from '@capacitor/core';
 import { v4 as uuidv4 } from 'uuid';
+import { parse } from 'node-html-parser';
 
 export interface BingSearchOptions {
   query: string;
@@ -89,7 +90,7 @@ export class BingFreeSearchService {
       // 使用 CorsBypass 插件获取搜索页面
       const response = await this.fetchSearchPage(searchUrl, timeout);
 
-      // 解析搜索结果
+      // 解析搜索结果 - 使用 node-html-parser
       const results = this.parseSearchResults(response.data, maxResults);
 
       console.log(`[BingFreeSearchService] 搜索完成，找到 ${results.length} 个结果`);
@@ -219,60 +220,141 @@ export class BingFreeSearchService {
   }
 
   /**
-   * 解析搜索结果HTML
-   * 基于你的searxng-proxy脚本中的成功实现
+   * 使用 node-html-parser 解析搜索结果
+   * 高性能、强容错性的HTML解析
    */
   private parseSearchResults(html: string, maxResults: number): BingSearchResult[] {
     const results: BingSearchResult[] = [];
 
     try {
-      // 创建DOM解析器
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
+      console.log('[BingFreeSearchService] 使用 node-html-parser 解析搜索结果，HTML长度:', html.length);
 
-      console.log('[BingFreeSearchService] 开始解析搜索结果，HTML长度:', html.length);
-
-      // 直接按照你的脚本逻辑：$('.b_algo').each()
-      const resultElements = doc.querySelectorAll('.b_algo');
-      console.log('[BingFreeSearchService] 找到 .b_algo 元素:', resultElements.length);
-
-      resultElements.forEach((element) => {
-        if (results.length >= maxResults) return;
-
-        // 完全按照你的脚本逻辑：
-        // const title = $result.find('h2 a').text().trim();
-        // const url = $result.find('h2 a').attr('href');
-        // const content = $result.find('.b_caption p').text().trim();
-
-        const titleElement = element.querySelector('h2 a');
-        const title = this.cleanText(titleElement?.textContent || '');
-        const url = titleElement?.getAttribute('href') || '';
-        const contentElement = element.querySelector('.b_caption p');
-        const content = this.cleanText(contentElement?.textContent || '');
-
-        if (title && url) {
-          results.push({
-            id: uuidv4(),
-            title,
-            url: this.normalizeUrl(url),
-            snippet: content,
-            timestamp: new Date().toISOString(),
-            provider: 'bing-free',
-            score: 1.0
-          });
-
-          console.log(`[BingFreeSearchService] 解析成功 ${results.length}:`, title.substring(0, 50));
+      // 使用 node-html-parser 解析HTML
+      const root = parse(html, {
+        lowerCaseTagName: false,
+        comment: false,
+        fixNestedATags: true,
+        parseNoneClosedTags: true,
+        blockTextElements: {
+          script: false,
+          noscript: false,
+          style: false,
+          pre: true
         }
       });
 
-      console.log(`[BingFreeSearchService] 最终解析到 ${results.length} 个结果`);
+      // 尝试多种选择器策略，但使用统一的 node-html-parser API
+      const selectors = [
+        '.b_algo',           // 主要的Bing搜索结果选择器
+        '.b_result',         // 备用选择器
+        '.b_ans',            // 答案框选择器
+        '.b_web',            // 网页结果选择器
+        '[data-priority]'    // 带优先级的结果
+      ];
+
+      let resultElements: any[] = [];
+
+      // 尝试不同的选择器
+      for (const selector of selectors) {
+        resultElements = root.querySelectorAll(selector);
+        if (resultElements.length > 0) {
+          console.log(`[BingFreeSearchService] 使用选择器 "${selector}" 找到 ${resultElements.length} 个结果`);
+          break;
+        }
+      }
+
+      // 如果没有找到结果，尝试更宽泛的查找
+      if (resultElements.length === 0) {
+        console.log('[BingFreeSearchService] 主要选择器未找到结果，尝试通用链接查找');
+        const allLinks = root.querySelectorAll('a[href]');
+        resultElements = allLinks.filter((link: any) => {
+          const href = link.getAttribute('href') || '';
+          const text = link.text?.trim() || '';
+          return href &&
+                 !href.startsWith('#') &&
+                 !href.includes('bing.com/search') &&
+                 !href.includes('bing.com/images') &&
+                 text.length > 10;
+        }).slice(0, maxResults);
+      }
+
+      // 解析每个结果元素
+      resultElements.forEach((element: any, index: number) => {
+        if (results.length >= maxResults) return;
+
+        try {
+          // 提取标题和链接
+          let title = '';
+          let url = '';
+          let snippet = '';
+
+          // 尝试多种方式提取标题和链接
+          const titleSelectors = ['h2 a', 'h3 a', '.b_title a', 'a[href]'];
+          let titleElement: any = null;
+
+          for (const selector of titleSelectors) {
+            titleElement = element.querySelector(selector);
+            if (titleElement) {
+              title = this.cleanText(titleElement.text || '');
+              url = titleElement.getAttribute('href') || '';
+              if (title && url) break;
+            }
+          }
+
+          // 如果当前元素本身就是链接
+          if (!title && element.tagName === 'A') {
+            title = this.cleanText(element.text || '');
+            url = element.getAttribute('href') || '';
+          }
+
+          // 提取描述文本
+          const contentSelectors = ['.b_caption p', '.b_snippet', '.b_descript', 'p', 'span'];
+          for (const selector of contentSelectors) {
+            const contentElement = element.querySelector(selector);
+            if (contentElement) {
+              const text = this.cleanText(contentElement.text || '');
+              if (text && text.length > snippet.length) {
+                snippet = text;
+              }
+            }
+          }
+
+          // 如果没有找到描述，从父元素中查找
+          if (!snippet) {
+            const parentText = this.cleanText(element.text || '');
+            if (parentText.length > title.length) {
+              snippet = parentText.substring(title.length).trim();
+            }
+          }
+
+          if (title && url) {
+            results.push({
+              id: uuidv4(),
+              title,
+              url: this.normalizeUrl(url),
+              snippet: snippet || '无描述',
+              timestamp: new Date().toISOString(),
+              provider: 'bing-free',
+              score: 1.0 - (index * 0.1) // 根据位置给予不同分数
+            });
+
+            console.log(`[BingFreeSearchService] 解析成功 ${results.length}: ${title.substring(0, 50)}`);
+          }
+        } catch (error) {
+          console.warn(`[BingFreeSearchService] 解析单个结果失败:`, error);
+        }
+      });
+
+      console.log(`[BingFreeSearchService] node-html-parser 解析完成，找到 ${results.length} 个结果`);
 
     } catch (error) {
-      console.error('[BingFreeSearchService] HTML解析失败:', error);
+      console.error('[BingFreeSearchService] node-html-parser 解析失败:', error);
     }
 
     return results;
   }
+
+
 
   /**
    * 清理文本内容
