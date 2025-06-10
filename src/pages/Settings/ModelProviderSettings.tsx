@@ -21,7 +21,9 @@ import {
   FormControlLabel,
   CircularProgress,
   Snackbar,
-  Alert
+  Alert,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   ArrowLeft,
@@ -39,7 +41,10 @@ import {
   deleteProvider
 } from '../../shared/store/settingsSlice';
 import type { Model } from '../../shared/types';
+import type { ApiKeyConfig, LoadBalanceStrategy } from '../../shared/config/defaultModels';
 import { isValidUrl } from '../../shared/utils';
+import MultiKeyManager from '../../components/settings/MultiKeyManager';
+import ApiKeyManager from '../../shared/services/ApiKeyManager';
 import { alpha } from '@mui/material/styles';
 import ModelManagementDialog from '../../components/ModelManagementDialog';
 import SimpleModelDialog from '../../components/settings/SimpleModelDialog';
@@ -148,6 +153,11 @@ const ModelProviderSettings: React.FC = () => {
   const [newHeaderValue, setNewHeaderValue] = useState('');
   const [openHeadersDialog, setOpenHeadersDialog] = useState(false);
 
+  // 多 Key 管理相关状态
+  const [currentTab, setCurrentTab] = useState(0);
+  const [multiKeyEnabled, setMultiKeyEnabled] = useState(false);
+  const keyManager = ApiKeyManager.getInstance();
+
   // 当provider加载完成后初始化状态
   useEffect(() => {
     if (provider) {
@@ -155,8 +165,77 @@ const ModelProviderSettings: React.FC = () => {
       setBaseUrl(provider.baseUrl || '');
       setIsEnabled(provider.isEnabled);
       setExtraHeaders(provider.extraHeaders || {});
+
+      // 检查是否启用了多 Key 模式
+      setMultiKeyEnabled(!!(provider.apiKeys && provider.apiKeys.length > 0));
     }
   }, [provider]);
+
+  // 多 Key 管理函数
+  const handleApiKeysChange = (keys: ApiKeyConfig[]) => {
+    if (provider) {
+      dispatch(updateProvider({
+        id: provider.id,
+        updates: {
+          apiKeys: keys,
+          // 如果有多个 Key，更新主 apiKey 为第一个启用的 Key
+          apiKey: keys.find(k => k.isEnabled)?.key || keys[0]?.key || ''
+        }
+      }));
+    }
+  };
+
+  const handleStrategyChange = (strategy: LoadBalanceStrategy) => {
+    if (provider) {
+      dispatch(updateProvider({
+        id: provider.id,
+        updates: {
+          keyManagement: {
+            strategy,
+            maxFailuresBeforeDisable: provider.keyManagement?.maxFailuresBeforeDisable || 3,
+            failureRecoveryTime: provider.keyManagement?.failureRecoveryTime || 5,
+            enableAutoRecovery: provider.keyManagement?.enableAutoRecovery || true
+          }
+        }
+      }));
+    }
+  };
+
+  const handleToggleMultiKey = (enabled: boolean) => {
+    setMultiKeyEnabled(enabled);
+    if (provider) {
+      if (enabled) {
+        // 启用多 Key 模式：将当前单个 Key 转换为多 Key 配置
+        const currentKey = provider.apiKey;
+        if (currentKey) {
+          const initialKeys = [keyManager.createApiKeyConfig(currentKey, '主要密钥', 1)];
+          dispatch(updateProvider({
+            id: provider.id,
+            updates: {
+              apiKeys: initialKeys,
+              keyManagement: {
+                strategy: 'round_robin' as LoadBalanceStrategy,
+                maxFailuresBeforeDisable: 3,
+                failureRecoveryTime: 5,
+                enableAutoRecovery: true
+              }
+            }
+          }));
+        }
+      } else {
+        // 禁用多 Key 模式：保留第一个 Key 作为单个 Key
+        const firstKey = provider.apiKeys?.[0];
+        dispatch(updateProvider({
+          id: provider.id,
+          updates: {
+            apiKey: firstKey?.key || '',
+            apiKeys: undefined,
+            keyManagement: undefined
+          }
+        }));
+      }
+    }
+  };
 
   const handleBack = () => {
     navigate('/settings/default-model', { replace: true });
@@ -714,6 +793,7 @@ const ModelProviderSettings: React.FC = () => {
                 API配置
               </Typography>
 
+              {/* 启用状态 */}
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" gutterBottom color="text.secondary">
                   启用状态
@@ -730,137 +810,194 @@ const ModelProviderSettings: React.FC = () => {
                 />
               </Box>
 
+              {/* 多 Key 模式切换 */}
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                  API密钥
+                  API Key 管理模式
                 </Typography>
-                <TextField
-                  fullWidth
-                  placeholder="输入API密钥"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  variant="outlined"
-                  type="password"
-                  size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    }
-                  }}
-                  slotProps={{
-                    input: {
-                      'aria-invalid': false,
-                      'aria-describedby': 'provider-settings-api-key-helper-text'
-                    },
-                    formHelperText: {
-                      id: 'provider-settings-api-key-helper-text'
-                    }
-                  }}
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={multiKeyEnabled}
+                      onChange={(e) => handleToggleMultiKey(e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label={multiKeyEnabled ? '多 Key 负载均衡模式' : '单 Key 模式'}
                 />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  {multiKeyEnabled
+                    ? '启用多个 API Key 进行负载均衡和故障转移'
+                    : '使用单个 API Key（传统模式）'
+                  }
+                </Typography>
               </Box>
 
+              {/* API Key 配置标签页 */}
               <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                  基础URL (可选)
-                </Typography>
-                <TextField
-                  fullWidth
-                  placeholder="输入基础URL，例如: https://tow.bt6.top"
-                  value={baseUrl}
-                  onChange={(e) => {
-                    setBaseUrl(e.target.value);
-                    setBaseUrlError('');
-                  }}
-                  error={!!baseUrlError}
-                  helperText={
-                    <span>
-                      {baseUrlError && (
-                        <span style={{ display: 'block', color: 'error.main', marginBottom: '4px', fontSize: '0.75rem' }}>
-                          {baseUrlError}
-                        </span>
-                      )}
-                      <span style={{ display: 'block', color: 'text.secondary', marginBottom: '4px', fontSize: '0.75rem' }}>
-                        在URL末尾添加#可强制使用自定义格式，末尾添加/也可保持原格式
-                      </span>
-                      {baseUrl && isOpenAIProvider(provider?.providerType) && (
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            color: baseUrl.endsWith('#') || baseUrl.endsWith('/') ? '#ed6c02' : '#666',
-                            fontFamily: 'monospace',
-                            fontSize: '0.7rem',
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            marginTop: '4px'
+                <Tabs
+                  value={currentTab}
+                  onChange={(_, newValue) => setCurrentTab(newValue)}
+                  sx={{ mb: 2 }}
+                >
+                  <Tab label={multiKeyEnabled ? "多 Key 管理" : "API 密钥"} />
+                  <Tab label="基础配置" />
+                </Tabs>
+
+                {currentTab === 0 && (
+                  <Box>
+                    {multiKeyEnabled ? (
+                      // 多 Key 管理界面
+                      <MultiKeyManager
+                        providerName={provider.name}
+                        providerType={provider.providerType || 'openai'}
+                        apiKeys={provider.apiKeys || []}
+                        strategy={provider.keyManagement?.strategy || 'round_robin'}
+                        onKeysChange={handleApiKeysChange}
+                        onStrategyChange={handleStrategyChange}
+                      />
+                    ) : (
+                      // 单 Key 配置界面
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                          API密钥
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          placeholder="输入API密钥"
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          variant="outlined"
+                          type="password"
+                          size="small"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 2,
+                            }
+                          }}
+                          slotProps={{
+                            input: {
+                              'aria-invalid': false,
+                              'aria-describedby': 'provider-settings-api-key-helper-text'
+                            },
+                            formHelperText: {
+                              id: 'provider-settings-api-key-helper-text'
+                            }
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Box>
+                )}
+
+                {currentTab === 1 && (
+                  <Box>
+                    {/* 基础URL配置 */}
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                        基础URL (可选)
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        placeholder="输入基础URL，例如: https://tow.bt6.top"
+                        value={baseUrl}
+                        onChange={(e) => {
+                          setBaseUrl(e.target.value);
+                          setBaseUrlError('');
+                        }}
+                        error={!!baseUrlError}
+                        helperText={
+                          <span>
+                            {baseUrlError && (
+                              <span style={{ display: 'block', color: 'error.main', marginBottom: '4px', fontSize: '0.75rem' }}>
+                                {baseUrlError}
+                              </span>
+                            )}
+                            <span style={{ display: 'block', color: 'text.secondary', marginBottom: '4px', fontSize: '0.75rem' }}>
+                              在URL末尾添加#可强制使用自定义格式，末尾添加/也可保持原格式
+                            </span>
+                            {baseUrl && isOpenAIProvider(provider?.providerType) && (
+                              <span
+                                style={{
+                                  display: 'inline-block',
+                                  color: baseUrl.endsWith('#') || baseUrl.endsWith('/') ? '#ed6c02' : '#666',
+                                  fontFamily: 'monospace',
+                                  fontSize: '0.7rem',
+                                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  marginTop: '4px'
+                                }}
+                              >
+                                {baseUrl.endsWith('#') ? '强制使用: ' :
+                                 baseUrl.endsWith('/') ? '保持原格式: ' : '完整地址: '}
+                                {getCompleteApiUrl(baseUrl)}
+                              </span>
+                            )}
+                          </span>
+                        }
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                          }
+                        }}
+                      />
+                    </Box>
+
+                    {/* 自定义请求头按钮 */}
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                        自定义请求头 (可选)
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Button
+                          variant="outlined"
+                          startIcon={<Settings size={16} />}
+                          onClick={() => setOpenHeadersDialog(true)}
+                          sx={{
+                            borderRadius: 2,
+                            borderColor: (theme) => alpha(theme.palette.secondary.main, 0.5),
+                            color: 'secondary.main',
+                            '&:hover': {
+                              borderColor: 'secondary.main',
+                              bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.1),
+                            },
                           }}
                         >
-                          {baseUrl.endsWith('#') ? '强制使用: ' :
-                           baseUrl.endsWith('/') ? '保持原格式: ' : '完整地址: '}
-                          {getCompleteApiUrl(baseUrl)}
-                        </span>
-                      )}
-                    </span>
-                  }
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    }
-                  }}
-                />
-              </Box>
+                          配置请求头
+                        </Button>
+                        {Object.keys(extraHeaders).length > 0 && (
+                          <Typography variant="caption" color="text.secondary">
+                            已配置 {Object.keys(extraHeaders).length} 个请求头
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
 
-              {/* 自定义请求头按钮 */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                  自定义请求头 (可选)
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Settings size={16} />}
-                    onClick={() => setOpenHeadersDialog(true)}
-                    sx={{
-                      borderRadius: 2,
-                      borderColor: (theme) => alpha(theme.palette.secondary.main, 0.5),
-                      color: 'secondary.main',
-                      '&:hover': {
-                        borderColor: 'secondary.main',
-                        bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.1),
-                      },
-                    }}
-                  >
-                    配置请求头
-                  </Button>
-                  {Object.keys(extraHeaders).length > 0 && (
-                    <Typography variant="caption" color="text.secondary">
-                      已配置 {Object.keys(extraHeaders).length} 个请求头
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-
-              {/* 添加API测试按钮 */}
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                <Button
-                  variant="outlined"
-                  startIcon={isTesting ? <CircularProgress size={16} /> : <CheckCircle size={16} />}
-                  onClick={handleTestConnection}
-                  disabled={isTesting || !apiKey}
-                  sx={{
-                    borderRadius: 2,
-                    borderColor: (theme) => alpha(theme.palette.info.main, 0.5),
-                    color: 'info.main',
-                    '&:hover': {
-                      borderColor: 'info.main',
-                      bgcolor: (theme) => alpha(theme.palette.info.main, 0.1),
-                    },
-                  }}
-                >
-                  {isTesting ? '测试中...' : '测试连接'}
-                </Button>
+                    {/* API测试按钮 */}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                      <Button
+                        variant="outlined"
+                        startIcon={isTesting ? <CircularProgress size={16} /> : <CheckCircle size={16} />}
+                        onClick={handleTestConnection}
+                        disabled={isTesting || (!apiKey && (!provider.apiKeys || provider.apiKeys.length === 0))}
+                        sx={{
+                          borderRadius: 2,
+                          borderColor: (theme) => alpha(theme.palette.info.main, 0.5),
+                          color: 'info.main',
+                          '&:hover': {
+                            borderColor: 'info.main',
+                            bgcolor: (theme) => alpha(theme.palette.info.main, 0.1),
+                          },
+                        }}
+                      >
+                        {isTesting ? '测试中...' : '测试连接'}
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
               </Box>
             </>
           )}

@@ -9,6 +9,7 @@ import { DatabaseCleanupService } from '../shared/services/DatabaseCleanupServic
 import { dexieStorage } from '../shared/services/DexieStorageService';
 import { loadTopicMessagesThunk } from '../shared/store/slices/newMessagesSlice';
 import { initGroups } from '../shared/store/slices/groupsSlice';
+import { getStorageItem } from '../shared/utils/storage';
 
 export const useAppInitialization = () => {
   const [appInitialized, setAppInitialized] = useState(false);
@@ -39,9 +40,19 @@ export const useAppInitialization = () => {
       setInitializationStep('配置显示设置...');
       setInitializationProgress(20);
 
+      // 从存储中获取当前主题设置
+      const savedSettings = await getStorageItem('settings') as any;
+      const currentTheme = savedSettings?.theme || 'system';
+      const currentThemeStyle = savedSettings?.themeStyle || 'default';
+
+      // 确定实际的主题模式
+      const actualTheme = currentTheme === 'system'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : currentTheme as 'light' | 'dark';
+
       await Promise.all([
         safeAreaService.initialize(),
-        statusBarService.initialize('light')
+        statusBarService.initialize(actualTheme, currentThemeStyle)
       ]);
 
       if (signal.aborted) return;

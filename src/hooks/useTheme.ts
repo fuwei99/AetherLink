@@ -30,7 +30,7 @@ export const useTheme = () => {
     const updateStatusBar = async () => {
       try {
         if (statusBarService.isReady()) {
-          await statusBarService.updateTheme(mode);
+          await statusBarService.updateTheme(mode, themeStyle);
         }
       } catch (error) {
         console.error('状态栏主题更新失败:', error);

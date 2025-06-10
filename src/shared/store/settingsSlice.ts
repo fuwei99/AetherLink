@@ -8,7 +8,7 @@ import { getDefaultModelProviders, getDefaultModelId, type ModelProvider } from 
 
 interface SettingsState {
   theme: 'light' | 'dark' | 'system';
-  themeStyle: 'default' | 'claude' | 'minimal' | 'vibrant'; // 新增主题风格
+  themeStyle: 'default' | 'claude' | 'minimal' | 'vibrant' | 'nature' | 'ocean' | 'sunset' | 'monochrome' | 'cyberpunk'; // 新增主题风格
   fontSize: number;
   language: string;
   sendWithEnter: boolean;
@@ -121,7 +121,7 @@ const getInitialState = (): SettingsState => {
   // 默认状态
   const defaultState: SettingsState = {
     theme: 'system' as 'light' | 'dark' | 'system',
-    themeStyle: 'default' as 'default' | 'claude' | 'minimal' | 'vibrant',
+    themeStyle: 'default' as 'default' | 'claude' | 'minimal' | 'vibrant' | 'nature' | 'ocean' | 'sunset' | 'monochrome' | 'cyberpunk',
     fontSize: 16,
     language: 'zh-CN',
     sendWithEnter: true,
@@ -381,7 +381,7 @@ const settingsSlice = createSlice({
       state.theme = action.payload;
       // 异步操作将通过 extraReducers 处理
     },
-    setThemeStyle: (state, action: PayloadAction<'default' | 'claude' | 'minimal' | 'vibrant'>) => {
+    setThemeStyle: (state, action: PayloadAction<'default' | 'claude' | 'minimal' | 'vibrant' | 'nature' | 'ocean' | 'sunset' | 'monochrome' | 'cyberpunk'>) => {
       state.themeStyle = action.payload;
     },
     setFontSize: (state, action: PayloadAction<number>) => {
@@ -455,8 +455,8 @@ const settingsSlice = createSlice({
       if (providerIndex !== -1) {
         state.providers[providerIndex] = { ...state.providers[providerIndex], ...updates };
 
-        // 如果apiKey、baseUrl或extraHeaders更新了，也要更新所有关联模型
-        if (updates.apiKey !== undefined || updates.baseUrl !== undefined || updates.extraHeaders !== undefined) {
+        // 如果apiKey、baseUrl、extraHeaders或apiKeys更新了，也要更新所有关联模型
+        if (updates.apiKey !== undefined || updates.baseUrl !== undefined || updates.extraHeaders !== undefined || updates.apiKeys !== undefined) {
           state.providers[providerIndex].models = state.providers[providerIndex].models.map((model: Model) => ({
             ...model,
             apiKey: updates.apiKey !== undefined ? updates.apiKey : model.apiKey,

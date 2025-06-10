@@ -22,22 +22,25 @@
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
         <item name="android:windowLayoutInDisplayCutoutMode">never</item>
-        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+        <!-- 移除硬编码的状态栏颜色，由StatusBarService动态设置 -->
+        <!-- <item name="android:statusBarColor">@color/colorPrimaryDark</item> -->
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <!-- 临时禁用 Android 15 的 edge-to-edge 强制执行 -->
-        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+        <!-- 移除硬编码的状态栏文字颜色，由StatusBarService动态设置 -->
+        <!-- <item name="android:windowLightStatusBar">false</item> -->
+        <!-- 移除edge-to-edge禁用，使用EdgeToEdge插件动态控制导航栏颜色 -->
+        <!-- <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item> -->
     </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <!-- 启动画面保持静态颜色设置，应用启动后由StatusBarService和EdgeToEdge接管 -->
         <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowLayoutInDisplayCutoutMode">never</item>
         <item name="android:windowLightStatusBar">false</item>
-        <!-- 临时禁用 Android 15 的 edge-to-edge 强制执行 -->
-        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>

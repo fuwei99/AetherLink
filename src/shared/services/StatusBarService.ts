@@ -1,5 +1,6 @@
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
+import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 import { themeConfigs, type ThemeStyle } from '../config/themes';
 
 /**
@@ -42,9 +43,9 @@ export class StatusBarService {
 
     // --- Native Platform Only ---
     try {
-      // Android平台：EdgeToEdge已禁用，避免与底部导航栏冲突
+      // Android平台：不启用EdgeToEdge模式，只用来设置导航栏颜色
       if (Capacitor.getPlatform() === 'android') {
-        console.log('[StatusBarService] Android EdgeToEdge已禁用');
+        console.log('[StatusBarService] Android平台，将使用EdgeToEdge插件设置导航栏颜色');
       }
 
       // 设置状态栏不覆盖WebView
@@ -198,7 +199,10 @@ export class StatusBarService {
     }
 
     const isDark = this.currentTheme === 'dark';
-    const backgroundColor = isDark ? themeConfig.colors.background.dark : '#FFFFFF';
+    // 使用主题配置的背景色，而不是硬编码白色
+    const backgroundColor = isDark
+      ? themeConfig.colors.background.dark
+      : themeConfig.colors.background.light;
 
     return { themeConfig, backgroundColor, isDark };
   }
@@ -214,19 +218,24 @@ export class StatusBarService {
 
     // 设置状态栏样式
     if (isDark) {
-      // 深色模式：黑底白字
-      await StatusBar.setStyle({ style: Style.Dark }); // 文字/图标为浅色
+      // 深色模式：深色背景，需要浅色文字
+      await StatusBar.setStyle({ style: Style.Dark }); // 文字/图标为浅色（白色）
     } else {
-      // 浅色模式：白底黑字
-      await StatusBar.setStyle({ style: Style.Light }); // 文字/图标为深色
+      // 浅色模式：浅色背景，需要深色文字
+      await StatusBar.setStyle({ style: Style.Light }); // 文字/图标为深色（黑色）
     }
 
     // 设置状态栏背景色
     await StatusBar.setBackgroundColor({ color: backgroundColor });
 
-    // Android平台：EdgeToEdge已禁用，不设置底部导航栏背景色
+    // Android平台：使用EdgeToEdge插件设置底部导航栏背景色（解决Android 15白色导航栏问题）
     if (Capacitor.getPlatform() === 'android') {
-      console.log('[StatusBarService] EdgeToEdge已禁用，跳过底部导航栏背景色设置');
+      try {
+        await EdgeToEdge.setBackgroundColor({ color: backgroundColor });
+        console.log(`[StatusBarService] Android底部导航栏背景色已设置: ${backgroundColor}`);
+      } catch (error) {
+        console.warn('[StatusBarService] 设置导航栏背景色失败:', error);
+      }
     }
   }
 

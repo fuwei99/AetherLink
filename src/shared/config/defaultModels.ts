@@ -1,12 +1,48 @@
 import type { Model } from '../types';
 
+// 导出负载均衡策略类型
+export type LoadBalanceStrategy = 'round_robin' | 'priority' | 'least_used' | 'random';
+
+// API Key 配置接口
+export interface ApiKeyConfig {
+  id: string; // 唯一标识符
+  key: string; // API Key 值
+  name?: string; // 可选的 Key 名称/备注
+  isEnabled: boolean; // 是否启用
+  priority: number; // 优先级 (1-10, 数字越小优先级越高)
+  maxRequestsPerMinute?: number; // 每分钟最大请求数限制
+  // 使用统计
+  usage: {
+    totalRequests: number; // 总请求数
+    successfulRequests: number; // 成功请求数
+    failedRequests: number; // 失败请求数
+    lastUsed?: number; // 最后使用时间戳
+    consecutiveFailures: number; // 连续失败次数
+  };
+  // 状态信息
+  status: 'active' | 'disabled' | 'error' | 'rate_limited'; // Key 状态
+  lastError?: string; // 最后的错误信息
+  createdAt: number; // 创建时间戳
+  updatedAt: number; // 更新时间戳
+}
+
 export interface ModelProvider {
   id: string;
   name: string;
   avatar: string;
   color: string;
   isEnabled: boolean;
+  // 保持向后兼容的单个 API Key
   apiKey?: string;
+  // 新增：多 Key 支持
+  apiKeys?: ApiKeyConfig[];
+  // Key 管理配置
+  keyManagement?: {
+    strategy: 'round_robin' | 'priority' | 'least_used' | 'random'; // 负载均衡策略
+    maxFailuresBeforeDisable: number; // 连续失败多少次后禁用 Key
+    failureRecoveryTime: number; // 失败后多久重新尝试 (分钟)
+    enableAutoRecovery: boolean; // 是否启用自动恢复
+  };
   baseUrl?: string;
   models: Model[];
   providerType?: string;

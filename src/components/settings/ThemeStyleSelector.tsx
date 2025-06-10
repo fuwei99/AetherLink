@@ -18,7 +18,12 @@ import {
   Palette as PaletteIcon,
   Sparkles as AutoAwesomeIcon,
   Minus as MinimizeIcon,
-  Palette as ColorLensIcon
+  Palette as ColorLensIcon,
+  Leaf as LeafIcon,
+  Waves as WavesIcon,
+  Sunset as SunsetIcon,
+  Square as SquareIcon,
+  Zap as ZapIcon
 } from 'lucide-react';
 
 // 主题图标映射
@@ -27,6 +32,11 @@ const themeIcons: Record<ThemeStyle, React.ReactNode> = {
   claude: <AutoAwesomeIcon />,
   minimal: <MinimizeIcon />,
   vibrant: <ColorLensIcon />,
+  nature: <LeafIcon />,
+  ocean: <WavesIcon />,
+  sunset: <SunsetIcon />,
+  monochrome: <SquareIcon />,
+  cyberpunk: <ZapIcon />,
 };
 
 interface ThemeStyleSelectorProps {
@@ -39,7 +49,7 @@ const ThemeStyleSelector: React.FC<ThemeStyleSelectorProps> = ({ compact = false
   const currentThemeStyle = useSelector((state: any) => state.settings.themeStyle) || 'default';
 
   const handleThemeStyleChange = (themeStyle: ThemeStyle) => {
-    dispatch(setThemeStyle(themeStyle));
+    dispatch(setThemeStyle(themeStyle as 'default' | 'claude' | 'minimal' | 'vibrant' | 'nature' | 'ocean' | 'sunset' | 'monochrome' | 'cyberpunk'));
   };
 
   const ThemePreviewCard: React.FC<{ themeStyle: ThemeStyle }> = ({ themeStyle }) => {

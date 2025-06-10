@@ -78,10 +78,14 @@ const AppRouter: React.FC = () => {
     checkFirstTimeUser();
   }, []);
 
-  // 监听主题变化并初始化状态栏
+  // 监听主题变化并更新状态栏
   useEffect(() => {
     const currentTheme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
-    statusBarService.initialize(currentTheme, themeStyle);
+
+    // 只更新主题，不重复初始化
+    if (statusBarService.isReady()) {
+      statusBarService.updateTheme(currentTheme, themeStyle);
+    }
 
     // 监听系统主题变化
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
