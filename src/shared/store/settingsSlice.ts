@@ -34,7 +34,9 @@ interface SettingsState {
   codeShowLineNumbers: boolean; // 显示行号
   codeCollapsible: boolean; // 代码可折叠
   codeWrappable: boolean; // 代码可换行
+  // 在代码块设置接口中添加 mermaid 开关
   codeDefaultCollapsed: boolean; // 代码块默认收起
+  mermaidEnabled: boolean; // 是否启用 Mermaid 图表渲染
   showSystemPromptBubble: boolean; // 是否显示系统提示词气泡
   showUserAvatar: boolean; // 是否显示用户头像
   showUserName: boolean; // 是否显示用户名称
@@ -155,7 +157,9 @@ const getInitialState = (): SettingsState => {
     codeShowLineNumbers: true, // 默认显示行号
     codeCollapsible: true, // 默认可折叠
     codeWrappable: true, // 默认可换行
+    // 在默认设置中添加 mermaid 默认值
     codeDefaultCollapsed: false, // 默认展开代码块
+    mermaidEnabled: true, // 默认启用 Mermaid 图表渲染
     showSystemPromptBubble: true, // 默认显示系统提示词气泡
     showUserAvatar: true, // 默认显示用户头像
     showUserName: true, // 默认显示用户名称
@@ -653,6 +657,9 @@ const settingsSlice = createSlice({
     setCodeDefaultCollapsed: (state, action: PayloadAction<boolean>) => {
       state.codeDefaultCollapsed = action.payload;
     },
+    setMermaidEnabled: (state, action: PayloadAction<boolean>) => {
+      state.mermaidEnabled = action.payload;
+    },
 
     // 长文本粘贴为文件功能设置 actions
     setPasteLongTextAsFile: (state, action: PayloadAction<boolean>) => {
@@ -742,6 +749,7 @@ export const {
   setCodeCollapsible,
   setCodeWrappable,
   setCodeDefaultCollapsed,
+  setMermaidEnabled,
   // 长文本粘贴为文件功能控制
   setPasteLongTextAsFile,
   setPasteLongTextThreshold,

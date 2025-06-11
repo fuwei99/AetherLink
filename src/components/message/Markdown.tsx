@@ -22,15 +22,16 @@ import AdvancedImagePreview from './blocks/AdvancedImagePreview';
 const ALLOWED_ELEMENTS = /<(style|p|div|span|b|i|strong|em|ul|ol|li|table|tr|td|th|thead|tbody|h[1-6]|blockquote|pre|code|br|hr|svg|path|circle|rect|line|polyline|polygon|text|g|defs|title|desc|tspan|sub|sup)/i;
 const DISALLOWED_ELEMENTS = ['iframe'];
 
+// 在 Markdown 组件中传递角色信息
 interface Props {
-  // 新接口：使用 block
   block?: MainTextMessageBlock | TranslationMessageBlock | ThinkingMessageBlock;
-  // 兼容接口：使用 content
   content?: string;
   allowHtml?: boolean;
+  // 新增：消息角色
+  messageRole?: 'user' | 'assistant' | 'system';
 }
 
-const Markdown: React.FC<Props> = ({ block, content, allowHtml = false }) => {
+const Markdown: React.FC<Props> = ({ block, content, allowHtml = false, messageRole }) => {
   // 从用户设置获取数学引擎配置
   // 使用 useState 和 useEffect 来监听设置变化
   const [mathEngine, setMathEngine] = React.useState<string>('KaTeX');
@@ -116,19 +117,24 @@ const Markdown: React.FC<Props> = ({ block, content, allowHtml = false }) => {
       // TODO: 实现代码块保存逻辑
       console.log('保存代码块:', id, newContent);
     },
-    [block?.id]
+    []
   );
 
   const components = useMemo(() => {
     return {
       a: (props: any) => <Link {...props} target="_blank" rel="noopener noreferrer" />,
       code: (props: any) => (
-        <MarkdownCodeBlock {...props} id={getCodeBlockId(props?.node?.position?.start)} onSave={onSaveCodeBlock} />
+        <MarkdownCodeBlock 
+          {...props} 
+          id={getCodeBlockId(props?.node?.position?.start)} 
+          onSave={onSaveCodeBlock}
+          messageRole={messageRole}
+        />
       ),
       img: AdvancedImagePreview,
       pre: (props: any) => <pre style={{ overflow: 'visible' }} {...props} />
     } as Partial<Components>;
-  }, [onSaveCodeBlock]);
+  }, [onSaveCodeBlock, messageRole]);
 
   return (
     <div className="markdown">

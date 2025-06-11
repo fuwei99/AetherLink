@@ -22,7 +22,8 @@ import {
   setCodeShowLineNumbers,
   setCodeCollapsible,
   setCodeWrappable,
-  setCodeDefaultCollapsed
+  setCodeDefaultCollapsed,
+  setMermaidEnabled
 } from '../../../shared/store/settingsSlice';
 
 // 代码风格选项 - 大幅扩展主题选择
@@ -87,13 +88,15 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
   const [expanded, setExpanded] = useState(false);
 
   // 从 Redux store 获取设置
+  // 从 Redux store 获取设置
   const {
     codeStyle,
     codeEditor,
     codeShowLineNumbers,
     codeCollapsible,
     codeWrappable,
-    codeDefaultCollapsed
+    codeDefaultCollapsed,
+    mermaidEnabled
   } = useAppSelector(state => state.settings);
 
   const selectedStyle = CODE_STYLES.find(style => style.value === codeStyle);
@@ -347,6 +350,21 @@ const CodeBlockSettings: React.FC<CodeBlockSettingsProps> = () => {
             <CustomSwitch
               checked={codeDefaultCollapsed}
               onChange={(e) => dispatch(setCodeDefaultCollapsed(e.target.checked))}
+            />
+          </ListItem>
+
+          {/* Mermaid图表功能 */}
+          <ListItem sx={{ px: 1, py: 1 }}>
+            <ListItemText
+              primary="Mermaid图表"
+              secondary="启用Mermaid图表渲染功能"
+              primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
+              secondaryTypographyProps={{ variant: 'caption' }}
+              sx={{ pl: 4.5 }}
+            />
+            <CustomSwitch
+              checked={mermaidEnabled}
+              onChange={(e) => dispatch(setMermaidEnabled(e.target.checked))}
             />
           </ListItem>
 
