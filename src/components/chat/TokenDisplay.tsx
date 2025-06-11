@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Box, Typography, Tooltip, useTheme } from '@mui/material';
 import { Hash } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -18,6 +18,27 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
 }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
+
+  // 移动端检测和tooltip状态管理
+  const [isMobile, setIsMobile] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+
+  // 检测是否为移动端设备
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent;
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth <= 768;
+
+      setIsMobile(isMobileDevice || (isTouchDevice && isSmallScreen));
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // 获取当前话题的所有消息
   const currentTopicId = useSelector((state: RootState) => state.messages.currentTopicId);
@@ -92,13 +113,33 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
     ? `总Token: ${totalTokens.toLocaleString()}\n当前消息: ${currentMessageTokens.toLocaleString()}`
     : `总Token: ${totalTokens.toLocaleString()}`;
 
+  // 处理点击事件（仅移动端）
+  const handleClick = () => {
+    if (isMobile) {
+      setTooltipOpen(prev => !prev);
+    }
+  };
+
+  // 处理点击外部关闭tooltip（仅移动端）
+  const handleTooltipClose = () => {
+    if (isMobile) {
+      setTooltipOpen(false);
+    }
+  };
+
   return (
-    <Tooltip 
+    <Tooltip
       title={tooltipText}
       placement="top"
       arrow
+      open={isMobile ? tooltipOpen : undefined}
+      onClose={handleTooltipClose}
+      disableHoverListener={isMobile}
+      disableFocusListener={isMobile}
+      disableTouchListener={!isMobile}
     >
       <Box
+        onClick={handleClick}
         sx={{
           display: 'flex',
           alignItems: 'center',

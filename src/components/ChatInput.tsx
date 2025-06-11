@@ -822,8 +822,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         paddingBottom: isIOS ? '34px' : '4px', // 为iOS设备增加底部padding
         maxWidth: 'calc(100% - 24px)', // 确保有足够的左右边距
         marginTop: '0',
-        marginLeft: 'auto', // 水平居中
-        marginRight: 'auto' // 水平居中
+        marginLeft: 'auto', // 移动端保持居中
+        marginRight: 'auto' // 移动端保持居中
       };
     } else if (isTablet) {
       return {
@@ -831,8 +831,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         paddingBottom: isIOS ? '34px' : '4px', // 为iOS设备增加底部padding
         maxWidth: 'calc(100% - 40px)', // 确保有足够的左右边距
         marginTop: '0',
-        marginLeft: 'auto', // 水平居中
-        marginRight: 'auto' // 水平居中
+        marginLeft: '20px', // 平板端左对齐，避免被侧边栏遮挡
+        marginRight: '20px' // 平板端右边距
       };
     } else {
       return {
@@ -840,8 +840,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         paddingBottom: isIOS ? '34px' : '6px', // 为iOS设备增加底部padding
         maxWidth: 'calc(100% - 32px)', // 确保有足够的左右边距
         marginTop: '0',
-        marginLeft: 'auto', // 水平居中
-        marginRight: 'auto' // 水平居中
+        marginLeft: '16px', // 桌面端左对齐，避免被侧边栏遮挡
+        marginRight: '16px' // 桌面端右边距
       };
     }
   };

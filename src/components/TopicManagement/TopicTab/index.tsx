@@ -735,6 +735,14 @@ export default function TopicTab({
                 size="small"
                 startIcon={<Plus size={16} />}
                 onClick={onCreateTopic}
+                sx={{
+                  color: 'text.primary',
+                  borderColor: 'text.secondary',
+                  '&:hover': {
+                    borderColor: 'text.primary',
+                    backgroundColor: 'action.hover'
+                  }
+                }}
               >
                 新建话题
               </Button>

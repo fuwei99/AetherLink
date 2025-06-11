@@ -606,7 +606,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     <Box sx={{
       width: '100%',
       maxWidth: '800px',
-      margin: '0 auto',
+      margin: '0 16px', // 改为左右边距，避免被侧边栏遮挡
       // 添加全局滚动条样式
       '& textarea::-webkit-scrollbar': {
         width: '6px',
