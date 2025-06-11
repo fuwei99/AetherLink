@@ -403,3 +403,29 @@ mjx-container {
 .markdown span {
   white-space: pre;
 }
+
+
+/* Mermaid 图表样式 */
+.markdown .mermaid {
+  text-align: center;
+  margin: 1em 0;
+}
+
+.markdown .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 暗色主题下的 Mermaid 优化 */
+@media (prefers-color-scheme: dark) {
+  .markdown .mermaid {
+    background-color: transparent;
+  }
+}
+
+/* 移动端 Mermaid 响应式优化 */
+@media (max-width: 768px) {
+  .markdown .mermaid svg {
+    font-size: 12px;
+  }
+}

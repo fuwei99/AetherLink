@@ -1,16 +1,19 @@
-import React, { memo, useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { useTheme } from '@mui/material';
 import { useAppSelector } from '../../../shared/store';
 import CodeBlock from './CodeBlock';
 import EnhancedCodeBlock from './EnhancedCodeBlock';
+import MermaidBlock from './MermaidBlock';
 import type { CodeMessageBlock } from '../../../shared/types/newMessage';
 
+// 需要接收并传递 messageRole
 interface MarkdownCodeBlockProps {
   children: string;
   className?: string;
   id?: string;
   onSave?: (id: string, newContent: string) => void;
   [key: string]: any;
+  messageRole?: 'user' | 'assistant' | 'system';
 }
 
 /**
@@ -20,7 +23,8 @@ interface MarkdownCodeBlockProps {
 const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({
   children,
   className,
-  id
+  id,
+  messageRole 
 }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
@@ -47,6 +51,11 @@ const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({
     createdAt: new Date().toISOString(),
     status: 'success' as const
   }), [id, children, language]);
+
+  // **检测 Mermaid 图表时传递角色**
+  if (language === 'mermaid') {
+    return <MermaidBlock code={children} id={id} messageRole={messageRole} />;
+  }
 
   // 注意：数学公式由 Markdown 层面的插件处理
   // CodeBlock 专注于代码渲染

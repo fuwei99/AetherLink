@@ -15,6 +15,7 @@ interface Props {
   messageId?: string;
 }
 
+// 在 MainTextBlock 中传递角色信息
 const MainTextBlock: React.FC<Props> = ({ block, role, messageId }) => {
   const content = block.content || '';
   const isUserMessage = role === 'user';
@@ -45,8 +46,8 @@ const MainTextBlock: React.FC<Props> = ({ block, role, messageId }) => {
     const hasTools = hasToolUseTags(content);
 
     if (isUserMessage || !hasTools) {
-      // 用户消息或没有工具标签，直接渲染
-      return <Markdown block={block} />;
+      // 传递消息角色
+      return <Markdown block={block} messageRole={role as 'user' | 'assistant' | 'system'} />;
     }
 
     // 查找对应的工具块
@@ -127,7 +128,7 @@ const MainTextBlock: React.FC<Props> = ({ block, role, messageId }) => {
     }
 
     return <>{parts}</>;
-  }, [content, isUserMessage, blockEntities, messageId, renderUserInputAsMarkdown]);
+  }, [content, isUserMessage, blockEntities, messageId, renderUserInputAsMarkdown, block, role]);
 
   if (!content.trim()) {
     return null;
