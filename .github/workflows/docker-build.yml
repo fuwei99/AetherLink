@@ -29,5 +29,5 @@ jobs:
         push: true
         tags: |
           1600822305/aetherlink:latest
-          1600822305/aetherlink:${{ github.sha }}
+          1600822305/aetherlink:${{ github.sha }} 
         platforms: linux/amd64,linux/arm64
