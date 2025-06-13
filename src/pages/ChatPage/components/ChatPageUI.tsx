@@ -3,8 +3,7 @@ import { Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import { AlignJustify, Settings, Plus, Trash2 } from 'lucide-react';
 
 import MessageList from '../../../components/message/MessageList';
-import ChatInput from '../../../components/ChatInput';
-import CompactChatInput from '../../../components/CompactChatInput';
+import { ChatInput, CompactChatInput } from '../../../components/input';
 import { Sidebar } from '../../../components/TopicManagement';
 import ChatToolbar from '../../../components/ChatToolbar';
 import { ModelSelector } from './ModelSelector';

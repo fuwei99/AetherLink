@@ -1,28 +1,28 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, IconButton, Typography, Collapse, Chip } from '@mui/material';
-import MCPToolsButton from './chat/MCPToolsButton';
-import WebSearchProviderSelector from './WebSearchProviderSelector';
-import KnowledgeSelector from './chat/KnowledgeSelector';
-import AIDebateButton from './AIDebateButton';
-import QuickPhraseButton from './QuickPhraseButton';
+import MCPToolsButton from '../chat/MCPToolsButton';
+import WebSearchProviderSelector from '../WebSearchProviderSelector';
+import KnowledgeSelector from '../chat/KnowledgeSelector';
+import AIDebateButton from '../AIDebateButton';
+import QuickPhraseButton from '../QuickPhraseButton';
 import MultiModelSelector from './MultiModelSelector';
-import EnhancedToast, { toastManager } from './EnhancedToast';
-import { useChatInputLogic } from '../shared/hooks/useChatInputLogic';
-import { useFileUpload } from '../shared/hooks/useFileUpload';
-import { useUrlScraper } from '../shared/hooks/useUrlScraper';
-import { useInputStyles } from '../shared/hooks/useInputStyles';
-import { useKnowledgeContext } from '../shared/hooks/useKnowledgeContext';
-import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition'; // 导入 useVoiceRecognition
-import { useKeyboardManager } from '../shared/hooks/useKeyboardManager';
-import { getBasicIcons, getExpandedIcons } from '../shared/config/inputIcons';
+import EnhancedToast, { toastManager } from '../EnhancedToast';
+import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
+import { useFileUpload } from '../../shared/hooks/useFileUpload';
+import { useUrlScraper } from '../../shared/hooks/useUrlScraper';
+import { useInputStyles } from '../../shared/hooks/useInputStyles';
+import { useKnowledgeContext } from '../../shared/hooks/useKnowledgeContext';
+import { useVoiceRecognition } from '../../shared/hooks/useVoiceRecognition'; // 导入 useVoiceRecognition
+import { useKeyboardManager } from '../../shared/hooks/useKeyboardManager';
+import { getBasicIcons, getExpandedIcons } from '../../shared/config/inputIcons';
 
 import { Plus, X, Send, Square, Paperclip, ChevronUp, ChevronDown } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../shared/store';
-import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../shared/types';
-import type { DebateConfig } from '../shared/services/AIDebateService';
-import { dexieStorage } from '../shared/services/DexieStorageService';
-import { VoiceButton, EnhancedVoiceInput } from './VoiceRecognition';
+import type { RootState } from '../../shared/store';
+import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../../shared/types';
+import type { DebateConfig } from '../../shared/services/AIDebateService';
+import { dexieStorage } from '../../shared/services/DexieStorageService';
+import { VoiceButton, EnhancedVoiceInput } from '../VoiceRecognition';
 
 
 interface CompactChatInputProps {
@@ -538,7 +538,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
         setUploadingMedia(true);
 
         // 使用移动端文件存储服务创建文件
-        const { MobileFileStorageService } = await import('../shared/services/MobileFileStorageService');
+        const { MobileFileStorageService } = await import('../../shared/services/MobileFileStorageService');
         const fileStorageService = MobileFileStorageService.getInstance();
 
         const fileName = `粘贴的文本_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.txt`;

@@ -19,7 +19,7 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { X as CloseIcon, ArrowLeftRight as CompareArrowsIcon, CheckSquare as SelectAllIcon, Trash2 as ClearAllIcon } from 'lucide-react';
-import type { Model } from '../shared/types';
+import type { Model } from '../../shared/types';
 
 interface MultiModelSelectorProps {
   open: boolean;

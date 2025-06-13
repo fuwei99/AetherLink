@@ -2,28 +2,28 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { IconButton, CircularProgress, Badge, Tooltip } from '@mui/material';
 import { Send, Plus, Link, Square, ChevronDown, ChevronUp, Keyboard, Mic } from 'lucide-react';
 
-import { useChatInputLogic } from '../shared/hooks/useChatInputLogic';
-import { useFileUpload } from '../shared/hooks/useFileUpload';
-import { useUrlScraper } from '../shared/hooks/useUrlScraper';
-import { useInputStyles } from '../shared/hooks/useInputStyles';
+import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
+import { useFileUpload } from '../../shared/hooks/useFileUpload';
+import { useUrlScraper } from '../../shared/hooks/useUrlScraper';
+import { useInputStyles } from '../../shared/hooks/useInputStyles';
 import MultiModelSelector from './MultiModelSelector';
-import type { ImageContent, SiliconFlowImageFormat, FileContent } from '../shared/types';
+import type { ImageContent, SiliconFlowImageFormat, FileContent } from '../../shared/types';
 import { Image, Search } from 'lucide-react';
-import UrlScraperStatus from './UrlScraperStatus';
-import type { FileStatus } from './FilePreview';
-import IntegratedFilePreview from './IntegratedFilePreview';
+import UrlScraperStatus from '../UrlScraperStatus';
+import type { FileStatus } from '../FilePreview';
+import IntegratedFilePreview from '../IntegratedFilePreview';
 import UploadMenu from './UploadMenu';
-import EnhancedToast, { toastManager } from './EnhancedToast';
-import { dexieStorage } from '../shared/services/DexieStorageService';
+import EnhancedToast, { toastManager } from '../EnhancedToast';
+import { dexieStorage } from '../../shared/services/DexieStorageService';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../shared/store';
-import AIDebateButton from './AIDebateButton';
-import type { DebateConfig } from '../shared/services/AIDebateService';
-import QuickPhraseButton from './QuickPhraseButton';
-import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition';
-import { useKeyboardManager } from '../shared/hooks/useKeyboardManager';
-import { EnhancedVoiceInput } from './VoiceRecognition';
-import { getThemeColors } from '../shared/utils/themeUtils';
+import type { RootState } from '../../shared/store';
+import AIDebateButton from '../AIDebateButton';
+import type { DebateConfig } from '../../shared/services/AIDebateService';
+import QuickPhraseButton from '../QuickPhraseButton';
+import { useVoiceRecognition } from '../../shared/hooks/useVoiceRecognition';
+import { useKeyboardManager } from '../../shared/hooks/useKeyboardManager';
+import { EnhancedVoiceInput } from '../VoiceRecognition';
+import { getThemeColors } from '../../shared/utils/themeUtils';
 import { useTheme } from '@mui/material/styles';
 
 interface ChatInputProps {
@@ -772,7 +772,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         setUploadingMedia(true);
 
         // 使用移动端文件存储服务创建文件
-        const { MobileFileStorageService } = await import('../shared/services/MobileFileStorageService');
+        const { MobileFileStorageService } = await import('../../shared/services/MobileFileStorageService');
         const fileStorageService = MobileFileStorageService.getInstance();
 
         const fileName = `粘贴的文本_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.txt`;
