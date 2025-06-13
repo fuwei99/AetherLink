@@ -21,6 +21,7 @@ import AIDebateButton from './AIDebateButton';
 import type { DebateConfig } from '../shared/services/AIDebateService';
 import QuickPhraseButton from './QuickPhraseButton';
 import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition';
+import { useKeyboardManager } from '../shared/hooks/useKeyboardManager';
 import { EnhancedVoiceInput } from './VoiceRecognition';
 import { getThemeColors } from '../shared/utils/themeUtils';
 import { useTheme } from '@mui/material/styles';
@@ -61,7 +62,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   availableModels = [] // 默认空数组
 }) => {
   // 基础状态
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [uploadMenuAnchorEl, setUploadMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [multiModelSelectorOpen, setMultiModelSelectorOpen] = useState(false);
   const [isIOS, setIsIOS] = useState(false); // 新增: 是否是iOS设备
@@ -170,6 +170,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
     stopRecognition,
   } = useVoiceRecognition();
 
+  // 键盘管理功能
+  const {
+    isKeyboardVisible,
+    isPageTransitioning,
+    shouldHandleFocus
+  } = useKeyboardManager();
+
   // 当话题ID变化时，从数据库获取话题信息
   useEffect(() => {
     const loadTopic = async () => {
@@ -206,6 +213,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
                        (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
     setIsIOS(isIOSDevice);
   }, []);
+
+
 
   // 监听窗口大小变化，更新展开高度
   useEffect(() => {
@@ -373,7 +382,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
     // 设置一个延迟以确保组件挂载后聚焦生效
     const timer = setTimeout(() => {
-      if (currentTextarea) {
+      if (currentTextarea && !isPageTransitioning) {
+        // 只有在非页面切换状态下才执行焦点操作
         // 聚焦后立即模糊，这有助于解决某些Android设备上的复制粘贴问题
         currentTextarea.focus();
         currentTextarea.blur();
@@ -386,10 +396,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
     // 添加键盘显示检测
     const handleFocus = () => {
-      setIsKeyboardVisible(true);
+      // 键盘状态由 useKeyboardManager Hook 管理
 
       // iOS设备特殊处理
-      if (isIOS && textareaRef.current) {
+      if (isIOS && textareaRef.current && shouldHandleFocus()) {
         // 延迟执行，确保输入法已弹出
         setTimeout(() => {
           // 滚动到输入框位置
@@ -423,7 +433,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     };
 
     const handleBlur = () => {
-      setIsKeyboardVisible(false);
+      // 键盘状态由 useKeyboardManager Hook 管理
     };
 
     if (currentTextarea) {
@@ -438,7 +448,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
         currentTextarea.removeEventListener('blur', handleBlur);
       }
     };
-  }, [isMobile, isTablet, isIOS]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isMobile, isTablet, isIOS, isPageTransitioning]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
 
   // 处理上传菜单
   const handleOpenUploadMenu = (event: React.MouseEvent<HTMLButtonElement>) => {

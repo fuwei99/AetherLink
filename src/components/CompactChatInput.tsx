@@ -13,6 +13,7 @@ import { useUrlScraper } from '../shared/hooks/useUrlScraper';
 import { useInputStyles } from '../shared/hooks/useInputStyles';
 import { useKnowledgeContext } from '../shared/hooks/useKnowledgeContext';
 import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition'; // 导入 useVoiceRecognition
+import { useKeyboardManager } from '../shared/hooks/useKeyboardManager';
 import { getBasicIcons, getExpandedIcons } from '../shared/config/inputIcons';
 
 import { Plus, X, Send, Square, Paperclip, ChevronUp, ChevronDown } from 'lucide-react';
@@ -163,6 +164,11 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     stopRecognition,
   } = useVoiceRecognition();
 
+  // 键盘管理功能
+  const {
+    shouldHandleFocus
+  } = useKeyboardManager();
+
   // 使用重命名的变量来消除未使用警告
   useEffect(() => {
     // 仅用于显示可能的语音识别错误，防止未使用警告
@@ -201,6 +207,8 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
                        (navigator.userAgent.includes('Mac') && navigator.maxTouchPoints > 1);
     setIsIOS(isIOSDevice);
   }, []);
+
+
 
   // 监听窗口大小变化，更新展开高度
   useEffect(() => {
@@ -305,8 +313,8 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   const handleInputFocus = () => {
     setIsActivated(true);
 
-    // iOS设备特殊处理
-    if (isIOS && textareaRef.current) {
+    // 只有在非页面切换状态下才执行iOS特殊处理
+    if (isIOS && textareaRef.current && shouldHandleFocus()) {
       // 延迟执行，确保输入法已弹出
       setTimeout(() => {
         // 滚动到输入框位置
