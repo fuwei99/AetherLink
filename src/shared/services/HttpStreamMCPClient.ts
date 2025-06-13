@@ -320,23 +320,29 @@ export class HttpStreamMCPClient {
         const { done, value } = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+        const decodedValue = decoder.decode(value, { stream: true });
+        if (decodedValue) {
+          buffer += decodedValue;
+        }
 
-        // 处理SSE事件
-        const events = buffer.split("\n\n");
-        buffer = events.pop() || "";
+        // 处理SSE事件 - 添加安全检查
+        if (buffer) {
+          const events = buffer.split("\n\n");
+          buffer = events.pop() || "";
 
-        for (const event of events) {
-          const lines = event.split("\n");
-          const data = lines.find(line => line.startsWith("data:"))?.slice(5);
+          for (const event of events) {
+            if (!event) continue; // 跳过空事件
+            const lines = event.split("\n");
+            const data = lines.find((line: string) => line && line.startsWith("data:"))?.slice(5);
 
-          if (data) {
-            try {
-              const message = JSON.parse(data);
-              console.log('[HTTP Stream MCP] 收到流消息:', message);
-              this.handleServerMessage(message);
-            } catch (e) {
-              console.error('[HTTP Stream MCP] 解析流消息失败:', e);
+            if (data) {
+              try {
+                const message = JSON.parse(data);
+                console.log('[HTTP Stream MCP] 收到流消息:', message);
+                this.handleServerMessage(message);
+              } catch (e) {
+                console.error('[HTTP Stream MCP] 解析流消息失败:', e);
+              }
             }
           }
         }

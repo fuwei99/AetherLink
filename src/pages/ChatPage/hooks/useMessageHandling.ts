@@ -61,19 +61,49 @@ export const useMessageHandling = (
     }
   }, [dispatch, currentTopic]);
 
-  // 处理重新生成消息 - 使用顶部模型选择器最新的模型
+  // 处理重新生成消息 - 直接从Redux获取最新的模型选择
   const handleRegenerateMessage = useCallback(async (messageId: string) => {
-    if (!currentTopic || !selectedModel) return null;
+    if (!currentTopic) return null;
 
     try {
-      console.log(`[handleRegenerateMessage] 使用顶部选择器的模型重新生成消息: ${messageId}`, {
-        modelId: selectedModel.id,
-        modelName: selectedModel.name,
-        provider: selectedModel.provider
+      // 直接从Redux store获取最新的模型ID和可用模型列表，避免组件状态更新延迟
+      const state = store.getState();
+      const latestModelId = state.settings.currentModelId;
+      const providers = state.settings.providers || [];
+
+      if (!latestModelId) {
+        console.error('[handleRegenerateMessage] Redux中没有当前模型ID');
+        return null;
+      }
+
+      // 从Redux中的providers获取所有可用模型
+      const availableModels = providers.flatMap((provider: any) =>
+        provider.models?.filter((model: any) => model.enabled) || []
+      );
+
+      // 从可用模型列表中找到对应的模型对象
+      const latestModel = availableModels.find((m: any) => m.id === latestModelId);
+      if (!latestModel) {
+        console.error('[handleRegenerateMessage] 找不到对应的模型:', latestModelId);
+        // 如果找不到最新模型，回退到组件状态中的模型
+        if (!selectedModel) {
+          console.error('[handleRegenerateMessage] 组件状态中也没有模型');
+          return null;
+        }
+        console.warn('[handleRegenerateMessage] 回退使用组件状态中的模型:', selectedModel.id);
+      }
+
+      const modelToUse = latestModel || selectedModel;
+
+      console.log(`[handleRegenerateMessage] 使用模型重新生成消息: ${messageId}`, {
+        modelId: modelToUse.id,
+        modelName: modelToUse.name,
+        provider: modelToUse.provider,
+        source: latestModel ? 'Redux-Direct' : 'Component-Fallback'
       });
 
-      // 使用Redux Thunk重新生成消息，传入顶部模型选择器当前选择的模型
-      dispatch(regenerateMessage(messageId, currentTopic.id, selectedModel));
+      // 使用Redux Thunk重新生成消息，传入最新选择的模型
+      dispatch(regenerateMessage(messageId, currentTopic.id, modelToUse));
       return true;
     } catch (error) {
       console.error('重新生成消息失败:', error);

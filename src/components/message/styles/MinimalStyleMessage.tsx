@@ -66,13 +66,13 @@ const MinimalStyleMessage: React.FC<BaseMessageStyleProps> = ({
         >
           {isUserMessage ? (
             userAvatar ? (
-              <img src={userAvatar} alt="用户头像" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+              <img src={userAvatar} alt="用户头像" style={{ width: '100%', height: '100%', borderRadius: '25%' }} />
             ) : (
               '👤'
             )
           ) : (
             (assistantAvatar || modelAvatar) ? (
-              <img src={(assistantAvatar || modelAvatar) || undefined} alt="AI头像" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+              <img src={(assistantAvatar || modelAvatar) || undefined} alt="AI头像" style={{ width: '100%', height: '100%', borderRadius: '25%' }} />
             ) : (
               '🤖'
             )

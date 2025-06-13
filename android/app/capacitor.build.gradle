@@ -28,6 +28,7 @@ dependencies {
     implementation project(':capacitor-toast')
     implementation project(':capawesome-capacitor-android-edge-to-edge-support')
     implementation project(':capawesome-capacitor-file-picker')
+    implementation project(':capacitor-advanced-file-manager')
     implementation project(':capacitor-cors-bypass-enhanced')
 
 }

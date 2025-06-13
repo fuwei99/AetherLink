@@ -21,7 +21,15 @@ import {
   Alert,
   Chip,
   Divider,
-  Paper
+  Paper,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button
 } from '@mui/material';
 import {
   ArrowLeft as ArrowBackIcon,
@@ -29,9 +37,24 @@ import {
   File as FileIcon,
   Home as HomeIcon,
   ChevronRight as NavigateNextIcon,
-  FolderOpen as FolderOpenIcon
+  FolderOpen as FolderOpenIcon,
+  MoreVertical as MoreVertIcon,
+  FolderPlus as CreateFolderIcon,
+  FilePlus as CreateFileIcon,
+  Edit as EditIcon,
+  Trash2 as DeleteIcon,
+  Search as SearchIcon,
+  FileText,
+  Code,
+  Image,
+  FileVideo,
+  FileAudio,
+  Archive,
+  Settings as ConfigIcon
 } from 'lucide-react';
 import { workspaceService } from '../../shared/services/WorkspaceService';
+import { MobileFileViewer } from '../../components/MobileFileViewer';
+import { advancedFileManagerService } from '../../shared/services/AdvancedFileManagerService';
 import type { Workspace, WorkspaceFile } from '../../shared/types/workspace';
 import dayjs from 'dayjs';
 
@@ -46,6 +69,79 @@ const WorkspaceDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pathHistory, setPathHistory] = useState<string[]>([]);
+
+  // 文件操作相关状态
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+    file: WorkspaceFile | null;
+  } | null>(null);
+  const [createFolderDialog, setCreateFolderDialog] = useState(false);
+  const [createFileDialog, setCreateFileDialog] = useState(false);
+  const [renameDialog, setRenameDialog] = useState<{ open: boolean; file: WorkspaceFile | null }>({ open: false, file: null });
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; file: WorkspaceFile | null }>({ open: false, file: null });
+  const [newItemName, setNewItemName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<WorkspaceFile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // 文件查看器状态
+  const [fileViewerOpen, setFileViewerOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<WorkspaceFile | null>(null);
+
+  // 获取文件图标
+  const getFileIcon = (file: WorkspaceFile) => {
+    if (file.isDirectory) {
+      return <FolderIcon size={20} color="#1976d2" />;
+    }
+
+    const extension = file.name.split('.').pop()?.toLowerCase();
+
+    // 文本文件
+    const textExts = ['txt', 'md', 'readme', 'log', 'csv'];
+    if (textExts.includes(extension || '')) {
+      return <FileText size={20} color="#666" />;
+    }
+
+    // 代码文件
+    const codeExts = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'scss', 'py', 'java', 'cpp', 'c', 'h', 'json', 'xml', 'yaml', 'yml'];
+    if (codeExts.includes(extension || '')) {
+      return <Code size={20} color="#4caf50" />;
+    }
+
+    // 图片文件
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico'];
+    if (imageExts.includes(extension || '')) {
+      return <Image size={20} color="#ff9800" />;
+    }
+
+    // 视频文件
+    const videoExts = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
+    if (videoExts.includes(extension || '')) {
+      return <FileVideo size={20} color="#e91e63" />;
+    }
+
+    // 音频文件
+    const audioExts = ['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma'];
+    if (audioExts.includes(extension || '')) {
+      return <FileAudio size={20} color="#9c27b0" />;
+    }
+
+    // 压缩文件
+    const archiveExts = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2'];
+    if (archiveExts.includes(extension || '')) {
+      return <Archive size={20} color="#795548" />;
+    }
+
+    // 配置文件
+    const configExts = ['config', 'conf', 'ini', 'properties', 'env'];
+    if (configExts.includes(extension || '')) {
+      return <ConfigIcon size={20} color="#607d8b" />;
+    }
+
+    // 默认文件图标
+    return <FileIcon size={20} color="#757575" />;
+  };
 
   // 加载工作区信息
   const loadWorkspace = async () => {
@@ -71,8 +167,9 @@ const WorkspaceDetail: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const result = await workspaceService.getWorkspaceFiles(workspaceId, subPath);
+
+      // 优先使用高级文件管理器
+      const result = await workspaceService.getWorkspaceFilesAdvanced(workspaceId, subPath);
       setFiles(result.files);
       setCurrentPath(result.currentPath);
       setParentPath(result.parentPath);
@@ -138,12 +235,160 @@ const WorkspaceDetail: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // 获取文件图标
-  const getFileIcon = (file: WorkspaceFile) => {
-    if (file.isDirectory) {
-      return <FolderIcon color="primary" />;
+
+
+  // 文件操作处理函数
+  const handleContextMenu = (event: React.MouseEvent, file: WorkspaceFile) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4,
+      file
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  const handleCreateFolder = async () => {
+    if (!workspaceId || !newItemName.trim()) return;
+
+    try {
+      const result = await workspaceService.createFolder(workspaceId, currentPath, newItemName.trim());
+      if (result.success) {
+        setCreateFolderDialog(false);
+        setNewItemName('');
+        loadFiles(currentPath === workspace?.path ? '' : currentPath.replace(workspace?.path || '', '').replace(/^\//, ''));
+      } else {
+        setError(result.error || '创建文件夹失败');
+      }
+    } catch (err) {
+      setError('创建文件夹失败');
+      console.error('创建文件夹失败:', err);
     }
-    return <FileIcon color="action" />;
+  };
+
+  const handleCreateFile = async () => {
+    if (!workspaceId || !newItemName.trim()) return;
+
+    try {
+      // 如果文件名没有扩展名，默认添加.txt
+      let fileName = newItemName.trim();
+      if (!fileName.includes('.')) {
+        fileName += '.txt';
+      }
+
+      const result = await workspaceService.createFile(workspaceId, currentPath, fileName);
+      if (result.success) {
+        setCreateFileDialog(false);
+        setNewItemName('');
+        loadFiles(currentPath === workspace?.path ? '' : currentPath.replace(workspace?.path || '', '').replace(/^\//, ''));
+      } else {
+        setError(result.error || '创建文件失败');
+      }
+    } catch (err) {
+      setError('创建文件失败');
+      console.error('创建文件失败:', err);
+    }
+  };
+
+  const handleDeleteItem = async () => {
+    if (!workspaceId || !deleteDialog.file) return;
+
+    try {
+      const result = await workspaceService.deleteItem(
+        workspaceId,
+        deleteDialog.file.path,
+        deleteDialog.file.isDirectory
+      );
+      if (result.success) {
+        setDeleteDialog({ open: false, file: null });
+        loadFiles(currentPath === workspace?.path ? '' : currentPath.replace(workspace?.path || '', '').replace(/^\//, ''));
+      } else {
+        setError(result.error || '删除失败');
+      }
+    } catch (err) {
+      setError('删除失败');
+      console.error('删除失败:', err);
+    }
+  };
+
+  const handleRenameItem = async () => {
+    if (!workspaceId || !renameDialog.file || !newItemName.trim()) return;
+
+    try {
+      const result = await workspaceService.renameItem(workspaceId, renameDialog.file.path, newItemName.trim());
+      if (result.success) {
+        setRenameDialog({ open: false, file: null });
+        setNewItemName('');
+        loadFiles(currentPath === workspace?.path ? '' : currentPath.replace(workspace?.path || '', '').replace(/^\//, ''));
+      } else {
+        setError(result.error || '重命名失败');
+      }
+    } catch (err) {
+      setError('重命名失败');
+      console.error('重命名失败:', err);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!workspaceId || !searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      const result = await workspaceService.searchFiles(workspaceId, searchQuery.trim());
+      if (result.success && result.files) {
+        setSearchResults(result.files);
+      } else {
+        setError(result.error || '搜索失败');
+      }
+    } catch (err) {
+      setError('搜索失败');
+      console.error('搜索失败:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  // 打开文件查看器
+  const openFileViewer = (file: WorkspaceFile) => {
+    setSelectedFile(file);
+    setFileViewerOpen(true);
+  };
+
+  // 关闭文件查看器
+  const closeFileViewer = () => {
+    setFileViewerOpen(false);
+    setSelectedFile(null);
+  };
+
+  // 保存文件内容
+  const saveFileContent = async (content: string) => {
+    if (!selectedFile) return;
+
+    try {
+      await advancedFileManagerService.writeFile({
+        path: selectedFile.path,
+        content: content,
+        encoding: 'utf8',
+        append: false
+      });
+
+      // 刷新文件列表
+      const subPath = currentPath === workspace?.path ? '' : currentPath.replace(workspace?.path || '', '').replace(/^\//, '');
+      loadFiles(subPath);
+    } catch (error) {
+      throw new Error('保存文件失败: ' + (error instanceof Error ? error.message : String(error)));
+    }
   };
 
   // 生成面包屑导航
@@ -161,7 +406,7 @@ const WorkspaceDetail: React.FC = () => {
     if (currentPath !== workspace.path) {
       const relativePath = currentPath.replace(workspace.path, '').replace(/^\//, '');
       const pathParts = relativePath.split('/').filter(part => part);
-      
+
       pathParts.forEach((part, index) => {
         breadcrumbs.push({
           label: part,
@@ -200,7 +445,51 @@ const WorkspaceDetail: React.FC = () => {
               {workspace.path}
             </Typography>
           </Box>
+          <IconButton onClick={() => setCreateFolderDialog(true)} title="创建文件夹">
+            <CreateFolderIcon />
+          </IconButton>
+          <IconButton onClick={() => setCreateFileDialog(true)} title="创建文件">
+            <CreateFileIcon />
+          </IconButton>
         </Toolbar>
+
+        {/* 搜索栏 */}
+        <Box sx={{ px: 2, pb: 1 }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="搜索文件..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (e.target.value === '') {
+                clearSearch();
+              }
+            }}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <Box sx={{ display: 'flex' }}>
+                    {searchQuery && (
+                      <IconButton onClick={clearSearch} size="small">
+                        ×
+                      </IconButton>
+                    )}
+                    <IconButton onClick={handleSearch} disabled={isSearching}>
+                      <SearchIcon />
+                    </IconButton>
+                  </Box>
+                )
+              }
+            }}
+          />
+          {searchResults.length > 0 && (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              找到 {searchResults.length} 个结果
+            </Typography>
+          )}
+        </Box>
       </AppBar>
 
       {/* 面包屑导航 */}
@@ -277,11 +566,23 @@ const WorkspaceDetail: React.FC = () => {
             )}
 
             {/* 文件和文件夹列表 */}
-            {files.map((file, index) => (
-              <ListItem key={index} disablePadding>
+            {(searchResults.length > 0 ? searchResults : files).map((file, index) => (
+              <ListItem
+                key={index}
+                disablePadding
+                secondaryAction={
+                  <IconButton
+                    edge="end"
+                    onClick={(e) => handleContextMenu(e, file)}
+                    size="small"
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                }
+              >
                 <ListItemButton
-                  onClick={() => file.isDirectory ? enterFolder(file) : undefined}
-                  disabled={!file.isDirectory}
+                  onClick={() => file.isDirectory ? enterFolder(file) : openFileViewer(file)}
+                  onContextMenu={(e) => handleContextMenu(e, file)}
                 >
                   <ListItemIcon>
                     {getFileIcon(file)}
@@ -311,6 +612,124 @@ const WorkspaceDetail: React.FC = () => {
           </List>
         )}
       </Box>
+
+      {/* 右键菜单 */}
+      <Menu
+        open={contextMenu !== null}
+        onClose={handleCloseContextMenu}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem
+          onClick={() => {
+            setRenameDialog({ open: true, file: contextMenu?.file || null });
+            setNewItemName(contextMenu?.file?.name || '');
+            handleCloseContextMenu();
+          }}
+        >
+          <EditIcon size={16} style={{ marginRight: 8 }} />
+          重命名
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setDeleteDialog({ open: true, file: contextMenu?.file || null });
+            handleCloseContextMenu();
+          }}
+        >
+          <DeleteIcon size={16} style={{ marginRight: 8 }} />
+          删除
+        </MenuItem>
+      </Menu>
+
+      {/* 创建文件夹对话框 */}
+      <Dialog open={createFolderDialog} onClose={() => setCreateFolderDialog(false)}>
+        <DialogTitle>创建文件夹</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="文件夹名称"
+            fullWidth
+            variant="outlined"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateFolderDialog(false)}>取消</Button>
+          <Button onClick={handleCreateFolder} variant="contained">创建</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 创建文件对话框 */}
+      <Dialog open={createFileDialog} onClose={() => setCreateFileDialog(false)}>
+        <DialogTitle>创建文件</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="文件名称"
+            fullWidth
+            variant="outlined"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCreateFile()}
+            helperText="如果不指定扩展名，将自动添加 .txt"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateFileDialog(false)}>取消</Button>
+          <Button onClick={handleCreateFile} variant="contained">创建</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 重命名对话框 */}
+      <Dialog open={renameDialog.open} onClose={() => setRenameDialog({ open: false, file: null })}>
+        <DialogTitle>重命名</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="新名称"
+            fullWidth
+            variant="outlined"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleRenameItem()}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRenameDialog({ open: false, file: null })}>取消</Button>
+          <Button onClick={handleRenameItem} variant="contained">重命名</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 删除确认对话框 */}
+      <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, file: null })}>
+        <DialogTitle>确认删除</DialogTitle>
+        <DialogContent>
+          <Typography>
+            确定要删除 "{deleteDialog.file?.name}" 吗？此操作无法撤销。
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ open: false, file: null })}>取消</Button>
+          <Button onClick={handleDeleteItem} variant="contained" color="error">删除</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 文件查看器 */}
+      <MobileFileViewer
+        open={fileViewerOpen}
+        file={selectedFile}
+        onClose={closeFileViewer}
+        onSave={saveFileContent}
+      />
     </Box>
   );
 };

@@ -188,7 +188,8 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     [inputLayoutStyle]
   );
 
-  // 滑动手势处理 - 右滑打开侧边栏，左滑关闭侧边栏
+  // 滑动手势处理
+  // 右滑打开侧边栏：只在左边缘30px内开始的滑动才有效
   const handleOpenSidebar = useCallback(() => {
     if (!drawerOpen) {
       setDrawerOpen(true);
@@ -201,6 +202,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     }
   }, [drawerOpen, setDrawerOpen]);
 
+  // 左滑关闭侧边栏：只在侧边栏打开时才有效，任意位置都可以开始滑动
   const handleCloseSidebar = useCallback(() => {
     if (drawerOpen) {
       setDrawerOpen(false);
@@ -215,14 +217,18 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
 
   // 滑动进度处理
   const handleSwipeProgress = useCallback((progress: number, direction: 'left' | 'right') => {
+    // 左滑进度只在侧边栏打开时才显示
+    if (direction === 'left' && !drawerOpen) {
+      return;
+    }
     setSwipeProgress(progress);
     setSwipeDirection(direction);
-  }, []);
+  }, [drawerOpen]);
 
   // 使用滑动手势Hook
   const { swipeHandlers } = useSidebarSwipeGesture(
     handleOpenSidebar,
-    handleCloseSidebar,
+    drawerOpen ? handleCloseSidebar : undefined, // 只在侧边栏打开时才启用左滑关闭
     true, // 始终启用手势
     handleSwipeProgress // 传递进度回调
   );
@@ -575,9 +581,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
                   width: '100%',
                   maxWidth: '800px',
                   display: 'flex',
-                  justifyContent: 'flex-start', // 改为左对齐，避免被侧边栏遮挡
-                  paddingLeft: '16px',
-                  paddingRight: '16px'
+                  justifyContent: 'center'
                 }}>
                   {renderInputComponent()}
                 </Box>
@@ -625,9 +629,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
                     width: '100%',
                     maxWidth: '800px',
                     display: 'flex',
-                    justifyContent: 'flex-start', // 改为左对齐，避免被侧边栏遮挡
-                    paddingLeft: '16px',
-                    paddingRight: '16px'
+                    justifyContent: 'center'
                   }}>
                     <ChatToolbar
                       onClearTopic={handleClearTopic}
@@ -646,9 +648,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
                   width: '100%',
                   maxWidth: '800px',
                   display: 'flex',
-                  justifyContent: 'flex-start', // 改为左对齐，避免被侧边栏遮挡
-                  paddingLeft: '16px',
-                  paddingRight: '16px'
+                  justifyContent: 'center'
                 }}>
                   {renderInputComponent()}
                 </Box>

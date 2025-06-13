@@ -275,6 +275,15 @@ const ChatInterfaceSettings: React.FC = () => {
                 <MenuItem value={ThinkingDisplayStyle.CARD}>卡片模式（突出显示）</MenuItem>
                 <MenuItem value={ThinkingDisplayStyle.INLINE}>内联模式（嵌入消息）</MenuItem>
                 <MenuItem value={ThinkingDisplayStyle.HIDDEN}>隐藏（不显示思考过程）</MenuItem>
+                {/* 2025年新增的先进样式 */}
+                <MenuItem value={ThinkingDisplayStyle.STREAM}>🌊 流式文字（逐字显示）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.DOTS}>💫 思考点动画（输入指示器）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.WAVE}>🌀 波浪流动（思维可视化）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.SIDEBAR}>📋 侧边栏（滑出显示）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.OVERLAY}>🔍 全屏覆盖（沉浸体验）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.BREADCRUMB}>🔗 面包屑（步骤展示）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.FLOATING}>✨ 悬浮气泡（跟随鼠标）</MenuItem>
+                <MenuItem value={ThinkingDisplayStyle.TERMINAL}>💻 终端模式（命令行风格）</MenuItem>
               </Select>
             </FormControl>
 
@@ -309,6 +318,16 @@ const ChatInterfaceSettings: React.FC = () => {
               <br />• 卡片模式：突出的渐变卡片设计
               <br />• 内联模式：嵌入在消息中的紧凑显示
               <br />• 隐藏：完全不显示思考过程
+              <br />
+              <br />🚀 <strong>2025年新增先进样式：</strong>
+              <br />• 流式文字：打字机效果，逐字显示思考内容
+              <br />• 思考点动画：类似聊天应用的"正在输入"指示器
+              <br />• 波浪流动：动态波浪效果，可视化思维流动
+              <br />• 侧边栏：从右侧滑出的全屏思考面板
+              <br />• 全屏覆盖：沉浸式全屏思考内容展示
+              <br />• 面包屑：步骤化展示思考过程的关键节点
+              <br />• 悬浮气泡：跟随鼠标的动态悬浮预览
+              <br />• 终端模式：程序员风格的命令行界面显示
             </Typography>
           </Box>
         </Paper>

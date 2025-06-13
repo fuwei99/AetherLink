@@ -18,7 +18,7 @@ import {
   DEFAULT_MAX_TOKENS,
   findTokenLimit
 } from '../../config/constants';
-import { getDefaultThinkingEffort } from '../../utils/settingsUtils';
+import { getDefaultThinkingEffort, getAppSettings } from '../../utils/settingsUtils';
 
 /**
  * 参数配置接口
@@ -94,12 +94,22 @@ export class OpenAIParameterManager {
    * 获取基础参数
    */
   public getBaseParameters(): BaseParameters {
-    return {
+    const baseParams: BaseParameters = {
       temperature: this.getTemperature(),
       top_p: this.getTopP(),
       max_tokens: this.getMaxTokens(),
       stream: this.getStreamEnabled()
     };
+
+    // 检查是否启用了最大输出Token参数
+    const appSettings = getAppSettings();
+    if (appSettings.enableMaxOutputTokens === false) {
+      // 如果禁用了，从参数中移除max_tokens
+      delete (baseParams as any).max_tokens;
+      console.log(`[OpenAIParameterManager] 最大输出Token已禁用，从API参数中移除max_tokens`);
+    }
+
+    return baseParams;
   }
 
   /**

@@ -90,21 +90,14 @@ export const DataManager = {
         };
       }
 
-      // 版本不匹配，需要修复
-      console.warn(`DataManager: 数据库版本不匹配，当前: v${currentVersion}，期望: v${DB_CONFIG.VERSION}`);
-
-      // 使用Dexie删除旧数据库
-      await Dexie.delete(DB_CONFIG.NAME);
-      console.log('DataManager: 成功删除旧版本数据库');
-
-      // 等待300ms确保删除操作完成
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      console.log('DataManager: 数据库版本已修复，将在下次访问时创建新版本');
+      // 版本不匹配时，让 Dexie 自己处理版本升级
+      // 移除激进清理机制，避免数据丢失
+      console.log(`DataManager: 数据库版本不匹配，当前: v${currentVersion}，期望: v${DB_CONFIG.VERSION}`);
+      console.log('DataManager: 将使用 Dexie 标准迁移机制进行版本升级，保留用户数据');
 
       return {
         success: true,
-        message: '数据库版本已修复',
+        message: `数据库版本将从 v${currentVersion} 升级到 v${DB_CONFIG.VERSION}，使用渐进迁移保留数据`,
         oldVersion: currentVersion,
         newVersion: DB_CONFIG.VERSION
       };

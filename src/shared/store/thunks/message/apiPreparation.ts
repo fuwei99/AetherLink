@@ -148,6 +148,8 @@ export const prepareMessagesForApi = async (
   // 2. 获取包含content字段的消息
   const messages = await dexieStorage.getTopicMessages(topicId);
 
+
+
   // 按创建时间排序消息，确保顺序正确
   const sortedMessages = [...messages].sort((a, b) => {
     const timeA = new Date(a.createdAt).getTime();
@@ -215,6 +217,8 @@ export const prepareMessagesForApi = async (
 
     // 获取消息内容 - 检查是否有知识库缓存（风格）
     let content = getMainTextContent(message);
+
+
 
     // 如果是用户消息，检查是否有知识库搜索结果或选中的知识库
     if (message.role === 'user') {
@@ -372,6 +376,8 @@ export const prepareMessagesForApi = async (
     role: 'system',
     content: processedSystemPrompt
   });
+
+  console.log(`[prepareMessagesForApi] 准备完成，系统提示词长度: ${processedSystemPrompt.length}，API消息数量: ${apiMessages.length}`);
 
   return apiMessages;
 };

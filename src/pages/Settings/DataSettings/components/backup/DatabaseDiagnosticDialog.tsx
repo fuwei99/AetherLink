@@ -88,10 +88,14 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
   // 修复数据库问题
   const repairDatabase = async () => {
     try {
+      if (!window.confirm('此操作将清理旧版本数据库。如果您正在使用v6版本，建议谨慎操作。确定要继续吗？')) {
+        return;
+      }
+
       setIsRepairing(true);
       setError(null);
 
-      // 清理旧数据库
+      // 清理旧数据库（仅清理不同名称的旧数据库，不会影响当前版本）
       const result = await cleanupOldDatabases();
       setRepairResult(result);
 

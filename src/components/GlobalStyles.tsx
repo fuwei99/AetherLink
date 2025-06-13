@@ -52,8 +52,8 @@ const GlobalStyles: React.FC<GlobalStylesProps> = ({ fontSize, theme }) => {
       }
     ` : ''}
 
-    /* 全局字体设置 */
-    * {
+    /* 全局字体设置 - 排除数学公式元素 */
+    *:not(.katex):not(.katex *):not(mjx-container):not(mjx-container *) {
       font-family: var(--global-font-family) !important;
     }
 
@@ -97,6 +97,51 @@ const GlobalStyles: React.FC<GlobalStylesProps> = ({ fontSize, theme }) => {
     .MuiTooltip-tooltip {
       font-size: calc(var(--global-font-size) * 0.75) !important;
       font-family: var(--global-font-family) !important;
+    }
+
+    /* 隐藏滚动条样式 - 无感滑动 */
+    .hide-scrollbar {
+      /* Firefox */
+      scrollbar-width: none;
+      /* IE/Edge */
+      -ms-overflow-style: none;
+    }
+
+    /* WebKit浏览器 (Chrome, Safari, Opera) */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* 防止 placeholder 文字被选择和复制 */
+    textarea::placeholder,
+    input::placeholder {
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+      pointer-events: none !important;
+    }
+
+    /* 防止通过特殊方式复制 placeholder */
+    textarea::-webkit-input-placeholder,
+    input::-webkit-input-placeholder {
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      pointer-events: none !important;
+    }
+
+    textarea::-moz-placeholder,
+    input::-moz-placeholder {
+      user-select: none !important;
+      -moz-user-select: none !important;
+      pointer-events: none !important;
+    }
+
+    textarea:-ms-input-placeholder,
+    input:-ms-input-placeholder {
+      user-select: none !important;
+      -ms-user-select: none !important;
+      pointer-events: none !important;
     }
   `;
 

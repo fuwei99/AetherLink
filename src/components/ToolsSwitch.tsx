@@ -1,7 +1,8 @@
 import React from 'react';
-import { Switch, FormControlLabel, Tooltip, Box } from '@mui/material';
+import { FormControlLabel, Tooltip, Box } from '@mui/material';
 import { Wrench as BuildIcon } from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
+import CustomSwitch from './CustomSwitch';
 
 interface ToolsSwitchProps {
   enabled: boolean;
@@ -38,19 +39,9 @@ const ToolsSwitch: React.FC<ToolsSwitchProps> = ({
         />
         <FormControlLabel
           control={
-            <Switch
+            <CustomSwitch
               checked={enabled}
               onChange={(e) => onChange(e.target.checked)}
-              size="small"
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: isDarkMode ? '#90caf9' : '#1976d2',
-                },
-                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: isDarkMode ? '#90caf9' : '#1976d2',
-                },
-                marginRight: '-8px'
-              }}
             />
           }
           label={label}

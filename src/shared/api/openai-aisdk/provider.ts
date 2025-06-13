@@ -6,6 +6,7 @@
 import { BaseOpenAIProvider } from '../openai/provider';
 import { createAISDKClient } from './client';
 import { streamCompletionAISDK } from './stream';
+import { getAppSettings } from '../../utils/settingsUtils';
 import type { Model, Message } from '../../types';
 
 /**
@@ -45,10 +46,9 @@ export class OpenAIAISDKProvider extends BaseOpenAIProvider {
 
     try {
       // 准备参数 - 从助手设置中获取参数
-      const params = {
+      const params: any = {
         messages,
         temperature: this.getTemperature(options?.assistant),
-        max_tokens: this.getMaxTokens(options?.assistant),
         enableReasoning: this.supportsReasoning(),
         model: this.model,
         signal: options?.abortSignal,
@@ -56,6 +56,14 @@ export class OpenAIAISDKProvider extends BaseOpenAIProvider {
         mcpTools: options?.mcpTools,
         mcpMode: options?.mcpMode
       };
+
+      // 检查是否启用了最大输出Token参数
+      const appSettings = getAppSettings();
+      if (appSettings.enableMaxOutputTokens !== false) {
+        params.max_tokens = this.getMaxTokens(options?.assistant);
+      } else {
+        console.log(`[OpenAIAISDKProvider] 最大输出Token已禁用，从API参数中移除max_tokens`);
+      }
 
       // 处理系统提示词
       if (options?.systemPrompt) {
@@ -71,7 +79,7 @@ export class OpenAIAISDKProvider extends BaseOpenAIProvider {
         this.model.id,
         params.messages,
         params.temperature,
-        params.max_tokens,
+        params.max_tokens, // 如果禁用了会是undefined
         options?.onUpdate,
         params,
         options?.onChunk

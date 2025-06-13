@@ -148,14 +148,21 @@ const MessageEditor: React.FC<MessageEditorProps> = ({ message, topicId, open, o
         }
       }
 
+      if (!mainTextBlockId) {
+        console.warn('[MessageEditor] 未找到主文本块，消息可能没有正确的块结构');
+      }
+
 
 
       // � 性能优化：批量更新数据库和Redux状态
       const updatedAt = new Date().toISOString();
+
+      // 🔧 修复：区分用户消息和AI消息的更新策略
       const messageUpdates = {
         status: isUser ? UserMessageStatus.SUCCESS : AssistantMessageStatus.SUCCESS,
         updatedAt,
-        content: editedText
+        // 用户消息：设置content字段；AI消息：不设置content字段，让其从消息块获取
+        ...(isUser && { content: editedText })
       };
 
       // 🚀 性能优化：使用事务批量更新数据库，减少I/O操作
@@ -169,15 +176,34 @@ const MessageEditor: React.FC<MessageEditorProps> = ({ message, topicId, open, o
             });
           }
 
-          // 更新消息
+          // 更新消息表
           await dexieStorage.updateMessage(message.id, messageUpdates);
 
-          // 更新话题中的消息（如果需要）
+          // 🔧 修复：确保同时更新topic.messages数组
           if (topicId) {
-            await dexieStorage.updateMessageInTopic(topicId, message.id, {
-              ...message,
-              ...messageUpdates
-            });
+            const topic = await dexieStorage.topics.get(topicId);
+            if (topic && topic.messages) {
+              // 查找消息在数组中的位置
+              const messageIndex = topic.messages.findIndex((m: any) => m.id === message.id);
+
+              if (messageIndex >= 0) {
+                // 更新topic.messages数组中的消息
+                const updatedMessage = {
+                  ...topic.messages[messageIndex],
+                  ...messageUpdates
+                };
+                topic.messages[messageIndex] = updatedMessage;
+
+
+
+                // 保存更新后的话题
+                await dexieStorage.topics.put(topic);
+              } else {
+                console.warn('[MessageEditor] 在topic.messages中未找到消息:', message.id);
+              }
+            } else {
+              console.warn('[MessageEditor] 话题不存在或没有messages数组:', topicId);
+            }
           }
         });
 
@@ -205,6 +231,54 @@ const MessageEditor: React.FC<MessageEditorProps> = ({ message, topicId, open, o
         id: message.id,
         changes: messageUpdates
       }));
+
+      // 🔧 修复：清除getMainTextContent缓存，确保立即获取最新内容
+      try {
+        const { clearGetMainTextContentCache } = await import('../../shared/utils/messageUtils');
+        clearGetMainTextContentCache();
+      } catch (error) {
+        console.warn('[MessageEditor] 清除缓存失败:', error);
+      }
+
+      // 🔧 修复AI消息特殊问题：对于AI消息，不设置message.content字段
+      // 让getMainTextContent函数从消息块获取最新内容，而不是从缓存的content字段
+      if (!isUser) {
+        // AI消息：移除content字段，强制从消息块获取内容
+        dispatch(newMessagesActions.updateMessage({
+          id: message.id,
+          changes: {
+            ...(message as any).content && { content: undefined }, // 清除content字段（如果存在）
+            updatedAt: new Date().toISOString()
+          }
+        }));
+
+      }
+
+      // 🔧 修复：强制触发组件重新渲染
+      // 通过更新消息的updatedAt字段来触发依赖该字段的组件重新渲染
+      setTimeout(() => {
+        dispatch(newMessagesActions.updateMessage({
+          id: message.id,
+          changes: {
+            updatedAt: new Date().toISOString()
+          }
+        }));
+
+        // 🔧 额外修复：强制更新消息块的updatedAt，确保MainTextBlock重新渲染
+        if (mainTextBlockId) {
+          dispatch({
+            type: 'messageBlocks/updateOneBlock',
+            payload: {
+              id: mainTextBlockId,
+              changes: {
+                updatedAt: new Date().toISOString()
+              }
+            }
+          });
+        }
+
+
+      }, 100);
 
 
 

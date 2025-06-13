@@ -107,18 +107,20 @@ export async function* openAIChunkToTextDelta(stream: AsyncIterable<any>): Async
     if (chunk.choices && chunk.choices.length > 0) {
       const delta = chunk.choices[0].delta;
 
-      // 处理文本内容
-      if (delta?.content) {
+      // 处理文本内容 - 添加安全检查
+      if (delta?.content && typeof delta.content === 'string') {
         // 确保只处理新增的内容
         const textDelta = delta.content;
         yield { type: 'text-delta', textDelta };
       }
 
-      // 处理思考内容 - 支持多种字段名
+      // 处理思考内容 - 支持多种字段名，添加安全检查
       if (delta?.reasoning_content || delta?.reasoning) {
         const reasoningContent = delta.reasoning_content || delta.reasoning;
-        // 确保只处理新增的思考内容
-        yield { type: 'reasoning', textDelta: reasoningContent };
+        // 确保只处理新增的思考内容，并检查类型
+        if (reasoningContent && typeof reasoningContent === 'string') {
+          yield { type: 'reasoning', textDelta: reasoningContent };
+        }
       }
 
       // 处理DeepSeek特有的思考内容字段
@@ -126,8 +128,8 @@ export async function* openAIChunkToTextDelta(stream: AsyncIterable<any>): Async
       if (chunk.choices[0]?.message?.reasoning_content) {
         const fullReasoning = chunk.choices[0].message.reasoning_content;
 
-        // 如果收到的是完整消息，且与已处理内容不同，仅处理新增部分
-        if (fullReasoning !== processedReasoning) {
+        // 添加安全检查
+        if (fullReasoning && typeof fullReasoning === 'string' && fullReasoning !== processedReasoning) {
           // 找出新增的部分
           const newContent = fullReasoning.slice(processedReasoning.length);
           if (newContent) {

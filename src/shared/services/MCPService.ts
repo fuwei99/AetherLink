@@ -795,6 +795,26 @@ export class MCPService {
   }
 
   /**
+   * 关闭所有活跃的服务器
+   */
+  public async stopAllActiveServers(): Promise<void> {
+    const activeServers = this.getActiveServers();
+    console.log(`[MCP] 正在关闭 ${activeServers.length} 个活跃服务器`);
+
+    const promises = activeServers.map(async (server) => {
+      try {
+        await this.toggleServer(server.id, false);
+        console.log(`[MCP] 已关闭服务器: ${server.name}`);
+      } catch (error) {
+        console.error(`[MCP] 关闭服务器失败: ${server.name}`, error);
+      }
+    });
+
+    await Promise.all(promises);
+    console.log('[MCP] 所有活跃服务器已关闭');
+  }
+
+  /**
    * 清理所有连接
    */
   public async cleanup(): Promise<void> {

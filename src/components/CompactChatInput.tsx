@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, IconButton, Typography, Collapse, Chip } from '@mui/material';
 import MCPToolsButton from './chat/MCPToolsButton';
 import WebSearchProviderSelector from './WebSearchProviderSelector';
@@ -15,7 +15,7 @@ import { useKnowledgeContext } from '../shared/hooks/useKnowledgeContext';
 import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition'; // 导入 useVoiceRecognition
 import { getBasicIcons, getExpandedIcons } from '../shared/config/inputIcons';
 
-import { Plus, X, Send, Square, Paperclip } from 'lucide-react';
+import { Plus, X, Send, Square, Paperclip, ChevronUp, ChevronDown } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../shared/store';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../shared/types';
@@ -72,6 +72,9 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   const [expanded, setExpanded] = useState(false);
   const [showProviderSelector, setShowProviderSelector] = useState(false);
   const [showKnowledgeSelector, setShowKnowledgeSelector] = useState(false);
+  const [showExpandButton, setShowExpandButton] = useState(false); // 是否显示展开按钮
+  const [textareaExpanded, setTextareaExpanded] = useState(false); // 文本区域展开状态
+  const [expandedHeight, setExpandedHeight] = useState(Math.floor(window.innerHeight * 0.7)); // 展开时的高度
   const [inputHeight, setInputHeight] = useState(40); // 输入框容器高度
   const [isFullExpanded, setIsFullExpanded] = useState(false); // 是否全展开
   const [isActivated, setIsActivated] = useState(false); // 冷激活状态
@@ -199,6 +202,16 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     setIsIOS(isIOSDevice);
   }, []);
 
+  // 监听窗口大小变化，更新展开高度
+  useEffect(() => {
+    const updateExpandedHeight = () => {
+      setExpandedHeight(Math.floor(window.innerHeight * 0.7));
+    };
+
+    window.addEventListener('resize', updateExpandedHeight);
+    return () => window.removeEventListener('resize', updateExpandedHeight);
+  }, []);
+
   // 处理网络搜索按钮点击
   const handleWebSearchClick = () => {
     if (webSearchActive) {
@@ -267,7 +280,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
 
       const scrollHeight = textareaRef.current.scrollHeight;
       const minHeight = 24; // 最小高度（单行）
-      const maxHeight = isFullExpanded ? 200 : 120; // 最大高度，全展开时更高
+      const maxHeight = textareaExpanded ? expandedHeight : isFullExpanded ? 200 : 120; // 文本区域展开时使用屏幕高度的70%
 
       // 计算textarea的实际高度
       let textareaHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
@@ -277,13 +290,16 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
         textareaHeight = maxHeight;
       }
 
-      textareaRef.current.style.height = `${textareaHeight}px`;
+      // 如果文本区域展开，不需要设置高度，由CSS样式控制
+      if (!textareaExpanded) {
+        textareaRef.current.style.height = `${textareaHeight}px`;
+      }
 
       // 计算容器高度（textarea高度 + padding）
-      const containerHeight = textareaHeight + 16; // 8px上下padding
+      const containerHeight = textareaExpanded ? expandedHeight + 16 : textareaHeight + 16; // 8px上下padding
       setInputHeight(containerHeight);
     }
-  }, [message, isFullExpanded, isActivated]);
+  }, [message, isFullExpanded, isActivated, textareaExpanded, expandedHeight]);
 
   // 处理输入框激活
   const handleInputFocus = () => {
@@ -336,6 +352,39 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     setIsActivated(true);
   };
 
+  // 检测是否需要显示展开按钮 - 基于字数判断
+  const checkShowExpandButton = useCallback(() => {
+    if (!textareaExpanded) {
+      // 计算文本行数：根据字符数估算行数
+      const textLength = message.length;
+      const containerWidth = 280; // CompactChatInput 的估算容器宽度
+      const charsPerLine = Math.floor(containerWidth / 14); // 根据字体大小估算每行字符数
+
+      // 计算换行符数量
+      const newlineCount = (message.match(/\n/g) || []).length;
+
+      // 估算总行数：字符行数 + 换行符行数
+      const estimatedLines = Math.ceil(textLength / charsPerLine) + newlineCount;
+
+      // 当文本超过4行时显示展开按钮
+      setShowExpandButton(estimatedLines > 4);
+    } else {
+      // 展开状态下始终显示按钮（用于收起）
+      setShowExpandButton(true);
+    }
+  }, [textareaExpanded, message]);
+
+  // 监听消息内容变化，检测按钮显示状态
+  useEffect(() => {
+    checkShowExpandButton();
+  }, [message, checkShowExpandButton]);
+
+  // 监听展开状态变化
+  useEffect(() => {
+    // 延迟检测，确保DOM更新完成
+    setTimeout(checkShowExpandButton, 100);
+  }, [textareaExpanded, checkShowExpandButton]);
+
   // 处理输入变化，包含URL检测
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleChange(e);
@@ -344,6 +393,8 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     if (e.target.value.trim()) {
       setIsActivated(true);
     }
+    // 延迟检测展开按钮显示（等待高度调整完成）
+    setTimeout(checkShowExpandButton, 50);
   };
 
   // 处理键盘事件，包含全展开功能
@@ -605,8 +656,10 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
   return (
     <Box sx={{
       width: '100%',
-      maxWidth: '800px',
-      margin: '0 16px', // 改为左右边距，避免被侧边栏遮挡
+      maxWidth: { xs: '100%', sm: '800px' }, // 移动端占满宽度，桌面端限制最大宽度
+      margin: { xs: '0', sm: '0 auto' }, // 移动端无边距，桌面端居中
+      paddingLeft: { xs: '8px', sm: '0' }, // 移动端使用padding
+      paddingRight: { xs: '8px', sm: '0' }, // 移动端使用padding
       // 添加全局滚动条样式
       '& textarea::-webkit-scrollbar': {
         width: '6px',
@@ -667,7 +720,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'flex-start', // 改为顶部对齐，适应多行文本
+            alignItems: 'flex-end', // 改为底部对齐，让按钮固定在底部
             background: isDarkMode ? '#2A2A2A' : '#FFFFFF', // 不透明背景
             border: styles.border,
             borderRadius: isActivated || expanded || message.trim().length > 0
@@ -681,6 +734,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
             height: `${inputHeight}px`, // 动态高度
             transition: 'all 0.2s ease', // 平滑过渡
             cursor: !isActivated && !message.trim() ? 'pointer' : 'text', // 冷激活时显示指针
+            position: 'relative', // 添加相对定位，用于放置展开按钮
             '&:hover': !isActivated && !message.trim() ? {
               borderColor: isDarkMode ? '#555' : '#ddd',
               boxShadow: `0 2px 8px ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
@@ -688,9 +742,55 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
           }}
           onClick={!isActivated ? handleInputClick : undefined} // 冷激活时整个区域可点击
         >
-        <Box sx={{ flex: 1, marginRight: '8px', paddingTop: '4px' }}>
+          {/* 展开/收起按钮 - 显示在输入框容器右上角 */}
+          {showExpandButton && (
+            <Box sx={{
+              position: 'absolute',
+              top: '4px',
+              right: '4px',
+              zIndex: 10
+            }}>
+              <IconButton
+                onClick={() => setTextareaExpanded(!textareaExpanded)}
+                size="small"
+                sx={{
+                  color: textareaExpanded ? '#2196F3' : (isDarkMode ? '#B0B0B0' : '#555'),
+                  padding: '2px',
+                  width: '20px',
+                  height: '20px',
+                  minWidth: '20px',
+                  backgroundColor: isDarkMode
+                    ? 'rgba(42, 42, 42, 0.9)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '6px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {textareaExpanded ? (
+                  <ChevronDown size={14} />
+                ) : (
+                  <ChevronUp size={14} />
+                )}
+              </IconButton>
+            </Box>
+          )}
+        <Box sx={{
+          flex: 1,
+          marginRight: '8px',
+          // 添加样式来防止 placeholder 被选择
+          '& textarea::placeholder': {
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            MozUserSelect: 'none',
+            msUserSelect: 'none',
+            pointerEvents: 'none'
+          }
+        }}>
           <textarea
             ref={textareaRef}
+            className="hide-scrollbar"
             style={{
               width: '100%',
               border: 'none',
@@ -701,12 +801,12 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
               lineHeight: '1.4',
               fontFamily: 'inherit',
               color: isDarkMode ? '#ffffff' : '#000000',
-              minHeight: isActivated ? '24px' : '40px', // 冷激活时使用更高的最小高度
-              overflow: isActivated ? 'auto' : 'hidden', // 冷激活时隐藏滚动条
+              minHeight: textareaExpanded ? `${expandedHeight}px` : (isActivated ? '24px' : '40px'), // 展开时使用大高度
+              height: textareaExpanded ? `${expandedHeight}px` : 'auto', // 展开时固定高度
+              maxHeight: textareaExpanded ? `${expandedHeight}px` : (isActivated ? '120px' : '40px'), // 展开时使用大高度
+              overflow: textareaExpanded || isActivated ? 'auto' : 'hidden', // 展开或激活时显示滚动条
               padding: '0',
-              scrollbarWidth: 'thin', // Firefox
-              scrollbarColor: isDarkMode ? '#555 transparent' : '#ccc transparent', // Firefox
-              transition: 'all 0.2s ease', // 添加过渡动画
+              transition: 'all 0.3s ease', // 添加过渡动画
             }}
             placeholder={
               !isActivated
@@ -748,7 +848,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
         </Box>
 
         {/* 语音识别和发送按钮 */}
-        <Box sx={{ paddingTop: '4px', display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end', paddingBottom: '4px' }}>
           {/* 语音识别按钮 */}
           <VoiceButton
             isVoiceMode={isVoiceMode}
@@ -839,42 +939,54 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
                 已选择 {images.length} 张图片
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {images.map((image, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      position: 'relative',
-                      width: 60,
-                      height: 60,
-                      borderRadius: 1,
-                      overflow: 'hidden',
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}
-                  >
-                    <img
-                      src={image.base64Data || image.url}
-                      alt={`预览 ${index + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                    <IconButton
-                      size="small"
-                      onClick={() => handleRemoveImage(index)}
+                {images.map((image, index) => {
+                  // 创建唯一的 key，避免第三个图片重复显示问题
+                  const imageKey = `image-${index}-${image.name || 'unnamed'}-${image.size || Date.now()}`;
+                  // 添加时间戳防止缓存问题
+                  const imageSrc = image.base64Data || (image.url ? `${image.url}?t=${Date.now()}` : '');
+
+                  return (
+                    <Box
+                      key={imageKey}
                       sx={{
-                        position: 'absolute',
-                        top: -8,
-                        right: -8,
-                        backgroundColor: 'error.main',
-                        color: 'white',
-                        width: 20,
-                        height: 20,
-                        '&:hover': { backgroundColor: 'error.dark' }
+                        position: 'relative',
+                        width: 60,
+                        height: 60,
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        border: '1px solid',
+                        borderColor: 'divider'
                       }}
                     >
-                      <X size={12} />
-                    </IconButton>
-                  </Box>
-                ))}
+                      <img
+                        src={imageSrc}
+                        alt={`预览 ${index + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          // 图片加载失败时的处理
+                          console.warn('图片加载失败:', image);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveImage(index)}
+                        sx={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          backgroundColor: 'error.main',
+                          color: 'white',
+                          width: 20,
+                          height: 20,
+                          '&:hover': { backgroundColor: 'error.dark' }
+                        }}
+                      >
+                        <X size={12} />
+                      </IconButton>
+                    </Box>
+                  );
+                })}
               </Box>
             </Box>
           )}
@@ -886,33 +998,38 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
                 已选择 {files.length} 个文件
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {files.map((file, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      p: 1,
-                      bgcolor: 'action.hover',
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}
-                  >
-                    <Paperclip size={16} style={{ color: 'text.secondary' }} />
-                    <Typography variant="caption" sx={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {file.name}
-                    </Typography>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleRemoveFile(index)}
-                      sx={{ p: 0.5 }}
+                {files.map((file, index) => {
+                  // 创建唯一的 key，避免第三个文件重复显示问题
+                  const fileKey = `file-${index}-${file.name}-${file.size || Date.now()}`;
+
+                  return (
+                    <Box
+                      key={fileKey}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        p: 1,
+                        bgcolor: 'action.hover',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider'
+                      }}
                     >
-                      <X size={12} />
-                    </IconButton>
-                  </Box>
-                ))}
+                      <Paperclip size={16} style={{ color: 'text.secondary' }} />
+                      <Typography variant="caption" sx={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {file.name}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveFile(index)}
+                        sx={{ p: 0.5 }}
+                      >
+                        <X size={12} />
+                      </IconButton>
+                    </Box>
+                  );
+                })}
               </Box>
             </Box>
           )}

@@ -84,6 +84,20 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
     navigate('/settings/mcp-server');
   };
 
+  const handleToolsToggle = async (enabled: boolean) => {
+    if (!enabled) {
+      // 关闭总开关时，同时关闭所有已启动的MCP服务器
+      try {
+        await mcpService.stopAllActiveServers();
+        loadServers();
+        console.log('[MCP] 总开关关闭，已停止所有活跃服务器');
+      } catch (error) {
+        console.error('[MCP] 停止服务器失败:', error);
+      }
+    }
+    onToolsToggle?.(enabled);
+  };
+
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {
       case 'httpStream':
@@ -195,7 +209,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
               control={
                 <CustomSwitch
                   checked={toolsEnabled}
-                  onChange={(e) => onToolsToggle?.(e.target.checked)}
+                  onChange={(e) => handleToolsToggle(e.target.checked)}
                 />
               }
               label={

@@ -23,7 +23,8 @@ import {
   Snackbar,
   Alert,
   Tabs,
-  Tab
+  Tab,
+  InputAdornment
 } from '@mui/material';
 import {
   ArrowLeft,
@@ -32,7 +33,9 @@ import {
   Edit,
   Zap,
   CheckCircle,
-  Settings
+  Settings,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../shared/store';
@@ -161,6 +164,7 @@ const ModelProviderSettings: React.FC = () => {
   // 多 Key 管理相关状态
   const [currentTab, setCurrentTab] = useState(0);
   const [multiKeyEnabled, setMultiKeyEnabled] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
   const keyManager = ApiKeyManager.getInstance();
 
   // 当provider加载完成后初始化状态
@@ -240,6 +244,10 @@ const ModelProviderSettings: React.FC = () => {
         }));
       }
     }
+  };
+
+  const toggleShowApiKey = () => {
+    setShowApiKey(!showApiKey);
   };
 
   const handleBack = () => {
@@ -909,7 +917,7 @@ const ModelProviderSettings: React.FC = () => {
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
                           variant="outlined"
-                          type="password"
+                          type={showApiKey ? 'text' : 'password'}
                           size="small"
                           sx={{
                             '& .MuiOutlinedInput-root': {
@@ -919,7 +927,26 @@ const ModelProviderSettings: React.FC = () => {
                           slotProps={{
                             input: {
                               'aria-invalid': false,
-                              'aria-describedby': 'provider-settings-api-key-helper-text'
+                              'aria-describedby': 'provider-settings-api-key-helper-text',
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    aria-label="切换API密钥可见性"
+                                    onClick={toggleShowApiKey}
+                                    edge="end"
+                                    size="small"
+                                    sx={{
+                                      '&:hover': {
+                                        bgcolor: 'action.hover',
+                                        transform: 'scale(1.1)',
+                                      },
+                                      transition: 'all 0.2s ease-in-out',
+                                    }}
+                                  >
+                                    {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
                             },
                             formHelperText: {
                               id: 'provider-settings-api-key-helper-text'

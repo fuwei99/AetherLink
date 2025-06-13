@@ -8,7 +8,7 @@ import type {
   CodeMessageBlock,
   CitationMessageBlock,
   TranslationMessageBlock,
-  TableMessageBlock,
+  // TableMessageBlock, // 已废弃，表格通过Markdown渲染
   MultiModelMessageBlock,
   ChartMessageBlock,
   MathMessageBlock,
@@ -732,9 +732,9 @@ export function getAllTextContent(message: Message): string {
       case MessageBlockType.TOOL:
         textParts.push(`[Tool: ${(block as any).name}]`);
         break;
-      case MessageBlockType.TABLE:
-        textParts.push('[Table]');
-        break;
+      // case MessageBlockType.TABLE: // 已废弃，表格通过Markdown渲染
+      //   textParts.push('[Table]');
+      //   break;
       case MessageBlockType.MULTI_MODEL:
         const multiModel = block as MultiModelMessageBlock;
         textParts.push(`[多模型响应: ${multiModel.responses.length}个模型]`);
@@ -807,6 +807,11 @@ export function createMessage(options: {
  * 用于处理复杂的文本内容，如包含代码块、图片链接等的内容
  */
 export function splitContentIntoBlocks(messageId: string, content: string): MessageBlock[] {
+  // 添加安全检查
+  if (!content || typeof content !== 'string') {
+    return [];
+  }
+
   const blocks: MessageBlock[] = [];
   const now = new Date().toISOString();
 
@@ -1053,25 +1058,25 @@ export function createTranslationBlock(
 }
 
 /**
- * 创建表格块
+ * 创建表格块 - 已废弃，表格通过Markdown渲染
  */
-export function createTableBlock(
-  messageId: string,
-  headers: string[],
-  rows: string[][],
-  caption?: string
-): MessageBlock {
-  return {
-    id: uuid(),
-    messageId,
-    type: MessageBlockType.TABLE,
-    headers,
-    rows,
-    caption,
-    createdAt: new Date().toISOString(),
-    status: MessageBlockStatus.SUCCESS
-  };
-}
+// export function createTableBlock(
+//   messageId: string,
+//   headers: string[],
+//   rows: string[][],
+//   caption?: string
+// ): MessageBlock {
+//   return {
+//     id: uuid(),
+//     messageId,
+//     type: MessageBlockType.TABLE,
+//     headers,
+//     rows,
+//     caption,
+//     createdAt: new Date().toISOString(),
+//     status: MessageBlockStatus.SUCCESS
+//   };
+// }
 
 /**
  * 创建多模型响应块
@@ -1159,25 +1164,25 @@ export function findTranslationBlocks(message: Message): TranslationMessageBlock
 }
 
 /**
- * 查找消息的所有表格块
+ * 查找消息的所有表格块 - 已废弃，表格通过Markdown渲染
  */
-export function findTableBlocks(message: Message): TableMessageBlock[] {
-  if (!message || !message.blocks || message.blocks.length === 0) {
-    return [];
-  }
+// export function findTableBlocks(message: Message): TableMessageBlock[] {
+//   if (!message || !message.blocks || message.blocks.length === 0) {
+//     return [];
+//   }
 
-  const state = store.getState();
-  const tableBlocks: TableMessageBlock[] = [];
+//   const state = store.getState();
+//   const tableBlocks: TableMessageBlock[] = [];
 
-  for (const blockId of message.blocks) {
-    const block = messageBlocksSelectors.selectById(state, blockId);
-    if (block && block.type === MessageBlockType.TABLE) {
-      tableBlocks.push(block as TableMessageBlock);
-    }
-  }
+//   for (const blockId of message.blocks) {
+//     const block = messageBlocksSelectors.selectById(state, blockId);
+//     if (block && block.type === MessageBlockType.TABLE) {
+//       tableBlocks.push(block as TableMessageBlock);
+//     }
+//   }
 
-  return tableBlocks;
-}
+//   return tableBlocks;
+// }
 
 /**
  * 查找消息的所有多模型响应块

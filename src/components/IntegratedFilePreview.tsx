@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Box, Collapse, IconButton, Typography, useTheme } from '@mui/material';
 import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import FilePreview from './FilePreview';
@@ -28,6 +28,21 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+  // 当图片数组变化时，清理无效的缓存
+  useEffect(() => {
+    setImageUrls(prev => {
+      const newImageUrls: Record<string, string> = {};
+      // 只保留当前存在的图片的缓存
+      images.forEach((_, index) => {
+        const key = index.toString();
+        if (prev[key]) {
+          newImageUrls[key] = prev[key];
+        }
+      });
+      return newImageUrls;
+    });
+  }, [images.length]); // 当图片数量变化时触发
 
   // 处理图片引用格式的加载
   const loadImageFromReference = useCallback(async (imageId: string, imageIndex: number) => {
@@ -150,10 +165,13 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
             }}
           >
             {visibleImages.map((image, index) => {
+              // 优先使用图片的唯一 ID，避免第三个图片重复显示问题
+              const imageKey = image.id || `image-${index}-${image.name || 'unnamed'}-${image.size || Date.now()}`;
               const imageSrc = getImageSrc(image, index);
+
               return (
                 <Box
-                  key={`image-${index}`}
+                  key={imageKey}
                   sx={{
                     position: 'relative',
                     width: '48px',
@@ -172,6 +190,11 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        // 图片加载失败时的处理
+                        console.warn('图片加载失败:', image);
+                        e.currentTarget.style.display = 'none';
                       }}
                     />
                   ) : (
@@ -226,10 +249,12 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
             {visibleFiles.map((file, index) => {
               const fileKey = `${file.name}-${file.size}`;
               const fileStatus = fileStatuses[fileKey];
+              // 优先使用文件的唯一 ID，避免第三个文件重复显示问题
+              const uniqueFileKey = file.id || `file-${index}-${file.name}-${file.size || Date.now()}`;
 
               return (
                 <FilePreview
-                  key={`file-${index}`}
+                  key={uniqueFileKey}
                   file={file}
                   onRemove={() => onRemoveFile(index)}
                   compact={compact}
@@ -258,10 +283,13 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
               >
                 {images.slice(maxVisibleItems).map((image, index) => {
                   const actualIndex = maxVisibleItems + index;
+                  // 优先使用图片的唯一 ID，避免重复显示问题
+                  const extraImageKey = image.id ? `extra-${image.id}` : `extra-image-${actualIndex}-${image.name || 'unnamed'}-${image.size || Date.now()}`;
                   const imageSrc = getImageSrc(image, actualIndex);
+
                   return (
                     <Box
-                      key={`extra-image-${index}`}
+                      key={extraImageKey}
                       sx={{
                         position: 'relative',
                         width: '48px',
@@ -280,6 +308,11 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            // 图片加载失败时的处理
+                            console.warn('图片加载失败:', image);
+                            e.currentTarget.style.display = 'none';
                           }}
                         />
                       ) : (
@@ -335,10 +368,12 @@ const IntegratedFilePreview: React.FC<IntegratedFilePreviewProps> = ({
                   const fileKey = `${file.name}-${file.size}`;
                   const fileStatus = fileStatuses[fileKey];
                   const actualIndex = Math.max(0, maxVisibleItems - images.length) + index;
+                  // 优先使用文件的唯一 ID，避免重复显示问题
+                  const extraFileKey = file.id ? `extra-${file.id}` : `extra-file-${actualIndex}-${file.name}-${file.size || Date.now()}`;
 
                   return (
                     <FilePreview
-                      key={`extra-file-${index}`}
+                      key={extraFileKey}
                       file={file}
                       onRemove={() => onRemoveFile(actualIndex)}
                       compact={compact}

@@ -10,7 +10,6 @@ import {
   ListItemText,
   ListItemIcon,
   ListItemSecondaryAction,
-  Switch,
   Chip,
   Avatar,
   Button,
@@ -20,6 +19,7 @@ import {
 } from '@mui/material';
 import { Wrench, Settings, Database, Globe, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import CustomSwitch from '../CustomSwitch';
 import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
 
@@ -70,6 +70,20 @@ const MCPButton: React.FC<MCPButtonProps> = ({
     } catch (error) {
       console.error('切换服务器状态失败:', error);
     }
+  };
+
+  const handleToolsEnabledChange = async (enabled: boolean) => {
+    if (!enabled) {
+      // 关闭总开关时，同时关闭所有已启动的MCP服务器
+      try {
+        await mcpService.stopAllActiveServers();
+        loadServers();
+        console.log('[MCP] 总开关关闭，已停止所有活跃服务器');
+      } catch (error) {
+        console.error('[MCP] 停止服务器失败:', error);
+      }
+    }
+    onToolsEnabledChange(enabled);
   };
 
   const handleManageServers = () => {
@@ -189,10 +203,9 @@ const MCPButton: React.FC<MCPButtonProps> = ({
                 />
               )}
             </Box>
-            <Switch
+            <CustomSwitch
               checked={toolsEnabled}
-              onChange={(e) => onToolsEnabledChange(e.target.checked)}
-              color="primary"
+              onChange={(e) => handleToolsEnabledChange(e.target.checked)}
             />
           </Box>
         </DialogTitle>
@@ -278,11 +291,9 @@ const MCPButton: React.FC<MCPButtonProps> = ({
                       secondaryTypographyProps={{ component: 'div' }}
                     />
                     <ListItemSecondaryAction>
-                      <Switch
+                      <CustomSwitch
                         checked={server.isActive}
                         onChange={() => handleServerToggle(server)}
-                        color="primary"
-                        size="small"
                       />
                     </ListItemSecondaryAction>
                   </ListItem>

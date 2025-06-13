@@ -8,6 +8,7 @@ import { logApiRequest, logApiResponse } from '../../services/LoggerService';
 import { createClient } from './client';
 import { getMainTextContent } from '../../utils/messageUtils';
 import { AbstractBaseProvider } from '../baseProvider';
+import { getAppSettings } from '../../utils/settingsUtils';
 
 /**
  * 基础Provider抽象类
@@ -268,9 +269,16 @@ export class AnthropicProvider extends BaseProvider {
       const requestParams: any = {
         model: this.model.id,
         messages: anthropicMessages,
-        max_tokens: this.getMaxTokens(assistant), // 传递助手参数
         temperature: this.getTemperature(assistant) // 传递助手参数
       };
+
+      // 检查是否启用了最大输出Token参数
+      const appSettings = getAppSettings();
+      if (appSettings.enableMaxOutputTokens !== false) {
+        requestParams.max_tokens = this.getMaxTokens(assistant);
+      } else {
+        console.log(`[AnthropicProvider] 最大输出Token已禁用，从API参数中移除max_tokens`);
+      }
 
       // 添加调试日志显示使用的参数
       console.log(`[AnthropicProvider] API请求参数:`, {
