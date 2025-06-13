@@ -3314,10 +3314,10 @@ caniuse-lite@^1.0.30001716:
   resolved "https://registry.npmmirror.com/caniuse-lite/-/caniuse-lite-1.0.30001718.tgz"
   integrity sha512-AflseV1ahcSunK53NfEs9gFWgOEmzr0f+kaMFA4xiLZlr9Hzt7HxcSpIFcnNCUkz6R6dWKa54rUz3HUmI3nVcw==
 
-capacitor-advanced-file-manager@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.npmjs.org/capacitor-advanced-file-manager/-/capacitor-advanced-file-manager-0.1.4.tgz"
-  integrity sha512-fmrtdCGa/4BiSO/LwV4K7fuwXkAYaS+JtW8M6CwyqlPNvr7s65TkUEnG3cqeeHX6jhOlPHiA+Mf8zWso1j7NDQ==
+capacitor-advanced-file-manager@^0.1.5:
+  version "0.1.5"
+  resolved "https://registry.npmjs.org/capacitor-advanced-file-manager/-/capacitor-advanced-file-manager-0.1.5.tgz"
+  integrity sha512-K0WCGlEUoNAdoRTWkAh9TKggHFMvTgZ7xRM1bflxu/UOYmnmnQnrGfhsNV2GmmVfmmTuZ+MZstHU3IuAg59Alw==
 
 capacitor-cors-bypass-enhanced@^1.0.4:
   version "1.0.5"

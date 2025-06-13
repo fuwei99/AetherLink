@@ -115,7 +115,7 @@
     "axios": "^1.9.0",
     "better-react-mathjax": "^2.3.0",
     "buffer": "6.0.3",
-    "capacitor-advanced-file-manager": "^0.1.4",
+    "capacitor-advanced-file-manager": "^0.1.5",
     "capacitor-cors-bypass-enhanced": "^1.0.4",
     "chart.js": "^4.4.9",
     "cors": "^2.8.5",

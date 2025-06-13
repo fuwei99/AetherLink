@@ -40,4 +40,16 @@ end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+
+  # 修复Swift优化级别警告
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # 为Debug配置设置Swift优化级别为-Onone以支持预览
+      if config.name == 'Debug'
+        config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
+      end
+      # 确保所有target都有正确的iOS部署目标
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
+  end
 end
