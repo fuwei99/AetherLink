@@ -13,6 +13,7 @@ import { EventEmitter, EVENT_NAMES } from '../../../shared/services/EventService
 import { TopicService } from '../../../shared/services/TopicService';
 import { newMessagesActions } from '../../../shared/store/slices/newMessagesSlice';
 import { getThemeColors } from '../../../shared/utils/themeUtils';
+import { generateBackgroundStyle } from '../../../shared/utils/backgroundUtils';
 import { useTheme } from '@mui/material/styles';
 import { useSidebarSwipeGesture } from '../../../hooks/useSwipeGesture';
 import { SwipeIndicator, SwipeProgressIndicator } from '../../../components/SwipeIndicator';
@@ -126,6 +127,16 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   const topToolbarSettings = useSelector((state: RootState) =>
     (state.settings as any).topToolbar
   );
+  const chatBackground = useSelector((state: RootState) =>
+    state.settings.chatBackground || {
+      enabled: false,
+      imageUrl: '',
+      opacity: 0.3,
+      size: 'cover',
+      position: 'center',
+      repeat: 'no-repeat'
+    }
+  );
 
   // ==================== 计算属性和样式 ====================
   const themeColors = getThemeColors(theme, themeStyle);
@@ -138,6 +149,12 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   const shouldShowToolbar = useMemo(() =>
     inputLayoutStyle === 'default',
     [inputLayoutStyle]
+  );
+
+  // 生成背景样式
+  const backgroundStyle = useMemo(() =>
+    generateBackgroundStyle(chatBackground),
+    [chatBackground]
   );
 
   const dynamicStyles = useMemo(() => ({
@@ -591,7 +608,10 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
           {currentTopic ? (
             <>
               {/* 消息列表应该有固定的可滚动区域，不会被输入框覆盖 */}
-              <Box sx={dynamicStyles.messageContainer}>
+              <Box sx={{
+                ...dynamicStyles.messageContainer,
+                ...backgroundStyle
+              }}>
                 <MessageList
                   messages={currentMessages}
                   onRegenerate={handleRegenerateMessage}
@@ -609,6 +629,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
               <Box
                 sx={{
                   ...dynamicStyles.messageContainer,
+                  ...backgroundStyle,
                   marginBottom: '100px', // 为输入框留出足够空间
                 }}
               >

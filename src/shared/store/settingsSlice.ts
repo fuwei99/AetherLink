@@ -133,6 +133,16 @@ interface SettingsState {
     order: string[]; // 按钮显示顺序
     visibility: { [key: string]: boolean }; // 按钮可见性
   };
+
+  // 聊天界面背景设置
+  chatBackground?: {
+    enabled: boolean; // 是否启用自定义背景
+    imageUrl: string; // 背景图片URL
+    opacity: number; // 背景透明度 (0-1)
+    size: 'cover' | 'contain' | 'auto'; // 背景尺寸
+    position: 'center' | 'top' | 'bottom' | 'left' | 'right'; // 背景位置
+    repeat: 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y'; // 背景重复
+  };
 }
 
 
@@ -260,6 +270,16 @@ const getInitialState = (): SettingsState => {
         'knowledge': true,
         'web-search': true
       }
+    },
+
+    // 聊天界面背景默认设置
+    chatBackground: {
+      enabled: false, // 默认不启用自定义背景
+      imageUrl: '', // 默认无背景图片
+      opacity: 0.3, // 默认透明度30%
+      size: 'cover', // 默认覆盖整个区域
+      position: 'center', // 默认居中
+      repeat: 'no-repeat' // 默认不重复
     },
   };
 

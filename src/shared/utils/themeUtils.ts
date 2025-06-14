@@ -30,11 +30,11 @@ export const getThemeColors = (theme: Theme, themeStyle?: ThemeStyle) => {
           // 修复：使用不透明的背景色，避免"双层"效果
           return isDark ? '#2A1F1A' : '#FEF3E2'; // 深色：深棕色，浅色：浅米色
         case 'minimal':
-          return isDark ? alpha('#FFFFFF', 0.08) : alpha('#000000', 0.05);
+          return isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)';
         case 'vibrant':
-          return isDark ? alpha('#8B5CF6', 0.15) : alpha('#8B5CF6', 0.1);
+          return isDark ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.25)';
         default:
-          return isDark ? '#1a3b61' : '#e6f4ff';
+          return isDark ? 'rgba(26, 59, 97, 0.9)' : 'rgba(230, 244, 255, 0.9)';
       }
     })(),
 
@@ -44,9 +44,9 @@ export const getThemeColors = (theme: Theme, themeStyle?: ThemeStyle) => {
           // 修复：使用不透明的悬停背景色
           return isDark ? '#3A2B20' : '#FDE8C7'; // 深色：稍亮的深棕色，浅色：稍深的米色
         case 'minimal':
-          return isDark ? alpha('#FFFFFF', 0.12) : alpha('#000000', 0.08);
+          return isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.12)';
         case 'vibrant':
-          return isDark ? alpha('#8B5CF6', 0.2) : alpha('#8B5CF6', 0.15);
+          return isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(139, 92, 246, 0.2)';
         default:
           return isDark ? '#234b79' : '#d3e9ff';
       }
@@ -59,11 +59,11 @@ export const getThemeColors = (theme: Theme, themeStyle?: ThemeStyle) => {
           // 修复：使用不透明的背景色，避免"双层"效果
           return isDark ? '#1A2E26' : '#E6F7F1'; // 深色：深绿色，浅色：浅绿色
         case 'minimal':
-          return isDark ? alpha('#6B7280', 0.15) : alpha('#6B7280', 0.1);
+          return isDark ? 'rgba(40, 40, 40, 0.95)' : 'rgba(255, 255, 255, 0.95)';
         case 'vibrant':
-          return isDark ? alpha('#06B6D4', 0.15) : alpha('#06B6D4', 0.1);
+          return isDark ? 'rgba(6, 182, 212, 0.4)' : 'rgba(6, 182, 212, 0.35)';
         default:
-          return isDark ? '#333333' : theme.palette.primary.light;
+          return isDark ? 'rgba(51, 51, 51, 0.95)' : 'rgba(227, 242, 253, 0.95)';
       }
     })(),
 

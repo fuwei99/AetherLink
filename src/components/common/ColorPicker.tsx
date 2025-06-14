@@ -7,9 +7,14 @@ import {
   Typography,
   Paper,
   useTheme,
-  alpha
+  alpha,
+  Dialog,
+  DialogContent,
+  useMediaQuery
 } from '@mui/material';
 import { Palette } from 'lucide-react';
+import MobileColorPicker from './ColorPicker/components/MobileColorPicker';
+import { isMobileDevice } from './ColorPicker/utils/colorUtils';
 
 interface ColorPickerProps {
   value: string;
@@ -45,21 +50,31 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
   presetColors = DEFAULT_PRESET_COLORS
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')) || isMobileDevice();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [customColor, setCustomColor] = useState(value);
+  const [mobileDialogOpen, setMobileDialogOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     if (!disabled) {
-      setAnchorEl(event.currentTarget);
+      if (isMobile) {
+        setMobileDialogOpen(true);
+      } else {
+        setAnchorEl(event.currentTarget);
+      }
       setCustomColor(value);
     }
   };
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleMobileDialogClose = () => {
+    setMobileDialogOpen(false);
   };
 
   const handlePresetColorClick = (color: string) => {
@@ -86,6 +101,10 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
 
   const triggerNativeColorPicker = () => {
     if (inputRef.current) {
+      // 确保input有有效的颜色值
+      if (!customColor || !/^#[0-9A-Fa-f]{6}$/.test(customColor)) {
+        inputRef.current.value = value || '#000000';
+      }
       inputRef.current.click();
     }
   };
@@ -237,13 +256,18 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
           <input
             ref={inputRef}
             type="color"
-            value={customColor}
+            value={customColor || value || '#000000'}
             onChange={handleCustomColorChange}
-            style={{ 
-              position: 'absolute', 
-              left: '-9999px', 
-              opacity: 0, 
-              pointerEvents: 'none' 
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '0px',
+              height: '0px',
+              opacity: 0,
+              border: 'none',
+              outline: 'none',
+              background: 'transparent'
             }}
           />
 
@@ -272,6 +296,31 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
           </Box>
         </Paper>
       </Popover>
+
+      {/* 移动端颜色选择器对话框 */}
+      <Dialog
+        open={mobileDialogOpen}
+        onClose={handleMobileDialogClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            margin: 2,
+            maxHeight: 'calc(100vh - 32px)',
+            borderRadius: 2
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0 }}>
+          <MobileColorPicker
+            value={value}
+            onChange={onChange}
+            onClose={handleMobileDialogClose}
+            presetColors={presetColors}
+            disabled={disabled}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

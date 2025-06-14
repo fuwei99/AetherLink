@@ -10,6 +10,7 @@ import { User } from 'lucide-react';
 import MessageActions from '../MessageActions';
 import MessageBlockRenderer from '../MessageBlockRenderer';
 import type { BaseMessageStyleProps } from '../types/MessageComponent';
+import { Z_INDEX } from '../../../shared/constants/zIndex';
 
 const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
   message,
@@ -242,6 +243,8 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
             position: 'relative',
             maxWidth: '100%',
             boxShadow: 'none',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
           }}
         >
           {loading ? (
@@ -311,7 +314,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
                 display: 'flex',
                 flexDirection: 'row',
                 gap: '5px',
-                zIndex: 3, // 降低z-index，确保不会覆盖三点菜单
+                zIndex: Z_INDEX.MESSAGE.BUBBLE_INDICATORS, // 降低z-index，确保不会覆盖三点菜单
                 pointerEvents: 'auto',
               }}>
                 <MessageActions
@@ -335,7 +338,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
               right: 5,
               display: 'flex',
               flexDirection: 'row',
-              zIndex: 10, // 提高z-index，确保三点菜单在最上层
+              zIndex: Z_INDEX.MESSAGE.BUBBLE_MENU_BUTTON, // 提高z-index，确保三点菜单在最上层
               pointerEvents: 'auto',
             }}>
               <MessageActions

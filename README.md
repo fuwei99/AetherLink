@@ -260,6 +260,21 @@ npx cap open android
 
 APK将保存在 `android/app/build/outputs/apk/debug/` 目录
 
+## 许可证
+
+AetherLink 采用**分层许可模式**，根据使用者规模提供不同的许可方案：
+
+- **个人用户及8人以下团队**：适用 GNU Affero 通用公共许可证 v3.0 (AGPLv3)
+- **8人以上的组织机构**：必须获取商业使用许可证
+
+### 商业许可
+
+如果您的组织超过8人，或需要规避AGPLv3的开源义务，请联系我们获取商业许可证：
+
+📧 **商业授权联系**：1600822305@qq.com
+
+详细许可条款请查看 [LICENSE](LICENSE) 文件。
+
 ## 贡献指南
 
 1. Fork本仓库
@@ -268,9 +283,9 @@ APK将保存在 `android/app/build/outputs/apk/debug/` 目录
 4. 推送到分支 (`git push origin feature/amazing-feature`)
 5. 创建一个Pull Request
 
-## 许可证
+**注意**：所有代码贡献将被视为在AGPLv3许可证下提供。
 
-此项目采用MIT许可证 - 详情见LICENSE文件
+
 
 ## 特色功能
 
