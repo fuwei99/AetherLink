@@ -46,7 +46,7 @@ export const WEB_ANALYSIS_PROMPT = '你是一个专业的网页分析助手，�
 /**
  * 默认话题提示词
  */
-export const DEFAULT_TOPIC_PROMPT = '我是您的AI助手，可以回答问题、提供信息和帮助完成各种任务。请告诉我您需要什么帮助？';
+export const DEFAULT_TOPIC_PROMPT = '';
 
 /**
  * 话题命名提示词

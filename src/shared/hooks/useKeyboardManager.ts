@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Keyboard as CapacitorKeyboard } from '@capacitor/keyboard';
+import { useLocation } from 'react-router-dom';
 
 /**
  * 键盘管理 Hook
@@ -8,6 +9,9 @@ import { Keyboard as CapacitorKeyboard } from '@capacitor/keyboard';
 export const useKeyboardManager = () => {
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+  const location = useLocation();
+  const previousPathRef = useRef(location.pathname);
+  const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Capacitor 键盘事件监听器
   useEffect(() => {
@@ -20,7 +24,10 @@ export const useKeyboardManager = () => {
         keyboardShowListener = await CapacitorKeyboard.addListener('keyboardWillShow', () => {
           console.log('[KeyboardManager] 键盘将要显示');
           setIsKeyboardVisible(true);
-          setIsPageTransitioning(false); // 键盘显示时清除页面切换状态
+          // 键盘显示时清除页面切换状态，但要延迟一点确保页面已稳定
+          setTimeout(() => {
+            setIsPageTransitioning(false);
+          }, 100);
         });
 
         // 监听键盘隐藏事件
@@ -47,22 +54,39 @@ export const useKeyboardManager = () => {
     };
   }, []);
 
-  // 页面切换检测
+  // 路由变化检测 - 更精确的页面切换检测
   useEffect(() => {
-    // 组件挂载时标记为页面切换状态
-    setIsPageTransitioning(true);
-    console.log('[KeyboardManager] 页面切换状态开始');
-    
-    // 延迟清除页面切换状态，避免初始化时的焦点操作
-    const timer = setTimeout(() => {
-      setIsPageTransitioning(false);
-      console.log('[KeyboardManager] 页面切换状态结束');
-    }, 500);
+    const currentPath = location.pathname;
+    const previousPath = previousPathRef.current;
+
+    // 只有在路径真正发生变化时才标记为页面切换
+    if (currentPath !== previousPath) {
+      console.log('[KeyboardManager] 检测到路由变化:', previousPath, '->', currentPath);
+      setIsPageTransitioning(true);
+
+      // 清除之前的定时器
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current);
+      }
+
+      // 根据目标页面调整切换时间
+      const transitionDelay = currentPath === '/chat' ? 300 : 200; // 聊天页面需要更多时间加载
+
+      transitionTimerRef.current = setTimeout(() => {
+        setIsPageTransitioning(false);
+        console.log('[KeyboardManager] 页面切换状态结束');
+      }, transitionDelay);
+
+      // 更新路径引用
+      previousPathRef.current = currentPath;
+    }
 
     return () => {
-      clearTimeout(timer);
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current);
+      }
     };
-  }, []); // 只在组件挂载时执行
+  }, [location.pathname]); // 依赖路径变化
 
   /**
    * 手动隐藏键盘
@@ -81,13 +105,24 @@ export const useKeyboardManager = () => {
    * 在页面切换期间避免不必要的焦点操作
    */
   const shouldHandleFocus = () => {
-    return !isPageTransitioning;
+    const shouldHandle = !isPageTransitioning;
+    console.log('[KeyboardManager] shouldHandleFocus:', shouldHandle, 'isPageTransitioning:', isPageTransitioning);
+    return shouldHandle;
+  };
+
+  /**
+   * 手动设置页面切换状态（用于特殊情况）
+   */
+  const setPageTransitioning = (transitioning: boolean) => {
+    console.log('[KeyboardManager] 手动设置页面切换状态:', transitioning);
+    setIsPageTransitioning(transitioning);
   };
 
   return {
     isKeyboardVisible,
     isPageTransitioning,
     hideKeyboard,
-    shouldHandleFocus
+    shouldHandleFocus,
+    setPageTransitioning
   };
 };
