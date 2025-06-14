@@ -239,23 +239,39 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
     if (!message) return;
 
     try {
+      console.log('[MessageActions] 开始复制内容...');
+
       // 使用工具函数获取主文本内容
       const textContent = getMainTextContent(message);
+
+      if (!textContent || !textContent.trim()) {
+        console.warn('[MessageActions] 没有可复制的内容');
+        alert('没有可复制的内容');
+        return;
+      }
 
       // 优先使用Capacitor Clipboard插件（移动端）
       try {
         await Clipboard.write({
           string: textContent
         });
+        console.log('[MessageActions] Capacitor复制成功');
       } catch (capacitorError) {
+        console.log('[MessageActions] Capacitor复制失败，尝试Web API:', capacitorError);
         // 如果Capacitor失败，回退到Web API
         await navigator.clipboard.writeText(textContent);
+        console.log('[MessageActions] Web API复制成功');
       }
 
-      handleMenuClose();
+      // 显示成功提示
+      console.log('[MessageActions] 复制内容成功');
+
     } catch (error) {
-      console.error('复制内容失败:', error);
-      alert('复制失败');
+      console.error('[MessageActions] 复制内容失败:', error);
+      alert('复制失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    } finally {
+      // 确保菜单在操作完成后关闭
+      handleMenuClose();
     }
   }, [message, handleMenuClose]);
 
@@ -265,8 +281,30 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
     handleMenuClose();
   }, [handleMenuClose]);
 
-  // 删除消息 - 两次点击确认逻辑
+  // 删除消息 - 根据渲染模式使用不同的删除逻辑
   const handleDeleteClick = useCallback(() => {
+    console.log('[MessageActions] 删除消息:', message.id);
+
+    try {
+      if (onDelete) {
+        onDelete(message.id);
+        console.log('[MessageActions] 删除消息成功');
+      } else {
+        console.warn('[MessageActions] 没有删除回调函数');
+      }
+    } catch (error) {
+      console.error('[MessageActions] 删除消息失败:', error);
+      alert('删除失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    } finally {
+      // 重置删除按钮状态
+      setDeleteButtonClicked(false);
+      // 关闭菜单
+      handleMenuClose();
+    }
+  }, [onDelete, message.id, handleMenuClose]);
+
+  // 工具栏模式的删除 - 保留两次点击确认逻辑
+  const handleToolbarDeleteClick = useCallback(() => {
     if (!deleteButtonClicked) {
       // 第一次点击：变红，准备删除
       setDeleteButtonClicked(true);
@@ -281,7 +319,6 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
       }
       setDeleteButtonClicked(false);
     }
-    handleMenuClose();
   }, [deleteButtonClicked, onDelete, message.id]);
 
   // 重新生成消息 - 优化：使用useCallback
@@ -863,7 +900,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
           <Tooltip title={deleteButtonClicked ? "再次点击确认删除" : "删除"}>
             <IconButton
               size="small"
-              onClick={handleDeleteClick}
+              onClick={handleToolbarDeleteClick}
               sx={getDeleteButtonStyle(deleteButtonClicked, theme.palette.error.main, customTextColor)}
             >
               <Trash2 size={16} />

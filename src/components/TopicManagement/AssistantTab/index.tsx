@@ -146,7 +146,7 @@ export default function AssistantTab({
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 标题和按钮区域 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, minHeight: '32px' }}>
         {showSearch ? (
           <TextField
             fullWidth
@@ -174,9 +174,9 @@ export default function AssistantTab({
           />
         ) : (
           <>
-            <Typography variant="subtitle1" fontWeight="medium">所有助手</Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <IconButton size="small" onClick={handleSearchClick} sx={{ mr: 1 }}>
+            <Typography variant="subtitle1" fontWeight="medium" sx={{ flexShrink: 0 }}>所有助手</Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexShrink: 0 }}>
+              <IconButton size="small" onClick={handleSearchClick} sx={{ mr: 0.5 }}>
                 <Search size={18} />
               </IconButton>
               <Tooltip title="创建分组">
@@ -188,6 +188,9 @@ export default function AssistantTab({
                   sx={{
                     color: 'text.primary',
                     borderColor: 'text.secondary',
+                    minWidth: 'auto',
+                    px: 1,
+                    fontSize: '0.75rem',
                     '&:hover': {
                       borderColor: 'text.primary',
                       backgroundColor: 'action.hover'
@@ -206,6 +209,9 @@ export default function AssistantTab({
                   sx={{
                     color: 'text.primary',
                     borderColor: 'text.secondary',
+                    minWidth: 'auto',
+                    px: 1,
+                    fontSize: '0.75rem',
                     '&:hover': {
                       borderColor: 'text.primary',
                       backgroundColor: 'action.hover'
@@ -372,7 +378,8 @@ export default function AssistantTab({
                   width: 60,
                   height: 60,
                   bgcolor: editAssistantAvatar ? 'transparent' : 'primary.main',
-                  fontSize: '1.5rem'
+                  fontSize: '1.5rem',
+                  borderRadius: '25%' // 方圆形头像
                 }}
               >
                 {!editAssistantAvatar && (editAssistantName.charAt(0) || '助')}

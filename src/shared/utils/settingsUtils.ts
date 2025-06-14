@@ -102,7 +102,8 @@ export function getAppSettings(): Record<string, any> {
     contextCount: 5,
     mathRenderer: 'KaTeX',
     defaultThinkingEffort: 'medium',
-    thinkingBudget: 1024  // 默认思考预算为1024 tokens
+    thinkingBudget: 1024,  // 默认思考预算为1024 tokens
+    enableMaxOutputTokens: true  // 默认启用最大输出Token参数
   };
 }
 

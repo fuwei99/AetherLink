@@ -8,6 +8,7 @@ import { newMessagesActions } from '../shared/store/slices/newMessagesSlice';
 import { setCurrentAssistant } from '../shared/store/slices/assistantsSlice';
 import { initGroups } from '../shared/store/slices/groupsSlice';
 import { useModelComboSync } from '../shared/hooks/useModelComboSync';
+import { advancedFileManagerService } from '../shared/services/AdvancedFileManagerService';
 
 /**
  * 应用初始化组件
@@ -34,6 +35,20 @@ const AppInitializer = () => {
     const initializeApp = async () => {
       // 确保加载分组数据
       dispatch(initGroups());
+
+      // 注释掉自动权限请求，改为用户主动触发
+      // 检查文件管理器权限状态（不自动请求）
+      try {
+        console.log('[AppInitializer] 检查文件管理器权限状态...');
+        const permissionResult = await advancedFileManagerService.checkPermissions();
+        if (permissionResult.granted) {
+          console.log('[AppInitializer] 文件管理器权限已授予');
+        } else {
+          console.log('[AppInitializer] 文件管理器权限未授予，用户可在工作区设置中手动授权');
+        }
+      } catch (error) {
+        console.error('[AppInitializer] 检查文件管理器权限失败:', error);
+      }
 
       try {
         // 1. 确保选中了一个助手

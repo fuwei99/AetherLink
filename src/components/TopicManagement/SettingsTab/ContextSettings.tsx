@@ -12,8 +12,10 @@ import {
   IconButton,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction
+  ListItemSecondaryAction,
+  Divider // 导入 Divider 组件
 } from '@mui/material';
+import CustomSwitch from '../../CustomSwitch';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { MathRendererType } from '../../../shared/types';
 import type { ThinkingOption } from '../../../shared/config/reasoningConfig';
@@ -22,12 +24,14 @@ interface ContextSettingsProps {
   contextLength: number;
   contextCount: number;
   maxOutputTokens: number;
+  enableMaxOutputTokens: boolean;
   mathRenderer: MathRendererType;
   thinkingEffort: ThinkingOption;
   thinkingBudget: number;
   onContextLengthChange: (value: number) => void;
   onContextCountChange: (value: number) => void;
   onMaxOutputTokensChange: (value: number) => void;
+  onEnableMaxOutputTokensChange: (value: boolean) => void;
   onMathRendererChange: (value: MathRendererType) => void;
   onThinkingEffortChange: (value: ThinkingOption) => void;
   onThinkingBudgetChange: (value: number) => void;
@@ -40,12 +44,14 @@ export default function ContextSettings({
   contextLength,
   contextCount,
   maxOutputTokens,
+  enableMaxOutputTokens,
   mathRenderer,
   thinkingEffort,
   thinkingBudget,
   onContextLengthChange,
   onContextCountChange,
   onMaxOutputTokensChange,
+  onEnableMaxOutputTokensChange,
   onMathRendererChange,
   onThinkingEffortChange,
   onThinkingBudgetChange
@@ -61,9 +67,20 @@ export default function ContextSettings({
       }
     };
 
+    const handleEnableMaxTokensChange = (e: CustomEvent) => {
+      const newValue = e.detail;
+      if (newValue !== enableMaxOutputTokens) {
+        onEnableMaxOutputTokensChange(newValue);
+      }
+    };
+
     window.addEventListener('maxOutputTokensChanged', handleMaxOutputTokensChange as EventListener);
-    return () => window.removeEventListener('maxOutputTokensChanged', handleMaxOutputTokensChange as EventListener);
-  }, [maxOutputTokens, onMaxOutputTokensChange]);
+    window.addEventListener('enableMaxTokensChanged', handleEnableMaxTokensChange as EventListener);
+    return () => {
+      window.removeEventListener('maxOutputTokensChanged', handleMaxOutputTokensChange as EventListener);
+      window.removeEventListener('enableMaxTokensChanged', handleEnableMaxTokensChange as EventListener);
+    };
+  }, [maxOutputTokens, enableMaxOutputTokens, onMaxOutputTokensChange, onEnableMaxOutputTokensChange]);
 
   // 处理上下文长度变化
   const handleContextLengthChange = (_event: Event, newValue: number | number[]) => {
@@ -83,6 +100,14 @@ export default function ContextSettings({
     onMaxOutputTokensChange(value);
     // 触发自定义事件通知其他组件
     window.dispatchEvent(new CustomEvent('maxOutputTokensChanged', { detail: value }));
+  };
+
+  // 处理最大输出Token开关变化
+  const handleEnableMaxOutputTokensChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.checked;
+    onEnableMaxOutputTokensChange(value);
+    // 触发自定义事件通知其他组件
+    window.dispatchEvent(new CustomEvent('enableMaxTokensChanged', { detail: value }));
   };
 
   // 处理思考预算变化
@@ -203,6 +228,7 @@ export default function ContextSettings({
               ]}
             />
           </Box>
+          <Divider sx={{ my: 2 }} /> {/* 添加分割线 */}
 
           {/* 上下文消息数量控制 */}
           <Box sx={{ mb: 3 }}>
@@ -229,24 +255,34 @@ export default function ContextSettings({
               ]}
             />
           </Box>
+          <Divider sx={{ my: 2 }} /> {/* 添加分割线 */}
 
           {/* 最大输出Token控制 */}
           <Box sx={{ mb: 3 }}>
-            {/* 标题和当前值 */}
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" fontWeight="medium" sx={{ mb: 0.5 }}>
-                最大输出Token: {maxOutputTokens} tokens
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                限制AI生成回复的最大长度，不同模型支持的范围不同
-              </Typography>
+            {/* 标题和开关 */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Box sx={{ flexGrow: 1, minWidth: 0 }}> {/* 允许文本内容伸展并防止溢出 */}
+                <Typography variant="body2" fontWeight="medium" sx={{ mb: 0.5 }}>
+                  最大输出Token: {enableMaxOutputTokens ? `${maxOutputTokens} tokens` : '已禁用'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                  限制AI生成回复的最大长度，关闭后API请求中不包含此参数
+                </Typography>
+              </Box>
+              <Box sx={{ flexShrink: 0 }}> {/* 防止开关按钮被压缩 */}
+                <CustomSwitch
+                  checked={enableMaxOutputTokens}
+                  onChange={handleEnableMaxOutputTokensChange}
+                />
+              </Box>
             </Box>
 
             {/* 滑块控制 */}
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{ mb: 2, opacity: enableMaxOutputTokens ? 1 : 0.5 }}>
               <Slider
                 value={Math.min(maxOutputTokens, 65536)}
                 onChange={handleMaxOutputTokensChange}
+                disabled={!enableMaxOutputTokens}
                 min={256}
                 max={65536}
                 step={256}
@@ -287,6 +323,7 @@ export default function ContextSettings({
                     }
                   }
                 }}
+                disabled={!enableMaxOutputTokens}
                 size="small"
                 sx={{ width: 120 }}
               />
@@ -300,6 +337,7 @@ export default function ContextSettings({
               滑块范围: 256-64K tokens，输入框支持最大2M tokens。系统会根据模型自动应用限制。
             </Typography>
           </Box>
+          <Divider sx={{ my: 2 }} /> {/* 添加分割线 */}
 
           {/* 思维链长度选择 */}
           <Box sx={{ mb: 3 }}>
@@ -344,6 +382,7 @@ export default function ContextSettings({
               {thinkingEffort === 'auto' && '根据问题复杂度自动调整思考深度'}
             </Typography>
           </Box>
+          <Divider sx={{ my: 2 }} /> {/* 添加分割线 */}
 
           {/* 思考预算设置 */}
           <Box sx={{ mb: 3 }}>
@@ -416,6 +455,7 @@ export default function ContextSettings({
               思考预算控制模型的思考深度。较高的值允许更深入的思考，但会增加响应时间。
             </Typography>
           </Box>
+          <Divider sx={{ my: 2 }} /> {/* 添加分割线 */}
 
           {/* 数学公式渲染器选择 */}
           <Box>

@@ -46,12 +46,19 @@ export class GeminiConfigBuilder {
       systemInstruction: isGemmaModel(this.model) ? undefined : this.systemInstruction,
       temperature: this.getTemperature(),
       topP: this.getTopP(),
-      maxOutputTokens: this.getMaxTokens(),
       tools: this.tools,
       ...this.getBudgetToken(),
       ...this.getCustomParameters(),
       ...this.getGeminiSpecificParameters()
     };
+
+    // 检查是否启用了最大输出Token参数
+    const appSettings = getAppSettings();
+    if (appSettings.enableMaxOutputTokens !== false) {
+      config.maxOutputTokens = this.getMaxTokens();
+    } else {
+      console.log(`[GeminiConfigBuilder] 最大输出Token已禁用，从API参数中移除maxOutputTokens`);
+    }
 
     // 为图像生成模型添加必要的配置
     if (isGenerateImageModel(this.model)) {

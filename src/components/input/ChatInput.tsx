@@ -1,28 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { IconButton, CircularProgress, Badge, Tooltip } from '@mui/material';
 import { Send, Plus, Link, Square, ChevronDown, ChevronUp, Keyboard, Mic } from 'lucide-react';
 
-import { useChatInputLogic } from '../shared/hooks/useChatInputLogic';
-import { useFileUpload } from '../shared/hooks/useFileUpload';
-import { useUrlScraper } from '../shared/hooks/useUrlScraper';
-import { useInputStyles } from '../shared/hooks/useInputStyles';
+import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
+import { useFileUpload } from '../../shared/hooks/useFileUpload';
+import { useUrlScraper } from '../../shared/hooks/useUrlScraper';
+import { useInputStyles } from '../../shared/hooks/useInputStyles';
 import MultiModelSelector from './MultiModelSelector';
-import type { ImageContent, SiliconFlowImageFormat, FileContent } from '../shared/types';
+import type { ImageContent, SiliconFlowImageFormat, FileContent } from '../../shared/types';
 import { Image, Search } from 'lucide-react';
-import UrlScraperStatus from './UrlScraperStatus';
-import type { FileStatus } from './FilePreview';
-import IntegratedFilePreview from './IntegratedFilePreview';
+import UrlScraperStatus from '../UrlScraperStatus';
+import type { FileStatus } from '../FilePreview';
+import IntegratedFilePreview from '../IntegratedFilePreview';
 import UploadMenu from './UploadMenu';
-import EnhancedToast, { toastManager } from './EnhancedToast';
-import { dexieStorage } from '../shared/services/DexieStorageService';
+import EnhancedToast, { toastManager } from '../EnhancedToast';
+import { dexieStorage } from '../../shared/services/DexieStorageService';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../shared/store';
-import AIDebateButton from './AIDebateButton';
-import type { DebateConfig } from '../shared/services/AIDebateService';
-import QuickPhraseButton from './QuickPhraseButton';
-import { useVoiceRecognition } from '../shared/hooks/useVoiceRecognition';
-import { EnhancedVoiceInput } from './VoiceRecognition';
-import { getThemeColors } from '../shared/utils/themeUtils';
+import type { RootState } from '../../shared/store';
+import AIDebateButton from '../AIDebateButton';
+import type { DebateConfig } from '../../shared/services/AIDebateService';
+import QuickPhraseButton from '../QuickPhraseButton';
+import { useVoiceRecognition } from '../../shared/hooks/useVoiceRecognition';
+import { useKeyboardManager } from '../../shared/hooks/useKeyboardManager';
+import { EnhancedVoiceInput } from '../VoiceRecognition';
+import { getThemeColors } from '../../shared/utils/themeUtils';
 import { useTheme } from '@mui/material/styles';
 
 interface ChatInputProps {
@@ -61,7 +62,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   availableModels = [] // 默认空数组
 }) => {
   // 基础状态
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [uploadMenuAnchorEl, setUploadMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [multiModelSelectorOpen, setMultiModelSelectorOpen] = useState(false);
   const [isIOS, setIsIOS] = useState(false); // 新增: 是否是iOS设备
@@ -70,6 +70,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [expanded, setExpanded] = useState(false); // 新增: 扩展显示状态
   const [expandedHeight, setExpandedHeight] = useState(Math.floor(window.innerHeight * 0.7)); // 展开时的高度
   const [showExpandButton, setShowExpandButton] = useState(false); // 是否显示展开按钮
+  const [shouldHideVoiceButton, setShouldHideVoiceButton] = useState(false); // 是否隐藏语音按钮
 
   // 拖拽状态
   const [isDragging, setIsDragging] = useState(false);
@@ -169,6 +170,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
     stopRecognition,
   } = useVoiceRecognition();
 
+  // 键盘管理功能
+  const {
+    isKeyboardVisible,
+    isPageTransitioning,
+    shouldHandleFocus
+  } = useKeyboardManager();
+
   // 当话题ID变化时，从数据库获取话题信息
   useEffect(() => {
     const loadTopic = async () => {
@@ -205,6 +213,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
                        (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
     setIsIOS(isIOSDevice);
   }, []);
+
+
 
   // 监听窗口大小变化，更新展开高度
   useEffect(() => {
@@ -307,40 +317,51 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   // 输入处理逻辑现在由 useChatInputLogic 和 useUrlScraper hooks 提供
 
-  // 检测是否需要显示展开按钮
-  const checkShowExpandButton = useCallback(() => {
-    if (textareaRef.current && !expanded) {
-      const textarea = textareaRef.current;
-      // 检查是否出现滚动条
-      const hasScroll = textarea.scrollHeight > textarea.clientHeight + 2; // 添加2px容差
-      setShowExpandButton(hasScroll);
-    } else if (expanded) {
-      // 展开状态下始终显示按钮（用于收起）
-      setShowExpandButton(true);
-    } else {
-      setShowExpandButton(false);
-    }
-  }, [expanded]);
+  // 检测是否需要显示展开按钮和隐藏语音按钮 - 改为基于字数判断
+  const checkButtonVisibility = useCallback(() => {
+    if (!expanded) {
+      // 计算文本行数：根据字符数估算行数
+      const textLength = message.length;
+      const containerWidth = isMobile ? 280 : isTablet ? 400 : 500; // 估算容器宽度
+      const charsPerLine = Math.floor(containerWidth / (isTablet ? 17 : 16)); // 根据字体大小估算每行字符数
 
-  // 监听消息内容变化，检测是否显示展开按钮
+      // 计算换行符数量
+      const newlineCount = (message.match(/\n/g) || []).length;
+
+      // 估算总行数：字符行数 + 换行符行数
+      const estimatedLines = Math.ceil(textLength / charsPerLine) + newlineCount;
+
+      // 当文本超过3行时隐藏语音按钮，为输入区域让出空间
+      setShouldHideVoiceButton(estimatedLines > 3);
+
+      // 当文本超过4行时显示展开按钮
+      setShowExpandButton(estimatedLines > 4);
+    } else {
+      // 展开状态下始终显示展开按钮（用于收起），隐藏语音按钮
+      setShowExpandButton(true);
+      setShouldHideVoiceButton(true);
+    }
+  }, [expanded, message, isMobile, isTablet]);
+
+  // 监听消息内容变化，检测按钮显示状态
   useEffect(() => {
-    checkShowExpandButton();
-  }, [message, checkShowExpandButton]);
+    checkButtonVisibility();
+  }, [message, checkButtonVisibility]);
 
   // 监听展开状态变化
   useEffect(() => {
     // 延迟检测，确保DOM更新完成
-    setTimeout(checkShowExpandButton, 100);
-  }, [expanded, checkShowExpandButton]);
+    setTimeout(checkButtonVisibility, 100);
+  }, [expanded, checkButtonVisibility]);
 
-  // 增强的 handleChange 以支持 URL 检测和展开按钮检测
+  // 增强的 handleChange 以支持 URL 检测和按钮显示检测
   const enhancedHandleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // 调用 hook 提供的 handleChange
     handleChange(e);
     // 检测 URL
     detectUrlInMessage(e.target.value);
-    // 延迟检测展开按钮显示（等待高度调整完成）
-    setTimeout(checkShowExpandButton, 50);
+    // 延迟检测按钮显示状态（等待高度调整完成）
+    setTimeout(checkButtonVisibility, 50);
   };
 
   // 增强的 handleKeyDown 以支持展开功能
@@ -361,7 +382,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
     // 设置一个延迟以确保组件挂载后聚焦生效
     const timer = setTimeout(() => {
-      if (currentTextarea) {
+      if (currentTextarea && !isPageTransitioning) {
+        // 只有在非页面切换状态下才执行焦点操作
         // 聚焦后立即模糊，这有助于解决某些Android设备上的复制粘贴问题
         currentTextarea.focus();
         currentTextarea.blur();
@@ -374,10 +396,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
     // 添加键盘显示检测
     const handleFocus = () => {
-      setIsKeyboardVisible(true);
+      // 键盘状态由 useKeyboardManager Hook 管理
 
       // iOS设备特殊处理
-      if (isIOS && textareaRef.current) {
+      if (isIOS && textareaRef.current && shouldHandleFocus()) {
         // 延迟执行，确保输入法已弹出
         setTimeout(() => {
           // 滚动到输入框位置
@@ -411,7 +433,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     };
 
     const handleBlur = () => {
-      setIsKeyboardVisible(false);
+      // 键盘状态由 useKeyboardManager Hook 管理
     };
 
     if (currentTextarea) {
@@ -426,7 +448,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
         currentTextarea.removeEventListener('blur', handleBlur);
       }
     };
-  }, [isMobile, isTablet, isIOS]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isMobile, isTablet, isIOS, isPageTransitioning]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
 
   // 处理上传菜单
   const handleOpenUploadMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -508,6 +532,38 @@ const ChatInput: React.FC<ChatInputProps> = ({
       }
     }, 10);
   }, [message, setMessage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+
+  // 组件引用
+  const aiDebateButtonRef = useRef<any>(null);
+  const quickPhraseButtonRef = useRef<any>(null);
+
+  // 处理AI辩论按钮点击 - 模拟点击按钮
+  const handleAIDebateClick = useCallback(() => {
+    if (isDebating) {
+      onStopDebate?.();
+    } else {
+      // 模拟点击AI辩论按钮来打开弹窗
+      if (aiDebateButtonRef.current) {
+        const buttonElement = aiDebateButtonRef.current.querySelector('button');
+        if (buttonElement) {
+          buttonElement.click();
+        }
+      }
+    }
+  }, [isDebating, onStopDebate]);
+
+  // 处理快捷短语按钮点击 - 模拟点击按钮
+  const handleQuickPhraseClick = useCallback(() => {
+    // 模拟点击快捷短语按钮来打开菜单
+    if (quickPhraseButtonRef.current) {
+      const buttonElement = quickPhraseButtonRef.current.querySelector('button');
+      if (buttonElement) {
+        buttonElement.click();
+      }
+    }
+  }, []);
 
   // 语音识别处理函数
   const handleToggleVoiceMode = () => {
@@ -646,8 +702,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
           const reader = new FileReader();
           reader.onload = (event) => {
             const base64Data = event.target?.result as string;
+            // 生成更唯一的 ID，避免重复显示问题
+            const uniqueId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 11)}-${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
             const newImage: ImageContent = {
-              id: `${Date.now()}-${Math.random()}`,
+              id: uniqueId,
               url: base64Data,
               base64Data: base64Data,
               mimeType: file.type,
@@ -662,11 +720,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
           const reader = new FileReader();
           reader.onload = (event) => {
             const base64Data = event.target?.result as string;
+            // 生成更唯一的 ID，避免重复显示问题
+            const uniqueId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 11)}-${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
             const newFile: FileContent = {
-              id: `${Date.now()}-${Math.random()}`,
+              id: uniqueId,
               name: file.name,
               mimeType: file.type,
-              extension: file.name.split('.').pop() || '',
+              extension: (file.name && typeof file.name === 'string') ? (file.name.split('.').pop() || '') : '',
               size: file.size,
               base64Data: base64Data,
               url: ''
@@ -712,7 +772,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         setUploadingMedia(true);
 
         // 使用移动端文件存储服务创建文件
-        const { MobileFileStorageService } = await import('../shared/services/MobileFileStorageService');
+        const { MobileFileStorageService } = await import('../../shared/services/MobileFileStorageService');
         const fileStorageService = MobileFileStorageService.getInstance();
 
         const fileName = `粘贴的文本_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.txt`;
@@ -780,12 +840,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
           const reader = new FileReader();
           reader.onload = (event) => {
             const base64Data = event.target?.result as string;
+            // 生成更唯一的 ID，避免重复显示问题
+            const timestamp = Date.now();
+            const uniqueId = `paste-img-${timestamp}-${Math.random().toString(36).substring(2, 11)}`;
             const newImage: ImageContent = {
-              id: `${Date.now()}-${Math.random()}`,
+              id: uniqueId,
               url: base64Data,
               base64Data: base64Data,
               mimeType: file.type,
-              name: `粘贴的图片_${Date.now()}.${file.type.split('/')[1]}`,
+              name: `粘贴的图片_${timestamp}.${file.type.split('/')[1]}`,
               size: file.size
             };
             setImages(prev => [...prev, newImage]);
@@ -820,10 +883,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
       return {
         paddingTop: '0px',
         paddingBottom: isIOS ? '34px' : '4px', // 为iOS设备增加底部padding
-        maxWidth: 'calc(100% - 24px)', // 确保有足够的左右边距
+        maxWidth: '100%', // 移动端占满屏幕宽度
         marginTop: '0',
-        marginLeft: 'auto', // 移动端保持居中
-        marginRight: 'auto' // 移动端保持居中
+        marginLeft: '0', // 移动端不需要居中边距
+        marginRight: '0', // 移动端不需要居中边距
+        paddingLeft: '8px', // 使用padding代替margin
+        paddingRight: '8px' // 使用padding代替margin
       };
     } else if (isTablet) {
       return {
@@ -831,8 +896,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         paddingBottom: isIOS ? '34px' : '4px', // 为iOS设备增加底部padding
         maxWidth: 'calc(100% - 40px)', // 确保有足够的左右边距
         marginTop: '0',
-        marginLeft: '20px', // 平板端左对齐，避免被侧边栏遮挡
-        marginRight: '20px' // 平板端右边距
+        marginLeft: 'auto', // 水平居中
+        marginRight: 'auto' // 水平居中
       };
     } else {
       return {
@@ -840,8 +905,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         paddingBottom: isIOS ? '34px' : '6px', // 为iOS设备增加底部padding
         maxWidth: 'calc(100% - 32px)', // 确保有足够的左右边距
         marginTop: '0',
-        marginLeft: '16px', // 桌面端左对齐，避免被侧边栏遮挡
-        marginRight: '16px' // 桌面端右边距
+        marginLeft: 'auto', // 水平居中
+        marginRight: 'auto' // 水平居中
       };
     }
   };
@@ -938,6 +1003,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         backdropFilter: inputBoxStyle === 'modern' ? 'blur(10px)' : 'none',
         WebkitBackdropFilter: inputBoxStyle === 'modern' ? 'blur(10px)' : 'none',
         transition: 'all 0.3s ease',
+        position: 'relative', // 添加相对定位，用于放置展开按钮
         // 防止文本选择
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -946,18 +1012,55 @@ const ChatInput: React.FC<ChatInputProps> = ({
         WebkitTouchCallout: 'none',
         WebkitTapHighlightColor: 'transparent'
       }}>
-        {/* 语音识别按钮 - 根据状态显示不同图标 */}
-        <IconButton
-          onClick={handleToggleVoiceMode}
-          disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-          size={isTablet ? "large" : "medium"}
-          style={{
-            color: voiceState !== 'normal' ? '#f44336' : iconColor,
-            padding: isTablet ? '10px' : '8px',
-            backgroundColor: voiceState !== 'normal' ? 'rgba(211, 47, 47, 0.15)' : 'transparent',
-            transition: 'all 0.25s ease-in-out'
-          }}
-        >
+        {/* 展开/收起按钮 - 显示在输入框容器右上角 */}
+        {showExpandButton && (
+          <div style={{
+            position: 'absolute',
+            top: '4px',
+            right: '4px',
+            zIndex: 10
+          }}>
+            <Tooltip title={expanded ? "收起输入框" : "展开输入框"}>
+              <IconButton
+                onClick={() => setExpanded(!expanded)}
+                size="small"
+                style={{
+                  color: expanded ? '#2196F3' : iconColor,
+                  padding: '2px',
+                  width: '20px',
+                  height: '20px',
+                  minWidth: '20px',
+                  backgroundColor: isDarkMode
+                    ? 'rgba(42, 42, 42, 0.9)'
+                    : 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '6px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {expanded ? (
+                  <ChevronDown size={14} />
+                ) : (
+                  <ChevronUp size={14} />
+                )}
+              </IconButton>
+            </Tooltip>
+          </div>
+        )}
+        {/* 语音识别按钮 - 根据状态显示不同图标，当文本超过3行时隐藏 */}
+        {!shouldHideVoiceButton && (
+          <IconButton
+            onClick={handleToggleVoiceMode}
+            disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+            size={isTablet ? "large" : "medium"}
+            style={{
+              color: voiceState !== 'normal' ? '#f44336' : iconColor,
+              padding: isTablet ? '10px' : '8px',
+              backgroundColor: voiceState !== 'normal' ? 'rgba(211, 47, 47, 0.15)' : 'transparent',
+              transition: 'all 0.25s ease-in-out'
+            }}
+          >
           {voiceState === 'normal' ? (
             <Tooltip title="切换到语音输入模式">
               <Mic size={isTablet ? 28 : 24} />
@@ -967,14 +1070,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
               <Keyboard size={isTablet ? 28 : 24} />
             </Tooltip>
           )}
-        </IconButton>
+          </IconButton>
+        )}
 
         {/* 输入区域 - 根据三状态显示不同的输入方式 */}
         <div style={{
           flexGrow: 1,
-          margin: isTablet ? '0 12px' : '0 8px',
-          position: 'relative'
+          // 当语音按钮隐藏时，左边距减少，为文本区域让出更多空间
+          margin: shouldHideVoiceButton
+            ? (isTablet ? '0 12px 0 4px' : '0 8px 0 2px')  // 语音按钮隐藏时减少左边距
+            : (isTablet ? '0 12px' : '0 8px'),              // 正常状态
+          position: 'relative',
+          transition: 'margin 0.25s ease-in-out' // 平滑过渡动画
         }}>
+
           {voiceState === 'recording' ? (
             /* 录音状态 - 显示增强语音输入组件 */
             <EnhancedVoiceInput
@@ -992,6 +1101,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             <>
               <textarea
                 ref={textareaRef}
+                className="hide-scrollbar"
                 style={{
                   fontSize: isTablet ? '17px' : '16px',
                   padding: isTablet ? '10px 0' : '8px 0',
@@ -1007,9 +1117,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   height: expanded ? `${expandedHeight}px` : `${textareaHeight}px`,
                   maxHeight: expanded ? `${expandedHeight}px` : `${isMobile ? 200 : 250}px`,
                   color: textColor,
-                  transition: 'height 0.3s ease-out, min-height 0.3s ease-out, max-height 0.3s ease',
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: `${isDarkMode ? '#555 transparent' : '#ccc transparent'}`
+                  transition: 'height 0.3s ease-out, min-height 0.3s ease-out, max-height 0.3s ease'
+                  // 滚动条隐藏通过 hide-scrollbar CSS类处理
                 }}
                 placeholder={
                   imageGenerationMode
@@ -1074,79 +1183,41 @@ const ChatInput: React.FC<ChatInputProps> = ({
               </IconButton>
             </Tooltip>
 
-            {/* AI辩论按钮 */}
-            {showAIDebateButton && (
-              <AIDebateButton
-                onStartDebate={onStartDebate}
-                onStopDebate={onStopDebate}
-                isDebating={isDebating}
-                disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-                question={message}
-              />
-            )}
 
-            {/* 快捷短语按钮 */}
-            {showQuickPhraseButton && (
-              <QuickPhraseButton
-                onInsertPhrase={handleInsertPhrase}
-                assistant={currentAssistant}
-                disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-                size={isTablet ? "large" : "medium"}
-              />
-            )}
 
-            {/* 展开/收起按钮 - 只在需要时显示 */}
-            {showExpandButton && (
-              <Tooltip title={expanded ? "收起输入框" : "展开输入框"}>
-                <IconButton
-                  onClick={() => setExpanded(!expanded)}
-                  size={isTablet ? "large" : "medium"}
-                  style={{
-                    color: expanded ? '#2196F3' : iconColor,
-                    padding: isTablet ? '10px' : '8px',
-                    marginRight: isTablet ? '4px' : '2px'
-                  }}
-                >
-                  {expanded ? (
-                    <ChevronDown size={isTablet ? 20 : 18} />
-                  ) : (
-                    <ChevronUp size={isTablet ? 20 : 18} />
-                  )}
-                </IconButton>
-              </Tooltip>
-            )}
+
 
             {/* 发送按钮或停止按钮 */}
             <IconButton
-              onClick={isStreaming && onStopResponse ? onStopResponse : handleSubmit}
-              disabled={!isStreaming && (!canSendMessage() || (isLoading && !allowConsecutiveMessages))}
-              size={isTablet ? "large" : "medium"}
-              style={{
-                color: isStreaming ? '#ff4d4f' : !canSendMessage() || (isLoading && !allowConsecutiveMessages) ? disabledColor : imageGenerationMode ? '#9C27B0' : webSearchActive ? '#3b82f6' : urlScraperStatus === 'success' ? '#26C6DA' : isDarkMode ? '#4CAF50' : '#09bb07',
-                padding: isTablet ? '10px' : '8px'
-              }}
-            >
-              {isStreaming ? (
-                <Tooltip title="停止生成">
-                  <Square size={isTablet ? 20 : 18} />
-                </Tooltip>
-              ) : showLoadingIndicator ? (
-                <CircularProgress size={isTablet ? 28 : 24} color="inherit" />
-              ) : imageGenerationMode ? (
-                <Tooltip title="生成图像">
-                  <Image size={isTablet ? 20 : 18} />
-                </Tooltip>
-              ) : webSearchActive ? (
-                <Tooltip title="搜索网络">
-                  <Search size={isTablet ? 20 : 18} />
-                </Tooltip>
-              ) : urlScraperStatus === 'success' ? (
-                <Tooltip title="发送解析的网页内容">
-                  <Link size={isTablet ? 20 : 18} />
-                </Tooltip>
-              ) : (
-                <Send size={isTablet ? 20 : 18} />
-              )}
+                onClick={isStreaming && onStopResponse ? onStopResponse : handleSubmit}
+                disabled={!isStreaming && (!canSendMessage() || (isLoading && !allowConsecutiveMessages))}
+                size={isTablet ? "large" : "medium"}
+                style={{
+                  color: isStreaming ? '#ff4d4f' : !canSendMessage() || (isLoading && !allowConsecutiveMessages) ? disabledColor : imageGenerationMode ? '#9C27B0' : webSearchActive ? '#3b82f6' : urlScraperStatus === 'success' ? '#26C6DA' : isDarkMode ? '#4CAF50' : '#09bb07',
+                  padding: isTablet ? '10px' : '8px'
+                }}
+              >
+                {isStreaming ? (
+                  <Tooltip title="停止生成">
+                    <Square size={isTablet ? 20 : 18} />
+                  </Tooltip>
+                ) : showLoadingIndicator ? (
+                  <CircularProgress size={isTablet ? 28 : 24} color="inherit" />
+                ) : imageGenerationMode ? (
+                  <Tooltip title="生成图像">
+                    <Image size={isTablet ? 20 : 18} />
+                  </Tooltip>
+                ) : webSearchActive ? (
+                  <Tooltip title="搜索网络">
+                    <Search size={isTablet ? 20 : 18} />
+                  </Tooltip>
+                ) : urlScraperStatus === 'success' ? (
+                  <Tooltip title="发送解析的网页内容">
+                    <Link size={isTablet ? 20 : 18} />
+                  </Tooltip>
+                ) : (
+                  <Send size={isTablet ? 20 : 18} />
+                )}
             </IconButton>
           </>
         )}
@@ -1161,6 +1232,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onFileUpload={handleFileUploadLocal}
         onMultiModelSend={() => setMultiModelSelectorOpen(true)}
         showMultiModel={!!(onSendMultiModelMessage && availableModels.length > 1 && !isStreaming && canSendMessage())}
+        // AI辩论相关
+        onAIDebate={handleAIDebateClick}
+        showAIDebate={showAIDebateButton}
+        isDebating={isDebating}
+        // 快捷短语相关
+        onQuickPhrase={handleQuickPhraseClick}
+        showQuickPhrase={showQuickPhraseButton}
       />
 
       {/* 多模型选择器 */}
@@ -1179,6 +1257,37 @@ const ChatInput: React.FC<ChatInputProps> = ({
         maxVisible={3}
       />
 
+      {/* 隐藏的AI辩论按钮 - 用于触发弹窗 */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} ref={aiDebateButtonRef}>
+        <AIDebateButton
+          onStartDebate={onStartDebate}
+          onStopDebate={onStopDebate}
+          isDebating={isDebating}
+          disabled={false}
+          question={message}
+        />
+      </div>
+
+      {/* 快捷短语按钮 - 放在屏幕中央但透明，这样菜单会在正确位置显示 */}
+      <div
+        ref={quickPhraseButtonRef}
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: -1,
+          opacity: 0,
+          pointerEvents: 'none'
+        }}
+      >
+        <QuickPhraseButton
+          onInsertPhrase={handleInsertPhrase}
+          assistant={currentAssistant}
+          disabled={false}
+          size="medium"
+        />
+      </div>
 
     </div>
   );

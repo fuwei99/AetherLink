@@ -29,12 +29,16 @@ const VirtualizedRenderer: React.FC<{ content: string }> = ({ content }) => {
     const lineHeight = 20; // 估算行高
     const visibleLines = Math.ceil(containerHeight / lineHeight) + 5; // 多渲染5行缓冲
 
-    // 只显示最后的可见行数
-    const lines = content.split('\n');
-    const startIndex = Math.max(0, lines.length - visibleLines);
-    const visibleLines_actual = lines.slice(startIndex);
+    // 只显示最后的可见行数 - 添加安全检查
+    if (content && typeof content === 'string') {
+      const lines = content.split('\n');
+      const startIndex = Math.max(0, lines.length - visibleLines);
+      const visibleLines_actual = lines.slice(startIndex);
 
-    setVisibleContent(visibleLines_actual.join('\n'));
+      setVisibleContent(visibleLines_actual.join('\n'));
+    } else {
+      setVisibleContent('');
+    }
   }, [content]);
 
   return (
@@ -95,7 +99,9 @@ const CanvasRenderer: React.FC<{ content: string }> = ({ content }) => {
     ctx.fillStyle = color;
     ctx.textBaseline = 'top';
 
-    // 绘制文本（只绘制最后几行）
+    // 绘制文本（只绘制最后几行）- 添加安全检查
+    if (!content || typeof content !== 'string') return;
+
     const lines = content.split('\n');
     const maxLines = Math.floor(rect.height / lineHeight);
     const visibleLines = lines.slice(-maxLines);

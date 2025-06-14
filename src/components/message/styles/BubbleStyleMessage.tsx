@@ -86,7 +86,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
                     sx={{
                       width: 24,
                       height: 24,
-                      borderRadius: '20%',
+                      borderRadius: '25%',
                     }}
                   />
                 ) : (
@@ -95,7 +95,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
                       bgcolor: themeColors.buttonSecondary,
                       width: 24,
                       height: 24,
-                      borderRadius: '20%',
+                      borderRadius: '25%',
                     }}
                   >
                     <User size={16} color="white" />
@@ -151,7 +151,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
                     sx={{
                       width: 24,
                       height: 24,
-                      borderRadius: '20%',
+                      borderRadius: '25%',
                     }}
                   />
                 ) : (
@@ -160,7 +160,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
                       bgcolor: 'secondary.main',
                       width: 24,
                       height: 24,
-                      borderRadius: '20%',
+                      borderRadius: '25%',
                       fontSize: '0.8rem',
                       fontWeight: 600
                     }}
@@ -311,7 +311,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
                 display: 'flex',
                 flexDirection: 'row',
                 gap: '5px',
-                zIndex: 10,
+                zIndex: 5, // 降低z-index，避免穿透到输入框上方
                 pointerEvents: 'auto',
               }}>
                 <MessageActions
@@ -335,7 +335,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
               right: 5,
               display: 'flex',
               flexDirection: 'row',
-              zIndex: 10,
+              zIndex: 5, // 降低z-index，避免穿透到输入框上方
               pointerEvents: 'auto',
             }}>
               <MessageActions

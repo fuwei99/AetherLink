@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
-import { Image, Camera, FileText, ArrowLeftRight } from 'lucide-react';
+import { Image, Camera, FileText, ArrowLeftRight, MessageSquare, Zap } from 'lucide-react';
 
 interface UploadMenuProps {
   anchorEl: HTMLElement | null;
@@ -10,6 +10,13 @@ interface UploadMenuProps {
   onFileUpload: () => void;
   onMultiModelSend?: () => void;
   showMultiModel?: boolean;
+  // AI辩论相关
+  onAIDebate?: () => void;
+  showAIDebate?: boolean;
+  isDebating?: boolean;
+  // 快捷短语相关
+  onQuickPhrase?: () => void;
+  showQuickPhrase?: boolean;
 }
 
 const UploadMenu: React.FC<UploadMenuProps> = ({
@@ -20,6 +27,13 @@ const UploadMenu: React.FC<UploadMenuProps> = ({
   onFileUpload,
   onMultiModelSend,
   showMultiModel = false,
+  // AI辩论相关
+  onAIDebate,
+  showAIDebate = false,
+  isDebating = false,
+  // 快捷短语相关
+  onQuickPhrase,
+  showQuickPhrase = false,
 }) => {
   return (
     <Menu
@@ -82,6 +96,62 @@ const UploadMenu: React.FC<UploadMenuProps> = ({
         </ListItemIcon>
         <ListItemText primary="上传文件" />
       </MenuItem>
+
+      {/* AI辩论选项 */}
+      {showAIDebate && onAIDebate && (
+        <>
+          <Divider sx={{ my: 0.5 }} />
+          <MenuItem
+            onClick={() => {
+              onAIDebate();
+              onClose();
+            }}
+            sx={{ py: 1.5 }}
+          >
+            <ListItemIcon>
+              <MessageSquare size={20} color={isDebating ? "#f44336" : "#2196F3"} />
+            </ListItemIcon>
+            <ListItemText
+              primary={isDebating ? "停止AI辩论" : "开始AI辩论"}
+              secondary={isDebating ? "结束当前辩论" : "多AI角色辩论功能"}
+              sx={{
+                '& .MuiListItemText-secondary': {
+                  fontSize: '0.75rem',
+                  color: 'text.secondary'
+                }
+              }}
+            />
+          </MenuItem>
+        </>
+      )}
+
+      {/* 快捷短语选项 */}
+      {showQuickPhrase && onQuickPhrase && (
+        <>
+          <Divider sx={{ my: 0.5 }} />
+          <MenuItem
+            onClick={() => {
+              onQuickPhrase();
+              onClose();
+            }}
+            sx={{ py: 1.5 }}
+          >
+            <ListItemIcon>
+              <Zap size={20} color="#9C27B0" />
+            </ListItemIcon>
+            <ListItemText
+              primary="快捷短语"
+              secondary="插入预设的文本短语"
+              sx={{
+                '& .MuiListItemText-secondary': {
+                  fontSize: '0.75rem',
+                  color: 'text.secondary'
+                }
+              }}
+            />
+          </MenuItem>
+        </>
+      )}
 
       {/* 多模型选项 */}
       {showMultiModel && onMultiModelSend && (

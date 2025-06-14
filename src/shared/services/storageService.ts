@@ -30,8 +30,8 @@ export { dexieStorage };
  */
 export async function initStorageService(): Promise<void> {
   try {
-    // 清理旧数据库
-    await cleanupOldDatabases();
+    // 移除激进清理机制，让 Dexie 自己处理版本升级
+    // await cleanupOldDatabases(); // 已注释，避免数据丢失
 
     // Dexie会自动打开数据库，无需手动initialize
     // console.log('存储服务: 数据库初始化检查完成，或已通过initialize()处理。');

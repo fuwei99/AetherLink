@@ -148,6 +148,11 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ block }) => {
     return language.toUpperCase();
   };
 
+  // 处理尾部空白字符，参考电脑版实现
+  const safeCodeContent = useMemo(() => {
+    return typeof block.content === 'string' ? block.content.trimEnd() : ''
+  }, [block.content]);
+
   return (
     <Box
       sx={{
@@ -243,7 +248,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ block }) => {
               color: isDarkMode ? '#ccc' : '#666',
               fontSize: '14px'
             }}>
-              {getLanguageDisplayName(block.language)} 代码 ({block.content.split('\n').length} 行)
+              {getLanguageDisplayName(block.language)} 代码 ({safeCodeContent.split('\n').length} 行)
             </span>
           </Box>
           <ExpandMoreIcon size={16} color={isDarkMode ? '#888' : '#666'} />
@@ -272,7 +277,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ block }) => {
             }
           }}
         >
-          {block.content}
+          {safeCodeContent}
         </SyntaxHighlighter>
       )}
 

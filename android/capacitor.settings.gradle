@@ -59,5 +59,8 @@ project(':capawesome-capacitor-android-edge-to-edge-support').projectDir = new F
 include ':capawesome-capacitor-file-picker'
 project(':capawesome-capacitor-file-picker').projectDir = new File('../node_modules/@capawesome/capacitor-file-picker/android')
 
+include ':capacitor-advanced-file-manager'
+project(':capacitor-advanced-file-manager').projectDir = new File('../node_modules/capacitor-advanced-file-manager/android')
+
 include ':capacitor-cors-bypass-enhanced'
 project(':capacitor-cors-bypass-enhanced').projectDir = new File('../node_modules/capacitor-cors-bypass-enhanced/android')

@@ -28,6 +28,7 @@ import {
   Paper,
   alpha
 } from '@mui/material';
+import CustomSwitch from '../../CustomSwitch';
 import { ArrowLeft as ArrowBackIcon, Save as SaveIcon, RotateCcw as RestoreIcon, Plus as AddIcon, Trash2 as DeleteIcon, Sliders as TuneOutlinedIcon } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -124,6 +125,9 @@ const AssistantModelSettings: React.FC = () => {
   const [contextCount, setContextCount] = useState(5);
   const [thinkingEffort, setThinkingEffort] = useState<ThinkingOption>('medium');
 
+  // 最大输出Token开关状态
+  const [enableMaxTokens, setEnableMaxTokens] = useState(true);
+
   // Tab状态管理
   const [currentTab, setCurrentTab] = useState(0);
 
@@ -138,6 +142,8 @@ const AssistantModelSettings: React.FC = () => {
       if (appSettings.maxOutputTokens && appSettings.maxOutputTokens !== maxTokens) {
         setMaxTokens(appSettings.maxOutputTokens);
       }
+      // 初始化最大输出Token开关状态
+      setEnableMaxTokens(appSettings.enableMaxOutputTokens !== false);
     };
     loadContextSettings();
 
@@ -362,7 +368,11 @@ const AssistantModelSettings: React.FC = () => {
         // 同时保存到上下文设置
         ...((() => {
           const appSettings = getAppSettings();
-          saveAppSettings({ ...appSettings, maxOutputTokens: maxTokens });
+          saveAppSettings({
+            ...appSettings,
+            maxOutputTokens: maxTokens,
+            enableMaxOutputTokens: enableMaxTokens
+          });
           return {};
         })()),
         // OpenAI 专属参数
@@ -866,18 +876,36 @@ const AssistantModelSettings: React.FC = () => {
           {/* 最大输出Token设置 */}
           <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', py: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
-                最大输出Token (Max Output Tokens)
-              </Typography>
-              <Chip label={`${maxTokens} tokens`} size="small" />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
+                  最大输出Token (Max Output Tokens)
+                </Typography>
+                <CustomSwitch
+                  checked={enableMaxTokens}
+                  onChange={(e) => {
+                    const newValue = e.target.checked;
+                    setEnableMaxTokens(newValue);
+                    // 保存到localStorage
+                    const appSettings = getAppSettings();
+                    saveAppSettings({ ...appSettings, enableMaxOutputTokens: newValue });
+                    // 触发自定义事件通知其他组件
+                    window.dispatchEvent(new CustomEvent('enableMaxTokensChanged', { detail: newValue }));
+                  }}
+                />
+              </Box>
+              <Chip
+                label={enableMaxTokens ? `${maxTokens} tokens` : '已禁用'}
+                size="small"
+                color={enableMaxTokens ? 'default' : 'secondary'}
+              />
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               限制模型生成的最大token数量。不同模型支持的最大输出长度不同，如果设置值超过模型限制，API会自动调整或返回错误。
-              较高值允许更长的回复，但会消耗更多资源和时间。
+              较高值允许更长的回复，但会消耗更多资源和时间。关闭开关后，API请求中不会包含此参数。
             </Typography>
 
             {/* 滑块控制 */}
-            <Box sx={{ mb: 2, px: 1 }}>
+            <Box sx={{ mb: 2, px: 1, opacity: enableMaxTokens ? 1 : 0.5 }}>
               <Slider
                 value={Math.min(maxTokens, 65536)}
                 onChange={(_, value) => {
@@ -889,6 +917,7 @@ const AssistantModelSettings: React.FC = () => {
                   // 触发自定义事件通知其他组件
                   window.dispatchEvent(new CustomEvent('maxOutputTokensChanged', { detail: newValue }));
                 }}
+                disabled={!enableMaxTokens}
                 min={256}
                 max={65536}
                 step={256}
@@ -932,6 +961,7 @@ const AssistantModelSettings: React.FC = () => {
                     }
                   }
                 }}
+                disabled={!enableMaxTokens}
                 size="small"
                 sx={{ width: 120 }}
               />

@@ -70,7 +70,7 @@ export default function SettingsTab({
   onThinkingBudgetChange,
   initialContextLength = 16000,
   initialContextCount = 5,
-  initialMaxOutputTokens = 4096,
+  initialMaxOutputTokens = 8192,
   initialMathRenderer = 'KaTeX',
   initialThinkingEffort = 'medium',
   initialThinkingBudget = 1024,
@@ -85,6 +85,7 @@ export default function SettingsTab({
   const [contextLength, setContextLength] = useState<number>(initialContextLength);
   const [contextCount, setContextCount] = useState<number>(initialContextCount);
   const [maxOutputTokens, setMaxOutputTokens] = useState<number>(initialMaxOutputTokens);
+  const [enableMaxOutputTokens, setEnableMaxOutputTokens] = useState<boolean>(true);
   const [mathRenderer, setMathRenderer] = useState<MathRendererType>(initialMathRenderer);
   const [thinkingEffort, setThinkingEffort] = useState<ThinkingOption>(initialThinkingEffort);
   const [thinkingBudget, setThinkingBudget] = useState<number>(initialThinkingBudget);
@@ -100,6 +101,7 @@ export default function SettingsTab({
         if (appSettings.contextLength) setContextLength(appSettings.contextLength);
         if (appSettings.contextCount) setContextCount(appSettings.contextCount);
         if (appSettings.maxOutputTokens) setMaxOutputTokens(appSettings.maxOutputTokens);
+        if (appSettings.enableMaxOutputTokens !== undefined) setEnableMaxOutputTokens(appSettings.enableMaxOutputTokens);
         if (appSettings.mathRenderer) setMathRenderer(appSettings.mathRenderer);
         if (appSettings.defaultThinkingEffort) setThinkingEffort(appSettings.defaultThinkingEffort);
         if (appSettings.thinkingBudget) setThinkingBudget(appSettings.thinkingBudget);
@@ -257,7 +259,8 @@ export default function SettingsTab({
               width: 36,
               height: 36,
               mr: 1.5,
-              bgcolor: userAvatar ? 'transparent' : '#87d068'
+              bgcolor: userAvatar ? 'transparent' : '#87d068',
+              borderRadius: '25%' // 方圆形头像
             }}
           >
             {!userAvatar && "我"}
@@ -309,6 +312,7 @@ export default function SettingsTab({
         contextLength={contextLength}
         contextCount={contextCount}
         maxOutputTokens={maxOutputTokens}
+        enableMaxOutputTokens={enableMaxOutputTokens}
         mathRenderer={mathRenderer}
         thinkingEffort={thinkingEffort}
         thinkingBudget={thinkingBudget}
@@ -377,6 +381,20 @@ export default function SettingsTab({
             console.log(`[ContextSettings] 已同步更新 ${assistants.length} 个助手的maxTokens为 ${value}`);
           } catch (error) {
             console.error('同步助手maxTokens失败:', error);
+          }
+        }}
+        onEnableMaxOutputTokensChange={(value) => {
+          setEnableMaxOutputTokens(value);
+          // 保存到localStorage
+          try {
+            const appSettingsJSON = localStorage.getItem('appSettings');
+            const appSettings = appSettingsJSON ? JSON.parse(appSettingsJSON) : {};
+            localStorage.setItem('appSettings', JSON.stringify({
+              ...appSettings,
+              enableMaxOutputTokens: value
+            }));
+          } catch (error) {
+            console.error('保存最大输出Token开关设置失败', error);
           }
         }}
         onMathRendererChange={(value) => {

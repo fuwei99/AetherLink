@@ -62,6 +62,11 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios/App
+          pod install --repo-update
+
       - name: Update iOS project settings
         run: |
           cd ios/App
@@ -109,11 +114,17 @@ jobs:
           # 运行 Python 脚本更新项目
           python3 update_project.py
 
-      - name: List available schemes
+      - name: List available schemes and verify setup
         run: |
           cd ios/App
-          echo "Available schemes:"
+          echo "=== Available schemes ==="
           xcodebuild -workspace App.xcworkspace -list
+          echo ""
+          echo "=== Workspace structure ==="
+          ls -la
+          echo ""
+          echo "=== Pod installation status ==="
+          ls -la Pods/ || echo "Pods directory not found"
 
       - name: Build iOS App (Archive)
         run: |
@@ -122,7 +133,7 @@ jobs:
           # 创建构建目录
           mkdir -p build
 
-          # 尝试构建归档，使用更简单的参数
+          # 构建归档，添加Swift优化设置以消除警告
           xcodebuild archive \
             -workspace App.xcworkspace \
             -scheme App \
@@ -132,20 +143,9 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE="" \
-            DEVELOPMENT_TEAM="" || {
-              echo "Archive failed, trying with different scheme name..."
-              # 如果失败，尝试使用其他可能的 scheme 名称
-              xcodebuild archive \
-                -workspace App.xcworkspace \
-                -scheme "App (iOS)" \
-                -configuration Release \
-                -archivePath ./build/App.xcarchive \
-                -destination generic/platform=iOS \
-                CODE_SIGNING_ALLOWED=NO \
-                CODE_SIGN_IDENTITY="" \
-                PROVISIONING_PROFILE="" \
-                DEVELOPMENT_TEAM=""
-            }
+            DEVELOPMENT_TEAM="" \
+            SWIFT_OPTIMIZATION_LEVEL="-Onone" \
+            -quiet
 
       - name: Export IPA (Unsigned)
         run: |
@@ -157,49 +157,19 @@ jobs:
             exit 1
           fi
 
-          # 创建更简单的导出选项
-          cat > ExportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>development</string>
-              <key>compileBitcode</key>
-              <false/>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>stripSwiftSymbols</key>
-              <true/>
-              <key>thinning</key>
-              <string>&lt;none&gt;</string>
-              <key>signingCertificate</key>
-              <string>-</string>
-              <key>provisioningProfiles</key>
-              <dict/>
-          </dict>
-          </plist>
-          EOF
-
-          # 尝试导出IPA
-          xcodebuild -exportArchive \
-            -archivePath ./build/App.xcarchive \
-            -exportPath ./build \
-            -exportOptionsPlist ExportOptions.plist || {
-              echo "Export failed, trying alternative method..."
-              # 如果导出失败，尝试直接从归档中提取
-              if [ -d "./build/App.xcarchive/Products/Applications" ]; then
-                echo "Extracting app from archive..."
-                mkdir -p ./build/Payload
-                cp -r ./build/App.xcarchive/Products/Applications/*.app ./build/Payload/
-                cd ./build
-                zip -r App.ipa Payload/
-                echo "IPA created manually from archive"
-              else
-                echo "Cannot find app in archive"
-                exit 1
-              fi
-            }
+          # 直接从归档中提取应用，避免复杂的导出过程
+          echo "Extracting app from archive..."
+          if [ -d "./build/App.xcarchive/Products/Applications" ]; then
+            mkdir -p ./build/Payload
+            cp -r ./build/App.xcarchive/Products/Applications/*.app ./build/Payload/
+            cd ./build
+            zip -r App.ipa Payload/
+            echo "IPA created successfully from archive"
+          else
+            echo "Cannot find app in archive"
+            ls -la ./build/App.xcarchive/
+            exit 1
+          fi
 
       - name: Rename and prepare IPA
         run: |

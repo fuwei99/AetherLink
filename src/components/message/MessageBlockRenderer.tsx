@@ -16,7 +16,6 @@ import CodeBlock from './blocks/CodeBlock';
 import CitationBlock from './blocks/CitationBlock';
 import ErrorBlock from './blocks/ErrorBlock';
 import TranslationBlock from './blocks/TranslationBlock';
-import TableBlock from './blocks/TableBlock';
 import MathBlock from './blocks/MathBlock';
 import MultiModelBlock from './blocks/MultiModelBlock';
 import ModelComparisonBlock from './blocks/ModelComparisonBlock';
@@ -204,9 +203,9 @@ const MessageBlockRenderer: React.FC<Props> = ({
               case MessageBlockType.TRANSLATION:
                 blockComponent = <TranslationBlock key={block.id} block={block} />;
                 break;
-              case MessageBlockType.TABLE:
-                blockComponent = <TableBlock key={block.id} block={block} />;
-                break;
+              // case MessageBlockType.TABLE: // 已废弃，表格通过Markdown渲染
+              //   console.warn('TABLE block type is deprecated, tables should be rendered via Markdown');
+              //   break;
               case MessageBlockType.MATH:
                 blockComponent = <MathBlock key={block.id} block={block} />;
                 break;

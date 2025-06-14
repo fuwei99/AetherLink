@@ -124,15 +124,20 @@ const Markdown: React.FC<Props> = ({ block, content, allowHtml = false, messageR
     return {
       a: (props: any) => <Link {...props} target="_blank" rel="noopener noreferrer" />,
       code: (props: any) => (
-        <MarkdownCodeBlock 
-          {...props} 
-          id={getCodeBlockId(props?.node?.position?.start)} 
+        <MarkdownCodeBlock
+          {...props}
+          id={getCodeBlockId(props?.node?.position?.start)}
           onSave={onSaveCodeBlock}
           messageRole={messageRole}
         />
       ),
       img: AdvancedImagePreview,
-      pre: (props: any) => <pre style={{ overflow: 'visible' }} {...props} />
+      pre: (props: any) => <pre style={{ overflow: 'visible' }} {...props} />,
+      table: (props: any) => (
+        <div className="markdown-table-container">
+          <table {...props} />
+        </div>
+      )
     } as Partial<Components>;
   }, [onSaveCodeBlock, messageRole]);
 

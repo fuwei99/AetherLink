@@ -121,7 +121,7 @@ function findMcpToolByName(mcpTools: MCPTool[], toolName: string): MCPTool | und
  * 2. <tool_name>参数</tool_name> (提示词注入模式)
  */
 export function parseToolUse(content: string, mcpTools: MCPTool[]): MCPToolResponse[] {
-  if (!content || !mcpTools || mcpTools.length === 0) {
+  if (!content || typeof content !== 'string' || !mcpTools || mcpTools.length === 0) {
     return [];
   }
 

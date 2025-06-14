@@ -127,6 +127,7 @@ const AssistantItem = memo(function AssistantItem({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: '25%', // 方圆形头像
   }), [isSelected]);
 
   const primaryTextSx = useMemo(() => ({

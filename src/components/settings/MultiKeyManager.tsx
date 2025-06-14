@@ -300,7 +300,16 @@ const MultiKeyManager: React.FC<MultiKeyManagerProps> = ({
                   }
                   secondary={
                     <Box>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontFamily: 'monospace',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '100%', // 确保在父容器内
+                        }}
+                      >
                         {formatKeyDisplay(key.key, isVisible)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">

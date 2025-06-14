@@ -8,7 +8,6 @@ import {
   ListItemText,
   ListItemIcon,
   ListItemSecondaryAction,
-  Switch,
   Typography,
   Box,
   Chip,
@@ -25,6 +24,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
+import CustomSwitch from '../CustomSwitch';
 
 interface MCPToolsButtonProps {
   toolsEnabled?: boolean;
@@ -125,6 +125,22 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = ({
   const handleNavigateToSettings = () => {
     setOpen(false);
     navigate('/settings/mcp-server');
+  };
+
+  const handleToolsEnabledChange = async (enabled: boolean) => {
+    if (!enabled && onToolsEnabledChange) {
+      // 关闭总开关时，同时关闭所有已启动的MCP服务器
+      try {
+        await mcpService.stopAllActiveServers();
+        loadServers();
+        console.log('[MCP] 总开关关闭，已停止所有活跃服务器');
+      } catch (error) {
+        console.error('[MCP] 停止服务器失败:', error);
+      }
+    }
+    if (onToolsEnabledChange) {
+      onToolsEnabledChange(enabled);
+    }
   };
 
   const getServerTypeIcon = (type: MCPServerType) => {
@@ -230,10 +246,9 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = ({
               )}
             </Box>
             {onToolsEnabledChange && (
-              <Switch
+              <CustomSwitch
                 checked={toolsEnabled}
-                onChange={(e) => onToolsEnabledChange(e.target.checked)}
-                color="primary"
+                onChange={(e) => handleToolsEnabledChange(e.target.checked)}
               />
             )}
           </Box>
@@ -309,11 +324,9 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = ({
                         secondaryTypographyProps={{ component: 'div' }}
                       />
                       <ListItemSecondaryAction>
-                        <Switch
+                        <CustomSwitch
                           checked={server.isActive}
                           onChange={(e) => handleToggleServer(server.id, e.target.checked)}
-                          color="primary"
-                          size="small"
                         />
                       </ListItemSecondaryAction>
                     </ListItem>
