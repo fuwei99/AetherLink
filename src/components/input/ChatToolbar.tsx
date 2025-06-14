@@ -1,21 +1,157 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Box, Typography, useTheme, IconButton } from '@mui/material';
 // Lucide Icons - 按需导入，高端简约设计
-import { Plus, Trash2, AlertTriangle, Camera, Search, ChevronLeft, BookOpen } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Camera, Search, ChevronLeft, BookOpen, Video } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState } from '../shared/store';
-import { TopicService } from '../shared/services/TopicService';
-import { EventEmitter, EVENT_NAMES } from '../shared/services/EventService';
-import { newMessagesActions } from '../shared/store/slices/newMessagesSlice';
-import { updateSettings } from '../shared/store/settingsSlice';
-import WebSearchProviderSelector from './WebSearchProviderSelector';
-import MCPToolsButton from './chat/MCPToolsButton';
-import KnowledgeSelector from './chat/KnowledgeSelector';
+import type { RootState } from '../../shared/store';
+import { TopicService } from '../../shared/services/TopicService';
+import { EventEmitter, EVENT_NAMES } from '../../shared/services/EventService';
+import { newMessagesActions } from '../../shared/store/slices/newMessagesSlice';
+import { updateSettings } from '../../shared/store/settingsSlice';
+import WebSearchProviderSelector from '../WebSearchProviderSelector';
+import MCPToolsButton from '../chat/MCPToolsButton';
+import KnowledgeSelector from '../chat/KnowledgeSelector';
+
+// 现代玻璃UI工具栏样式 - 2025年设计趋势
+// 导出供其他组件使用
+export const getGlassmorphismToolbarStyles = (isDarkMode: boolean) => {
+  return {
+    // 容器样式 - 玻璃容器
+    container: {
+      background: 'transparent',
+      border: 'none',
+      borderRadius: '24px',
+      padding: '0 8px'
+    },
+    // 按钮样式 - 长方圆形玻璃背景
+    button: {
+      // 玻璃背景效果
+      background: isDarkMode
+        ? 'rgba(255, 255, 255, 0.08)'
+        : 'rgba(255, 255, 255, 0.15)',
+      // 玻璃边框
+      border: isDarkMode
+        ? '1px solid rgba(255, 255, 255, 0.12)'
+        : '1px solid rgba(255, 255, 255, 0.25)',
+      // 长方圆形设计
+      borderRadius: '16px',
+      padding: '8px 14px',
+      // 毛玻璃效果
+      backdropFilter: 'blur(12px) saturate(120%)',
+      WebkitBackdropFilter: 'blur(12px) saturate(120%)', // Safari兼容
+      // 阴影效果
+      boxShadow: isDarkMode
+        ? '0 4px 16px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+        : '0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+      // 动画过渡
+      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      minHeight: '36px',
+      // 防止文本选择
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      // 硬件加速
+      willChange: 'transform, background, box-shadow',
+      transform: 'translateZ(0)'
+    },
+    // 按钮悬停效果 - 增强玻璃效果
+    buttonHover: {
+      background: isDarkMode
+        ? 'rgba(255, 255, 255, 0.12)'
+        : 'rgba(255, 255, 255, 0.25)',
+      border: isDarkMode
+        ? '1px solid rgba(255, 255, 255, 0.18)'
+        : '1px solid rgba(255, 255, 255, 0.35)',
+      backdropFilter: 'blur(16px) saturate(140%)',
+      WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+      boxShadow: isDarkMode
+        ? '0 6px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+        : '0 6px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+      transform: 'translateY(-1px) translateZ(0)'
+    },
+    // 按钮激活效果 - 按压玻璃效果
+    buttonActive: {
+      background: isDarkMode
+        ? 'rgba(255, 255, 255, 0.15)'
+        : 'rgba(255, 255, 255, 0.3)',
+      border: isDarkMode
+        ? '1px solid rgba(255, 255, 255, 0.2)'
+        : '1px solid rgba(255, 255, 255, 0.4)',
+      backdropFilter: 'blur(20px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      boxShadow: isDarkMode
+        ? '0 2px 8px rgba(0, 0, 0, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+        : '0 2px 8px rgba(0, 0, 0, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+      transform: 'translateY(0px) scale(0.98) translateZ(0)'
+    },
+    // 文字样式 - 现代字体
+    text: {
+      fontSize: '13px',
+      fontWeight: 600,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)',
+      textShadow: isDarkMode
+        ? '0 1px 2px rgba(0, 0, 0, 0.3)'
+        : '0 1px 2px rgba(255, 255, 255, 0.8)',
+      letterSpacing: '0.01em'
+    }
+  };
+};
+
+// 透明样式工具栏样式 - 简约设计
+// 导出供其他组件使用
+export const getTransparentToolbarStyles = (isDarkMode: boolean) => {
+  return {
+    // 容器样式 - 透明容器
+    container: {
+      background: 'transparent',
+      border: 'none',
+      borderRadius: '24px',
+      padding: '0 8px'
+    },
+    // 按钮样式 - 简约透明
+    button: {
+      background: 'transparent',
+      border: 'none',
+      borderRadius: '20px',
+      padding: '6px 12px',
+      transition: 'all 0.15s ease',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      minHeight: '32px'
+    },
+    // 按钮悬停效果 - 轻微
+    buttonHover: {
+      background: isDarkMode
+        ? 'rgba(255, 255, 255, 0.06)'
+        : 'rgba(0, 0, 0, 0.04)'
+    },
+    // 按钮激活效果 - 简单
+    buttonActive: {
+      background: isDarkMode
+        ? 'rgba(255, 255, 255, 0.1)'
+        : 'rgba(0, 0, 0, 0.06)',
+      transform: 'scale(0.96)'
+    },
+    // 文字样式 - 小字体
+    text: {
+      fontSize: '13px',
+      fontWeight: 500,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)'
+    }
+  };
+};
 
 interface ChatToolbarProps {
   onClearTopic?: () => void;
   imageGenerationMode?: boolean; // 是否处于图像生成模式
   toggleImageGenerationMode?: () => void; // 切换图像生成模式
+  videoGenerationMode?: boolean; // 是否处于视频生成模式
+  toggleVideoGenerationMode?: () => void; // 切换视频生成模式
   webSearchActive?: boolean; // 是否处于网络搜索模式
   toggleWebSearch?: () => void; // 切换网络搜索模式
   toolsEnabled?: boolean; // 是否启用工具调用
@@ -31,6 +167,8 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
   onClearTopic,
   imageGenerationMode = false,
   toggleImageGenerationMode,
+  videoGenerationMode = false,
+  toggleVideoGenerationMode,
   webSearchActive = false,
   toggleWebSearch,
   toolsEnabled = true,
@@ -68,52 +206,13 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
   // 防抖保存的引用
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 简约小巧的工具栏样式
-  const getSimpleToolbarStyles = () => {
-    return {
-      // 容器样式 - 极简设计
-      container: {
-        background: 'transparent',
-        border: 'none',
-        borderRadius: '24px',
-        padding: '0 8px'
-      },
-      // 按钮样式 - 小巧圆润
-      button: {
-        background: 'transparent',
-        border: 'none',
-        borderRadius: '20px',
-        padding: '6px 12px',
-        transition: 'all 0.15s ease',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        minHeight: '32px'
-      },
-      // 按钮悬停效果 - 轻微
-      buttonHover: {
-        background: isDarkMode
-          ? 'rgba(255, 255, 255, 0.06)'
-          : 'rgba(0, 0, 0, 0.04)'
-      },
-      // 按钮激活效果 - 简单
-      buttonActive: {
-        background: isDarkMode
-          ? 'rgba(255, 255, 255, 0.1)'
-          : 'rgba(0, 0, 0, 0.06)',
-        transform: 'scale(0.96)'
-      },
-      // 文字样式 - 小字体
-      text: {
-        fontSize: '13px',
-        fontWeight: 500,
-        color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)'
-      }
-    };
-  };
 
-  const simpleStyles = getSimpleToolbarStyles();
+
+  // 根据设置选择样式
+  const toolbarStyle = useSelector((state: RootState) => state.settings.toolbarStyle || 'glassmorphism');
+  const currentStyles = toolbarStyle === 'glassmorphism'
+    ? getGlassmorphismToolbarStyles(isDarkMode)
+    : getTransparentToolbarStyles(isDarkMode);
 
   // 处理清空内容的二次确认
   const handleClearTopic = () => {
@@ -137,13 +236,28 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     }
   }, [clearConfirmMode]);
 
-  // 获取按钮的简约样式
-  const getButtonSimpleStyle = (isActive: boolean) => {
+  // 获取按钮的当前样式
+  const getButtonCurrentStyle = (isActive: boolean) => {
     const baseStyle = {
-      ...simpleStyles.button,
-      background: isActive
-        ? (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)')
-        : 'transparent'
+      ...currentStyles.button,
+      // 激活状态的特殊效果（仅在玻璃样式下）
+      ...(isActive && toolbarStyle === 'glassmorphism' && {
+        background: isDarkMode
+          ? 'rgba(255, 255, 255, 0.18)'
+          : 'rgba(255, 255, 255, 0.35)',
+        border: isDarkMode
+          ? '1px solid rgba(255, 255, 255, 0.25)'
+          : '1px solid rgba(255, 255, 255, 0.45)',
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+        boxShadow: isDarkMode
+          ? '0 4px 20px rgba(0, 0, 0, 0.2), 0 1px 6px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+          : '0 4px 20px rgba(0, 0, 0, 0.1), 0 1px 6px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+      }),
+      // 激活状态的透明样式效果
+      ...(isActive && toolbarStyle === 'transparent' && {
+        background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)'
+      })
     };
 
     return baseStyle;
@@ -367,6 +481,19 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
       isActive: imageGenerationMode
     },
     {
+      id: 'generate-video',
+      icon: <Video
+        size={16}
+        color={videoGenerationMode
+          ? (isDarkMode ? 'rgba(233, 30, 99, 0.9)' : 'rgba(233, 30, 99, 0.8)')
+          : (isDarkMode ? 'rgba(233, 30, 99, 0.6)' : 'rgba(233, 30, 99, 0.5)')
+        }
+      />,
+      label: videoGenerationMode ? '取消生成' : '生成视频',
+      onClick: toggleVideoGenerationMode,
+      isActive: videoGenerationMode
+    },
+    {
       id: 'knowledge',
       icon: <BookOpen
         size={16}
@@ -437,26 +564,69 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
           width: '100%',
           maxWidth: '800px',
           position: 'relative',
-          ...simpleStyles.container
+          ...currentStyles.container
         }}
       >
-        {/* 简约折叠按钮 */}
+        {/* 动态样式折叠按钮 */}
         <IconButton
           onClick={toggleToolbarCollapse}
           size="small"
           sx={{
-            background: 'transparent',
-            borderRadius: '16px',
-            width: 28,
-            height: 28,
-            color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
-            transition: 'all 0.15s ease',
-            marginRight: 0.5,
+            ...(toolbarStyle === 'glassmorphism' ? {
+              // 玻璃背景效果
+              background: isDarkMode
+                ? 'rgba(255, 255, 255, 0.06)'
+                : 'rgba(255, 255, 255, 0.12)',
+              // 玻璃边框
+              border: isDarkMode
+                ? '1px solid rgba(255, 255, 255, 0.08)'
+                : '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '14px',
+              width: 32,
+              height: 32,
+              // 毛玻璃效果
+              backdropFilter: 'blur(10px) saturate(120%)',
+              WebkitBackdropFilter: 'blur(10px) saturate(120%)',
+              // 阴影效果
+              boxShadow: isDarkMode
+                ? '0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+                : '0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              marginRight: 1,
+              '&:hover': {
+                background: isDarkMode
+                  ? 'rgba(255, 255, 255, 0.1)'
+                  : 'rgba(255, 255, 255, 0.2)',
+                border: isDarkMode
+                  ? '1px solid rgba(255, 255, 255, 0.12)'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+                backdropFilter: 'blur(12px) saturate(140%)',
+                WebkitBackdropFilter: 'blur(12px) saturate(140%)',
+                boxShadow: isDarkMode
+                  ? '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
+                  : '0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+                transform: 'translateY(-1px)'
+              },
+              '&:active': {
+                transform: 'translateY(0px) scale(0.95)',
+                boxShadow: isDarkMode
+                  ? '0 1px 4px rgba(0, 0, 0, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                  : '0 1px 4px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.05)'
+              }
+            } : {
+              // 透明样式
+              background: 'transparent',
+              borderRadius: '16px',
+              width: 28,
+              height: 28,
+              transition: 'all 0.15s ease',
+              marginRight: 0.5,
+              '&:hover': {
+                background: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)'
+              }
+            }),
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
             flexShrink: 0,
-            '&:hover': {
-              background: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
-            }
           }}
         >
           <ChevronLeft
@@ -517,9 +687,9 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
             </Box>
           )}
 
-          {/* 简约小巧按钮渲染 */}
+          {/* 动态样式按钮渲染 */}
           {buttons.map((button) => {
-            const buttonStyle = getButtonSimpleStyle(button.isActive);
+            const buttonStyle = getButtonCurrentStyle(button.isActive);
 
             return (
               <Box
@@ -527,12 +697,12 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
                 onClick={button.onClick}
                 sx={{
                   ...buttonStyle,
-                  margin: '0 2px',
+                  margin: toolbarStyle === 'glassmorphism' ? '0 4px' : '0 2px',
                   '&:hover': {
-                    ...simpleStyles.buttonHover
+                    ...currentStyles.buttonHover
                   },
                   '&:active': {
-                    ...simpleStyles.buttonActive
+                    ...currentStyles.buttonActive
                   }
                 }}
               >
@@ -541,7 +711,7 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
                   <Typography
                     variant="body2"
                     sx={{
-                      ...simpleStyles.text,
+                      ...currentStyles.text,
                       ml: toolbarDisplayStyle === 'both' ? 0.5 : 0
                     }}
                   >

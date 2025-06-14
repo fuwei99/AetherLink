@@ -22,7 +22,7 @@ import {
   Divider,
   alpha
 } from '@mui/material';
-import { ArrowLeft, ChevronRight, MessageSquare, MessageCircle, Wrench } from 'lucide-react';
+import { ArrowLeft, ChevronRight, MessageSquare, MessageCircle, Wrench, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
 import { setTheme, setFontSize, setFontFamily } from '../../shared/store/settingsSlice';
@@ -78,8 +78,16 @@ const AppearanceSettings: React.FC = () => {
     navigate('/settings/appearance/top-toolbar');
   };
 
+  const handleNavigateToToolbarCustomization = () => {
+    navigate('/settings/appearance/toolbar-customization');
+  };
+
   const handleNavigateToMessageBubble = () => {
     navigate('/settings/appearance/message-bubble');
+  };
+
+  const handleNavigateToThinkingProcess = () => {
+    navigate('/settings/appearance/thinking-process');
   };
 
   return (
@@ -477,7 +485,36 @@ const AppearanceSettings: React.FC = () => {
 
             <ListItem disablePadding>
               <ListItemButton
-                onClick={handleNavigateToTopToolbar}
+                onClick={handleNavigateToThinkingProcess}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#f59e0b', 0.12),
+                    color: '#f59e0b',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <Brain size={20} />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>思考过程设置</Typography>}
+                  secondary="自定义AI思考过程的显示方式和自动折叠行为"
+                />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToToolbarCustomization}
                 sx={{
                   transition: 'all 0.2s',
                   '&:hover': {
@@ -489,6 +526,35 @@ const AppearanceSettings: React.FC = () => {
                   <Avatar sx={{
                     bgcolor: alpha('#06b6d4', 0.12),
                     color: '#06b6d4',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <Wrench size={20} />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>输入框工具栏设置</Typography>}
+                  secondary="自定义输入框工具栏的背景样式和外观效果"
+                />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToTopToolbar}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#10b981', 0.12),
+                    color: '#10b981',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                   }}>
                     <Wrench size={20} />

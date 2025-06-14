@@ -124,6 +124,15 @@ interface SettingsState {
   // 长文本粘贴为文件功能设置
   pasteLongTextAsFile?: boolean; // 是否启用长文本粘贴为文件
   pasteLongTextThreshold?: number; // 长文本阈值（字符数）
+
+  // 工具栏样式设置
+  toolbarStyle?: 'glassmorphism' | 'transparent'; // 工具栏样式：毛玻璃效果或透明效果
+
+  // 工具栏按钮配置
+  toolbarButtons?: {
+    order: string[]; // 按钮显示顺序
+    visibility: { [key: string]: boolean }; // 按钮可见性
+  };
 }
 
 
@@ -235,6 +244,23 @@ const getInitialState = (): SettingsState => {
     // 长文本粘贴为文件功能默认设置
     pasteLongTextAsFile: false, // 默认关闭长文本粘贴为文件
     pasteLongTextThreshold: 1500, // 默认阈值1500字符
+
+    // 工具栏样式默认设置
+    toolbarStyle: 'glassmorphism', // 默认使用毛玻璃效果
+
+    // 工具栏按钮默认配置
+    toolbarButtons: {
+      order: ['mcp-tools', 'new-topic', 'clear-topic', 'generate-image', 'generate-video', 'knowledge', 'web-search'], // 默认按钮顺序
+      visibility: {
+        'mcp-tools': true,
+        'new-topic': true,
+        'clear-topic': true,
+        'generate-image': true,
+        'generate-video': true,
+        'knowledge': true,
+        'web-search': true
+      }
+    },
   };
 
   // 设置默认模型
@@ -376,6 +402,27 @@ export const loadSettings = createAsyncThunk('settings/load', async () => {
       }
       if (savedSettings.pasteLongTextThreshold === undefined) {
         savedSettings.pasteLongTextThreshold = 1500;
+      }
+
+      // 如果没有工具栏样式设置，使用默认值
+      if (!savedSettings.toolbarStyle) {
+        savedSettings.toolbarStyle = 'glassmorphism';
+      }
+
+      // 如果没有工具栏按钮配置，使用默认值
+      if (!savedSettings.toolbarButtons) {
+        savedSettings.toolbarButtons = {
+          order: ['mcp-tools', 'new-topic', 'clear-topic', 'generate-image', 'generate-video', 'knowledge', 'web-search'],
+          visibility: {
+            'mcp-tools': true,
+            'new-topic': true,
+            'clear-topic': true,
+            'generate-image': true,
+            'generate-video': true,
+            'knowledge': true,
+            'web-search': true
+          }
+        };
       }
 
       return {
@@ -668,6 +715,37 @@ const settingsSlice = createSlice({
     setPasteLongTextThreshold: (state, action: PayloadAction<number>) => {
       state.pasteLongTextThreshold = action.payload;
     },
+
+    // 工具栏样式设置 actions
+    setToolbarStyle: (state, action: PayloadAction<'glassmorphism' | 'transparent'>) => {
+      state.toolbarStyle = action.payload;
+    },
+
+    // 工具栏按钮配置 actions
+    setToolbarButtonOrder: (state, action: PayloadAction<string[]>) => {
+      if (!state.toolbarButtons) {
+        state.toolbarButtons = {
+          order: action.payload,
+          visibility: {}
+        };
+      } else {
+        state.toolbarButtons.order = action.payload;
+      }
+    },
+    setToolbarButtonVisibility: (state, action: PayloadAction<{ buttonId: string; visible: boolean }>) => {
+      const { buttonId, visible } = action.payload;
+      if (!state.toolbarButtons) {
+        state.toolbarButtons = {
+          order: [],
+          visibility: { [buttonId]: visible }
+        };
+      } else {
+        state.toolbarButtons.visibility[buttonId] = visible;
+      }
+    },
+    updateToolbarButtons: (state, action: PayloadAction<{ order: string[]; visibility: { [key: string]: boolean } }>) => {
+      state.toolbarButtons = action.payload;
+    },
   },
   extraReducers: (builder) => {
     // 处理加载设置
@@ -753,6 +831,12 @@ export const {
   // 长文本粘贴为文件功能控制
   setPasteLongTextAsFile,
   setPasteLongTextThreshold,
+  // 工具栏样式控制
+  setToolbarStyle,
+  // 工具栏按钮配置控制
+  setToolbarButtonOrder,
+  setToolbarButtonVisibility,
+  updateToolbarButtons,
 } = settingsSlice.actions;
 
 // 重用现有的action creators，但添加异步保存

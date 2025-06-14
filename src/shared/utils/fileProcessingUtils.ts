@@ -69,12 +69,39 @@ export class FileProcessingUtils {
       };
     } catch (error) {
       log('WARN', `获取图片 Base64 失败，使用回退方案: ${file.origin_name}`, { error });
-      
+
       // 回退到文件内置数据
       const base64Data = file.base64Data || '';
       const cleanBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
       const mimeType = file.mimeType || `image/${file.ext?.slice(1) || 'png'}`;
-      
+
+      return {
+        base64: cleanBase64,
+        mime: mimeType
+      };
+    }
+  }
+
+  /**
+   * 获取视频的 Base64 编码
+   * @param file 视频文件对象
+   * @returns 视频 Base64 数据和 MIME 类型
+   */
+  static async getVideoBase64(file: FileType): Promise<{ base64: string; mime: string }> {
+    try {
+      const result = await this.getFileBase64(file);
+      return {
+        base64: result.data,
+        mime: result.mimeType
+      };
+    } catch (error) {
+      log('WARN', `获取视频 Base64 失败，使用回退方案: ${file.origin_name}`, { error });
+
+      // 回退到文件内置数据
+      const base64Data = file.base64Data || '';
+      const cleanBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+      const mimeType = file.mimeType || `video/${file.ext?.slice(1) || 'mp4'}`;
+
       return {
         base64: cleanBase64,
         mime: mimeType
@@ -117,6 +144,17 @@ export class FileProcessingUtils {
    */
   static isPdfFile(file: FileType): boolean {
     return file.ext === '.pdf' || file.mimeType === 'application/pdf';
+  }
+
+  /**
+   * 检查文件是否为视频
+   * @param file 文件对象
+   * @returns 是否为视频
+   */
+  static isVideoFile(file: FileType): boolean {
+    return file.type === 'video' ||
+           (file.mimeType?.startsWith('video/') ?? false) ||
+           /\.(mp4|avi|mov|wmv|flv|mkv|webm|ogv|3gp|mpg|mpeg)$/i.test(file.ext || '');
   }
 
   /**
@@ -174,6 +212,28 @@ export class FileProcessingUtils {
         return 'application/xml';
       case '.csv':
         return 'text/csv';
+      // 视频文件MIME类型
+      case '.mp4':
+        return 'video/mp4';
+      case '.avi':
+        return 'video/x-msvideo';
+      case '.mov':
+        return 'video/quicktime';
+      case '.wmv':
+        return 'video/x-ms-wmv';
+      case '.flv':
+        return 'video/x-flv';
+      case '.mkv':
+        return 'video/x-matroska';
+      case '.webm':
+        return 'video/webm';
+      case '.ogv':
+        return 'video/ogg';
+      case '.3gp':
+        return 'video/3gpp';
+      case '.mpg':
+      case '.mpeg':
+        return 'video/mpeg';
       default:
         return 'application/octet-stream';
     }
@@ -274,9 +334,11 @@ export class FileProcessingUtils {
 export const {
   getFileBase64,
   getImageBase64,
+  getVideoBase64,
   readFileContent,
   isImageFile,
   isPdfFile,
+  isVideoFile,
   isTextFile,
   isSmallFile,
   getDefaultMimeType,

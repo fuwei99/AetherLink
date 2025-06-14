@@ -12,6 +12,7 @@ import { MessageBlockType, MessageBlockStatus } from '../../shared/types/newMess
 import MainTextBlock from './blocks/MainTextBlock';
 import ThinkingBlock from './blocks/ThinkingBlock';
 import ImageBlock from './blocks/ImageBlock';
+import VideoBlock from './blocks/VideoBlock';
 import CodeBlock from './blocks/CodeBlock';
 import CitationBlock from './blocks/CitationBlock';
 import ErrorBlock from './blocks/ErrorBlock';
@@ -190,6 +191,9 @@ const MessageBlockRenderer: React.FC<Props> = ({
                 break;
               case MessageBlockType.IMAGE:
                 blockComponent = <ImageBlock key={block.id} block={block} />;
+                break;
+              case MessageBlockType.VIDEO:
+                blockComponent = <VideoBlock key={block.id} block={block} />;
                 break;
               case MessageBlockType.CODE:
                 blockComponent = <CodeBlock key={block.id} block={block} />;

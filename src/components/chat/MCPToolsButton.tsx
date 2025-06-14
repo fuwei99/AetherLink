@@ -25,6 +25,7 @@ import type { RootState } from '../../shared/store';
 import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
 import CustomSwitch from '../CustomSwitch';
+import { getGlassmorphismToolbarStyles, getTransparentToolbarStyles } from '../input';
 
 interface MCPToolsButtonProps {
   toolsEnabled?: boolean;
@@ -47,36 +48,15 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = ({
     (state.settings as any).toolbarDisplayStyle || 'both'
   );
 
-  // 简约小巧的按钮样式 - 与主工具栏保持一致
-  const getSimpleButtonStyles = () => {
-    return {
-      button: {
-        background: 'transparent',
-        border: 'none',
-        borderRadius: '20px',
-        padding: '6px 12px',
-        transition: 'all 0.15s ease',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        minHeight: '32px'
-      },
-      buttonHover: {
-        background: isDarkMode
-          ? 'rgba(255, 255, 255, 0.06)'
-          : 'rgba(0, 0, 0, 0.04)'
-      },
-      buttonActive: {
-        background: isDarkMode
-          ? 'rgba(255, 255, 255, 0.1)'
-          : 'rgba(0, 0, 0, 0.06)',
-        transform: 'scale(0.96)'
-      }
-    };
-  };
+  // 获取工具栏样式设置
+  const toolbarStyle = useSelector((state: RootState) =>
+    (state.settings as any).toolbarStyle || 'glassmorphism'
+  );
 
-  const simpleStyles = getSimpleButtonStyles();
+  // 根据设置选择样式
+  const currentStyles = toolbarStyle === 'glassmorphism'
+    ? getGlassmorphismToolbarStyles(isDarkMode)
+    : getTransparentToolbarStyles(isDarkMode);
 
   useEffect(() => {
     loadServers();
@@ -172,21 +152,43 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = ({
       <Box
         onClick={handleOpen}
         sx={{
-          ...simpleStyles.button,
-          background: hasActiveServers
-            ? (isDarkMode ? 'rgba(16, 185, 129, 0.08)' : 'rgba(16, 185, 129, 0.05)')
-            : 'transparent',
-          margin: '0 2px',
+          ...currentStyles.button,
+          // 激活状态的特殊效果 - 绿色主题（仅在玻璃样式下）
+          ...(hasActiveServers && toolbarStyle === 'glassmorphism' && {
+            background: isDarkMode
+              ? 'rgba(16, 185, 129, 0.15)'
+              : 'rgba(16, 185, 129, 0.2)',
+            border: isDarkMode
+              ? '1px solid rgba(16, 185, 129, 0.25)'
+              : '1px solid rgba(16, 185, 129, 0.35)',
+            boxShadow: isDarkMode
+              ? '0 4px 16px rgba(16, 185, 129, 0.1), 0 1px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(16, 185, 129, 0.2)'
+              : '0 4px 16px rgba(16, 185, 129, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(16, 185, 129, 0.3)'
+          }),
+          // 激活状态的透明样式效果
+          ...(hasActiveServers && toolbarStyle === 'transparent' && {
+            background: isDarkMode ? 'rgba(16, 185, 129, 0.08)' : 'rgba(16, 185, 129, 0.05)'
+          }),
+          margin: toolbarStyle === 'glassmorphism' ? '0 4px' : '0 2px',
           '&:hover': {
-            ...simpleStyles.buttonHover,
-            ...(hasActiveServers && {
+            ...currentStyles.buttonHover,
+            ...(hasActiveServers && toolbarStyle === 'glassmorphism' && {
               background: isDarkMode
-                ? 'rgba(16, 185, 129, 0.12)'
-                : 'rgba(16, 185, 129, 0.08)'
+                ? 'rgba(16, 185, 129, 0.2)'
+                : 'rgba(16, 185, 129, 0.25)',
+              border: isDarkMode
+                ? '1px solid rgba(16, 185, 129, 0.3)'
+                : '1px solid rgba(16, 185, 129, 0.4)',
+              boxShadow: isDarkMode
+                ? '0 6px 24px rgba(16, 185, 129, 0.15), 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(16, 185, 129, 0.25)'
+                : '0 6px 24px rgba(16, 185, 129, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(16, 185, 129, 0.4)'
+            }),
+            ...(hasActiveServers && toolbarStyle === 'transparent' && {
+              background: isDarkMode ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.08)'
             })
           },
           '&:active': {
-            ...simpleStyles.buttonActive
+            ...currentStyles.buttonActive
           }
         }}
         title="MCP 工具"
@@ -204,11 +206,15 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = ({
           <Typography
             variant="body2"
             sx={{
-              fontWeight: 500,
+              fontWeight: 600,
               fontSize: '13px',
               color: hasActiveServers
-                ? (isDarkMode ? 'rgba(16, 185, 129, 0.9)' : 'rgba(16, 185, 129, 0.8)')
-                : (isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)'),
+                ? (isDarkMode ? 'rgba(16, 185, 129, 0.95)' : 'rgba(16, 185, 129, 0.9)')
+                : (isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)'),
+              textShadow: isDarkMode
+                ? '0 1px 2px rgba(0, 0, 0, 0.3)'
+                : '0 1px 2px rgba(255, 255, 255, 0.8)',
+              letterSpacing: '0.01em',
               ml: toolbarDisplayStyle === 'both' ? 0.5 : 0
             }}
           >

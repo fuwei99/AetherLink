@@ -34,6 +34,7 @@ interface ChatInputProps {
   isLoading?: boolean;
   allowConsecutiveMessages?: boolean; // 允许连续发送消息，即使AI尚未回复
   imageGenerationMode?: boolean; // 是否处于图像生成模式
+  videoGenerationMode?: boolean; // 是否处于视频生成模式
   onSendImagePrompt?: (prompt: string) => void; // 发送图像生成提示词的回调
   webSearchActive?: boolean; // 是否处于网络搜索模式
   onDetectUrl?: (url: string) => Promise<string>; // 用于检测并解析URL的回调
@@ -52,6 +53,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isLoading = false,
   allowConsecutiveMessages = true, // 默认允许连续发送
   imageGenerationMode = false, // 默认不是图像生成模式
+  videoGenerationMode = false, // 默认不是视频生成模式
   onSendImagePrompt,
   webSearchActive = false, // 默认不是网络搜索模式
   onDetectUrl,
@@ -150,6 +152,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     isLoading,
     allowConsecutiveMessages,
     imageGenerationMode,
+    videoGenerationMode,
     toolsEnabled,
     parsedContent,
     images,
@@ -1123,9 +1126,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 placeholder={
                   imageGenerationMode
                     ? "输入图像生成提示词... (Ctrl+Enter 展开)"
-                    : webSearchActive
-                      ? "输入网络搜索内容... (Ctrl+Enter 展开)"
-                      : "和ai助手说点什么... (Ctrl+Enter 展开)"
+                    : videoGenerationMode
+                      ? "输入视频生成提示词... (Ctrl+Enter 展开)"
+                      : webSearchActive
+                        ? "输入网络搜索内容... (Ctrl+Enter 展开)"
+                        : "和ai助手说点什么... (Ctrl+Enter 展开)"
                 }
                 value={message}
                 onChange={enhancedHandleChange}

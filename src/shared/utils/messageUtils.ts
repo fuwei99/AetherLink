@@ -5,6 +5,7 @@ import type {
   MainTextMessageBlock,
   ThinkingMessageBlock,
   ImageMessageBlock,
+  VideoMessageBlock,
   CodeMessageBlock,
   CitationMessageBlock,
   TranslationMessageBlock,
@@ -92,6 +93,15 @@ export function createUserMessage(options: {
         });
         blocks.push(imageBlock);
         message.blocks.push(imageBlock.id);
+      } else if (file.type === FileTypes.VIDEO) {
+        // 视频文件创建视频块
+        const videoBlock = createVideoBlock(messageId, {
+          file,
+          url: file.base64Data ? `data:${file.mimeType};base64,${file.base64Data}` : '',
+          mimeType: file.mimeType || 'video/mp4'
+        });
+        blocks.push(videoBlock);
+        message.blocks.push(videoBlock.id);
       } else {
         // 其他文件创建文件块
         const fileBlock = createFileBlock(messageId, file);
@@ -239,6 +249,46 @@ export function createImageBlock(messageId: string, imageData: {
       mimeType: imageData.file.mimeType || imageData.mimeType,
       base64Data: imageData.file.base64Data,
       type: imageData.file.type
+    } : undefined,
+    createdAt: new Date().toISOString(),
+    status: MessageBlockStatus.SUCCESS
+  };
+}
+
+/**
+ * 创建视频块
+ */
+export function createVideoBlock(messageId: string, videoData: {
+  url: string;
+  base64Data?: string;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  size?: number;
+  duration?: number;
+  poster?: string;
+  file?: FileType;
+}): MessageBlock {
+  return {
+    id: uuid(),
+    messageId,
+    type: MessageBlockType.VIDEO,
+    url: videoData.url,
+    base64Data: videoData.base64Data,
+    mimeType: videoData.mimeType,
+    width: videoData.width,
+    height: videoData.height,
+    size: videoData.size,
+    duration: videoData.duration,
+    poster: videoData.poster,
+    file: videoData.file ? {
+      id: videoData.file.id,
+      name: videoData.file.name,
+      origin_name: videoData.file.origin_name,
+      size: videoData.file.size,
+      mimeType: videoData.file.mimeType || videoData.mimeType,
+      base64Data: videoData.file.base64Data,
+      type: videoData.file.type
     } : undefined,
     createdAt: new Date().toISOString(),
     status: MessageBlockStatus.SUCCESS
@@ -451,6 +501,27 @@ export function findImageBlocks(message: Message): ImageMessageBlock[] {
   }
 
   return imageBlocks;
+}
+
+/**
+ * 查找消息的所有视频块
+ */
+export function findVideoBlocks(message: Message): VideoMessageBlock[] {
+  if (!message || !message.blocks || message.blocks.length === 0) {
+    return [];
+  }
+
+  const state = store.getState();
+  const videoBlocks: VideoMessageBlock[] = [];
+
+  for (const blockId of message.blocks) {
+    const block = messageBlocksSelectors.selectById(state, blockId);
+    if (block && block.type === MessageBlockType.VIDEO) {
+      videoBlocks.push(block as VideoMessageBlock);
+    }
+  }
+
+  return videoBlocks;
 }
 
 /**

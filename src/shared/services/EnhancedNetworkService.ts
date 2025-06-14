@@ -402,23 +402,27 @@ class EnhancedNetworkService {
     const stack = new Error().stack;
     if (!stack) return undefined;
 
-    const lines = stack.split('\n');
-    // 找到第一个不是这个服务内部的调用
-    for (let i = 3; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line.includes('EnhancedNetworkService')) {
-        const match = line.match(/at\s+(.+):(\d+):(\d+)/);
-        if (match) {
-          return {
-            stack: lines.slice(i).join('\n'),
-            url: match[1],
-            line: parseInt(match[2], 10),
-            column: parseInt(match[3], 10)
-          };
+    try {
+      const lines = (stack || '').split('\n');
+      // 找到第一个不是这个服务内部的调用
+      for (let i = 3; i < lines.length; i++) {
+        const line = lines[i];
+        if (line && !line.includes('EnhancedNetworkService')) {
+          const match = line.match(/at\s+(.+):(\d+):(\d+)/);
+          if (match) {
+            return {
+              stack: lines.slice(i).join('\n'),
+              url: match[1],
+              line: parseInt(match[2], 10),
+              column: parseInt(match[3], 10)
+            };
+          }
         }
       }
+    } catch (error) {
+      console.error('[EnhancedNetworkService] 解析调用栈失败:', error);
     }
-    
+
     return undefined;
   }
 

@@ -8,6 +8,7 @@ export const MessageBlockType = {
   MAIN_TEXT: 'main_text',
   THINKING: 'thinking',
   IMAGE: 'image',
+  VIDEO: 'video',
   CODE: 'code',
   TOOL: 'tool',
   FILE: 'file',
@@ -77,6 +78,28 @@ export interface ImageMessageBlock extends BaseMessageBlock {
   width?: number
   height?: number
   size?: number
+  file?: {
+    id: string
+    name: string
+    origin_name: string
+    size: number
+    mimeType: string
+    base64Data?: string
+    type?: string
+  }
+}
+
+// 视频消息块
+export interface VideoMessageBlock extends BaseMessageBlock {
+  type: typeof MessageBlockType.VIDEO
+  url: string
+  base64Data?: string
+  mimeType: string
+  width?: number
+  height?: number
+  size?: number
+  duration?: number
+  poster?: string
   file?: {
     id: string
     name: string
@@ -242,6 +265,7 @@ export type MessageBlock =
   | MainTextMessageBlock
   | ThinkingMessageBlock
   | ImageMessageBlock
+  | VideoMessageBlock
   | CodeMessageBlock
   | ToolMessageBlock
   | FileMessageBlock

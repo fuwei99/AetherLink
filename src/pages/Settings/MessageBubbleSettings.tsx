@@ -15,7 +15,8 @@ import {
   alpha,
   FormControlLabel,
   Switch,
-  Button
+  Button,
+  Slider
 } from '@mui/material';
 import { ArrowLeft, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -45,6 +46,11 @@ const MessageBubbleSettings: React.FC = () => {
     aiBubbleColor: '',
     aiTextColor: ''
   };
+
+  // 获取消息气泡宽度设置
+  const messageBubbleMinWidth = settings.messageBubbleMinWidth || 50;
+  const messageBubbleMaxWidth = settings.messageBubbleMaxWidth || 99;
+  const userMessageMaxWidth = settings.userMessageMaxWidth || 80;
 
   const handleBack = () => {
     navigate('/settings/appearance');
@@ -90,6 +96,25 @@ const MessageBubbleSettings: React.FC = () => {
         aiBubbleColor: '',
         aiTextColor: ''
       }
+    }));
+  };
+
+  // 消息气泡宽度设置处理函数
+  const handleMessageBubbleMinWidthChange = (_event: Event, newValue: number | number[]) => {
+    dispatch(updateSettings({
+      messageBubbleMinWidth: newValue as number
+    }));
+  };
+
+  const handleMessageBubbleMaxWidthChange = (_event: Event, newValue: number | number[]) => {
+    dispatch(updateSettings({
+      messageBubbleMaxWidth: newValue as number
+    }));
+  };
+
+  const handleUserMessageMaxWidthChange = (_event: Event, newValue: number | number[]) => {
+    dispatch(updateSettings({
+      userMessageMaxWidth: newValue as number
     }));
   };
 
@@ -297,6 +322,169 @@ const MessageBubbleSettings: React.FC = () => {
           </Box>
         </Paper>
 
+        {/* 消息气泡宽度设置 */}
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' }
+                }}
+              >
+                消息气泡宽度设置
+              </Typography>
+              <Tooltip title="自定义聊天界面中消息气泡的宽度范围，适配不同设备屏幕">
+                <IconButton size="small" sx={{ ml: 1 }}>
+                  <Info />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              调整消息气泡的宽度范围以适配不同设备屏幕
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            {/* AI消息最大宽度 */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" gutterBottom sx={{ fontWeight: 500 }}>
+                AI消息最大宽度: {messageBubbleMaxWidth}%
+              </Typography>
+              <Slider
+                value={messageBubbleMaxWidth}
+                onChange={handleMessageBubbleMaxWidthChange}
+                min={50}
+                max={100}
+                step={5}
+                marks={[
+                  { value: 50, label: '50%' },
+                  { value: 75, label: '75%' },
+                  { value: 100, label: '100%' }
+                ]}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(value) => `${value}%`}
+                sx={{
+                  '& .MuiSlider-thumb': {
+                    bgcolor: 'primary.main',
+                  },
+                  '& .MuiSlider-track': {
+                    bgcolor: 'primary.main',
+                  },
+                  '& .MuiSlider-rail': {
+                    bgcolor: 'divider',
+                  }
+                }}
+              />
+            </Box>
+
+            {/* 用户消息最大宽度 */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" gutterBottom sx={{ fontWeight: 500 }}>
+                用户消息最大宽度: {userMessageMaxWidth}%
+              </Typography>
+              <Slider
+                value={userMessageMaxWidth}
+                onChange={handleUserMessageMaxWidthChange}
+                min={50}
+                max={100}
+                step={5}
+                marks={[
+                  { value: 50, label: '50%' },
+                  { value: 75, label: '75%' },
+                  { value: 100, label: '100%' }
+                ]}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(value) => `${value}%`}
+                sx={{
+                  '& .MuiSlider-thumb': {
+                    bgcolor: 'secondary.main',
+                  },
+                  '& .MuiSlider-track': {
+                    bgcolor: 'secondary.main',
+                  },
+                  '& .MuiSlider-rail': {
+                    bgcolor: 'divider',
+                  }
+                }}
+              />
+            </Box>
+
+            {/* 消息最小宽度 */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" gutterBottom sx={{ fontWeight: 500 }}>
+                消息最小宽度: {messageBubbleMinWidth}%
+              </Typography>
+              <Slider
+                value={messageBubbleMinWidth}
+                onChange={handleMessageBubbleMinWidthChange}
+                min={10}
+                max={90}
+                step={5}
+                marks={[
+                  { value: 10, label: '10%' },
+                  { value: 30, label: '30%' },
+                  { value: 50, label: '50%' },
+                  { value: 70, label: '70%' },
+                  { value: 90, label: '90%' }
+                ]}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(value) => `${value}%`}
+                sx={{
+                  '& .MuiSlider-thumb': {
+                    bgcolor: 'success.main',
+                  },
+                  '& .MuiSlider-track': {
+                    bgcolor: 'success.main',
+                  },
+                  '& .MuiSlider-rail': {
+                    bgcolor: 'divider',
+                  }
+                }}
+              />
+            </Box>
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 2,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                lineHeight: 1.5,
+                p: 2,
+                bgcolor: 'rgba(0,0,0,0.02)',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <strong>宽度设置说明：</strong>
+              <br />• <strong>AI消息最大宽度</strong>：控制AI回复的最大显示宽度
+              <br />• <strong>用户消息最大宽度</strong>：控制用户消息的最大显示宽度
+              <br />• <strong>消息最小宽度</strong>：所有消息的最小显示宽度，避免过窄影响阅读
+              <br />• 较小的宽度适合手机等窄屏设备，较大的宽度适合平板和电脑
+            </Typography>
+          </Box>
+        </Paper>
+
         {/* 自定义气泡颜色设置 */}
         <Paper
           elevation={0}
@@ -426,6 +614,9 @@ const MessageBubbleSettings: React.FC = () => {
                   customBubbleColors={customBubbleColors}
                   messageActionMode={messageActionMode}
                   showMicroBubbles={showMicroBubbles}
+                  messageBubbleMinWidth={messageBubbleMinWidth}
+                  messageBubbleMaxWidth={messageBubbleMaxWidth}
+                  userMessageMaxWidth={userMessageMaxWidth}
                 />
               </Box>
             </Box>

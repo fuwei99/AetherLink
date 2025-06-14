@@ -157,6 +157,27 @@ export async function testConnection(model: Model): Promise<boolean> {
 }
 
 /**
+ * 检查是否为视频生成模型
+ */
+function isVideoGenerationModel(model: Model): boolean {
+  // 检查模型类型
+  if (model.modelTypes && model.modelTypes.includes('video_gen' as any)) {
+    return true;
+  }
+
+  // 检查视频生成标志
+  if ((model as any).videoGeneration || (model.capabilities as any)?.videoGeneration) {
+    return true;
+  }
+
+  // 基于模型ID检测
+  return model.id.includes('HunyuanVideo') ||
+         model.id.includes('Wan-AI/Wan2.1-T2V') ||
+         model.id.includes('Wan-AI/Wan2.1-I2V') ||
+         model.id.toLowerCase().includes('video');
+}
+
+/**
  * 发送聊天请求
  * @param messages 消息数组
  * @param model 模型配置
@@ -170,6 +191,12 @@ export async function sendChatRequest(
 ): Promise<string | { content: string; reasoning?: string; reasoningTime?: number }> {
   try {
     console.log(`[ProviderFactory.sendChatRequest] 开始处理请求 - 模型ID: ${model.id}, 提供商: ${model.provider}`);
+
+    // 🎬 检查是否为视频生成模型
+    if (isVideoGenerationModel(model)) {
+      console.log(`[ProviderFactory.sendChatRequest] 检测到视频生成模型: ${model.id}`);
+      throw new Error(`模型 ${model.name || model.id} 是视频生成模型，不支持聊天对话。请使用专门的视频生成功能。`);
+    }
 
     // 检查模型是否有API密钥
     if (!model.apiKey && model.provider !== 'auto') {

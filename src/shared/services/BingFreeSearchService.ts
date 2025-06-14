@@ -378,10 +378,14 @@ export class BingFreeSearchService {
 
       // 如果是Bing重定向URL，提取真实URL
       if (url.includes('bing.com/ck/a?')) {
-        const urlParams = new URLSearchParams(url.split('?')[1]);
-        const realUrl = urlParams.get('u');
-        if (realUrl) {
-          return decodeURIComponent(realUrl);
+        const urlParts = url.split('?');
+        const queryString = urlParts.length > 1 ? urlParts[1] : '';
+        if (queryString) {
+          const urlParams = new URLSearchParams(queryString);
+          const realUrl = urlParams.get('u');
+          if (realUrl) {
+            return decodeURIComponent(realUrl);
+          }
         }
       }
 

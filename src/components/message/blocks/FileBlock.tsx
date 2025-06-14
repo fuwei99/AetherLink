@@ -149,7 +149,9 @@ const FileBlock: React.FC<Props> = ({ block }) => {
 
           {(() => {
             const fileName = file.origin_name || file.name || '';
-            const ext = fileName.split('.').pop();
+            if (!fileName) return null;
+            const parts = fileName.split('.');
+            const ext = parts.length > 1 ? parts.pop() : '';
             return ext && ext !== fileName ? (
               <Chip
                 label={ext.toUpperCase()}

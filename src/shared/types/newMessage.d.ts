@@ -10,6 +10,7 @@ export const MessageBlockType: {
   readonly MAIN_TEXT: "main_text";
   readonly THINKING: "thinking";
   readonly IMAGE: "image";
+  readonly VIDEO: "video";
   readonly CODE: "code";
   readonly TOOL: "tool";
   readonly FILE: "file";
@@ -71,6 +72,19 @@ export interface ImageMessageBlock extends BaseMessageBlock {
   width?: number;
   height?: number;
   size?: number;
+}
+
+// 视频消息块
+export interface VideoMessageBlock extends BaseMessageBlock {
+  type: typeof MessageBlockType.VIDEO;
+  url: string;
+  base64Data?: string;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  size?: number;
+  duration?: number;
+  poster?: string;
 }
 
 // 代码消息块
@@ -157,17 +171,17 @@ export interface MathMessageBlock extends BaseMessageBlock {
 }
 
 // 消息块联合类型
-export type MessageBlock = 
+export type MessageBlock =
   | MainTextMessageBlock
   | ThinkingMessageBlock
   | ImageMessageBlock
+  | VideoMessageBlock
   | CodeMessageBlock
   | ToolMessageBlock
   | FileMessageBlock
   | ErrorMessageBlock
   | CitationMessageBlock
   | TranslationMessageBlock
-  | TableMessageBlock
   | MultiModelMessageBlock
   | ChartMessageBlock
   | MathMessageBlock;

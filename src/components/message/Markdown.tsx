@@ -132,6 +132,19 @@ const Markdown: React.FC<Props> = ({ block, content, allowHtml = false, messageR
         />
       ),
       img: AdvancedImagePreview,
+      video: (props: any) => (
+        <video
+          {...props}
+          controls
+          style={{
+            maxWidth: '100%',
+            maxHeight: '400px',
+            borderRadius: '8px',
+            backgroundColor: '#000'
+          }}
+          preload="metadata"
+        />
+      ),
       pre: (props: any) => <pre style={{ overflow: 'visible' }} {...props} />,
       table: (props: any) => (
         <div className="markdown-table-container">

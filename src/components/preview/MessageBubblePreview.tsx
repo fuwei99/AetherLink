@@ -16,12 +16,19 @@ interface MessageBubblePreviewProps {
   };
   messageActionMode: 'bubbles' | 'toolbar';
   showMicroBubbles: boolean;
+  // 新增宽度设置props
+  messageBubbleMinWidth?: number;
+  messageBubbleMaxWidth?: number;
+  userMessageMaxWidth?: number;
 }
 
 const MessageBubblePreview: React.FC<MessageBubblePreviewProps> = ({
   customBubbleColors,
   messageActionMode,
-  showMicroBubbles
+  showMicroBubbles,
+  messageBubbleMinWidth = 50,
+  messageBubbleMaxWidth = 99,
+  userMessageMaxWidth = 80
 }) => {
   const theme = useTheme();
   const themeColors = getThemeColors(theme);
@@ -52,7 +59,11 @@ const MessageBubblePreview: React.FC<MessageBubblePreviewProps> = ({
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {/* 用户消息预览 */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Box sx={{ maxWidth: '80%', position: 'relative' }}>
+          <Box sx={{
+            maxWidth: `${userMessageMaxWidth}%`,
+            minWidth: `${messageBubbleMinWidth}%`,
+            position: 'relative'
+          }}>
             <Paper
               sx={{
                 padding: 1.5,
@@ -147,7 +158,11 @@ const MessageBubblePreview: React.FC<MessageBubblePreviewProps> = ({
 
         {/* AI消息预览 */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-          <Box sx={{ maxWidth: '80%', position: 'relative' }}>
+          <Box sx={{
+            maxWidth: `${messageBubbleMaxWidth}%`,
+            minWidth: `${messageBubbleMinWidth}%`,
+            position: 'relative'
+          }}>
             <Paper
               sx={{
                 padding: 1.5,

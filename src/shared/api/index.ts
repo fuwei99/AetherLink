@@ -17,6 +17,10 @@ export * as geminiApi from './gemini';
 // 导出Anthropic API模块
 export * as anthropicApi from './anthropic';
 
+// 导出视频生成功能
+export { generateVideo, type GeneratedVideo } from '../services/APIService';
+export type { VideoGenerationParams, GoogleVeoParams } from '../services/APIService';
+
 // 通用聊天请求接口
 export interface ChatRequest {
   messages: { role: string; content: string; images?: any[] }[];
