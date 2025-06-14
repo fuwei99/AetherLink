@@ -129,6 +129,16 @@ async function initializeInBackground() {
     await initializeServices();
     console.log('所有服务初始化完成');
 
+    // 在开发环境下加载调试工具
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        await import('./utils/debugUtils');
+        console.log('调试工具已加载');
+      } catch (error) {
+        console.warn('加载调试工具失败:', error);
+      }
+    }
+
     // 移动端：原生层已禁用CORS，无需代理服务
     if (Capacitor.isNativePlatform()) {
       console.log('移动端：原生层已禁用CORS，直接使用标准fetch');

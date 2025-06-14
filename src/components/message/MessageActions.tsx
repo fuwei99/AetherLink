@@ -226,8 +226,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
 
   // 打开菜单 - 优化：使用useCallback
   const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    console.log('[MessageActions] 三点菜单被点击', { renderMode, messageId: message.id });
+    event.preventDefault();
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
-  }, []);
+  }, [renderMode, message.id]);
 
   // 关闭菜单 - 优化：使用useCallback
   const handleMenuClose = useCallback(() => {
@@ -239,10 +242,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
     if (!message) return;
 
     try {
-      console.log('[MessageActions] 开始复制内容...');
+      console.log('[MessageActions] 开始复制内容...', { messageId: message.id, renderMode });
 
       // 使用工具函数获取主文本内容
       const textContent = getMainTextContent(message);
+      console.log('[MessageActions] 获取到的文本内容:', textContent?.substring(0, 100) + '...');
 
       if (!textContent || !textContent.trim()) {
         console.warn('[MessageActions] 没有可复制的内容');
@@ -265,6 +269,8 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
 
       // 显示成功提示
       console.log('[MessageActions] 复制内容成功');
+      // 发送复制成功事件，用于UI提示
+      EventEmitter.emit('ui:copy_success', { content: '已复制消息内容' });
 
     } catch (error) {
       console.error('[MessageActions] 复制内容失败:', error);
@@ -273,7 +279,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
       // 确保菜单在操作完成后关闭
       handleMenuClose();
     }
-  }, [message, handleMenuClose]);
+  }, [message, handleMenuClose, renderMode]);
 
   // 打开编辑对话框 - 优化：使用useCallback
   const handleEditClick = useCallback(() => {
@@ -390,7 +396,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
     EventEmitter.emit(EVENT_NAMES.NEW_BRANCH, messageIndex);
 
     handleMenuClose();
-  }, [messageIndex]);
+  }, [handleMenuClose, messageIndex]);
 
   // 文本转语音 - 优化：使用缓存的配置，避免重复存储调用
   const handleTextToSpeech = useCallback(async () => {
@@ -761,8 +767,14 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
       {renderMode === 'menuOnly' && (
         <IconButton
           size="small"
-          onClick={handleMenuClick}
-          sx={menuButtonStyle(theme.palette.mode === 'dark')}
+          onClick={(e) => {
+            e.stopPropagation(); // 防止事件冒泡
+            handleMenuClick(e);
+          }}
+          sx={{
+            ...menuButtonStyle(theme.palette.mode === 'dark'),
+            zIndex: 100, // 确保按钮在最上层
+          }}
         >
           <MoreVertical size={14} />
         </IconButton>
@@ -1133,8 +1145,25 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
           vertical: 'top',
           horizontal: 'left', // 改为left，确保菜单从左侧展开
         }}
+        MenuListProps={{
+          sx: { zIndex: 1300 } // 确保菜单在最高层级
+        }}
+        PaperProps={{
+          sx: { 
+            zIndex: 1300,
+            pointerEvents: 'auto' // 确保菜单可以接收点击事件
+          }
+        }}
       >
-        <MenuItem onClick={handleCopyContent}>复制内容</MenuItem>
+        <MenuItem 
+          onClick={(e) => {
+            console.log('[MessageActions] 复制菜单项被点击');
+            e.stopPropagation();
+            handleCopyContent();
+          }}
+        >
+          复制内容
+        </MenuItem>
         <MenuItem onClick={handleSaveContent}>保存内容</MenuItem>
         <MenuItem onClick={handleExportClick} sx={{ display: 'flex', alignItems: 'center' }}>
           <FileText size={16} style={{ marginRight: '8px' }} />
@@ -1185,14 +1214,18 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
   );
 }, (prevProps, nextProps) => {
   // 自定义比较函数，只在关键props变化时重新渲染
+  // 添加更多状态检查，确保复制功能状态正确
   return (
     prevProps.message.id === nextProps.message.id &&
     prevProps.message.blocks?.length === nextProps.message.blocks?.length &&
     prevProps.message.currentVersionId === nextProps.message.currentVersionId &&
     prevProps.message.versions?.length === nextProps.message.versions?.length &&
+    prevProps.message.updatedAt === nextProps.message.updatedAt &&
+    prevProps.message.createdAt === nextProps.message.createdAt &&
     prevProps.topicId === nextProps.topicId &&
     prevProps.messageIndex === nextProps.messageIndex &&
-    prevProps.renderMode === nextProps.renderMode
+    prevProps.renderMode === nextProps.renderMode &&
+    prevProps.customTextColor === nextProps.customTextColor
   );
 });
 
