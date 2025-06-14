@@ -20,7 +20,8 @@ import EnhancedWebSearchService from '../../../shared/services/EnhancedWebSearch
 import { abortCompletion } from '../../../shared/utils/abortController';
 import store from '../../../shared/store';
 import { TopicService } from '../../../shared/services/TopicService';
-import type { SiliconFlowImageFormat } from '../../../shared/types';
+import { VideoTaskManager } from '../../../shared/services/VideoTaskManager';
+import type { SiliconFlowImageFormat, GoogleVeoParams } from '../../../shared/types';
 
 /**
  * 处理聊天特殊功能相关的钩子
@@ -35,6 +36,7 @@ export const useChatFeatures = (
   const dispatch = useDispatch();
   const [webSearchActive, setWebSearchActive] = useState(false); // 控制是否处于网络搜索模式
   const [imageGenerationMode, setImageGenerationMode] = useState(false); // 控制是否处于图像生成模式
+  const [videoGenerationMode, setVideoGenerationMode] = useState(false); // 控制是否处于视频生成模式
   // MCP 工具开关状态 - 从 localStorage 读取并持久化
   const [toolsEnabled, setToolsEnabled] = useState(() => {
     const saved = localStorage.getItem('mcp-tools-enabled');
@@ -49,18 +51,30 @@ export const useChatFeatures = (
   // 切换图像生成模式
   const toggleImageGenerationMode = () => {
     setImageGenerationMode(!imageGenerationMode);
-    // 如果启用图像生成模式，关闭网络搜索模式
-    if (!imageGenerationMode && webSearchActive) {
-      setWebSearchActive(false);
+    // 如果启用图像生成模式，关闭其他模式
+    if (!imageGenerationMode) {
+      if (webSearchActive) setWebSearchActive(false);
+      if (videoGenerationMode) setVideoGenerationMode(false);
+    }
+  };
+
+  // 切换视频生成模式
+  const toggleVideoGenerationMode = () => {
+    setVideoGenerationMode(!videoGenerationMode);
+    // 如果启用视频生成模式，关闭其他模式
+    if (!videoGenerationMode) {
+      if (webSearchActive) setWebSearchActive(false);
+      if (imageGenerationMode) setImageGenerationMode(false);
     }
   };
 
   // 切换网络搜索模式
   const toggleWebSearch = () => {
     setWebSearchActive(!webSearchActive);
-    // 如果启用网络搜索模式，关闭图像生成模式
-    if (!webSearchActive && imageGenerationMode) {
-      setImageGenerationMode(false);
+    // 如果启用网络搜索模式，关闭其他模式
+    if (!webSearchActive) {
+      if (imageGenerationMode) setImageGenerationMode(false);
+      if (videoGenerationMode) setVideoGenerationMode(false);
     }
   };
 
@@ -74,6 +88,245 @@ export const useChatFeatures = (
     // 直接使用正常的消息发送流程，让messageThunk处理图像生成
     // 不再调用handleSendMessage，避免重复发送
     handleSendMessage(prompt, images, false, files); // 禁用工具，因为图像生成不需要工具
+  };
+
+  // 处理视频生成提示词
+  const handleVideoPrompt = async (prompt: string, images?: SiliconFlowImageFormat[], files?: any[]) => {
+    if (!currentTopic || !prompt.trim() || !selectedModel) return;
+
+    console.log(`[useChatFeatures] 处理视频生成提示词: ${prompt}`);
+    console.log(`[useChatFeatures] 使用模型: ${selectedModel.id}`);
+
+    // 检查模型是否支持视频生成
+    const isVideoModel = selectedModel.modelTypes?.includes('video_gen') ||
+                        selectedModel.videoGeneration ||
+                        selectedModel.capabilities?.videoGeneration ||
+                        selectedModel.id.includes('HunyuanVideo') ||
+                        selectedModel.id.includes('Wan-AI/Wan2.1-T2V') ||
+                        selectedModel.id.includes('Wan-AI/Wan2.1-I2V') ||
+                        selectedModel.id.toLowerCase().includes('video');
+
+    if (!isVideoModel) {
+      console.error(`[useChatFeatures] 模型 ${selectedModel.name || selectedModel.id} 不支持视频生成`);
+      // 创建错误消息
+      const { message: errorMessage, blocks: errorBlocks } = createAssistantMessage({
+        assistantId: currentTopic.assistantId,
+        topicId: currentTopic.id,
+        askId: `video-gen-${Date.now()}`,
+        modelId: selectedModel.id,
+        model: selectedModel,
+        status: AssistantMessageStatus.ERROR
+      });
+
+      const mainTextBlock = errorBlocks.find((block: any) => block.type === MessageBlockType.MAIN_TEXT);
+      if (mainTextBlock && 'content' in mainTextBlock) {
+        mainTextBlock.content = `❌ 模型 ${selectedModel.name || selectedModel.id} 不支持视频生成。请选择支持视频生成的模型，如 HunyuanVideo 或 Wan-AI 系列模型。`;
+        mainTextBlock.status = MessageBlockStatus.ERROR;
+      }
+
+      await TopicService.saveMessageAndBlocks(errorMessage, errorBlocks);
+      return;
+    }
+
+    // 创建用户消息
+    const { message: userMessage, blocks: userBlocks } = createUserMessage({
+      content: prompt,
+      assistantId: currentTopic.assistantId,
+      topicId: currentTopic.id,
+      modelId: selectedModel.id,
+      model: selectedModel,
+      images: images?.map(img => ({ url: img.image_url?.url || '' })),
+      files: files?.map(file => file.fileRecord).filter(Boolean)
+    });
+
+    await TopicService.saveMessageAndBlocks(userMessage, userBlocks);
+
+    // 创建助手消息（视频生成中）
+    const { message: assistantMessage, blocks: assistantBlocks } = createAssistantMessage({
+      assistantId: currentTopic.assistantId,
+      topicId: currentTopic.id,
+      askId: userMessage.id,
+      modelId: selectedModel.id,
+      model: selectedModel,
+      status: AssistantMessageStatus.PROCESSING
+    });
+
+    const mainTextBlock = assistantBlocks.find((block: any) => block.type === MessageBlockType.MAIN_TEXT);
+    if (mainTextBlock && 'content' in mainTextBlock) {
+      mainTextBlock.content = '🎬 正在生成视频，请稍候...\n\n视频生成通常需要几分钟时间，请耐心等待。';
+      mainTextBlock.status = MessageBlockStatus.PROCESSING;
+    }
+
+    await TopicService.saveMessageAndBlocks(assistantMessage, assistantBlocks);
+
+    // 创建任务ID
+    const taskId = `video-task-${Date.now()}`;
+
+    try {
+      // 调用视频生成API，但是我们需要拦截requestId
+      console.log('[useChatFeatures] 开始调用视频生成API');
+
+      // 创建一个自定义的视频生成函数，支持多个提供商
+      const generateVideoWithTaskSaving = async () => {
+        // 检查是否是Google Veo模型
+        if (selectedModel.id === 'veo-2.0-generate-001' || selectedModel.provider === 'google') {
+          // 使用Google Veo API - 分离提交和轮询以支持任务恢复
+          const { submitVeoGeneration, pollVeoOperation } = await import('../../../shared/api/google/veo');
+
+          if (!selectedModel.apiKey) {
+            throw new Error('Google API密钥未设置');
+          }
+
+          // 构建Google Veo参数
+          const veoParams: GoogleVeoParams = {
+            prompt: prompt,
+            aspectRatio: '16:9',
+            personGeneration: 'dont_allow',
+            durationSeconds: 8,
+            enhancePrompt: true
+          };
+
+          // 如果有参考图片，添加到参数中
+          if (images && images.length > 0) {
+            veoParams.image = images[0].image_url?.url;
+          }
+
+          // 先提交请求获取操作名称
+          const operationName = await submitVeoGeneration(selectedModel.apiKey, veoParams);
+
+          console.log('[useChatFeatures] 获得Google Veo操作名称:', operationName);
+
+          // 保存任务，使用操作名称作为requestId以支持恢复
+          VideoTaskManager.saveTask({
+            id: taskId,
+            requestId: operationName, // 使用操作名称，支持任务恢复
+            messageId: assistantMessage.id,
+            blockId: mainTextBlock?.id || '',
+            model: selectedModel,
+            prompt: prompt,
+            startTime: new Date().toISOString(),
+            status: 'processing'
+          });
+
+          // 继续轮询获取结果
+          const videoUrl = await pollVeoOperation(selectedModel.apiKey, operationName);
+
+          return { url: videoUrl };
+        } else {
+          // 使用硅基流动等OpenAI兼容API
+          const { submitVideoGeneration, pollVideoStatusInternal } = await import('../../../shared/api/openai/video');
+
+          // 先提交视频生成请求获取requestId
+          const requestId = await submitVideoGeneration(
+            selectedModel.baseUrl || 'https://api.siliconflow.cn/v1',
+            selectedModel.apiKey!,
+            selectedModel.id,
+            {
+              prompt: prompt,
+              image_size: '1280x720',
+              image: images && images.length > 0 ? images[0].image_url?.url : undefined
+            }
+          );
+
+          console.log('[useChatFeatures] 获得requestId:', requestId);
+
+          // 立即保存任务到本地存储，包含正确的requestId
+          VideoTaskManager.saveTask({
+            id: taskId,
+            requestId: requestId,
+            messageId: assistantMessage.id,
+            blockId: mainTextBlock?.id || '',
+            model: selectedModel,
+            prompt: prompt,
+            startTime: new Date().toISOString(),
+            status: 'processing'
+          });
+
+          // 继续轮询获取结果
+          const videoUrl = await pollVideoStatusInternal(
+            selectedModel.baseUrl || 'https://api.siliconflow.cn/v1',
+            selectedModel.apiKey!,
+            requestId
+          );
+
+          return { url: videoUrl };
+        }
+      };
+
+      const videoResult = await generateVideoWithTaskSaving();
+
+      // 更新消息内容为生成的视频
+      const videoContent = `🎬 视频生成完成！\n\n**提示词：** ${prompt}\n\n**生成时间：** ${new Date().toLocaleString()}\n\n**模型：** ${selectedModel.name || selectedModel.id}`;
+
+      if (mainTextBlock && mainTextBlock.id) {
+        await TopicService.updateMessageBlockFields(mainTextBlock.id, {
+          content: videoContent,
+          status: MessageBlockStatus.SUCCESS
+        });
+
+        // 创建视频块 - 使用正确的字段结构
+        const videoBlock = {
+          id: `video-${Date.now()}`,
+          type: MessageBlockType.VIDEO,
+          messageId: assistantMessage.id,
+          url: videoResult.url, // 视频URL存储在url字段
+          mimeType: 'video/mp4', // 默认视频格式
+          status: MessageBlockStatus.SUCCESS,
+          width: 1280, // 默认宽度
+          height: 720, // 默认高度
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        // 添加视频块到Redux状态
+        store.dispatch(upsertOneBlock(videoBlock));
+
+        // 更新消息的blocks数组
+        const updatedBlocks = [...(assistantMessage.blocks || []), videoBlock.id];
+        store.dispatch(newMessagesActions.updateMessage({
+          id: assistantMessage.id,
+          changes: { blocks: updatedBlocks }
+        }));
+
+        // 保存到数据库
+        await dexieStorage.updateMessage(assistantMessage.id, { blocks: updatedBlocks });
+        await dexieStorage.saveMessageBlock(videoBlock);
+      }
+
+      // 更新消息状态为成功
+      store.dispatch(newMessagesActions.updateMessage({
+        id: assistantMessage.id,
+        changes: {
+          status: AssistantMessageStatus.SUCCESS,
+          updatedAt: new Date().toISOString()
+        }
+      }));
+
+      // 删除任务（生成成功）
+      VideoTaskManager.removeTask(taskId);
+
+    } catch (error) {
+      console.error('[useChatFeatures] 视频生成失败:', error);
+
+      // 更新为错误消息
+      if (mainTextBlock && mainTextBlock.id) {
+        await TopicService.updateMessageBlockFields(mainTextBlock.id, {
+          content: `❌ 视频生成失败：${error instanceof Error ? error.message : String(error)}`,
+          status: MessageBlockStatus.ERROR
+        });
+      }
+
+      store.dispatch(newMessagesActions.updateMessage({
+        id: assistantMessage.id,
+        changes: {
+          status: AssistantMessageStatus.ERROR,
+          updatedAt: new Date().toISOString()
+        }
+      }));
+
+      // 删除任务（生成失败）
+      VideoTaskManager.removeTask(taskId);
+    }
   };
 
   // 处理网络搜索请求
@@ -441,6 +694,14 @@ export const useChatFeatures = (
       return;
     }
 
+    // 如果处于视频生成模式，则调用视频生成处理函数
+    if (videoGenerationMode) {
+      await handleVideoPrompt(content, images, files);
+      // 关闭视频生成模式
+      setVideoGenerationMode(false);
+      return;
+    }
+
     // 如果处于网络搜索模式，则调用网络搜索处理函数
     if (webSearchActive) {
       handleWebSearch(content);
@@ -646,14 +907,17 @@ export const useChatFeatures = (
   return {
     webSearchActive,
     imageGenerationMode,
+    videoGenerationMode,
     toolsEnabled,
     mcpMode,
     toggleWebSearch,
     toggleImageGenerationMode,
+    toggleVideoGenerationMode,
     toggleToolsEnabled,
     handleMCPModeChange,
     handleWebSearch,
     handleImagePrompt,
+    handleVideoPrompt,
     handleStopResponseClick,
     handleMessageSend,
     handleMultiModelSend

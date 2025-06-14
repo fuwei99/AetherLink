@@ -4,7 +4,24 @@ import { handleError } from '../utils/error';
 import type { ImageGenerationParams, GeneratedImage } from '../types';
 import { ModelType } from '../types';
 import { log } from './LoggerService';
-import { generateImage as openaiGenerateImage } from '../api/openai';
+import { generateImage as openaiGenerateImage, generateVideo as openaiGenerateVideo } from '../api/openai';
+import { generateVideoWithVeo } from '../api/google/veo';
+import type { VideoGenerationParams } from '../api/openai/video';
+import type { GoogleVeoParams } from '../api/google/veo';
+
+// 重新导出类型
+export type { VideoGenerationParams, GoogleVeoParams };
+
+/**
+ * 视频生成结果接口
+ */
+export interface GeneratedVideo {
+  url: string;
+  prompt: string;
+  timestamp: string;
+  modelId: string;
+  requestId?: string;
+}
 
 // 工具函数已移至ProviderFactory，保持APIService简洁
 
@@ -69,6 +86,78 @@ export async function generateImage(
     return generatedImage;
   } catch (error: any) {
     handleError(error, 'APIService.generateImage', {
+      logLevel: 'ERROR',
+      additionalData: { params },
+      rethrow: true
+    });
+    throw error;
+  }
+}
+
+/**
+ * 生成视频
+ * @param model 模型配置
+ * @param params 视频生成参数
+ * @returns 生成的视频结果
+ */
+export async function generateVideo(
+  model: Model,
+  params: VideoGenerationParams | GoogleVeoParams
+): Promise<GeneratedVideo> {
+  try {
+    log('INFO', `开始生成视频，使用模型: ${model.name}`);
+
+    // 检查模型是否支持视频生成
+    const isVideoGenerationModel =
+      // 1. 优先检查 modelTypes 中是否包含视频生成类型
+      (model.modelTypes && model.modelTypes.includes('video_gen' as any)) ||
+      // 2. 检查模型的视频生成标志
+      (model as any).videoGeneration ||
+      (model.capabilities as any)?.videoGeneration ||
+      // 3. 基于模型ID的后备检测
+      model.id.includes('HunyuanVideo') ||
+      model.id.includes('Wan-AI/Wan2.1-T2V') ||
+      model.id.includes('Wan-AI/Wan2.1-I2V') ||
+      model.id === 'veo-2.0-generate-001' || // Google Veo 2
+      model.id.toLowerCase().includes('video');
+
+    if (!isVideoGenerationModel) {
+      throw new Error(`模型 ${model.name} 不支持视频生成`);
+    }
+
+    let videoUrl: string;
+
+    // 检查是否是Google Veo模型
+    if (model.id === 'veo-2.0-generate-001' || model.provider === 'google') {
+      if (!model.apiKey) {
+        throw new Error('Google API密钥未设置');
+      }
+
+      const result = await generateVideoWithVeo(model.apiKey, params as GoogleVeoParams);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Google Veo视频生成失败');
+      }
+
+      videoUrl = result.url!;
+    } else {
+      // 使用OpenAI兼容API生成视频（硅基流动等）
+      videoUrl = await openaiGenerateVideo(model, params as VideoGenerationParams);
+    }
+
+    // 创建视频生成结果
+    const generatedVideo: GeneratedVideo = {
+      url: videoUrl,
+      prompt: params.prompt,
+      timestamp: new Date().toISOString(),
+      modelId: model.id
+    };
+
+    log('INFO', `视频生成成功: ${generatedVideo.url.substring(0, 50)}...`);
+
+    return generatedVideo;
+  } catch (error: any) {
+    handleError(error, 'APIService.generateVideo', {
       logLevel: 'ERROR',
       additionalData: { params },
       rethrow: true

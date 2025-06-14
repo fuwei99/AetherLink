@@ -249,6 +249,28 @@ export function getFileMimeType(file: FileType): string {
       return 'application/epub+zip';
     case '.ipynb':
       return 'application/x-ipynb+json';
+    // 视频文件MIME类型
+    case '.mp4':
+      return 'video/mp4';
+    case '.avi':
+      return 'video/x-msvideo';
+    case '.mov':
+      return 'video/quicktime';
+    case '.wmv':
+      return 'video/x-ms-wmv';
+    case '.flv':
+      return 'video/x-flv';
+    case '.mkv':
+      return 'video/x-matroska';
+    case '.webm':
+      return 'video/webm';
+    case '.ogv':
+      return 'video/ogg';
+    case '.3gp':
+      return 'video/3gpp';
+    case '.mpg':
+    case '.mpeg':
+      return 'video/mpeg';
     default:
       return 'application/octet-stream';
   }

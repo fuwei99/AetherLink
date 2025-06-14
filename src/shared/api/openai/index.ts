@@ -53,6 +53,13 @@ export {
   generateImageByChat
 } from './image';
 
+// 导出视频生成模块
+export {
+  generateVideo,
+  type VideoGenerationParams,
+  type GeneratedVideo
+} from './video';
+
 // 导出Provider类
 export {
   BaseOpenAIProvider,

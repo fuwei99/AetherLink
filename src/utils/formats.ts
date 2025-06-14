@@ -54,7 +54,7 @@ export function removeSpecialCharactersForFileName(fileName: string): string {
     .trim(); // 移除前后空格
 
   // 移除控制字符（避免ESLint警告）
-  result = result.split('').filter(char => {
+  result = (result || '').split('').filter(char => {
     const code = char.charCodeAt(0);
     return code >= 32 && code !== 127 && (code < 128 || code > 159);
   }).join('');

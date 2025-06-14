@@ -44,6 +44,16 @@ export const defaultModelTypeRules: ModelTypeRule[] = [
     types: [ModelType.ImageGen],
   },
 
+  // 视频生成模型匹配规则
+  {
+    pattern: 'HunyuanVideo|Wan.*T2V|Wan.*I2V|video.*gen|video.*generation',
+    types: [ModelType.VideoGen],
+  },
+  {
+    pattern: 'video|movie|film|motion',
+    types: [ModelType.VideoGen],
+  },
+
   // 嵌入模型匹配规则
   {
     pattern: 'embedding|text-embedding|embeddings',
@@ -211,6 +221,7 @@ export function getModelTypeDisplayName(type: ModelType): string {
     [ModelType.Tool]: '工具使用',
     [ModelType.Reasoning]: '推理',
     [ModelType.ImageGen]: '图像生成',
+    [ModelType.VideoGen]: '视频生成',
     [ModelType.FunctionCalling]: '函数调用',
     [ModelType.WebSearch]: '网络搜索',
     [ModelType.Rerank]: '重排序',

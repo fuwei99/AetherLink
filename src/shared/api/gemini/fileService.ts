@@ -88,8 +88,9 @@ export class GeminiFileService {
       }
 
       // 检查是否为支持的文件类型
-      if (file.ext !== '.pdf') {
-        throw new Error('Gemini 目前只支持 PDF 文件上传');
+      const supportedExtensions = ['.pdf', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm', '.ogv', '.3gp', '.mpg', '.mpeg'];
+      if (!supportedExtensions.includes(file.ext)) {
+        throw new Error(`Gemini 不支持 ${file.ext} 文件类型。支持的类型：${supportedExtensions.join(', ')}`);
       }
 
       // 记录 API 请求
@@ -101,22 +102,17 @@ export class GeminiFileService {
         model: this.model.id
       });
 
-      // 获取文件的 base64 数据
-      const fileContent = await this.getFileContent(file);
+      // 直接获取文件的原始数据，避免Base64转换
+      const blob = await this.getFileBlob(file);
 
       // 使用 Gemini SDK 上传文件
       const uploadResult = await withRetry(
         async () => {
-          // 创建 Blob 对象用于上传
-          const cleanBase64 = FileProcessingUtils.cleanBase64Data(fileContent);
-          const binaryData = this.base64ToArrayBuffer(cleanBase64);
-          const blob = new Blob([binaryData], { type: 'application/pdf' });
-
-          // 使用 SDK 上传文件
+          // 直接使用原始文件数据上传
           return await this.sdk.files.upload({
             file: blob,
             config: {
-              mimeType: 'application/pdf',
+              mimeType: blob.type,
               name: file.id,
               displayName: file.origin_name
             }
@@ -146,10 +142,26 @@ export class GeminiFileService {
   }
 
   /**
-   * 将 base64 转换为 ArrayBuffer
+   * 获取文件的Blob对象，直接用于上传
    */
-  private base64ToArrayBuffer(base64: string): ArrayBuffer {
-    return FileProcessingUtils.base64ToArrayBuffer(base64);
+  private async getFileBlob(file: FileType): Promise<Blob> {
+    try {
+      // 获取文件的base64数据
+      const fileContent = await this.getFileContent(file);
+
+      // 清理base64数据并转换为ArrayBuffer
+      const cleanBase64 = FileProcessingUtils.cleanBase64Data(fileContent);
+      const binaryData = FileProcessingUtils.base64ToArrayBuffer(cleanBase64);
+
+      // 获取MIME类型
+      const mimeType = FileProcessingUtils.getDefaultMimeType(file);
+
+      // 创建Blob对象
+      return new Blob([binaryData], { type: mimeType });
+    } catch (error) {
+      console.error('[GeminiFileService] 创建文件Blob失败:', error);
+      throw new Error('无法创建文件Blob对象');
+    }
   }
 
   /**

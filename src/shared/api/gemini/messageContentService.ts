@@ -4,7 +4,7 @@
  */
 import type { Message, FileType, Model } from '../../types';
 import type { Content, Part } from '@google/genai';
-import { getMainTextContent } from '../../utils/messageUtils';
+import { getMainTextContent, findVideoBlocks } from '../../utils/messageUtils';
 import { findImageBlocks, findFileBlocks } from '../../utils/blockUtils';
 import { createGeminiFileService } from './fileService';
 import { log } from '../../services/LoggerService';
@@ -77,6 +77,9 @@ export class GeminiMessageContentService {
 
     // 处理图片块
     await this.processImageBlocks(message, parts);
+
+    // 处理视频块
+    await this.processVideoBlocks(message, parts);
 
     // 处理文件块
     await this.processFileBlocks(message, parts);
@@ -177,6 +180,45 @@ export class GeminiMessageContentService {
   }
 
   /**
+   * 处理消息中的视频块
+   */
+  private async processVideoBlocks(message: Message, parts: Part[]): Promise<void> {
+    const videoBlocks = findVideoBlocks(message);
+
+    log('INFO', `找到 ${videoBlocks.length} 个视频块`, {
+      messageId: message.id,
+      videoBlockIds: videoBlocks.map(block => block.id)
+    });
+
+    for (const videoBlock of videoBlocks) {
+      const blockFile = videoBlock.file;
+      if (!blockFile) {
+        continue;
+      }
+
+      // 将视频块的文件对象适配为完整的 FileType
+      const file = this.adaptFileBlockToFileType(blockFile);
+
+      try {
+        const videoPart = await this.handleVideoFile(file);
+        if (videoPart) {
+          parts.push(videoPart);
+        }
+      } catch (error) {
+        log('ERROR', `处理视频块失败: ${videoBlock.id}`, {
+          videoId: videoBlock.id,
+          fileName: file.origin_name,
+          error
+        });
+        // 添加错误提示
+        parts.push({
+          text: `[无法处理视频: ${file.origin_name}]`
+        });
+      }
+    }
+  }
+
+  /**
    * 处理消息中的文件块
    */
   private async processFileBlocks(message: Message, parts: Part[]): Promise<void> {
@@ -197,6 +239,13 @@ export class GeminiMessageContentService {
           const imagePart = await this.handleImageFile(file);
           if (imagePart) {
             parts.push(imagePart);
+          }
+        }
+        // 处理视频文件
+        else if (FileProcessingUtils.isVideoFile(file)) {
+          const videoPart = await this.handleVideoFile(file);
+          if (videoPart) {
+            parts.push(videoPart);
           }
         }
         // 处理PDF文件
@@ -246,6 +295,63 @@ export class GeminiMessageContentService {
   }
 
   /**
+   * 处理视频文件
+   */
+  private async handleVideoFile(file: FileType): Promise<Part | null> {
+    try {
+      // 对于视频文件，总是使用Files API上传，避免Base64过大导致500错误
+      log('INFO', `处理视频文件: ${file.origin_name}`, {
+        fileSize: file.size,
+        strategy: 'Files API优先'
+      });
+
+      // 1. 先检索已上传的文件
+      const fileMetadata = await this.fileService.retrieveFile(file);
+
+      if (fileMetadata) {
+        log('INFO', `使用已上传的视频文件: ${fileMetadata.uri}`, {
+          fileName: file.origin_name
+        });
+
+        const fileUri = fileMetadata.uri || fileMetadata.name;
+        return {
+          fileData: {
+            fileUri: fileUri,
+            mimeType: fileMetadata.mimeType
+          } as Part['fileData']
+        };
+      }
+
+      // 2. 如果文件不存在，上传到 Gemini
+      log('INFO', `上传新视频文件: ${file.origin_name}`, {
+        fileSize: file.size
+      });
+      const uploadResult = await this.fileService.uploadFile(file);
+
+      // 3. 等待视频文件处理完成
+      log('INFO', `等待视频文件处理完成: ${uploadResult.name}`, {
+        currentState: uploadResult.state
+      });
+
+      const processedFile = await this.waitForFileProcessing(uploadResult);
+      if (!processedFile) {
+        throw new Error('视频文件处理超时或失败');
+      }
+
+      const fileUri = processedFile.uri || processedFile.name;
+      return {
+        fileData: {
+          fileUri: fileUri,
+          mimeType: processedFile.mimeType
+        } as Part['fileData']
+      };
+    } catch (error) {
+      log('ERROR', `视频文件处理失败: ${file.origin_name}`, { error });
+      return null;
+    }
+  }
+
+  /**
    * 处理PDF文件
    */
   private async handlePdfFile(file: FileType): Promise<Part | null> {
@@ -271,9 +377,13 @@ export class GeminiMessageContentService {
         log('INFO', `使用已上传的文件: ${fileMetadata.uri}`, {
           fileName: file.origin_name
         });
+
+        // 关键修复：确保使用正确的URI格式
+        const fileUri = fileMetadata.uri || fileMetadata.name;
+
         return {
           fileData: {
-            fileUri: fileMetadata.uri,
+            fileUri: fileUri,
             mimeType: fileMetadata.mimeType
           } as Part['fileData']
         };
@@ -285,9 +395,12 @@ export class GeminiMessageContentService {
       });
       const uploadResult = await this.fileService.uploadFile(file);
 
+      // 关键修复：使用完整的URI格式，确保与Gemini API兼容
+      const fileUri = uploadResult.uri || uploadResult.name;
+
       return {
         fileData: {
-          fileUri: uploadResult.uri,
+          fileUri: fileUri,
           mimeType: uploadResult.mimeType
         } as Part['fileData']
       };
@@ -324,6 +437,56 @@ export class GeminiMessageContentService {
       log('ERROR', `处理文本文件失败: ${file.origin_name}`, { error });
       return null;
     }
+  }
+
+  /**
+   * 等待文件处理完成（特别是视频文件）
+   */
+  private async waitForFileProcessing(file: any): Promise<any | null> {
+    const maxAttempts = 30; // 最多等待30次
+    const waitInterval = 10000; // 每次等待10秒
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        // 获取文件当前状态
+        const fileList = await this.fileService.listFiles();
+        const currentFile = fileList.find(f => f.name === file.name);
+
+        if (!currentFile) {
+          log('ERROR', `文件不存在: ${file.name}`);
+          return null;
+        }
+
+        log('INFO', `检查文件状态 (${attempt}/${maxAttempts}): ${currentFile.state}`, {
+          fileName: file.displayName || file.name,
+          state: currentFile.state
+        });
+
+        if (currentFile.state === 'ACTIVE') {
+          log('INFO', `文件处理完成: ${currentFile.name}`);
+          return currentFile;
+        }
+
+        if (currentFile.state === 'FAILED') {
+          log('ERROR', `文件处理失败: ${currentFile.name}`);
+          return null;
+        }
+
+        // 等待后继续检查
+        if (attempt < maxAttempts) {
+          log('INFO', `文件仍在处理中，等待${waitInterval/1000}秒后重试...`);
+          await new Promise(resolve => setTimeout(resolve, waitInterval));
+        }
+      } catch (error) {
+        log('WARN', `检查文件状态时出错 (${attempt}/${maxAttempts})`, { error });
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 5000)); // 出错时等待5秒
+        }
+      }
+    }
+
+    log('ERROR', `文件处理超时: ${file.name}`);
+    return null;
   }
 
 

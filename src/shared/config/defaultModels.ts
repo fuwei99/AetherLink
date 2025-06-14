@@ -128,6 +128,18 @@ export const getDefaultModelProviders = (): ModelProvider[] => [
       { id: 'gemini-2.0-flash-001', name: 'Gemini 2.0 Flash', provider: 'gemini', enabled: true, isDefault: false },
       { id: 'gemini-1.5-pro-002', name: 'Gemini 1.5 Pro', provider: 'gemini', enabled: true, isDefault: false },
       { id: 'gemini-1.5-flash-002', name: 'Gemini 1.5 Flash', provider: 'gemini', enabled: true, isDefault: false },
+      {
+        id: 'veo-2.0-generate-001',
+        name: 'Veo 2 (视频生成)',
+        provider: 'google',
+        enabled: true,
+        isDefault: false,
+        description: 'Google Veo 2高质量视频生成模型，支持文本和图片生成视频',
+        capabilities: {
+          videoGeneration: true
+        },
+        modelTypes: ['video_gen' as any]
+      },
     ]
   },
   {

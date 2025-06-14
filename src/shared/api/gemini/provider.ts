@@ -778,20 +778,37 @@ export default class GeminiProvider extends BaseProvider {
     let reasoning = '';
     let reasoningTime = 0;
 
-    // 转换消息格式 - 使用现有的方法
+    // 转换消息格式 - 使用现有的方法，包含历史消息
     const messageContentService = createGeminiMessageContentService(this.model);
     const userLastMessage = messages[messages.length - 1];
     const messageContents = await messageContentService.getMessageContents(userLastMessage);
+
+    // 构建历史消息
+    const history: Content[] = [];
+    const userMessages = messages.slice(0, -1); // 除了最后一条消息的所有消息
+    for (const message of userMessages) {
+      if (message.role !== 'system') { // 跳过系统消息
+        history.push(await messageContentService.getMessageContents(message));
+      }
+    }
+
+    console.log(`[sendChatMessage] 包含历史消息数量: ${history.length}`);
 
     // 构建配置 - 使用现有的方法
     const configBuilder = new GeminiConfigBuilder(assistant, this.model, 4096, assistant.prompt, []);
     const config = configBuilder.build();
 
-    // 直接使用 SDK 的流式响应，按照电脑版的方式
-    const response = await this.sdk.models.generateContentStream({
+    // 使用chat方式包含历史消息
+    const chat = this.sdk.chats.create({
       model: this.model.id,
-      contents: [messageContents],
-      config
+      config: config,
+      history: history
+    });
+
+    // 发送消息并获取流式响应
+    const response = await chat.sendMessageStream({
+      message: messageContents as any,
+      config: config
     });
 
     // 按照电脑版的方式处理流式响应

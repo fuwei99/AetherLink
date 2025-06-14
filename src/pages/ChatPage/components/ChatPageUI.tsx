@@ -3,9 +3,8 @@ import { Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import { AlignJustify, Settings, Plus, Trash2 } from 'lucide-react';
 
 import MessageList from '../../../components/message/MessageList';
-import { ChatInput, CompactChatInput } from '../../../components/input';
+import { ChatInput, CompactChatInput, ChatToolbar } from '../../../components/input';
 import { Sidebar } from '../../../components/TopicManagement';
-import ChatToolbar from '../../../components/ChatToolbar';
 import { ModelSelector } from './ModelSelector';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../../shared/store';
@@ -58,10 +57,12 @@ interface ChatPageUIProps {
   handleResendMessage: (messageId: string) => void;
   webSearchActive: boolean;
   imageGenerationMode: boolean;
+  videoGenerationMode: boolean;
   toolsEnabled: boolean;
   mcpMode: 'prompt' | 'function';
   toggleWebSearch: () => void;
   toggleImageGenerationMode: () => void;
+  toggleVideoGenerationMode: () => void;
   toggleToolsEnabled: () => void;
   handleMCPModeChange: (mode: 'prompt' | 'function') => void;
   handleMessageSend: (content: string, images?: any[], toolsEnabled?: boolean, files?: any[]) => void;
@@ -94,10 +95,12 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   handleResendMessage,
   webSearchActive,
   imageGenerationMode,
+  videoGenerationMode,
   toolsEnabled,
   mcpMode,
   toggleWebSearch,
   toggleImageGenerationMode,
+  toggleVideoGenerationMode,
   toggleToolsEnabled,
   handleMCPModeChange,
   handleMessageSend,
@@ -385,6 +388,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     isLoading,
     allowConsecutiveMessages: true,
     imageGenerationMode,
+    videoGenerationMode,
     onSendImagePrompt: handleSendImagePrompt,
     webSearchActive,
     onStopResponse: handleStopResponseClick,
@@ -400,6 +404,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     availableModels,
     isLoading,
     imageGenerationMode,
+    videoGenerationMode,
     handleSendImagePrompt,
     webSearchActive,
     handleStopResponseClick,
@@ -567,6 +572,8 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
                       onClearTopic={handleClearTopic}
                       imageGenerationMode={imageGenerationMode}
                       toggleImageGenerationMode={toggleImageGenerationMode}
+                      videoGenerationMode={videoGenerationMode}
+                      toggleVideoGenerationMode={toggleVideoGenerationMode}
                       webSearchActive={webSearchActive}
                       toggleWebSearch={toggleWebSearch}
                       toolsEnabled={toolsEnabled}
@@ -634,6 +641,8 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
                       onClearTopic={handleClearTopic}
                       imageGenerationMode={imageGenerationMode}
                       toggleImageGenerationMode={toggleImageGenerationMode}
+                      videoGenerationMode={videoGenerationMode}
+                      toggleVideoGenerationMode={toggleVideoGenerationMode}
                       webSearchActive={webSearchActive}
                       toggleWebSearch={toggleWebSearch}
                       toolsEnabled={toolsEnabled}

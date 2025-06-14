@@ -29,14 +29,19 @@ const VirtualizedRenderer: React.FC<{ content: string }> = ({ content }) => {
     const lineHeight = 20; // 估算行高
     const visibleLines = Math.ceil(containerHeight / lineHeight) + 5; // 多渲染5行缓冲
 
-    // 只显示最后的可见行数 - 添加安全检查
-    if (content && typeof content === 'string') {
-      const lines = content.split('\n');
-      const startIndex = Math.max(0, lines.length - visibleLines);
-      const visibleLines_actual = lines.slice(startIndex);
+    // 只显示最后的可见行数 - 增强安全检查
+    try {
+      if (content && typeof content === 'string') {
+        const lines = (content || '').split('\n');
+        const startIndex = Math.max(0, lines.length - visibleLines);
+        const visibleLines_actual = lines.slice(startIndex);
 
-      setVisibleContent(visibleLines_actual.join('\n'));
-    } else {
+        setVisibleContent(visibleLines_actual.join('\n'));
+      } else {
+        setVisibleContent('');
+      }
+    } catch (error) {
+      console.error('[VirtualizedRenderer] 处理内容时出错:', error);
       setVisibleContent('');
     }
   }, [content]);
@@ -99,16 +104,20 @@ const CanvasRenderer: React.FC<{ content: string }> = ({ content }) => {
     ctx.fillStyle = color;
     ctx.textBaseline = 'top';
 
-    // 绘制文本（只绘制最后几行）- 添加安全检查
-    if (!content || typeof content !== 'string') return;
+    // 绘制文本（只绘制最后几行）- 增强安全检查
+    try {
+      if (!content || typeof content !== 'string') return;
 
-    const lines = content.split('\n');
-    const maxLines = Math.floor(rect.height / lineHeight);
-    const visibleLines = lines.slice(-maxLines);
+      const lines = (content || '').split('\n');
+      const maxLines = Math.floor(rect.height / lineHeight);
+      const visibleLines = lines.slice(-maxLines);
 
-    visibleLines.forEach((line, index) => {
-      ctx.fillText(line, 10, index * lineHeight + 10);
-    });
+      visibleLines.forEach((line, index) => {
+        ctx.fillText(line, 10, index * lineHeight + 10);
+      });
+    } catch (error) {
+      console.error('[CanvasRenderer] 绘制文本时出错:', error);
+    }
   }, [content]);
 
   return (

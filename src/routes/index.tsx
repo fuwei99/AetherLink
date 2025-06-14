@@ -39,6 +39,8 @@ const ModelComboSettings = lazy(() => import('../pages/Settings/ModelComboSettin
 // 导入AI辩论设置页面
 const AIDebateSettings = lazy(() => import('../pages/Settings/AIDebateSettings'));
 import MessageBubbleSettings from "../pages/Settings/MessageBubbleSettings";
+// 导入工具栏定制页面
+const ToolbarCustomization = lazy(() => import('../pages/Settings/ToolbarCustomization'));
 // 导入快捷短语设置页面
 const QuickPhraseSettings = lazy(() => import('../components/QuickPhraseSettings'));
 // 导入助手设置页面
@@ -49,6 +51,8 @@ const WorkspaceSettings = lazy(() => import('../pages/Settings/WorkspaceSettings
 const WorkspaceDetail = lazy(() => import('../pages/Settings/WorkspaceDetail'));
 // 导入权限管理页面
 const FilePermissionPage = lazy(() => import('../pages/Settings/FilePermissionPage'));
+// 导入思考过程设置页面
+const ThinkingProcessSettings = lazy(() => import('../pages/Settings/ThinkingProcessSettings'));
 
 // 加载中组件
 const LoadingFallback = () => (
@@ -121,6 +125,8 @@ const AppRouter: React.FC = () => {
         <Route path="/settings/appearance" element={<AppearanceSettings />} />
         <Route path="/settings/appearance/chat-interface" element={<ChatInterfaceSettings />} />
         <Route path="/settings/appearance/message-bubble" element={<MessageBubbleSettings />} />
+        <Route path="/settings/appearance/toolbar-customization" element={<ToolbarCustomization />} />
+        <Route path="/settings/appearance/thinking-process" element={<ThinkingProcessSettings />} />
         <Route path="/settings/appearance/top-toolbar" element={<TopToolbarSettings />} />
         <Route path="/settings/appearance/top-toolbar-diy" element={<TopToolbarDIYSettings />} />
         <Route path="/settings/appearance/top-toolbar-test" element={<TopToolbarTestPage />} />

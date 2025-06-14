@@ -9,6 +9,7 @@ export const ModelType = {
   Tool: 'tool',                  // 工具使用模型
   Reasoning: 'reasoning',        // 推理模型
   ImageGen: 'image_gen',         // 图像生成模型
+  VideoGen: 'video_gen',         // 视频生成模型
   FunctionCalling: 'function_calling', // 函数调用模型
   WebSearch: 'web_search',       // 网络搜索模型
   Rerank: 'rerank',              // 重排序模型
@@ -284,12 +285,14 @@ export interface Model {
   capabilities?: {
     multimodal?: boolean; // 是否支持多模态（图像）
     imageGeneration?: boolean; // 是否支持图像生成
+    videoGeneration?: boolean; // 是否支持视频生成
     webSearch?: boolean; // 是否支持网页搜索
     reasoning?: boolean; // 是否支持推理优化
     functionCalling?: boolean; // 是否支持函数调用
   }; // 模型能力
   multimodal?: boolean; // 直接的多模态支持标志，用于兼容预设模型配置
   imageGeneration?: boolean; // 直接的图像生成支持标志
+  videoGeneration?: boolean; // 直接的视频生成支持标志
   modelTypes?: ModelType[]; // 模型类型
   apiVersion?: string; // API版本，主要用于Azure OpenAI
   extraHeaders?: Record<string, string>; // 额外的请求头
@@ -326,11 +329,15 @@ export interface PresetModel {
   defaultBaseUrl?: string;
   multimodal?: boolean; // 是否支持多模态（图像）
   imageGeneration?: boolean; // 是否支持图像生成
+  videoGeneration?: boolean; // 是否支持视频生成
   modelTypes?: ModelType[]; // 预设的模型类型
 }
 
 // 确保从newMessage导出所有类型
 export * from './newMessage.ts';
+
+// 导出Google Veo相关类型
+export type { GoogleVeoParams, GoogleVeoResult } from '../api/google/veo';
 
 // 快捷短语类型定义
 export interface QuickPhrase {

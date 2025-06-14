@@ -40,8 +40,8 @@ const IMAGE_COMPRESS_THRESHOLD = 1024 * 1024;
  */
 export class MobileFileStorageService {
   private static instance: MobileFileStorageService;
-  private readonly storageDir = 'CherryStudio/files';
-  private readonly tempDir = 'CherryStudio/temp';
+  private readonly storageDir = 'AetherLink/files';
+  private readonly tempDir = 'AetherLink/temp';
 
   private constructor() {
     this.initStorageDir();

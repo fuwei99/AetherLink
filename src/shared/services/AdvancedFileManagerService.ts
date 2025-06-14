@@ -129,10 +129,11 @@ class AdvancedFileManagerService {
 
       // 处理不同类型的URI
       if (decodedUri.includes('primary:')) {
-        const pathPart = decodedUri.split('primary:')[1];
+        const parts = decodedUri.split('primary:');
+        const pathPart = parts.length > 1 ? parts[1] : '';
         if (pathPart) {
           // 获取最后一个路径段作为名称
-          const segments = pathPart.split('/').filter(s => s.length > 0);
+          const segments = (pathPart || '').split('/').filter(s => s.length > 0);
           if (segments.length > 0) {
             return segments[segments.length - 1];
           }
@@ -163,7 +164,7 @@ class AdvancedFileManagerService {
       }
 
       // 从普通路径中提取
-      const pathSegments = uri.split('/').filter(s => s.length > 0);
+      const pathSegments = (uri || '').split('/').filter(s => s.length > 0);
       if (pathSegments.length > 0) {
         return pathSegments[pathSegments.length - 1];
       }

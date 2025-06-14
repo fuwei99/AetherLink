@@ -109,6 +109,27 @@ function createEnhancedProvider(originalProvider: any, model: Model, providerCon
 }
 
 /**
+ * 检查是否为视频生成模型
+ */
+function isVideoGenerationModel(model: Model): boolean {
+  // 检查模型类型
+  if (model.modelTypes && model.modelTypes.includes('video_gen' as any)) {
+    return true;
+  }
+
+  // 检查视频生成标志
+  if ((model as any).videoGeneration || (model.capabilities as any)?.videoGeneration) {
+    return true;
+  }
+
+  // 基于模型ID检测
+  return model.id.includes('HunyuanVideo') ||
+         model.id.includes('Wan-AI/Wan2.1-T2V') ||
+         model.id.includes('Wan-AI/Wan2.1-I2V') ||
+         model.id.toLowerCase().includes('video');
+}
+
+/**
  * API提供商注册表 - 修复版本，避免重复请求
  * 负责管理和获取API服务提供商
  */
@@ -119,6 +140,12 @@ export const ApiProviderRegistry = {
    * @returns API提供商实例
    */
   get(model: Model) {
+    // 🎬 检查是否为视频生成模型
+    if (isVideoGenerationModel(model)) {
+      console.log(`[ApiProviderRegistry] 检测到视频生成模型: ${model.id}`);
+      throw new Error(`模型 ${model.name || model.id} 是视频生成模型，不支持聊天对话。请使用专门的视频生成功能。`);
+    }
+
     // 获取供应商配置
     const providerConfig = getProviderConfig(model);
 

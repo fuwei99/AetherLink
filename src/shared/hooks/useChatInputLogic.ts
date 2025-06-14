@@ -9,6 +9,7 @@ interface UseChatInputLogicProps {
   isLoading?: boolean;
   allowConsecutiveMessages?: boolean;
   imageGenerationMode?: boolean;
+  videoGenerationMode?: boolean;
   toolsEnabled?: boolean;
   parsedContent?: string;
   images: ImageContent[];
@@ -29,6 +30,7 @@ export const useChatInputLogic = ({
   isLoading = false,
   allowConsecutiveMessages = true,
   imageGenerationMode = false,
+  videoGenerationMode = false,
   toolsEnabled = true,
   parsedContent = '',
   images,
@@ -96,6 +98,22 @@ export const useChatInputLogic = ({
 
     // 如果是图像生成模式，则调用生成图像的回调
     if (imageGenerationMode && onSendImagePrompt) {
+      onSendImagePrompt(processedMessage);
+      setMessage('');
+
+      // 重置输入框高度到默认值（ChatInput 特有）
+      if (enableTextareaResize) {
+        const defaultHeight = isMobile ? 24 : 28;
+        setTextareaHeight(defaultHeight);
+        if (textareaRef.current) {
+          textareaRef.current.style.height = `${defaultHeight}px`;
+        }
+      }
+      return;
+    }
+
+    // 如果是视频生成模式，也使用图像生成回调（因为视频生成也是特殊模式）
+    if (videoGenerationMode && onSendImagePrompt) {
       onSendImagePrompt(processedMessage);
       setMessage('');
 

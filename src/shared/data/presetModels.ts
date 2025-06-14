@@ -290,6 +290,63 @@ export const presetModels: PresetModel[] = [
     imageGeneration: true,
     modelTypes: [ModelType.ImageGen]
   },
+
+  // 新增: 硅基流动视频生成模型
+  {
+    id: 'tencent/HunyuanVideo',
+    name: 'HunyuanVideo',
+    provider: 'siliconflow',
+    description: '腾讯混元视频生成模型，支持文生视频',
+    capabilities: ['视频生成', '文本到视频', '创意视频'],
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://api.siliconflow.cn',
+    videoGeneration: true,
+    modelTypes: [ModelType.VideoGen]
+  },
+  {
+    id: 'Wan-AI/Wan2.1-T2V-14B',
+    name: 'Wan2.1 T2V 14B',
+    provider: 'siliconflow',
+    description: 'Wan AI文生视频模型，高质量视频生成',
+    capabilities: ['视频生成', '文本到视频', '高清视频'],
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://api.siliconflow.cn',
+    videoGeneration: true,
+    modelTypes: [ModelType.VideoGen]
+  },
+  {
+    id: 'Wan-AI/Wan2.1-T2V-14B-Turbo',
+    name: 'Wan2.1 T2V 14B Turbo',
+    provider: 'siliconflow',
+    description: 'Wan AI文生视频模型（加速版），快速视频生成',
+    capabilities: ['视频生成', '文本到视频', '快速生成'],
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://api.siliconflow.cn',
+    videoGeneration: true,
+    modelTypes: [ModelType.VideoGen]
+  },
+  {
+    id: 'Wan-AI/Wan2.1-I2V-14B-720P',
+    name: 'Wan2.1 I2V 14B 720P',
+    provider: 'siliconflow',
+    description: 'Wan AI图生视频模型，支持图像到视频转换',
+    capabilities: ['视频生成', '图像到视频', '720P高清'],
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://api.siliconflow.cn',
+    videoGeneration: true,
+    modelTypes: [ModelType.VideoGen]
+  },
+  {
+    id: 'Wan-AI/Wan2.1-I2V-14B-720P-Turbo',
+    name: 'Wan2.1 I2V 14B 720P Turbo',
+    provider: 'siliconflow',
+    description: 'Wan AI图生视频模型（加速版），快速图像到视频转换',
+    capabilities: ['视频生成', '图像到视频', '快速生成'],
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://api.siliconflow.cn',
+    videoGeneration: true,
+    modelTypes: [ModelType.VideoGen]
+  },
   {
     id: 'black-forest-labs/FLUX.1-schnell',
     name: 'FLUX.1 Schnell',

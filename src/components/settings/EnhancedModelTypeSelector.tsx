@@ -23,7 +23,7 @@ import { dexieStorage } from '../../shared/services/DexieStorageService';
 const MODEL_TYPE_GROUPS = {
   basic: ['chat'],
   input: ['vision', 'audio'],
-  output: ['image_gen', 'transcription', 'translation'],
+  output: ['image_gen', 'video_gen', 'transcription', 'translation'],
   advanced: ['reasoning', 'function_calling', 'web_search', 'tool', 'code_gen'],
   data: ['embedding', 'rerank']
 };
@@ -81,6 +81,10 @@ const MODEL_TYPE_INFO: Record<string, { description: string, color: string }> = 
   transcription: {
     description: '语音转文字功能',
     color: '#D35400'
+  },
+  video_gen: {
+    description: '视频生成功能',
+    color: '#8E44AD'
   }
 };
 

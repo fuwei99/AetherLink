@@ -17,6 +17,7 @@ import {
 import { dexieStorage } from '../../shared/services/DexieStorageService';
 import { EventEmitter, EVENT_NAMES } from '../../shared/services/EventService';
 import { TopicService } from '../../shared/services/TopicService';
+import { VideoTaskManager } from '../../shared/services/VideoTaskManager';
 import { newMessagesActions } from '../../shared/store/slices/newMessagesSlice';
 import { addTopic } from '../../shared/store/slices/assistantsSlice';
 
@@ -31,6 +32,22 @@ const ChatPage: React.FC = () => {
 
   // 消息引用，用于分支功能
   const messagesRef = useRef<any[]>([]);
+
+  // 应用启动时恢复未完成的视频生成任务
+  useEffect(() => {
+    const resumeVideoTasks = async () => {
+      try {
+        console.log('[ChatPage] 检查并恢复未完成的视频生成任务');
+        await VideoTaskManager.resumeTasks();
+      } catch (error) {
+        console.error('[ChatPage] 恢复视频任务失败:', error);
+      }
+    };
+
+    // 延迟一点执行，确保应用完全加载
+    const timer = setTimeout(resumeVideoTasks, 1000);
+    return () => clearTimeout(timer);
+  }, []); // 只在组件挂载时执行一次
 
   // 当话题ID变化时，从数据库获取话题信息
   useEffect(() => {
@@ -149,14 +166,16 @@ const ChatPage: React.FC = () => {
     loadTopicMessages
   } = useMessageHandling(selectedModel, currentTopic);
 
-  // 特殊功能钩子 (网络搜索、图像生成、URL抓取等)
+  // 特殊功能钩子 (网络搜索、图像生成、视频生成、URL抓取等)
   const {
     webSearchActive,
     imageGenerationMode,
+    videoGenerationMode,
     toolsEnabled,
     mcpMode,
     toggleWebSearch,
     toggleImageGenerationMode,
+    toggleVideoGenerationMode,
     toggleToolsEnabled,
     handleMCPModeChange,
     handleStopResponseClick,
@@ -305,10 +324,12 @@ const ChatPage: React.FC = () => {
       handleResendMessage={handleResendMessage}
       webSearchActive={webSearchActive}
       imageGenerationMode={imageGenerationMode}
+      videoGenerationMode={videoGenerationMode}
       toolsEnabled={toolsEnabled}
       mcpMode={mcpMode}
       toggleWebSearch={toggleWebSearch}
       toggleImageGenerationMode={toggleImageGenerationMode}
+      toggleVideoGenerationMode={toggleVideoGenerationMode}
       toggleToolsEnabled={toggleToolsEnabled}
       handleMCPModeChange={handleMCPModeChange}
       handleMessageSend={handleMessageSend}
