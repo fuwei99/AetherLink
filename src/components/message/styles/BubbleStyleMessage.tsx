@@ -311,7 +311,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
                 display: 'flex',
                 flexDirection: 'row',
                 gap: '5px',
-                zIndex: 5, // 降低z-index，避免穿透到输入框上方
+                zIndex: 3, // 降低z-index，确保不会覆盖三点菜单
                 pointerEvents: 'auto',
               }}>
                 <MessageActions
@@ -335,7 +335,7 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
               right: 5,
               display: 'flex',
               flexDirection: 'row',
-              zIndex: 5, // 降低z-index，避免穿透到输入框上方
+              zIndex: 10, // 提高z-index，确保三点菜单在最上层
               pointerEvents: 'auto',
             }}>
               <MessageActions
