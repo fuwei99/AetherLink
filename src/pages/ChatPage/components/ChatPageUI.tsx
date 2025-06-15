@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import { AlignJustify, Settings, Plus, Trash2 } from 'lucide-react';
 
@@ -13,6 +13,7 @@ import { EventEmitter, EVENT_NAMES } from '../../../shared/services/EventService
 import { TopicService } from '../../../shared/services/TopicService';
 import { newMessagesActions } from '../../../shared/store/slices/newMessagesSlice';
 import { getThemeColors } from '../../../shared/utils/themeUtils';
+import { generateBackgroundStyle } from '../../../shared/utils/backgroundUtils';
 import { useTheme } from '@mui/material/styles';
 import { useSidebarSwipeGesture } from '../../../hooks/useSwipeGesture';
 import { SwipeIndicator, SwipeProgressIndicator } from '../../../components/SwipeIndicator';
@@ -110,33 +111,52 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   handleStartDebate,
   handleStopDebate
 }) => {
+  // ==================== Hooks 和基础状态 ====================
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  // 滑动指示器状态
-  const [swipeProgress, setSwipeProgress] = React.useState(0);
-  const [swipeDirection, setSwipeDirection] = React.useState<'left' | 'right'>('right');
+  // 本地状态
+  const [swipeProgress, setSwipeProgress] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right'>('right');
 
-  // 获取主题风格
+  // Redux 状态选择器
   const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
-  const themeColors = getThemeColors(theme, themeStyle);
-
-  // 优化 selector - 使用 useMemo 避免每次渲染时创建默认对象
   const inputLayoutStyle = useSelector((state: RootState) =>
     (state.settings as any).inputLayoutStyle
   ) || 'default';
-
   const topToolbarSettings = useSelector((state: RootState) =>
     (state.settings as any).topToolbar
   );
+  const chatBackground = useSelector((state: RootState) =>
+    state.settings.chatBackground || {
+      enabled: false,
+      imageUrl: '',
+      opacity: 0.3,
+      size: 'cover',
+      position: 'center',
+      repeat: 'no-repeat'
+    }
+  );
 
-  // 使用 useMemo 优化默认设置的合并
+  // ==================== 计算属性和样式 ====================
+  const themeColors = getThemeColors(theme, themeStyle);
+
   const mergedTopToolbarSettings = useMemo(() => ({
     ...DEFAULT_TOP_TOOLBAR_SETTINGS,
     ...topToolbarSettings
   }), [topToolbarSettings]);
 
-  // 动态样式，支持主题
+  const shouldShowToolbar = useMemo(() =>
+    inputLayoutStyle === 'default',
+    [inputLayoutStyle]
+  );
+
+  // 生成背景样式
+  const backgroundStyle = useMemo(() =>
+    generateBackgroundStyle(chatBackground),
+    [chatBackground]
+  );
+
   const dynamicStyles = useMemo(() => ({
     mainContainer: {
       display: 'flex',
@@ -184,18 +204,12 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     }
   }), [themeColors]);
 
-  // 根据布局样式决定是否显示工具栏
-  const shouldShowToolbar = useMemo(() =>
-    inputLayoutStyle === 'default',
-    [inputLayoutStyle]
-  );
+  // ==================== 事件处理函数 ====================
 
   // 滑动手势处理
-  // 右滑打开侧边栏：只在左边缘30px内开始的滑动才有效
   const handleOpenSidebar = useCallback(() => {
     if (!drawerOpen) {
       setDrawerOpen(true);
-      // 用户成功使用滑动手势，标记为已看过提示
       try {
         localStorage.setItem('sidebar-swipe-hint-seen', 'true');
       } catch (error) {
@@ -204,11 +218,9 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     }
   }, [drawerOpen, setDrawerOpen]);
 
-  // 左滑关闭侧边栏：只在侧边栏打开时才有效，任意位置都可以开始滑动
   const handleCloseSidebar = useCallback(() => {
     if (drawerOpen) {
       setDrawerOpen(false);
-      // 用户成功使用滑动手势，标记为已看过提示
       try {
         localStorage.setItem('sidebar-swipe-hint-seen', 'true');
       } catch (error) {
@@ -217,9 +229,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     }
   }, [drawerOpen, setDrawerOpen]);
 
-  // 滑动进度处理
   const handleSwipeProgress = useCallback((progress: number, direction: 'left' | 'right') => {
-    // 左滑进度只在侧边栏打开时才显示
     if (direction === 'left' && !drawerOpen) {
       return;
     }
@@ -227,35 +237,25 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     setSwipeDirection(direction);
   }, [drawerOpen]);
 
-  // 使用滑动手势Hook
   const { swipeHandlers } = useSidebarSwipeGesture(
     handleOpenSidebar,
-    drawerOpen ? handleCloseSidebar : undefined, // 只在侧边栏打开时才启用左滑关闭
-    true, // 始终启用手势
-    handleSwipeProgress // 传递进度回调
+    drawerOpen ? handleCloseSidebar : undefined,
+    true,
+    handleSwipeProgress
   );
 
-  // 优化创建新话题函数 - 使用 useCallback 避免不必要的重新渲染
+  // 话题管理
   const handleCreateTopic = useCallback(async () => {
-    // 触发新建话题事件
     EventEmitter.emit(EVENT_NAMES.ADD_NEW_TOPIC);
     console.log('[ChatPageUI] Emitted ADD_NEW_TOPIC event.');
 
-    // 创建新话题
     const newTopic = await TopicService.createNewTopic();
-
-    // 如果成功创建话题，自动跳转到新话题
     if (newTopic) {
       console.log('[ChatPageUI] 成功创建新话题，自动跳转:', newTopic.id);
-
-      // 设置当前话题 - 立即选择新创建的话题
       dispatch(newMessagesActions.setCurrentTopicId(newTopic.id));
 
-      // 确保话题侧边栏显示并选中新话题
       setTimeout(() => {
         EventEmitter.emit(EVENT_NAMES.SHOW_TOPIC_SIDEBAR);
-
-        // 再次确保新话题被选中，防止其他逻辑覆盖
         setTimeout(() => {
           dispatch(newMessagesActions.setCurrentTopicId(newTopic.id));
         }, 50);
@@ -263,7 +263,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     }
   }, [dispatch]);
 
-  // 优化渲染顶部工具栏组件的函数 - 使用 useCallback 避免不必要的重新渲染
+  // 工具栏组件渲染
   const renderToolbarComponent = useCallback((componentId: string) => {
     switch (componentId) {
       case 'menuButton':
@@ -343,7 +343,6 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
         return null;
     }
   }, [
-    isMobile,
     mergedTopToolbarSettings,
     setDrawerOpen,
     drawerOpen,
@@ -359,7 +358,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     navigate
   ]);
 
-  // 优化消息发送回调函数 - 使用 useCallback 避免不必要的重新渲染
+  // ==================== 消息处理函数 ====================
   const handleSendMessage = useCallback((content: string, images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => {
     if (currentTopic) {
       handleMessageSend(content, images, toolsEnabled, files);
@@ -380,27 +379,36 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     handleMessageSend(prompt);
   }, [handleMessageSend]);
 
-  // 优化 commonProps - 使用 useMemo 避免每次渲染时创建新对象
-  const commonProps = useMemo(() => ({
-    onSendMessage: handleSendMessage,
-    onSendMultiModelMessage: handleMultiModelSend ? handleSendMultiModelMessage : undefined,
-    availableModels,
-    isLoading,
-    allowConsecutiveMessages: true,
-    imageGenerationMode,
-    videoGenerationMode,
-    onSendImagePrompt: handleSendImagePrompt,
-    webSearchActive,
-    onStopResponse: handleStopResponseClick,
-    isStreaming,
-    isDebating,
-    onStartDebate: handleStartDebate,
-    onStopDebate: handleStopDebate,
-    toolsEnabled
-  }), [
+  // ==================== 组件配置和渲染 ====================
+
+  const commonProps = useMemo(() => {
+    const props = {
+      onSendMessage: handleSendMessage,
+      availableModels,
+      isLoading,
+      allowConsecutiveMessages: true,
+      imageGenerationMode,
+      videoGenerationMode,
+      onSendImagePrompt: handleSendImagePrompt,
+      webSearchActive,
+      onStopResponse: handleStopResponseClick,
+      isStreaming,
+      isDebating,
+      toolsEnabled
+    };
+
+    if (handleMultiModelSend && handleSendMultiModelMessage) {
+      (props as any).onSendMultiModelMessage = handleSendMultiModelMessage;
+    }
+
+    if (handleStartDebate && handleStopDebate) {
+      (props as any).onStartDebate = handleStartDebate;
+      (props as any).onStopDebate = handleStopDebate;
+    }
+
+    return props;
+  }, [
     handleSendMessage,
-    handleMultiModelSend,
-    handleSendMultiModelMessage,
     availableModels,
     isLoading,
     imageGenerationMode,
@@ -410,16 +418,18 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     handleStopResponseClick,
     isStreaming,
     isDebating,
+    toolsEnabled,
+    handleMultiModelSend,
+    handleSendMultiModelMessage,
     handleStartDebate,
-    handleStopDebate,
-    toolsEnabled
+    handleStopDebate
   ]);
 
-  // 优化渲染输入框组件函数 - 使用 useCallback
-  const renderInputComponent = useCallback(() => {
+  const inputComponent = useMemo(() => {
     if (inputLayoutStyle === 'compact') {
       return (
         <CompactChatInput
+          key="compact-input"
           {...commonProps}
           onClearTopic={handleClearTopic}
           onNewTopic={handleCreateTopic}
@@ -429,7 +439,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
         />
       );
     } else {
-      return <ChatInput {...commonProps} />;
+      return <ChatInput key="default-input" {...commonProps} />;
     }
   }, [
     inputLayoutStyle,
@@ -440,6 +450,71 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     toggleWebSearch,
     toggleToolsEnabled
   ]);
+
+  const InputContainer = useMemo(() => {
+    return (
+      <Box sx={{
+        width: '100%',
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 2,
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        {shouldShowToolbar && (
+          <Box sx={{
+            width: '100%',
+            maxWidth: '800px',
+            display: 'flex',
+            justifyContent: 'center'
+          }}>
+            <ChatToolbar
+              onClearTopic={handleClearTopic}
+              imageGenerationMode={imageGenerationMode}
+              toggleImageGenerationMode={toggleImageGenerationMode}
+              videoGenerationMode={videoGenerationMode}
+              toggleVideoGenerationMode={toggleVideoGenerationMode}
+              webSearchActive={webSearchActive}
+              toggleWebSearch={toggleWebSearch}
+              toolsEnabled={toolsEnabled}
+              onToolsEnabledChange={toggleToolsEnabled}
+            />
+          </Box>
+        )}
+
+        <Box sx={{
+          width: '100%',
+          maxWidth: '800px',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          {inputComponent}
+        </Box>
+      </Box>
+    );
+  }, [
+    shouldShowToolbar,
+    handleClearTopic,
+    imageGenerationMode,
+    toggleImageGenerationMode,
+    videoGenerationMode,
+    toggleVideoGenerationMode,
+    webSearchActive,
+    toggleWebSearch,
+    toolsEnabled,
+    toggleToolsEnabled,
+    inputComponent
+  ]);
+
+  // ==================== 组件渲染 ====================
 
   return (
     <Box
@@ -533,7 +608,10 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
           {currentTopic ? (
             <>
               {/* 消息列表应该有固定的可滚动区域，不会被输入框覆盖 */}
-              <Box sx={dynamicStyles.messageContainer}>
+              <Box sx={{
+                ...dynamicStyles.messageContainer,
+                ...backgroundStyle
+              }}>
                 <MessageList
                   messages={currentMessages}
                   onRegenerate={handleRegenerateMessage}
@@ -544,60 +622,14 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
               </Box>
 
               {/* 输入框容器，固定在底部 */}
-              <Box sx={{
-                width: '100%',
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 2,
-                backgroundColor: 'transparent',
-                boxShadow: 'none',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 0,
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-                {/* 工具栏容器 - 仅在默认布局时显示 */}
-                {shouldShowToolbar && (
-                  <Box sx={{
-                    width: '100%',
-                    maxWidth: '800px',
-                    display: 'flex',
-                    justifyContent: 'center'
-                  }}>
-                    <ChatToolbar
-                      onClearTopic={handleClearTopic}
-                      imageGenerationMode={imageGenerationMode}
-                      toggleImageGenerationMode={toggleImageGenerationMode}
-                      videoGenerationMode={videoGenerationMode}
-                      toggleVideoGenerationMode={toggleVideoGenerationMode}
-                      webSearchActive={webSearchActive}
-                      toggleWebSearch={toggleWebSearch}
-                      toolsEnabled={toolsEnabled}
-                      onToolsEnabledChange={toggleToolsEnabled}
-                    />
-                  </Box>
-                )}
-
-                {/* 输入框容器 */}
-                <Box sx={{
-                  width: '100%',
-                  maxWidth: '800px',
-                  display: 'flex',
-                  justifyContent: 'center'
-                }}>
-                  {renderInputComponent()}
-                </Box>
-              </Box>
+              {InputContainer}
             </>
           ) : (
             <>
               <Box
                 sx={{
                   ...dynamicStyles.messageContainer,
+                  ...backgroundStyle,
                   marginBottom: '100px', // 为输入框留出足够空间
                 }}
               >
@@ -613,54 +645,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
               </Box>
 
               {/* 即使没有当前话题，也显示输入框 */}
-              <Box sx={{
-                width: '100%',
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 2,
-                backgroundColor: 'transparent',
-                boxShadow: 'none',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 0,
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-                {/* 工具栏容器 - 仅在默认布局时显示 */}
-                {shouldShowToolbar && (
-                  <Box sx={{
-                    width: '100%',
-                    maxWidth: '800px',
-                    display: 'flex',
-                    justifyContent: 'center'
-                  }}>
-                    <ChatToolbar
-                      onClearTopic={handleClearTopic}
-                      imageGenerationMode={imageGenerationMode}
-                      toggleImageGenerationMode={toggleImageGenerationMode}
-                      videoGenerationMode={videoGenerationMode}
-                      toggleVideoGenerationMode={toggleVideoGenerationMode}
-                      webSearchActive={webSearchActive}
-                      toggleWebSearch={toggleWebSearch}
-                      toolsEnabled={toolsEnabled}
-                      onToolsEnabledChange={toggleToolsEnabled}
-                    />
-                  </Box>
-                )}
-
-                {/* 输入框容器 */}
-                <Box sx={{
-                  width: '100%',
-                  maxWidth: '800px',
-                  display: 'flex',
-                  justifyContent: 'center'
-                }}>
-                  {renderInputComponent()}
-                </Box>
-              </Box>
+              {InputContainer}
             </>
           )}
         </Box>

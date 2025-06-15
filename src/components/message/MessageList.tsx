@@ -389,6 +389,11 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
 
   // 移除虚拟滚动相关的函数，使用简单的DOM渲染
 
+  // 获取背景设置
+  const chatBackground = useSelector((state: RootState) =>
+    state.settings.chatBackground || { enabled: false }
+  );
+
   return (
     <Box
       ref={containerRef}
@@ -402,9 +407,12 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
         pb: 2, // 保持底部padding
         width: '100%', // 确保容器占满可用宽度
         maxWidth: '100%', // 确保不超出父容器
-        bgcolor: theme.palette.mode === 'dark'
-          ? theme.palette.background.default
-          : '#f5f5f5',
+        // 只有在没有自定义背景时才设置默认背景色
+        ...(chatBackground.enabled ? {} : {
+          bgcolor: theme.palette.mode === 'dark'
+            ? theme.palette.background.default
+            : '#f5f5f5'
+        }),
         scrollbarWidth: 'thin',
         scrollbarColor: `${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e1e1e1'} transparent`,
         '&::-webkit-scrollbar': {

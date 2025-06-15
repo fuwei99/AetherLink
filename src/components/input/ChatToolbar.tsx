@@ -174,17 +174,22 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
   toolsEnabled = true,
   onToolsEnabledChange
 }) => {
+  // ==================== 状态定义区域 ====================
   const scrollRef = useRef<HTMLDivElement>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [showProviderSelector, setShowProviderSelector] = useState(false);
   const [clearConfirmMode, setClearConfirmMode] = useState(false);
   const [showKnowledgeSelector, setShowKnowledgeSelector] = useState(false);
+
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const dispatch = useDispatch();
 
+  // ==================== Redux状态获取区域 ====================
   // 从Redux获取网络搜索设置
   const webSearchSettings = useSelector((state: RootState) => state.webSearch);
   const webSearchEnabled = webSearchSettings?.enabled || false;
@@ -203,38 +208,28 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
   // 使用本地状态来立即响应UI变化，避免等待异步保存
   const [localToolbarCollapsed, setLocalToolbarCollapsed] = useState(toolbarCollapsedFromStore);
 
-  // 防抖保存的引用
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-
 
   // 根据设置选择样式
   const toolbarStyle = useSelector((state: RootState) => state.settings.toolbarStyle || 'glassmorphism');
+
+  // 获取工具栏按钮配置
+  const toolbarButtons = useSelector((state: RootState) => state.settings.toolbarButtons || {
+    order: ['mcp-tools', 'new-topic', 'clear-topic', 'generate-image', 'generate-video', 'knowledge', 'web-search'],
+    visibility: {
+      'mcp-tools': true,
+      'new-topic': true,
+      'clear-topic': true,
+      'generate-image': true,
+      'generate-video': true,
+      'knowledge': true,
+      'web-search': true
+    }
+  });
+
+  // ==================== 计算属性区域 ====================
   const currentStyles = toolbarStyle === 'glassmorphism'
     ? getGlassmorphismToolbarStyles(isDarkMode)
     : getTransparentToolbarStyles(isDarkMode);
-
-  // 处理清空内容的二次确认
-  const handleClearTopic = () => {
-    if (clearConfirmMode) {
-      // 第二次点击，执行清空
-      onClearTopic?.();
-      setClearConfirmMode(false);
-    } else {
-      // 第一次点击，进入确认模式
-      setClearConfirmMode(true);
-    }
-  };
-
-  // 自动重置确认模式（3秒后）
-  useEffect(() => {
-    if (clearConfirmMode) {
-      const timer = setTimeout(() => {
-        setClearConfirmMode(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [clearConfirmMode]);
 
   // 获取按钮的当前样式
   const getButtonCurrentStyle = (isActive: boolean) => {
@@ -263,6 +258,17 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     return baseStyle;
   };
 
+  // ==================== useEffect区域 ====================
+  // 自动重置确认模式（3秒后）
+  useEffect(() => {
+    if (clearConfirmMode) {
+      const timer = setTimeout(() => {
+        setClearConfirmMode(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [clearConfirmMode]);
+
   // 同步本地状态与store状态
   useEffect(() => {
     setLocalToolbarCollapsed(toolbarCollapsedFromStore);
@@ -277,6 +283,9 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     };
   }, []);
 
+  // ==================== 事件处理函数区域 ====================
+
+  // ---------- 工具栏控制相关 ----------
   // 切换工具栏折叠状态
   const toggleToolbarCollapse = () => {
     const newCollapsedState = !localToolbarCollapsed;
@@ -294,6 +303,19 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
         toolbarCollapsed: newCollapsedState
       }));
     }, 500);
+  };
+
+  // ---------- 话题操作相关 ----------
+  // 处理清空内容的二次确认
+  const handleClearTopic = () => {
+    if (clearConfirmMode) {
+      // 第二次点击，执行清空
+      onClearTopic?.();
+      setClearConfirmMode(false);
+    } else {
+      // 第一次点击，进入确认模式
+      setClearConfirmMode(true);
+    }
   };
 
   // 创建新话题 - 使用统一的TopicService
@@ -324,6 +346,7 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     }
   };
 
+  // ---------- 拖动滑动相关 ----------
   // 优化的拖动滑动处理 - 增加齿轮感和流畅度
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // 移除折叠状态检查，因为折叠时工具栏已经隐藏
@@ -410,6 +433,7 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     }
   };
 
+  // ---------- 功能切换相关 ----------
   // 处理知识库按钮点击
   const handleKnowledgeClick = () => {
     setShowKnowledgeSelector(true);
@@ -440,71 +464,6 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     setShowKnowledgeSelector(false);
   };
 
-  // 简约小巧按钮数据 - 使用Lucide Icons
-  const buttons = [
-    {
-      id: 'new-topic',
-      icon: <Plus
-        size={16}
-        color={isDarkMode ? 'rgba(76, 175, 80, 0.8)' : 'rgba(76, 175, 80, 0.7)'}
-      />,
-      label: '新建话题',
-      onClick: handleCreateTopic,
-      isActive: false
-    },
-    {
-      id: 'clear-topic',
-      icon: clearConfirmMode
-        ? <AlertTriangle
-            size={16}
-            color={isDarkMode ? 'rgba(244, 67, 54, 0.8)' : 'rgba(244, 67, 54, 0.7)'}
-          />
-        : <Trash2
-            size={16}
-            color={isDarkMode ? 'rgba(33, 150, 243, 0.8)' : 'rgba(33, 150, 243, 0.7)'}
-          />,
-      label: clearConfirmMode ? '确认清空' : '清空内容',
-      onClick: handleClearTopic,
-      isActive: clearConfirmMode
-    },
-    {
-      id: 'generate-image',
-      icon: <Camera
-        size={16}
-        color={imageGenerationMode
-          ? (isDarkMode ? 'rgba(156, 39, 176, 0.9)' : 'rgba(156, 39, 176, 0.8)')
-          : (isDarkMode ? 'rgba(156, 39, 176, 0.6)' : 'rgba(156, 39, 176, 0.5)')
-        }
-      />,
-      label: imageGenerationMode ? '取消生成' : '生成图片',
-      onClick: toggleImageGenerationMode,
-      isActive: imageGenerationMode
-    },
-    {
-      id: 'generate-video',
-      icon: <Video
-        size={16}
-        color={videoGenerationMode
-          ? (isDarkMode ? 'rgba(233, 30, 99, 0.9)' : 'rgba(233, 30, 99, 0.8)')
-          : (isDarkMode ? 'rgba(233, 30, 99, 0.6)' : 'rgba(233, 30, 99, 0.5)')
-        }
-      />,
-      label: videoGenerationMode ? '取消生成' : '生成视频',
-      onClick: toggleVideoGenerationMode,
-      isActive: videoGenerationMode
-    },
-    {
-      id: 'knowledge',
-      icon: <BookOpen
-        size={16}
-        color={isDarkMode ? 'rgba(5, 150, 105, 0.8)' : 'rgba(5, 150, 105, 0.7)'}
-      />,
-      label: '知识库',
-      onClick: handleKnowledgeClick,
-      isActive: false
-    }
-  ];
-
   // 处理网络搜索按钮点击
   const handleWebSearchClick = () => {
     if (webSearchActive) {
@@ -524,11 +483,76 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     }
   };
 
-  // 如果网络搜索已启用，添加网络搜索按钮
-  if (webSearchEnabled && toggleWebSearch) {
-    const providerName = webSearchSettings?.providers?.find(p => p.id === currentProvider)?.name || '搜索';
-
-    buttons.push({
+  // ==================== 按钮配置区域 ====================
+  // 定义所有可用的按钮配置
+  const allButtonConfigs = {
+    'mcp-tools': onToolsEnabledChange ? {
+      id: 'mcp-tools',
+      component: 'MCPToolsButton', // 标记这是一个特殊组件
+      isActive: toolsEnabled
+    } : null,
+    'new-topic': {
+      id: 'new-topic',
+      icon: <Plus
+        size={16}
+        color={isDarkMode ? 'rgba(76, 175, 80, 0.8)' : 'rgba(76, 175, 80, 0.7)'}
+      />,
+      label: '新建话题',
+      onClick: handleCreateTopic,
+      isActive: false
+    },
+    'clear-topic': {
+      id: 'clear-topic',
+      icon: clearConfirmMode
+        ? <AlertTriangle
+            size={16}
+            color={isDarkMode ? 'rgba(244, 67, 54, 0.8)' : 'rgba(244, 67, 54, 0.7)'}
+          />
+        : <Trash2
+            size={16}
+            color={isDarkMode ? 'rgba(33, 150, 243, 0.8)' : 'rgba(33, 150, 243, 0.7)'}
+          />,
+      label: clearConfirmMode ? '确认清空' : '清空内容',
+      onClick: handleClearTopic,
+      isActive: clearConfirmMode
+    },
+    'generate-image': {
+      id: 'generate-image',
+      icon: <Camera
+        size={16}
+        color={imageGenerationMode
+          ? (isDarkMode ? 'rgba(156, 39, 176, 0.9)' : 'rgba(156, 39, 176, 0.8)')
+          : (isDarkMode ? 'rgba(156, 39, 176, 0.6)' : 'rgba(156, 39, 176, 0.5)')
+        }
+      />,
+      label: imageGenerationMode ? '取消生成' : '生成图片',
+      onClick: toggleImageGenerationMode,
+      isActive: imageGenerationMode
+    },
+    'generate-video': {
+      id: 'generate-video',
+      icon: <Video
+        size={16}
+        color={videoGenerationMode
+          ? (isDarkMode ? 'rgba(233, 30, 99, 0.9)' : 'rgba(233, 30, 99, 0.8)')
+          : (isDarkMode ? 'rgba(233, 30, 99, 0.6)' : 'rgba(233, 30, 99, 0.5)')
+        }
+      />,
+      label: videoGenerationMode ? '取消生成' : '生成视频',
+      onClick: toggleVideoGenerationMode,
+      isActive: videoGenerationMode
+    },
+    'knowledge': {
+      id: 'knowledge',
+      icon: <BookOpen
+        size={16}
+        color={isDarkMode ? 'rgba(5, 150, 105, 0.8)' : 'rgba(5, 150, 105, 0.7)'}
+      />,
+      label: '知识库',
+      onClick: handleKnowledgeClick,
+      isActive: false
+    },
+    'web-search': webSearchEnabled && toggleWebSearch ? {
       id: 'web-search',
       icon: <Search
         size={16}
@@ -537,11 +561,22 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
           : (isDarkMode ? 'rgba(59, 130, 246, 0.6)' : 'rgba(59, 130, 246, 0.5)')
         }
       />,
-      label: webSearchActive ? '关闭搜索' : providerName,
+      label: webSearchActive ? '关闭搜索' : (webSearchSettings?.providers?.find(p => p.id === currentProvider)?.name || '搜索'),
       onClick: handleWebSearchClick,
       isActive: webSearchActive
-    });
-  }
+    } : null
+  };
+
+  // 根据设置生成按钮数组
+  const buttons = toolbarButtons.order
+    .filter(buttonId => {
+      // 过滤掉不可见的按钮和不存在的按钮配置
+      return toolbarButtons.visibility[buttonId] && allButtonConfigs[buttonId as keyof typeof allButtonConfigs];
+    })
+    .map(buttonId => allButtonConfigs[buttonId as keyof typeof allButtonConfigs])
+    .filter((button): button is NonNullable<typeof button> => button !== null); // 过滤掉null值并修复类型
+
+  // ==================== 渲染逻辑区域 ====================
 
   return (
     <Box
@@ -677,18 +712,26 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
           >
-          {/* MCP 按钮 - 合并工具开关和MCP工具功能 */}
-          {onToolsEnabledChange && (
-            <Box sx={{ mr: 1 }}>
-              <MCPToolsButton
-                toolsEnabled={toolsEnabled}
-                onToolsEnabledChange={onToolsEnabledChange}
-              />
-            </Box>
-          )}
-
           {/* 动态样式按钮渲染 */}
           {buttons.map((button) => {
+            // 特殊处理MCP工具按钮
+            if ('component' in button && button.component === 'MCPToolsButton') {
+              return (
+                <Box key={button.id} sx={{ mr: 1 }}>
+                  <MCPToolsButton
+                    toolsEnabled={toolsEnabled}
+                    onToolsEnabledChange={onToolsEnabledChange}
+                  />
+                </Box>
+              );
+            }
+
+            // 普通按钮渲染
+            // 类型守卫：确保button有普通按钮的属性
+            if (!('onClick' in button) || !('icon' in button) || !('label' in button)) {
+              return null;
+            }
+
             const buttonStyle = getButtonCurrentStyle(button.isActive);
 
             return (

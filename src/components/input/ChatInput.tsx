@@ -383,30 +383,38 @@ const ChatInput: React.FC<ChatInputProps> = ({
   useEffect(() => {
     const currentTextarea = textareaRef.current; // 保存当前的 ref 值
 
-    // 设置一个延迟以确保组件挂载后聚焦生效
+    // 只设置初始高度，不执行焦点操作避免闪烁
     const timer = setTimeout(() => {
-      if (currentTextarea && !isPageTransitioning) {
-        // 只有在非页面切换状态下才执行焦点操作
-        // 聚焦后立即模糊，这有助于解决某些Android设备上的复制粘贴问题
-        currentTextarea.focus();
-        currentTextarea.blur();
-
+      if (currentTextarea) {
         // 确保初始高度正确设置，以显示完整的placeholder
         const initialHeight = isMobile ? 32 : isTablet ? 36 : 34;
         currentTextarea.style.height = `${initialHeight}px`;
+
+        // 只有在非页面切换状态下才执行焦点操作，且延迟更长时间
+        if (!isPageTransitioning) {
+          console.log('[ChatInput] 初始化完成，页面切换状态:', isPageTransitioning);
+        }
       }
-    }, 300);
+    }, 100); // 减少延迟时间
 
     // 添加键盘显示检测
     const handleFocus = () => {
-      // 键盘状态由 useKeyboardManager Hook 管理
+      console.log('[ChatInput] 输入框获得焦点, shouldHandleFocus:', shouldHandleFocus());
+
+      // 只有在允许处理焦点时才执行特殊逻辑
+      if (!shouldHandleFocus()) {
+        console.log('[ChatInput] 页面切换中，跳过焦点处理');
+        return;
+      }
 
       // iOS设备特殊处理
-      if (isIOS && textareaRef.current && shouldHandleFocus()) {
+      if (isIOS && textareaRef.current) {
         // 延迟执行，确保输入法已弹出
         setTimeout(() => {
+          if (!textareaRef.current) return;
+
           // 滚动到输入框位置
-          textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
           // 额外处理：尝试滚动页面到底部
           window.scrollTo({
@@ -418,25 +426,23 @@ const ChatInput: React.FC<ChatInputProps> = ({
           const viewportHeight = window.innerHeight;
           const keyboardHeight = viewportHeight * 0.4; // 估计键盘高度约为视口的40%
 
-          if (textareaRef.current) {
-            const inputRect = textareaRef.current.getBoundingClientRect();
-            const inputBottom = inputRect.bottom;
+          const inputRect = textareaRef.current.getBoundingClientRect();
+          const inputBottom = inputRect.bottom;
 
-            // 如果输入框底部被键盘遮挡，则滚动页面
-            if (inputBottom > viewportHeight - keyboardHeight) {
-              const scrollAmount = inputBottom - (viewportHeight - keyboardHeight) + 20; // 额外20px空间
-              window.scrollBy({
-                top: scrollAmount,
-                behavior: 'smooth'
-              });
-            }
+          // 如果输入框底部被键盘遮挡，则滚动页面
+          if (inputBottom > viewportHeight - keyboardHeight) {
+            const scrollAmount = inputBottom - (viewportHeight - keyboardHeight) + 20; // 额外20px空间
+            window.scrollBy({
+              top: scrollAmount,
+              behavior: 'smooth'
+            });
           }
-        }, 400); // 增加延迟时间，确保键盘完全弹出
+        }, 300); // 减少延迟时间
       }
     };
 
     const handleBlur = () => {
-      // 键盘状态由 useKeyboardManager Hook 管理
+      console.log('[ChatInput] 输入框失去焦点');
     };
 
     if (currentTextarea) {
@@ -451,7 +457,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         currentTextarea.removeEventListener('blur', handleBlur);
       }
     };
-  }, [isMobile, isTablet, isIOS, isPageTransitioning]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isIOS, shouldHandleFocus, isMobile, isTablet]); // 移除 isPageTransitioning 依赖避免重复绑定
 
 
 

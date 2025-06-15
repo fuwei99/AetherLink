@@ -1,6 +1,8 @@
-# AetherLink 移动应用开发文档
+# AetherLink
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/1600822305/CS-LLM-house)
+
+[![](https://img.shields.io/badge/License-AGPLv3-important.svg?style=plastic&logo=gnu)](https://www.gnu.org/licenses/agpl-3.0) [![](https://img.shields.io/badge/License-Commercial-blue.svg?style=plastic&logoColor=white&logo=telegram&color=blue)](mailto:1600822305@qq.com?subject=AetherLink%20Commercial%20License%20Inquiry)
 
 ## 项目概述
 
@@ -33,6 +35,190 @@ AetherLink移动应用是一个基于现代Web技术构建的跨平台AI助手�
 - **React**: 19.x
 - **TypeScript**: 5.8.x
 
+
+## 安装指南
+
+1. **克隆仓库**
+
+```bash
+git clone https://github.com/1600822305/AetherLink.git
+cd AetherLink
+```
+
+2. **安装依赖**
+
+```bash
+npm install
+```
+
+3. **初始化Capacitor**
+
+```bash
+npx cap init
+```
+
+## 开发指南
+
+### 启动开发服务器
+
+```bash
+npm run dev
+```
+
+### 构建选项
+
+```bash
+npm run build              # 快速构建（推荐）
+npm run build:ultra        # 完整构建（包含类型检查）
+```
+
+### 移动端开发
+
+```bash
+# 构建并同步到Android
+npm run build
+npx cap sync android
+npx cap open android
+```
+
+### 主要功能
+
+- **多模型AI对话**：支持OpenAI、Claude、Gemini、Grok等主流AI模型
+- **语音交互**：语音识别输入 + TTS语音播放
+- **移动端优化**：原生Android应用体验
+- **知识库管理**：文档上传、智能检索
+- **MCP工具集成**：扩展AI能力的工具生态
+- **Vue+React混合架构**：充分利用两个生态优势
+
+## 构建与部署
+
+### Android APK构建
+
+```bash
+# 在Android Studio中构建
+npx cap open android
+# 然后在Android Studio中: Build > Build Bundle(s) / APK(s) > Build APK(s)
+```
+
+APK将保存在 `android/app/build/outputs/apk/debug/` 目录
+
+## 许可证
+
+AetherLink 采用**分层许可模式**，根据使用者规模提供不同的许可方案：
+
+- **个人用户及8人以下团队**：适用 GNU Affero 通用公共许可证 v3.0 (AGPLv3)
+- **8人以上的组织机构**：必须获取商业使用许可证
+
+### 商业许可
+
+如果您的组织超过8人，或需要规避AGPLv3的开源义务，请联系我们获取商业许可证：
+
+📧 **商业授权联系**：1600822305@qq.com
+
+详细许可条款请查看 [LICENSE](LICENSE) 文件。
+
+## 贡献指南
+
+1. Fork本仓库
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m '添加一些功能'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建一个Pull Request
+
+**注意**：所有代码贡献将被视为在AGPLv3许可证下提供。
+
+
+
+## 特色功能
+
+### 🤖 自动获取模型列表
+
+AetherLink支持从各大AI提供商API自动获取可用模型列表：
+
+- 支持OpenAI、Claude (Anthropic)、Gemini (Google)、Grok (xAI)、硅基流动和火山方舟等主流AI提供商
+- 自动处理不同API格式和端点路径
+- 智能适配自定义中转站API
+- 提供优雅的回退机制，当API请求失败时使用预设模型列表
+- 支持的API端点:
+  - OpenAI: `/v1/models`
+  - Claude: `/v1/models`
+  - Gemini: `/v1beta/models`
+  - Grok: `/v1/models`
+  - 硅基流动: `/v1/models`
+  - 火山方舟: `/api/v3/models`
+  - 自定义中转站: 自动检测并适配
+
+### 🎙️ 语音识别功能
+
+AetherLink支持多种语音识别方案：
+
+- **Capacitor语音识别**：移动端原生语音识别，支持实时转录
+- **OpenAI Whisper**：高精度语音转文本，支持多语言
+- **Web Speech API**：浏览器原生语音识别作为备选方案
+- **智能提供商切换**：根据环境自动选择最佳识别方案
+- **实时反馈**：支持部分结果显示和实时状态更新
+- **按住说话**：直观的语音输入交互方式
+
+### 🔊 增强语音合成
+
+AetherLink提供多层级的语音合成解决方案：
+
+- **Azure TTS**：微软Azure认知服务，支持SSML和高质量语音
+- **OpenAI TTS**：OpenAI语音合成，支持流式和非流式输出
+- **硅基流动TTS**：高质量中文语音合成
+- **Web Speech API**：浏览器原生语音合成作为备选
+- **智能降级**：自动尝试多种TTS服务，确保语音播放成功
+- **语音控制**：播放/暂停、语速调整、语音选择等功能
+
+### 🛠️ MCP工具支持
+
+集成Model Context Protocol (MCP)工具生态：
+
+- **Fetch工具**：支持网络请求和数据获取
+- **跨平台兼容**：移动端使用原生HTTP，Web端使用代理
+- **工具块渲染**：可视化工具执行结果
+- **错误处理**：完善的错误处理和重试机制
+
+### 📱 移动端优化
+
+AetherLink针对移动设备进行了多项优化：
+
+- **返回键智能处理**：根据当前页面上下文智能处理Android返回键行为
+  - 在聊天和欢迎页面显示退出确认对话框
+  - 在其他页面返回上一级页面
+  - 防止意外退出应用
+- **WebView版本检测**：自动检测WebView版本并提供升级建议
+- **响应式布局**：自适应不同屏幕尺寸和方向
+- **触摸优化**：针对触摸交互优化的UI元素和手势
+- **性能优化**：减少不必要的渲染和计算，确保在移动设备上流畅运行
+- **原生功能集成**：相机、文件系统、剪贴板等原生功能无缝集成
+
+### 🎨 Vue + React 混合架构
+
+- **React主框架**：使用React 19作为主要UI框架
+- **Vue组件集成**：通过桥接组件无缝集成Vue 3组件
+- **类型安全**：完整的TypeScript支持
+
+### 📚 知识库管理
+
+- **文档管理**：支持多种文档格式的上传和管理
+- **智能检索**：基于AI的语义搜索和内容检索
+
+### 💻 代码编辑器
+
+- **语法高亮**：基于Shiki的高质量语法高亮
+- **多语言支持**：支持主流编程语言
+
+### 🧠 AI思考过程
+
+- 支持显示AI的思考过程（主要支持Grok模型）
+- 可视化思考时间和过程，改善用户体验
+
+### 🛠️ 开发者工具
+
+- 控制台日志查看
+- 网络请求监控
+- API请求和响应分析
 ## 项目结构
 
 ```
@@ -193,172 +379,3 @@ AetherLink/
 ├── tailwind.config.js      # Tailwind CSS配置
 └── eslint.config.js        # ESLint代码规范配置
 ```
-
-## 安装指南
-
-1. **克隆仓库**
-
-```bash
-git clone https://github.com/1600822305/AetherLink.git
-cd AetherLink
-```
-
-2. **安装依赖**
-
-```bash
-npm install
-```
-
-3. **初始化Capacitor**
-
-```bash
-npx cap init
-```
-
-## 开发指南
-
-### 启动开发服务器
-
-```bash
-npm run dev
-```
-
-### 构建选项
-
-```bash
-npm run build              # 快速构建（推荐）
-npm run build:ultra        # 完整构建（包含类型检查）
-```
-
-### 移动端开发
-
-```bash
-# 构建并同步到Android
-npm run build
-npx cap sync android
-npx cap open android
-```
-
-### 主要功能
-
-- **多模型AI对话**：支持OpenAI、Claude、Gemini、Grok等主流AI模型
-- **语音交互**：语音识别输入 + TTS语音播放
-- **移动端优化**：原生Android应用体验
-- **知识库管理**：文档上传、智能检索
-- **MCP工具集成**：扩展AI能力的工具生态
-- **Vue+React混合架构**：充分利用两个生态优势
-
-## 构建与部署
-
-### Android APK构建
-
-```bash
-# 在Android Studio中构建
-npx cap open android
-# 然后在Android Studio中: Build > Build Bundle(s) / APK(s) > Build APK(s)
-```
-
-APK将保存在 `android/app/build/outputs/apk/debug/` 目录
-
-## 贡献指南
-
-1. Fork本仓库
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m '添加一些功能'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建一个Pull Request
-
-## 许可证
-
-此项目采用MIT许可证 - 详情见LICENSE文件
-
-## 特色功能
-
-### 🤖 自动获取模型列表
-
-AetherLink支持从各大AI提供商API自动获取可用模型列表：
-
-- 支持OpenAI、Claude (Anthropic)、Gemini (Google)、Grok (xAI)、硅基流动和火山方舟等主流AI提供商
-- 自动处理不同API格式和端点路径
-- 智能适配自定义中转站API
-- 提供优雅的回退机制，当API请求失败时使用预设模型列表
-- 支持的API端点:
-  - OpenAI: `/v1/models`
-  - Claude: `/v1/models`
-  - Gemini: `/v1beta/models`
-  - Grok: `/v1/models`
-  - 硅基流动: `/v1/models`
-  - 火山方舟: `/api/v3/models`
-  - 自定义中转站: 自动检测并适配
-
-### 🎙️ 语音识别功能
-
-AetherLink支持多种语音识别方案：
-
-- **Capacitor语音识别**：移动端原生语音识别，支持实时转录
-- **OpenAI Whisper**：高精度语音转文本，支持多语言
-- **Web Speech API**：浏览器原生语音识别作为备选方案
-- **智能提供商切换**：根据环境自动选择最佳识别方案
-- **实时反馈**：支持部分结果显示和实时状态更新
-- **按住说话**：直观的语音输入交互方式
-
-### 🔊 增强语音合成
-
-AetherLink提供多层级的语音合成解决方案：
-
-- **Azure TTS**：微软Azure认知服务，支持SSML和高质量语音
-- **OpenAI TTS**：OpenAI语音合成，支持流式和非流式输出
-- **硅基流动TTS**：高质量中文语音合成
-- **Web Speech API**：浏览器原生语音合成作为备选
-- **智能降级**：自动尝试多种TTS服务，确保语音播放成功
-- **语音控制**：播放/暂停、语速调整、语音选择等功能
-
-### 🛠️ MCP工具支持
-
-集成Model Context Protocol (MCP)工具生态：
-
-- **Fetch工具**：支持网络请求和数据获取
-- **跨平台兼容**：移动端使用原生HTTP，Web端使用代理
-- **工具块渲染**：可视化工具执行结果
-- **错误处理**：完善的错误处理和重试机制
-
-### 📱 移动端优化
-
-AetherLink针对移动设备进行了多项优化：
-
-- **返回键智能处理**：根据当前页面上下文智能处理Android返回键行为
-  - 在聊天和欢迎页面显示退出确认对话框
-  - 在其他页面返回上一级页面
-  - 防止意外退出应用
-- **WebView版本检测**：自动检测WebView版本并提供升级建议
-- **响应式布局**：自适应不同屏幕尺寸和方向
-- **触摸优化**：针对触摸交互优化的UI元素和手势
-- **性能优化**：减少不必要的渲染和计算，确保在移动设备上流畅运行
-- **原生功能集成**：相机、文件系统、剪贴板等原生功能无缝集成
-
-### 🎨 Vue + React 混合架构
-
-- **React主框架**：使用React 19作为主要UI框架
-- **Vue组件集成**：通过桥接组件无缝集成Vue 3组件
-- **类型安全**：完整的TypeScript支持
-
-### 📚 知识库管理
-
-- **文档管理**：支持多种文档格式的上传和管理
-- **智能检索**：基于AI的语义搜索和内容检索
-
-### 💻 代码编辑器
-
-- **语法高亮**：基于Shiki的高质量语法高亮
-- **多语言支持**：支持主流编程语言
-
-### 🧠 AI思考过程
-
-- 支持显示AI的思考过程（主要支持Grok模型）
-- 可视化思考时间和过程，改善用户体验
-
-### 🛠️ 开发者工具
-
-- 控制台日志查看
-- 网络请求监控
-- API请求和响应分析

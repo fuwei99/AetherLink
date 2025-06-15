@@ -1,0 +1,109 @@
+**AetherLink 许可协议 (AetherLink License Agreement)**
+
+本项目采用**分层许可模式 (Tiered Licensing Model)**，根据使用者规模提供不同的许可方案。
+
+**核心原则：**
+* **个人用户及8人以下团队：** 适用 **GNU Affero 通用公共许可证 v3.0 (AGPLv3)**
+* **8人以上的组织机构：** **必须** 获取 **商业使用许可证 (Commercial Use License)**
+
+**规模定义：** "8人以下团队" 是指在您的组织（包括但不限于公司、团体、机构、项目组等任何形式的实体）中，能够直接或间接访问、使用、部署或从 AetherLink 软件功能中获益的人员总数不超过8人。这包括开发人员、测试人员、运维人员、最终用户、通过API或集成方式间接使用者等所有相关人员。
+
+---
+
+**第一部分：开源许可 (Open Source License) - AGPLv3**
+**适用范围：个人用户及8人以下团队**
+
+如果您是个人用户，或您的团队符合上述"8人以下"的定义，您可以在 **AGPLv3** 许可证条款下使用、修改和分发 AetherLink。
+
+* **许可证全文：** AGPLv3 完整条款请访问 [https://www.gnu.org/licenses/agpl-3.0.html](https://www.gnu.org/licenses/agpl-3.0.html)
+
+* **重要义务：** AGPLv3 要求，如果您修改了 AetherLink 并通过网络提供服务，或者分发修改版本，您必须向用户提供**完整的源代码**，并保持相同的 AGPLv3 许可证。
+
+* **注意事项：** 即使您符合"8人以下"条件，如果您无法满足 AGPLv3 的开源义务，仍需要获取商业许可证。
+
+**第二部分：商业许可 (Commercial License)**
+**适用范围：8人以上组织，或需要规避AGPLv3义务的用户**
+
+* **强制要求：** 如果您的组织**超过8人**，您**必须**联系我们获取商业许可证后方可使用 AetherLink。
+
+* **可选获取：** 即使您的团队在8人以下，但存在以下情况时，也**必须**获取商业许可证：
+  - 希望分发修改版本但**不愿公开源代码**
+  - 基于修改版本提供网络服务但**不愿提供源代码**
+  - 组织政策或合同要求禁止使用 AGPLv3 许可的软件
+  - 需要闭源分发或保密使用
+
+* **许可证优势：** 商业许可证将免除您的 AGPLv3 义务，并可能包含额外的商业保障条款。
+
+* **获取方式：** 请发送邮件至 **1600822305@qq.com** 联系 AetherLink 开发团队洽谈商业授权事宜。
+
+**第三部分：代码贡献 (Code Contributions)**
+
+* 我们欢迎社区为 AetherLink 项目贡献代码。所有提交的贡献将被视为在 **AGPLv3** 许可证下提供。
+
+* 通过提交代码贡献（如 Pull Request），您同意将您的代码以 AGPLv3 许可证授权给项目及所有使用者。
+
+* 您理解并同意，您的贡献可能被包含在商业许可证版本的 AetherLink 中。
+
+**第四部分：其他条款 (Additional Terms)**
+
+* 商业许可证的具体条款以双方签署的正式协议为准。
+
+* 项目维护者保留更新本许可政策的权利，更新将通过官方渠道通知。
+
+* 本许可协议的解释权归 AetherLink 开发团队所有。
+
+---
+
+**AetherLink License Agreement**
+
+This project adopts a **Tiered Licensing Model**, providing different licensing options based on user scale.
+
+**Core Principles:**
+* **Individual Users and Teams of 8 or Fewer:** Governed by **GNU Affero General Public License v3.0 (AGPLv3)**
+* **Organizations with More Than 8 People:** **Must** obtain a **Commercial Use License**
+
+**Scale Definition:** "Teams of 8 or Fewer" refers to organizations (including but not limited to companies, groups, institutions, project teams, or any other entities) where the total number of individuals who can directly or indirectly access, use, deploy, or benefit from AetherLink software functionality does not exceed 8 people. This includes developers, testers, operations staff, end-users, indirect users via APIs or integrations, and all related personnel.
+
+---
+
+**Part I: Open Source License - AGPLv3**
+**Applicable to: Individual Users and Teams of 8 or Fewer**
+
+If you are an individual user or your team meets the "8 or fewer" definition above, you may use, modify, and distribute AetherLink under the **AGPLv3** license terms.
+
+* **Full License Text:** Complete AGPLv3 terms available at [https://www.gnu.org/licenses/agpl-3.0.html](https://www.gnu.org/licenses/agpl-3.0.html)
+
+* **Key Obligation:** AGPLv3 requires that if you modify AetherLink and provide services over a network, or distribute modified versions, you must provide users with **complete source code** under the same AGPLv3 license.
+
+* **Important Note:** Even if you qualify for "8 or fewer," if you cannot comply with AGPLv3 open source obligations, you still need to obtain a commercial license.
+
+**Part II: Commercial License**
+**Applicable to: Organizations with More Than 8 People, or Users Needing to Avoid AGPLv3 Obligations**
+
+* **Mandatory Requirement:** If your organization **exceeds 8 people**, you **must** contact us to obtain a commercial license before using AetherLink.
+
+* **Optional Acquisition:** Even if your team has 8 or fewer people, you **must** obtain a commercial license in the following situations:
+  - Wish to distribute modified versions but **unwilling to disclose source code**
+  - Provide network services based on modified versions but **unwilling to provide source code**
+  - Organizational policies or contracts prohibit use of AGPLv3-licensed software
+  - Require closed-source distribution or confidential use
+
+* **License Benefits:** Commercial license exempts you from AGPLv3 obligations and may include additional commercial assurance terms.
+
+* **How to Obtain:** Please email **1600822305@qq.com** to contact the AetherLink development team for commercial licensing discussions.
+
+**Part III: Code Contributions**
+
+* We welcome community code contributions to the AetherLink project. All submitted contributions are considered provided under the **AGPLv3** license.
+
+* By submitting code contributions (such as Pull Requests), you agree to license your code under AGPLv3 to the project and all users.
+
+* You understand and agree that your contributions may be included in commercial license versions of AetherLink.
+
+**Part IV: Additional Terms**
+
+* Specific terms of commercial licenses are subject to formal agreements signed by both parties.
+
+* Project maintainers reserve the right to update this licensing policy, with updates communicated through official channels.
+
+* The interpretation rights of this license agreement belong to the AetherLink development team.

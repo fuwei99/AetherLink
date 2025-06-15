@@ -311,14 +311,17 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
 
   // 处理输入框激活
   const handleInputFocus = () => {
+    console.log('[CompactChatInput] 输入框获得焦点, shouldHandleFocus:', shouldHandleFocus());
     setIsActivated(true);
 
     // 只有在非页面切换状态下才执行iOS特殊处理
     if (isIOS && textareaRef.current && shouldHandleFocus()) {
       // 延迟执行，确保输入法已弹出
       setTimeout(() => {
+        if (!textareaRef.current) return;
+
         // 滚动到输入框位置
-        textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         // 额外处理：尝试滚动页面到底部
         window.scrollTo({

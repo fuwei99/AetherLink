@@ -61,20 +61,21 @@ const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = React.memo(({ topi
         borderRadius: '8px',
         cursor: 'pointer',
         backgroundColor: theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.02)'
-          : 'rgba(0, 0, 0, 0.02)',
+          ? 'rgba(30, 30, 30, 0.95)'
+          : 'rgba(255, 255, 255, 0.95)',
         border: `1px solid`,
         borderColor: theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.1)'
-          : 'rgba(0, 0, 0, 0.08)',
+          ? 'rgba(255, 255, 255, 0.15)'
+          : 'rgba(0, 0, 0, 0.15)',
         transition: 'all 0.2s ease',
+        backdropFilter: 'blur(8px)',
         '&:hover': {
           backgroundColor: theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.05)'
-            : 'rgba(0, 0, 0, 0.04)',
+            ? 'rgba(40, 40, 40, 0.98)'
+            : 'rgba(250, 250, 250, 0.98)',
           borderColor: theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.2)'
-            : 'rgba(0, 0, 0, 0.15)',
+            ? 'rgba(255, 255, 255, 0.25)'
+            : 'rgba(0, 0, 0, 0.25)',
         },
         position: 'relative',
         zIndex: 10

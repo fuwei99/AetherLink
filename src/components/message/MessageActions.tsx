@@ -44,6 +44,8 @@ import { useAppSelector } from '../../shared/store';
 import { Clipboard } from '@capacitor/clipboard';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
+import { Z_INDEX } from '../../shared/constants/zIndex';
+import { debugLog } from '../../shared/utils/debugLogger';
 
 interface MessageActionsProps {
   message: Message;
@@ -226,11 +228,11 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
 
   // 打开菜单 - 优化：使用useCallback
   const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
-    console.log('[MessageActions] 三点菜单被点击', { renderMode, messageId: message.id });
+    debugLog.component('MessageActions', '三点菜单被点击', { renderMode, messageId: message.id });
     event.preventDefault();
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
-  }, [renderMode, message.id]);
+  }, []);
 
   // 关闭菜单 - 优化：使用useCallback
   const handleMenuClose = useCallback(() => {
@@ -242,14 +244,14 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
     if (!message) return;
 
     try {
-      console.log('[MessageActions] 开始复制内容...', { messageId: message.id, renderMode });
+      debugLog.component('MessageActions', '开始复制内容', { messageId: message.id, renderMode });
 
       // 使用工具函数获取主文本内容
       const textContent = getMainTextContent(message);
-      console.log('[MessageActions] 获取到的文本内容:', textContent?.substring(0, 100) + '...');
+      debugLog.component('MessageActions', '获取到的文本内容', textContent?.substring(0, 100) + '...');
 
       if (!textContent || !textContent.trim()) {
-        console.warn('[MessageActions] 没有可复制的内容');
+        debugLog.warn('[MessageActions] 没有可复制的内容');
         alert('没有可复制的内容');
         return;
       }
@@ -259,27 +261,30 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
         await Clipboard.write({
           string: textContent
         });
-        console.log('[MessageActions] Capacitor复制成功');
+        debugLog.component('MessageActions', 'Capacitor复制成功');
       } catch (capacitorError) {
-        console.log('[MessageActions] Capacitor复制失败，尝试Web API:', capacitorError);
+        debugLog.component('MessageActions', 'Capacitor复制失败，尝试Web API', capacitorError);
         // 如果Capacitor失败，回退到Web API
         await navigator.clipboard.writeText(textContent);
-        console.log('[MessageActions] Web API复制成功');
+        debugLog.component('MessageActions', 'Web API复制成功');
       }
 
       // 显示成功提示
-      console.log('[MessageActions] 复制内容成功');
-      // 发送复制成功事件，用于UI提示
-      EventEmitter.emit('ui:copy_success', { content: '已复制消息内容' });
+      debugLog.component('MessageActions', '复制内容成功');
+
+      // 发送复制成功事件，用于UI提示（检查是否有监听器）
+      if (EventEmitter.listenerCount('ui:copy_success') > 0) {
+        EventEmitter.emit('ui:copy_success', { content: '已复制消息内容' });
+      }
 
     } catch (error) {
-      console.error('[MessageActions] 复制内容失败:', error);
+      debugLog.error('[MessageActions] 复制内容失败', error);
       alert('复制失败: ' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       // 确保菜单在操作完成后关闭
       handleMenuClose();
     }
-  }, [message, handleMenuClose, renderMode]);
+  }, [message, handleMenuClose]);
 
   // 打开编辑对话框 - 优化：使用useCallback
   const handleEditClick = useCallback(() => {
@@ -773,7 +778,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
           }}
           sx={{
             ...menuButtonStyle(theme.palette.mode === 'dark'),
-            zIndex: 100, // 确保按钮在最上层
+            zIndex: Z_INDEX.MESSAGE.TOOLBAR_BUTTON, // 确保按钮在最上层
           }}
         >
           <MoreVertical size={14} />
@@ -1146,18 +1151,18 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
           horizontal: 'left', // 改为left，确保菜单从左侧展开
         }}
         MenuListProps={{
-          sx: { zIndex: 1300 } // 确保菜单在最高层级
+          sx: { zIndex: Z_INDEX.MENU.DROPDOWN } // 确保菜单在最高层级
         }}
         PaperProps={{
-          sx: { 
-            zIndex: 1300,
+          sx: {
+            zIndex: Z_INDEX.MENU.DROPDOWN,
             pointerEvents: 'auto' // 确保菜单可以接收点击事件
           }
         }}
       >
-        <MenuItem 
+        <MenuItem
           onClick={(e) => {
-            console.log('[MessageActions] 复制菜单项被点击');
+            debugLog.component('MessageActions', '复制菜单项被点击');
             e.stopPropagation();
             handleCopyContent();
           }}
