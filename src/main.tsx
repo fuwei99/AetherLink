@@ -12,7 +12,6 @@ import { initializeServices } from './shared/services';
 // 导入 EventSource polyfill 以支持移动端 SSE
 import { EventSourcePolyfill } from 'event-source-polyfill';
 import { Capacitor } from '@capacitor/core';
-import { SplashScreen } from '@capacitor/splash-screen';
 
 //  保存原生fetch引用，防止被拦截器覆盖
 if (typeof globalThis !== 'undefined' && globalThis.fetch) {
@@ -75,15 +74,8 @@ async function initializeApp() {
       await new Promise(resolve => setTimeout(resolve, remainingTime));
     }
 
-    // 隐藏启动画面
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await SplashScreen.hide({ fadeOutDuration: 300 });
-        console.log('[INFO] 启动画面已隐藏');
-      } catch (error) {
-        console.warn('[WARN] 隐藏启动画面失败:', error);
-      }
-    }
+    // 原生启动画面已禁用，无需手动隐藏
+    console.log('[INFO] 原生启动画面已禁用，应用启动完成');
 
     console.log('[App] 应用启动完成');
 
@@ -91,14 +83,8 @@ async function initializeApp() {
     console.error('应用初始化失败:',
       error instanceof Error ? `${error.name}: ${error.message}` : String(error));
 
-    // 即使初始化失败，也要隐藏启动画面
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await SplashScreen.hide({ fadeOutDuration: 300 });
-      } catch (hideError) {
-        console.warn('[WARN] 隐藏启动画面失败:', hideError);
-      }
-    }
+    // 原生启动画面已禁用，无需手动隐藏
+    console.log('[WARN] 应用初始化失败，但原生启动画面已自动隐藏');
 
     // 显示用户友好的错误信息
     showErrorUI(error);

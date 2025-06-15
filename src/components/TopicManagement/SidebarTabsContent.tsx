@@ -12,9 +12,8 @@ import { Bot, MessageSquare, Settings } from 'lucide-react';
 
 /**
  * 侧边栏标签页内容组件
- * 使用React.memo优化性能，减少不必要的重新渲染
  */
-const SidebarTabsContent = React.memo(() => {
+export default function SidebarTabsContent() {
   const {
     loading,
     value,
@@ -51,20 +50,34 @@ const SidebarTabsContent = React.memo(() => {
   const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
   const themeColors = getThemeColors(theme, themeStyle);
 
-  // 优化的标签页切换处理，减少日志输出和不必要的操作
-  const handleChange = React.useCallback((_event: React.SyntheticEvent, newValue: number) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[SidebarTabs] 标签页切换: ${value} -> ${newValue}`);
-    }
+  // 标签页切换
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+    console.log(`[SidebarTabs] 标签页切换: ${value} -> ${newValue}`, {
+      currentAssistant: currentAssistant?.id,
+      assistantWithTopics: assistantWithTopics?.id,
+      topicsCount: assistantWithTopics?.topics?.length || 0,
+      topicIds: assistantWithTopics?.topicIds?.length || 0,
+      currentTopic: currentTopic?.id
+    });
 
-    // 使用requestAnimationFrame优化性能
-    requestAnimationFrame(() => {
-      if (newValue === 1 && refreshTopics) { // 切换到话题标签页
+    if (newValue === 1) { // 切换到话题标签页
+      console.log('[SidebarTabs] 切换到话题标签页，话题详情:',
+        assistantWithTopics?.topics?.map((t) => ({id: t.id, name: t.name})) || []);
+
+      // 切换到话题标签页时刷新话题数据
+      if (refreshTopics) {
+        console.log('[SidebarTabs] 刷新话题数据');
         refreshTopics();
       }
-      setValue(newValue);
-    });
-  }, [value, refreshTopics, setValue]);
+    }
+
+    if (newValue === 0) { // 切换到助手标签页
+      console.log('[SidebarTabs] 切换到助手标签页');
+      // 可以在这里添加助手数据刷新逻辑
+    }
+
+    setValue(newValue);
+  };
 
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -186,9 +199,4 @@ const SidebarTabsContent = React.memo(() => {
       )}
     </Box>
   );
-});
-
-// 设置displayName用于调试
-SidebarTabsContent.displayName = 'SidebarTabsContent';
-
-export default SidebarTabsContent;
+}

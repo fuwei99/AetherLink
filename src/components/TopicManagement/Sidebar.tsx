@@ -1,7 +1,16 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, IconButton, Drawer, useMediaQuery, useTheme } from '@mui/material';
 import { X as CloseIcon } from 'lucide-react';
 import SidebarTabs from './SidebarTabs';
+import {
+  getMobileDrawerStyles,
+  getDesktopDrawerStyles,
+  getDrawerContentStyles,
+  getCloseButtonStyles,
+  getCloseButtonInteractionStyles,
+  MODAL_OPTIMIZATION,
+} from './sidebarOptimization';
+import { useSidebarToggle, useSidebarKeyboardShortcuts } from './hooks/useSidebarToggle';
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -33,34 +42,37 @@ export default function Sidebar({
 
   const drawerWidth = 308;
 
-  const handleDrawerToggle = () => {
-    if (isMobile) {
-      // 移动端逻辑
-      if (onMobileToggle) {
-        onMobileToggle();
-      } else {
-        setLocalMobileOpen(!localMobileOpen);
-      }
-    } else {
-      // 桌面端逻辑
-      if (onDesktopToggle) {
-        onDesktopToggle();
-      } else {
-        setLocalDesktopOpen(!localDesktopOpen);
-      }
-    }
-  };
+  // 使用优化的侧边栏切换Hook
+  const { handleToggle: handleDrawerToggle } = useSidebarToggle({
+    isMobile,
+    onMobileToggle,
+    onDesktopToggle,
+    localMobileOpen,
+    localDesktopOpen,
+    setLocalMobileOpen,
+    setLocalDesktopOpen,
+  });
 
-  const isOpen = isMobile
-    ? (onMobileToggle ? mobileOpen : localMobileOpen)
-    : (onDesktopToggle ? desktopOpen : localDesktopOpen);
+  // 添加键盘快捷键支持
+  useSidebarKeyboardShortcuts(handleDrawerToggle, true);
 
-  const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+  // 使用 useMemo 缓存计算结果
+  const isOpen = useMemo(() => {
+    return isMobile
+      ? (onMobileToggle ? mobileOpen : localMobileOpen)
+      : (onDesktopToggle ? desktopOpen : localDesktopOpen);
+  }, [isMobile, onMobileToggle, mobileOpen, localMobileOpen, onDesktopToggle, desktopOpen, localDesktopOpen]);
+
+  // 使用 useMemo 缓存抽屉内容，避免不必要的重新渲染
+  const drawer = useMemo(() => (
+    <Box sx={getDrawerContentStyles()}>
       {/* 显示收起按钮：移动端始终显示，桌面端在有控制函数时显示 */}
       {(isMobile || onDesktopToggle) && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
-          <IconButton onClick={handleDrawerToggle}>
+        <Box sx={getCloseButtonStyles()}>
+          <IconButton
+            onClick={handleDrawerToggle}
+            sx={getCloseButtonInteractionStyles()}
+          >
             <CloseIcon size={20} />
           </IconButton>
         </Box>
@@ -72,7 +84,13 @@ export default function Sidebar({
         onToolsToggle={onToolsToggle}
       />
     </Box>
-  );
+  ), [isMobile, onDesktopToggle, handleDrawerToggle, mcpMode, toolsEnabled, onMCPModeChange, onToolsToggle]);
+
+  // 优化的移动端样式
+  const mobileDrawerSx = useMemo(() => getMobileDrawerStyles(drawerWidth), [drawerWidth]);
+
+  // 优化的桌面端样式
+  const desktopDrawerSx = useMemo(() => getDesktopDrawerStyles(drawerWidth, isOpen), [drawerWidth, isOpen]);
 
   return (
     <>
@@ -81,33 +99,15 @@ export default function Sidebar({
           variant="temporary"
           open={isOpen}
           onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-              borderRadius: '0 16px 16px 0'
-            },
-          }}
+          ModalProps={MODAL_OPTIMIZATION}
+          sx={mobileDrawerSx}
         >
           {drawer}
         </Drawer>
       ) : (
         <Drawer
           variant="persistent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            width: isOpen ? drawerWidth : 0,
-            flexShrink: 0,
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-              position: 'relative',
-              height: '100%',
-              border: 'none'
-            },
-          }}
+          sx={desktopDrawerSx}
           open={isOpen}
         >
           {drawer}

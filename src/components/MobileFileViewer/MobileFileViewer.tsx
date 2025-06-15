@@ -263,7 +263,7 @@ export const MobileFileViewer: React.FC<MobileFileViewerProps> = ({
               display: 'flex',
               flexDirection: 'column',
               backgroundColor: '#1e1e1e',
-              touchAction: 'pan-y pinch-zoom', // MT管理器风格：允许垂直滚动和双指缩放
+              touchAction: 'none', // 修复@use-gesture警告：设置为none以支持手势
               position: 'relative',
               // 边界限制样式
               overscrollBehavior: 'contain', // 防止过度滚动

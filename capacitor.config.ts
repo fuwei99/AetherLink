@@ -45,11 +45,14 @@ const config: CapacitorConfig = {
       overlaysWebView: false // 确保背景色生效，避免内容被覆盖
     },
     SplashScreen: {
-      launchShowDuration: 1000, // 显示1秒启动画面，首次安装时会动态延长
-      launchAutoHide: false, // 手动控制启动画面隐藏
-      backgroundColor: '#ffffff', // 设置启动画面背景色
-      androidSplashResourceName: 'splash', // Android启动画面资源
-      iosSplashResourceName: 'Splash' // iOS启动画面资源
+      launchShowDuration: 0, // 立即隐藏原生启动画面
+      launchAutoHide: true, // 自动隐藏启动画面
+      backgroundColor: '#F8FAFC', // 保持背景色一致
+      androidSplashResourceName: 'splash', // 保留资源名称
+      iosSplashResourceName: 'Splash', // 保留资源名称
+      showSpinner: false, // 不显示加载指示器
+      splashFullScreen: false, // 禁用全屏模式
+      splashImmersive: false // 非沉浸式模式
     },
     EdgeToEdge: {
       backgroundColor: '#ffffff' // 【Android 15 底部导航栏默认背景颜色】：白色，运行时由StatusBarService动态更新

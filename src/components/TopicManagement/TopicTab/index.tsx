@@ -287,44 +287,30 @@ export default function TopicTab({
     }
   }, [topics, isLoading, onSelectTopic]);
 
-  // 优化的事件监听器，减少不必要的话题选择操作
+  // 监听SHOW_TOPIC_SIDEBAR事件，确保在切换到话题标签页时自动选择话题（优化：与主逻辑保持一致）
   useEffect(() => {
-    let debounceTimer: NodeJS.Timeout;
-
     const handleShowTopicSidebar = () => {
-      // 清除之前的定时器
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
+      // 如果有话题但没有选中的话题，自动选择第一个话题
+      if (!isLoading && topics.length > 0) {
+        // 使用Redux状态检查，与主自动选择逻辑保持一致
+        const currentTopicId = store.getState().messages?.currentTopicId;
 
-      // 使用防抖，避免频繁操作
-      debounceTimer = setTimeout(() => {
-        // 如果有话题但没有选中的话题，自动选择第一个话题
-        if (!isLoading && topics.length > 0) {
-          // 使用Redux状态检查，与主自动选择逻辑保持一致
-          const currentTopicId = store.getState().messages?.currentTopicId;
+        // 只有在完全没有选中话题时才自动选择第一个话题
+        // 移除"话题不在当前助手列表中"的检查，避免用户选择被覆盖
+        if (!currentTopicId) {
+          console.log('[TopicTab] SHOW_TOPIC_SIDEBAR事件触发自动选择第一个话题:', topics[0].name);
 
-          // 只有在完全没有选中话题时才自动选择第一个话题
-          if (!currentTopicId) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('[TopicTab] 自动选择第一个话题:', topics[0].name);
-            }
-
-            // 使用requestAnimationFrame确保在下一次渲染帧中执行
-            requestAnimationFrame(() => {
-              onSelectTopic(topics[0]);
-            });
-          }
+          // 使用requestAnimationFrame确保在下一次渲染帧中执行
+          requestAnimationFrame(() => {
+            onSelectTopic(topics[0]);
+          });
         }
-      }, 100); // 100ms防抖延迟
+      }
     };
 
     const unsubscribe = EventEmitter.on(EVENT_NAMES.SHOW_TOPIC_SIDEBAR, handleShowTopicSidebar);
 
     return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
       unsubscribe();
     };
   }, [topics, isLoading, onSelectTopic]);

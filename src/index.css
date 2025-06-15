@@ -80,6 +80,16 @@ input, textarea, .RNTextInput {
   font-family: inherit;
 }
 
+/* 修复@use-gesture库的touch-action警告 */
+[data-gesture] {
+  touch-action: none !important;
+}
+
+/* 为使用手势的容器添加touch-action */
+.gesture-container {
+  touch-action: none !important;
+}
+
 /* React Native Web TextInput样式增强 */
 .RNTextInput {
   -webkit-user-select: auto !important;

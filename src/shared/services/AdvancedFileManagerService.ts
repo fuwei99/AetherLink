@@ -3,7 +3,7 @@
  * 封装capacitor-advanced-file-manager插件的功能
  */
 
-import { registerPlugin } from '@capacitor/core';
+import { registerPlugin, Capacitor } from '@capacitor/core';
 import type {
   AdvancedFileManagerPlugin,
   PermissionResult,
@@ -32,9 +32,24 @@ class AdvancedFileManagerService {
   private permissionsGranted = false;
 
   /**
+   * 检查是否在支持的平台上
+   */
+  private isSupportedPlatform(): boolean {
+    return Capacitor.isNativePlatform();
+  }
+
+  /**
    * 请求文件访问权限
    */
   async requestPermissions(): Promise<PermissionResult> {
+    // 在 Web 环境下直接返回不支持
+    if (!this.isSupportedPlatform()) {
+      return {
+        granted: false,
+        message: '文件管理功能仅在移动端应用中可用'
+      };
+    }
+
     try {
       const result = await AdvancedFileManager.requestPermissions();
       this.permissionsGranted = result.granted;
@@ -52,6 +67,14 @@ class AdvancedFileManagerService {
    * 检查文件访问权限
    */
   async checkPermissions(): Promise<PermissionResult> {
+    // 在 Web 环境下直接返回不支持
+    if (!this.isSupportedPlatform()) {
+      return {
+        granted: false,
+        message: '文件管理功能仅在移动端应用中可用'
+      };
+    }
+
     try {
       const result = await AdvancedFileManager.checkPermissions();
       this.permissionsGranted = result.granted;
@@ -69,6 +92,11 @@ class AdvancedFileManagerService {
    * 确保有权限，如果没有则抛出友好的错误信息
    */
   private async ensurePermissions(): Promise<boolean> {
+    // 在 Web 环境下直接抛出错误
+    if (!this.isSupportedPlatform()) {
+      throw new Error('文件管理功能仅在移动端应用中可用。在浏览器中，请使用浏览器的文件选择功能。');
+    }
+
     if (!this.permissionsGranted) {
       const result = await this.checkPermissions();
       if (!result.granted) {
@@ -487,6 +515,11 @@ class AdvancedFileManagerService {
    * 测试插件连接
    */
   async testConnection(): Promise<boolean> {
+    // 在 Web 环境下直接返回 false
+    if (!this.isSupportedPlatform()) {
+      return false;
+    }
+
     try {
       const result = await AdvancedFileManager.echo({ value: 'test' });
       return result.value === 'test';

@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { IconButton, CircularProgress, Badge, Tooltip } from '@mui/material';
-import { Send, Plus, Link, Square, ChevronDown, ChevronUp, Keyboard, Mic } from 'lucide-react';
+import { Send, Plus, Square, ChevronDown, ChevronUp, Keyboard, Mic } from 'lucide-react';
 
 import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
 import { useFileUpload } from '../../shared/hooks/useFileUpload';
-import { useUrlScraper } from '../../shared/hooks/useUrlScraper';
+
 import { useInputStyles } from '../../shared/hooks/useInputStyles';
 import MultiModelSelector from './MultiModelSelector';
 import type { ImageContent, SiliconFlowImageFormat, FileContent } from '../../shared/types';
 import { Image, Search } from 'lucide-react';
-import UrlScraperStatus from '../UrlScraperStatus';
+
 import type { FileStatus } from '../FilePreview';
 import IntegratedFilePreview from '../IntegratedFilePreview';
 import UploadMenu from './UploadMenu';
@@ -37,7 +37,6 @@ interface ChatInputProps {
   videoGenerationMode?: boolean; // 是否处于视频生成模式
   onSendImagePrompt?: (prompt: string) => void; // 发送图像生成提示词的回调
   webSearchActive?: boolean; // 是否处于网络搜索模式
-  onDetectUrl?: (url: string) => Promise<string>; // 用于检测并解析URL的回调
   onStopResponse?: () => void; // 停止AI回复的回调
   isStreaming?: boolean; // 是否正在流式响应中
   isDebating?: boolean; // 是否正在AI辩论中
@@ -45,7 +44,7 @@ interface ChatInputProps {
   availableModels?: any[]; // 可用模型列表
 }
 
-const ChatInputComponent: React.FC<ChatInputProps> = ({
+const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
   onSendMultiModelMessage,
   onStartDebate,
@@ -56,7 +55,6 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
   videoGenerationMode = false, // 默认不是视频生成模式
   onSendImagePrompt,
   webSearchActive = false, // 默认不是网络搜索模式
-  onDetectUrl,
   onStopResponse,
   isStreaming = false,
   isDebating = false, // 默认不在辩论中
@@ -114,15 +112,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
   // 获取快捷短语按钮显示设置
   const showQuickPhraseButton = useSelector((state: RootState) => state.settings.showQuickPhraseButton ?? true);
 
-  // URL解析功能
-  const {
-    detectedUrl,
-    parsedContent,
-    urlScraperStatus,
-    scraperError,
-    resetUrlScraper,
-    detectUrlInMessage
-  } = useUrlScraper({ onDetectUrl });
+  // 移除URL解析功能以提升性能
 
   // 文件上传功能
   const { handleImageUpload, handleFileUpload } = useFileUpload({
@@ -154,12 +144,10 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     imageGenerationMode,
     videoGenerationMode,
     toolsEnabled,
-    parsedContent,
     images,
     files,
     setImages,
     setFiles,
-    resetUrlScraper,
     enableTextareaResize: true,
     enableCompositionHandling: true,
     enableCharacterCount: true,
@@ -237,13 +225,6 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     if (!onSendMultiModelMessage) return;
 
     let processedMessage = message.trim();
-
-    // 如果有解析的内容，添加到消息中
-    if (parsedContent && urlScraperStatus === 'success') {
-      processedMessage = `${processedMessage}\n\n${parsedContent}`;
-      // 重置URL解析状态 - 使用 hook 提供的函数
-      resetUrlScraper();
-    }
 
     // 合并images数组和files中的图片文件
     const allImages = [
@@ -357,15 +338,13 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     setTimeout(checkButtonVisibility, 100);
   }, [expanded, checkButtonVisibility]);
 
-  // 增强的 handleChange 以支持 URL 检测和按钮显示检测
-  const enhancedHandleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // 优化的 handleChange - 移除URL检测，添加防抖机制
+  const enhancedHandleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // 调用 hook 提供的 handleChange
     handleChange(e);
-    // 检测 URL
-    detectUrlInMessage(e.target.value);
-    // 延迟检测按钮显示状态（等待高度调整完成）
-    setTimeout(checkButtonVisibility, 50);
-  };
+    // 使用防抖延迟检测按钮显示状态，避免频繁计算
+    setTimeout(checkButtonVisibility, 100);
+  }, [handleChange, checkButtonVisibility]);
 
   // 增强的 handleKeyDown 以支持展开功能
   const enhancedHandleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -379,23 +358,34 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     }
   };
 
-  // 优化的初始化处理，减少不必要的重新渲染
+  // 增强的焦点处理，适应iOS设备 - 添加初始化防护
   useEffect(() => {
-    const currentTextarea = textareaRef.current;
+    const currentTextarea = textareaRef.current; // 保存当前的 ref 值
 
-    // 使用requestAnimationFrame优化性能，避免阻塞主线程
-    const animationFrame = requestAnimationFrame(() => {
-      if (currentTextarea) {
+    // 添加初始化标记，避免重复初始化
+    if (!currentTextarea || currentTextarea.dataset.initialized === 'true') {
+      return;
+    }
+
+    // 只设置初始高度，不执行焦点操作避免闪烁
+    const timer = setTimeout(() => {
+      if (currentTextarea && currentTextarea.dataset.initialized !== 'true') {
         // 确保初始高度正确设置，以显示完整的placeholder
         const initialHeight = isMobile ? 32 : isTablet ? 36 : 34;
         currentTextarea.style.height = `${initialHeight}px`;
 
-        // 减少日志输出，避免性能影响
-        if (!isPageTransitioning && process.env.NODE_ENV === 'development') {
-          console.log('[ChatInput] 初始化完成');
+        // 标记为已初始化
+        currentTextarea.dataset.initialized = 'true';
+
+        // 只在真正的初始化时输出日志，避免重复日志
+        console.log('[ChatInput] 输入框初始化完成');
+
+        // 只有在非页面切换状态下才执行焦点操作
+        if (!isPageTransitioning) {
+          // 这里可以添加额外的焦点处理逻辑
         }
       }
-    });
+    }, 100); // 减少延迟时间
 
     // 添加键盘显示检测
     const handleFocus = () => {
@@ -451,13 +441,15 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     }
 
     return () => {
-      cancelAnimationFrame(animationFrame);
+      clearTimeout(timer);
       if (currentTextarea) {
         currentTextarea.removeEventListener('focus', handleFocus);
         currentTextarea.removeEventListener('blur', handleBlur);
+        // 清理初始化标记
+        currentTextarea.dataset.initialized = 'false';
       }
     };
-  }, []); // 移除所有依赖项，只在组件挂载时执行一次
+  }, [isIOS, isMobile, isTablet]); // 移除可能导致重复触发的依赖
 
 
 
@@ -947,15 +939,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      {/* URL解析状态显示 */}
-      {urlScraperStatus !== 'idle' && (
-        <UrlScraperStatus
-          status={urlScraperStatus}
-          url={detectedUrl}
-          error={scraperError}
-          onClose={resetUrlScraper}
-        />
-      )}
+      {/* 移除URL解析状态显示以提升性能 */}
 
       {/* 集成的文件预览区域 */}
       <IntegratedFilePreview
@@ -1204,7 +1188,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                 disabled={!isStreaming && (!canSendMessage() || (isLoading && !allowConsecutiveMessages))}
                 size={isTablet ? "large" : "medium"}
                 style={{
-                  color: isStreaming ? '#ff4d4f' : !canSendMessage() || (isLoading && !allowConsecutiveMessages) ? disabledColor : imageGenerationMode ? '#9C27B0' : webSearchActive ? '#3b82f6' : urlScraperStatus === 'success' ? '#26C6DA' : isDarkMode ? '#4CAF50' : '#09bb07',
+                  color: isStreaming ? '#ff4d4f' : !canSendMessage() || (isLoading && !allowConsecutiveMessages) ? disabledColor : imageGenerationMode ? '#9C27B0' : webSearchActive ? '#3b82f6' : isDarkMode ? '#4CAF50' : '#09bb07',
                   padding: isTablet ? '10px' : '8px'
                 }}
               >
@@ -1221,10 +1205,6 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                 ) : webSearchActive ? (
                   <Tooltip title="搜索网络">
                     <Search size={isTablet ? 20 : 18} />
-                  </Tooltip>
-                ) : urlScraperStatus === 'success' ? (
-                  <Tooltip title="发送解析的网页内容">
-                    <Link size={isTablet ? 20 : 18} />
                   </Tooltip>
                 ) : (
                   <Send size={isTablet ? 20 : 18} />
@@ -1303,29 +1283,5 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     </div>
   );
 };
-
-// 使用React.memo优化性能，减少不必要的重新渲染
-const ChatInput = React.memo(ChatInputComponent, (prevProps, nextProps) => {
-  // 自定义比较函数，只在关键props变化时重新渲染
-  const keysToCompare = [
-    'isLoading', 'imageGenerationMode', 'videoGenerationMode',
-    'webSearchActive', 'isStreaming', 'isDebating', 'toolsEnabled'
-  ];
-
-  for (const key of keysToCompare) {
-    if (prevProps[key as keyof ChatInputProps] !== nextProps[key as keyof ChatInputProps]) {
-      return false; // props changed, should re-render
-    }
-  }
-
-  // 检查数组props
-  if (prevProps.availableModels?.length !== nextProps.availableModels?.length) {
-    return false;
-  }
-
-  return true; // props are the same, skip re-render
-});
-
-ChatInput.displayName = 'ChatInput';
 
 export default ChatInput;

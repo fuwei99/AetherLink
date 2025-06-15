@@ -106,7 +106,7 @@ export const useKeyboardManager = () => {
    */
   const shouldHandleFocus = () => {
     const shouldHandle = !isPageTransitioning;
-    console.log('[KeyboardManager] shouldHandleFocus:', shouldHandle, 'isPageTransitioning:', isPageTransitioning);
+    // 只在状态变化时输出日志，避免重复日志
     return shouldHandle;
   };
 

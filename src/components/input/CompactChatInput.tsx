@@ -9,7 +9,7 @@ import MultiModelSelector from './MultiModelSelector';
 import EnhancedToast, { toastManager } from '../EnhancedToast';
 import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
 import { useFileUpload } from '../../shared/hooks/useFileUpload';
-import { useUrlScraper } from '../../shared/hooks/useUrlScraper';
+
 import { useInputStyles } from '../../shared/hooks/useInputStyles';
 import { useKnowledgeContext } from '../../shared/hooks/useKnowledgeContext';
 import { useVoiceRecognition } from '../../shared/hooks/useVoiceRecognition'; // 导入 useVoiceRecognition
@@ -35,7 +35,6 @@ interface CompactChatInputProps {
   imageGenerationMode?: boolean;
   onSendImagePrompt?: (prompt: string) => void;
   webSearchActive?: boolean;
-  onDetectUrl?: (url: string) => Promise<string>;
   onStopResponse?: () => void;
   isStreaming?: boolean;
   isDebating?: boolean; // 是否在辩论中
@@ -48,7 +47,7 @@ interface CompactChatInputProps {
   toggleToolsEnabled?: () => void;
 }
 
-const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
+const CompactChatInput: React.FC<CompactChatInputProps> = ({
   onSendMessage,
   onSendMultiModelMessage, // 启用多模型功能
   onStartDebate, // 启用AI辩论功能
@@ -58,7 +57,6 @@ const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
   imageGenerationMode = false,
   onSendImagePrompt,
   webSearchActive = false,
-  onDetectUrl,
   onStopResponse,
   isStreaming = false,
   isDebating = false, // 启用辩论状态
@@ -108,15 +106,7 @@ const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
   // 获取长文本粘贴设置
   const settings = useSelector((state: RootState) => state.settings);
 
-  // URL解析功能
-  const {
-    detectedUrl,
-    parsedContent,
-    urlScraperStatus,
-    scraperError,
-    resetUrlScraper,
-    detectUrlInMessage
-  } = useUrlScraper({ onDetectUrl });
+  // 移除URL解析功能以提升性能
 
   // 文件上传功能
   const { handleImageUpload: uploadImages, handleFileUpload: uploadFiles } = useFileUpload({
@@ -144,12 +134,10 @@ const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
     allowConsecutiveMessages,
     imageGenerationMode,
     toolsEnabled,
-    parsedContent,
     images,
     files,
     setImages,
     setFiles,
-    resetUrlScraper,
     enableTextareaResize: true, // 启用文本区域自动调整
     enableCompositionHandling: true, // 启用输入法处理
     enableCharacterCount: true, // 启用字符计数
@@ -396,17 +384,16 @@ const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
     setTimeout(checkShowExpandButton, 100);
   }, [textareaExpanded, checkShowExpandButton]);
 
-  // 处理输入变化，包含URL检测
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // 优化的输入变化处理 - 移除URL检测，添加防抖
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleChange(e);
-    detectUrlInMessage(e.target.value);
     // 有内容时保持激活状态
     if (e.target.value.trim()) {
       setIsActivated(true);
     }
-    // 延迟检测展开按钮显示（等待高度调整完成）
-    setTimeout(checkShowExpandButton, 50);
-  };
+    // 使用防抖延迟检测展开按钮显示，避免频繁计算
+    setTimeout(checkShowExpandButton, 100);
+  }, [handleChange, checkShowExpandButton]);
 
   // 处理键盘事件，包含全展开功能
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -910,8 +897,8 @@ const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
         </Box>
       )}
 
-      {/* 文件预览和URL状态显示 */}
-      {(images.length > 0 || files.length > 0 || urlScraperStatus !== 'idle') && (
+      {/* 文件预览显示 */}
+      {(images.length > 0 || files.length > 0) && (
         <Box
           sx={{
             padding: '8px 12px',
@@ -923,25 +910,7 @@ const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
             overflowY: 'auto'
           }}
         >
-          {/* URL解析状态 */}
-          {urlScraperStatus !== 'idle' && (
-            <Box sx={{ mb: 1, p: 1, bgcolor: 'action.hover', borderRadius: 1 }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {urlScraperStatus === 'parsing' && '正在解析网页...'}
-                {urlScraperStatus === 'success' && `已解析: ${detectedUrl}`}
-                {urlScraperStatus === 'error' && `解析失败: ${scraperError}`}
-              </Typography>
-              {urlScraperStatus !== 'parsing' && (
-                <IconButton
-                  size="small"
-                  onClick={resetUrlScraper}
-                  sx={{ ml: 1, p: 0.5 }}
-                >
-                  <X size={12} />
-                </IconButton>
-              )}
-            </Box>
-          )}
+          {/* 移除URL解析状态显示以提升性能 */}
 
           {/* 图片预览 */}
           {images.length > 0 && (
@@ -1335,29 +1304,5 @@ const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
     </Box>
   );
 };
-
-// 使用React.memo优化性能，减少不必要的重新渲染
-const CompactChatInput = React.memo(CompactChatInputComponent, (prevProps, nextProps) => {
-  // 自定义比较函数，只在关键props变化时重新渲染
-  const keysToCompare = [
-    'isLoading', 'imageGenerationMode', 'webSearchActive',
-    'isStreaming', 'isDebating', 'toolsEnabled'
-  ];
-
-  for (const key of keysToCompare) {
-    if (prevProps[key as keyof CompactChatInputProps] !== nextProps[key as keyof CompactChatInputProps]) {
-      return false; // props changed, should re-render
-    }
-  }
-
-  // 检查数组props
-  if (prevProps.availableModels?.length !== nextProps.availableModels?.length) {
-    return false;
-  }
-
-  return true; // props are the same, skip re-render
-});
-
-CompactChatInput.displayName = 'CompactChatInput';
 
 export default CompactChatInput;

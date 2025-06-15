@@ -74,7 +74,7 @@ interface ChatPageUIProps {
   handleStopDebate?: () => void;
 }
 
-const ChatPageUIComponent: React.FC<ChatPageUIProps> = ({
+export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   currentTopic,
   currentMessages,
   isStreaming,
@@ -237,12 +237,15 @@ const ChatPageUIComponent: React.FC<ChatPageUIProps> = ({
     setSwipeDirection(direction);
   }, [drawerOpen]);
 
-  const { swipeHandlers } = useSidebarSwipeGesture(
+  const sidebarSwipeGesture = useSidebarSwipeGesture(
     handleOpenSidebar,
     drawerOpen ? handleCloseSidebar : undefined,
     true,
     handleSwipeProgress
   );
+
+  // 从手势对象中提取DOM事件处理器，排除非DOM属性
+  const { isSwipeActive, resetSwipeState, ...gestureHandlers } = sidebarSwipeGesture;
 
   // 话题管理
   const handleCreateTopic = useCallback(async () => {
@@ -381,60 +384,55 @@ const ChatPageUIComponent: React.FC<ChatPageUIProps> = ({
 
   // ==================== 组件配置和渲染 ====================
 
-  // 优化commonProps，减少不必要的重新渲染
-  const stableProps = useMemo(() => ({
-    onSendMessage: handleSendMessage,
-    onSendImagePrompt: handleSendImagePrompt,
-    onStopResponse: handleStopResponseClick,
-    allowConsecutiveMessages: true,
-  }), [handleSendMessage, handleSendImagePrompt, handleStopResponseClick]);
-
-  const dynamicProps = useMemo(() => ({
-    availableModels,
-    isLoading,
-    imageGenerationMode,
-    videoGenerationMode,
-    webSearchActive,
-    isStreaming,
-    isDebating,
-    toolsEnabled
-  }), [
-    availableModels,
-    isLoading,
-    imageGenerationMode,
-    videoGenerationMode,
-    webSearchActive,
-    isStreaming,
-    isDebating,
-    toolsEnabled
-  ]);
-
-  const optionalProps = useMemo(() => {
-    const props: any = {};
+  const commonProps = useMemo(() => {
+    const props = {
+      onSendMessage: handleSendMessage,
+      availableModels,
+      isLoading,
+      allowConsecutiveMessages: true,
+      imageGenerationMode,
+      videoGenerationMode,
+      onSendImagePrompt: handleSendImagePrompt,
+      webSearchActive,
+      onStopResponse: handleStopResponseClick,
+      isStreaming,
+      isDebating,
+      toolsEnabled
+    };
 
     if (handleMultiModelSend && handleSendMultiModelMessage) {
-      props.onSendMultiModelMessage = handleSendMultiModelMessage;
+      (props as any).onSendMultiModelMessage = handleSendMultiModelMessage;
     }
 
     if (handleStartDebate && handleStopDebate) {
-      props.onStartDebate = handleStartDebate;
-      props.onStopDebate = handleStopDebate;
+      (props as any).onStartDebate = handleStartDebate;
+      (props as any).onStopDebate = handleStopDebate;
     }
 
     return props;
-  }, [handleMultiModelSend, handleSendMultiModelMessage, handleStartDebate, handleStopDebate]);
+  }, [
+    handleSendMessage,
+    availableModels,
+    isLoading,
+    imageGenerationMode,
+    videoGenerationMode,
+    handleSendImagePrompt,
+    webSearchActive,
+    handleStopResponseClick,
+    isStreaming,
+    isDebating,
+    toolsEnabled,
+    handleMultiModelSend,
+    handleSendMultiModelMessage,
+    handleStartDebate,
+    handleStopDebate
+  ]);
 
-  const commonProps = useMemo(() => ({
-    ...stableProps,
-    ...dynamicProps,
-    ...optionalProps
-  }), [stableProps, dynamicProps, optionalProps]);
-
-  // 优化输入组件，减少重新创建
   const inputComponent = useMemo(() => {
     if (inputLayoutStyle === 'compact') {
       return (
         <CompactChatInput
+          key="compact-input"
           {...commonProps}
           onClearTopic={handleClearTopic}
           onNewTopic={handleCreateTopic}
@@ -444,15 +442,11 @@ const ChatPageUIComponent: React.FC<ChatPageUIProps> = ({
         />
       );
     } else {
-      // 移除key属性，让React自然复用组件实例
-      return <ChatInput {...commonProps} />;
+      return <ChatInput key="default-input" {...commonProps} />;
     }
   }, [
     inputLayoutStyle,
-    // 只依赖真正会影响组件类型的属性
-    stableProps,
-    dynamicProps,
-    optionalProps,
+    commonProps,
     handleClearTopic,
     handleCreateTopic,
     toggleImageGenerationMode,
@@ -527,8 +521,11 @@ const ChatPageUIComponent: React.FC<ChatPageUIProps> = ({
 
   return (
     <Box
-      sx={dynamicStyles.mainContainer}
-      {...swipeHandlers} // 添加滑动手势处理
+      sx={{
+        ...dynamicStyles.mainContainer,
+        touchAction: 'none' // 修复@use-gesture警告：设置为none以支持手势
+      }}
+      {...gestureHandlers} // 只传递DOM事件处理器，排除非DOM属性
     >
       {/* 桌面端可收起侧边栏，移动端可隐藏 */}
       {!isMobile && (
@@ -681,30 +678,3 @@ const ChatPageUIComponent: React.FC<ChatPageUIProps> = ({
     </Box>
   );
 };
-
-// 使用React.memo优化性能，减少不必要的重新渲染
-export const ChatPageUI = React.memo(ChatPageUIComponent, (prevProps, nextProps) => {
-  // 自定义比较函数，只在关键props变化时重新渲染
-  const keysToCompare = [
-    'isStreaming', 'isLoading', 'drawerOpen', 'currentTopic',
-    'webSearchActive', 'imageGenerationMode', 'videoGenerationMode',
-    'toolsEnabled', 'mcpMode', 'isDebating'
-  ];
-
-  for (const key of keysToCompare) {
-    if (prevProps[key as keyof ChatPageUIProps] !== nextProps[key as keyof ChatPageUIProps]) {
-      return false; // props changed, should re-render
-    }
-  }
-
-  // 检查数组props
-  if (prevProps.currentMessages?.length !== nextProps.currentMessages?.length) {
-    return false;
-  }
-
-  if (prevProps.availableModels?.length !== nextProps.availableModels?.length) {
-    return false;
-  }
-
-  return true; // props are the same, skip re-render
-});

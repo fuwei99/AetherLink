@@ -13,6 +13,10 @@ import { dexieStorage } from '../../../shared/services/DexieStorageService';
 // 常量
 const CURRENT_ASSISTANT_ID_KEY = 'currentAssistantId';
 
+// 全局初始化状态，防止多个组件实例同时初始化
+let globalInitialized = false;
+let globalInitializing = false;
+
 /**
  * 侧边栏状态管理钩子
  */
@@ -84,15 +88,25 @@ export function useSidebarState() {
     dispatch(setReduxCurrentAssistant(assistant));
   }, [dispatch]);
 
+  // 添加加载状态防护
+  const loadingRef = useRef(false);
+
   // 加载助手列表 - 优化版本，避免不必要的重新加载
   const loadAssistants = useCallback(async (forceReload = false) => {
     try {
+      // 防止并发加载
+      if (loadingRef.current) {
+        console.log('[SidebarTabs] 正在加载中，跳过重复请求');
+        return;
+      }
+
       // 如果已经有助手数据且不是强制重新加载，则跳过
       if (!forceReload && userAssistants.length > 0) {
         console.log('[SidebarTabs] 助手列表已存在，跳过重新加载');
         return;
       }
 
+      loadingRef.current = true;
       console.log('[SidebarTabs] 开始加载助手列表');
       const assistants = await AssistantService.getUserAssistants();
       console.log('[SidebarTabs] 获取到助手列表:', assistants.length);
@@ -137,50 +151,58 @@ export function useSidebarState() {
     } catch (error) {
       console.error('[SidebarTabs] 加载助手数据失败:', error);
       throw error;
+    } finally {
+      loadingRef.current = false;
     }
   }, [userAssistants.length, setUserAssistants, setCurrentAssistant]);
 
-  // 初始化数据
+  // 初始化数据 - 添加全局防护机制避免重复初始化
   useEffect(() => {
     async function initializeData() {
+      // 检查全局初始化状态
+      if (globalInitialized || globalInitializing) {
+        console.log('[SidebarTabs] 全局已初始化或正在初始化，跳过');
+        setLoading(false);
+        return;
+      }
+
+      // 双重检查本地状态
+      if (initialized.current) {
+        console.log('[SidebarTabs] 本地已经初始化过，跳过重复初始化');
+        setLoading(false);
+        return;
+      }
+
       try {
+        console.log('[SidebarTabs] 开始初始化侧边栏数据');
         setLoading(true);
+        globalInitializing = true;
+        initialized.current = true; // 立即设置为true，防止重复调用
+
         await loadAssistants(true); // 初始化时强制加载助手列表
-        initialized.current = true;
+
+        globalInitialized = true;
+        console.log('[SidebarTabs] 侧边栏数据初始化完成');
       } catch (error) {
         console.error('[SidebarTabs] 初始化数据失败:', error);
+        initialized.current = false; // 失败时重置，允许重试
+        globalInitialized = false;
       } finally {
+        globalInitializing = false;
         setLoading(false); // 确保loading状态在成功或失败后都设置
       }
     }
 
-    if (!initialized.current) {
-      initializeData();
-    }
-  }, []);
+    initializeData();
+  }, []); // 移除loadAssistants依赖，避免重复触发
 
-  // 优化的事件监听器，添加防抖处理避免频繁切换
+  // 监听SHOW_TOPIC_SIDEBAR事件，切换到话题标签页
   useEffect(() => {
-    let debounceTimer: NodeJS.Timeout;
-
-    const handleShowTopicSidebar = () => {
-      // 清除之前的定时器
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-
-      // 使用防抖，避免频繁切换
-      debounceTimer = setTimeout(() => {
-        setValue(1); // 切换到话题标签页（索引为1）
-      }, 50); // 50ms防抖延迟
-    };
-
-    const unsubscribe = EventEmitter.on(EVENT_NAMES.SHOW_TOPIC_SIDEBAR, handleShowTopicSidebar);
+    const unsubscribe = EventEmitter.on(EVENT_NAMES.SHOW_TOPIC_SIDEBAR, () => {
+      setValue(1); // 切换到话题标签页（索引为1）
+    });
 
     return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
       unsubscribe();
     };
   }, []);

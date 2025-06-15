@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTheme, useMediaQuery } from '@mui/material';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../types';
 
@@ -11,12 +11,10 @@ interface UseChatInputLogicProps {
   imageGenerationMode?: boolean;
   videoGenerationMode?: boolean;
   toolsEnabled?: boolean;
-  parsedContent?: string;
   images: ImageContent[];
   files: FileContent[];
   setImages: React.Dispatch<React.SetStateAction<ImageContent[]>>;
   setFiles: React.Dispatch<React.SetStateAction<FileContent[]>>;
-  resetUrlScraper?: () => void;
   // ChatInput 特有的功能
   enableTextareaResize?: boolean;
   enableCompositionHandling?: boolean;
@@ -32,12 +30,10 @@ export const useChatInputLogic = ({
   imageGenerationMode = false,
   videoGenerationMode = false,
   toolsEnabled = true,
-  parsedContent = '',
   images,
   files,
   setImages,
   setFiles,
-  resetUrlScraper,
   enableTextareaResize = false,
   enableCompositionHandling = false,
   enableCharacterCount = false
@@ -60,41 +56,46 @@ export const useChatInputLogic = ({
 
   // 判断是否允许发送消息
   const canSendMessage = () => {
-    const hasContent = message.trim() || images.length > 0 || files.length > 0 || parsedContent.trim();
+    const hasContent = message.trim() || images.length > 0 || files.length > 0;
     return hasContent && (allowConsecutiveMessages || !isLoading);
   };
 
-  // 文本区域高度自适应（ChatInput 特有）
-  const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
+  // 防抖定时器引用
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 优化的文本区域高度自适应（ChatInput 特有）- 添加防抖机制
+  const adjustTextareaHeight = useCallback((textarea: HTMLTextAreaElement) => {
     if (!enableTextareaResize) return;
 
-    // 重置高度以获取正确的scrollHeight
-    textarea.style.height = 'auto';
+    // 清除之前的防抖定时器
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
 
-    // 计算新高度
-    const newHeight = Math.max(
-      isMobile ? 32 : isTablet ? 36 : 34, // 最小高度
-      Math.min(textarea.scrollHeight, 120) // 最大高度120px
-    );
+    // 使用防抖机制，避免频繁计算
+    debounceTimerRef.current = setTimeout(() => {
+      // 重置高度以获取正确的scrollHeight
+      textarea.style.height = 'auto';
 
-    setTextareaHeight(newHeight);
-    textarea.style.height = `${newHeight}px`;
-  };
+      // 计算新高度
+      const newHeight = Math.max(
+        isMobile ? 32 : isTablet ? 36 : 34, // 最小高度
+        Math.min(textarea.scrollHeight, 120) // 最大高度120px
+      );
+
+      setTextareaHeight(newHeight);
+      textarea.style.height = `${newHeight}px`;
+    }, 16); // 16ms防抖，约60fps
+  }, [enableTextareaResize, isMobile, isTablet]);
 
   // 处理消息发送
   const handleSubmit = async () => {
-    if ((!message.trim() && images.length === 0 && files.length === 0 && !parsedContent) ||
+    if ((!message.trim() && images.length === 0 && files.length === 0) ||
         (isLoading && !allowConsecutiveMessages)) {
       return;
     }
 
     let processedMessage = message.trim();
-
-    // 如果有解析的内容，添加到消息中
-    if (parsedContent) {
-      processedMessage = `${processedMessage}\n\n${parsedContent}`;
-      resetUrlScraper?.();
-    }
 
     // 如果是图像生成模式，则调用生成图像的回调
     if (imageGenerationMode && onSendImagePrompt) {
@@ -253,17 +254,21 @@ export const useChatInputLogic = ({
     }
   };
 
-  // 优化的字符数检测，使用useMemo减少计算
-  const shouldShowCharCount = useMemo(() => {
-    return enableCharacterCount && message.length > 500;
-  }, [enableCharacterCount, message.length]);
-
-  // 只在需要时更新showCharCount状态
+  // 监听消息变化以检测字符数（ChatInput 特有）
   useEffect(() => {
-    if (enableCharacterCount) {
-      setShowCharCount(shouldShowCharCount);
+    if (enableCharacterCount && message.length <= 500) {
+      setShowCharCount(false);
     }
-  }, [enableCharacterCount, shouldShowCharCount]);
+  }, [message, enableCharacterCount]);
+
+  // 清理防抖定时器
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   return {
     message,
