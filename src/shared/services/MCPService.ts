@@ -65,6 +65,9 @@ export class MCPService {
   private capacitorCorsClients: Map<string, CapacitorCorsMCPClient> = new Map();
   private pendingCapacitorCorsClients: Map<string, Promise<CapacitorCorsMCPClient>> = new Map();
 
+  // 添加服务器状态保存字段
+  private savedActiveServerIds: Set<string> = new Set();
+
   private constructor() {
     this.loadServers();
   }
@@ -801,6 +804,13 @@ export class MCPService {
     const activeServers = this.getActiveServers();
     console.log(`[MCP] 正在关闭 ${activeServers.length} 个活跃服务器`);
 
+    // 保存当前活跃服务器的ID，以便后续恢复
+    this.savedActiveServerIds.clear();
+    activeServers.forEach(server => {
+      this.savedActiveServerIds.add(server.id);
+    });
+    console.log(`[MCP] 已保存 ${this.savedActiveServerIds.size} 个活跃服务器的状态`);
+
     const promises = activeServers.map(async (server) => {
       try {
         await this.toggleServer(server.id, false);
@@ -812,6 +822,43 @@ export class MCPService {
 
     await Promise.all(promises);
     console.log('[MCP] 所有活跃服务器已关闭');
+  }
+
+  /**
+   * 恢复之前保存的活跃服务器状态
+   */
+  public async restoreSavedActiveServers(): Promise<void> {
+    if (this.savedActiveServerIds.size === 0) {
+      console.log('[MCP] 没有保存的活跃服务器状态需要恢复');
+      return;
+    }
+
+    console.log(`[MCP] 正在恢复 ${this.savedActiveServerIds.size} 个服务器的活跃状态`);
+
+    const promises = Array.from(this.savedActiveServerIds).map(async (serverId) => {
+      try {
+        const server = this.getServerById(serverId);
+        if (server) {
+          await this.toggleServer(serverId, true);
+          console.log(`[MCP] 已恢复服务器: ${server.name}`);
+        }
+      } catch (error) {
+        console.error(`[MCP] 恢复服务器失败: ${serverId}`, error);
+      }
+    });
+
+    await Promise.all(promises);
+    console.log('[MCP] 所有保存的活跃服务器状态已恢复');
+
+    // 清空保存的状态
+    this.savedActiveServerIds.clear();
+  }
+
+  /**
+   * 检查是否有保存的活跃服务器状态
+   */
+  public hasSavedActiveServers(): boolean {
+    return this.savedActiveServerIds.size > 0;
   }
 
   /**

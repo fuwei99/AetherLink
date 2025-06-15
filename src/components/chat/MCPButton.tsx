@@ -82,6 +82,17 @@ const MCPButton: React.FC<MCPButtonProps> = ({
       } catch (error) {
         console.error('[MCP] 停止服务器失败:', error);
       }
+    } else {
+      // 开启总开关时，恢复之前保存的活跃服务器状态
+      try {
+        if (mcpService.hasSavedActiveServers()) {
+          await mcpService.restoreSavedActiveServers();
+          loadServers();
+          console.log('[MCP] 总开关开启，已恢复之前的活跃服务器状态');
+        }
+      } catch (error) {
+        console.error('[MCP] 恢复服务器状态失败:', error);
+      }
     }
     onToolsEnabledChange(enabled);
   };
