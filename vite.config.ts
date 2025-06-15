@@ -1,20 +1,16 @@
 import { defineConfig } from 'vite'
 import reactOxc from '@vitejs/plugin-react-oxc'  // Oxc 处理 React
-import reactSwc from '@vitejs/plugin-react-swc'  // SWC 处理 Vue 中的 TS
 import vue from '@vitejs/plugin-vue'
 
-// Rolldown-Vite 混合配置：Oxc + SWC
-// Oxc 处理 React (最快)，SWC 处理 Vue 中的 TypeScript (最稳定)
+// Rolldown-Vite + Oxc 配置
+// Oxc 处理 React (最快性能)，Vue 使用标准插件
 export default defineConfig({
   plugins: [
-    // Oxc 处理纯 React 文件 - 最快性能
+    // 只使用 Oxc 处理 React - 避免插件冲突
     reactOxc({
       include: /\.(jsx|tsx)$/,  // 只处理 JSX/TSX 文件
       exclude: [/\.vue$/, /node_modules/]
     }),
-
-    // SWC 处理普通 JS/TS 文件 - 稳定兼容性
-    reactSwc(),
     vue({
       template: {
         compilerOptions: {
