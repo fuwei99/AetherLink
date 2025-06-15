@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { ChevronRight as ChevronRightIcon, Palette as FormatColorFillIcon } from 'lucide-react';
 import { Settings as SettingsApplicationsIcon, Sliders as TuneIcon, Wand2 as AutoFixHighIcon, GitBranch } from 'lucide-react';
-import { Code as CodeIcon, MessageSquare as ForumIcon, BookOpen as MenuBookIcon, Folder as WorkspaceIcon } from 'lucide-react';
+import { Code as CodeIcon, MessageSquare as ForumIcon, BookOpen as MenuBookIcon, Folder as WorkspaceIcon, Database as DatabaseIcon } from 'lucide-react';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -71,6 +71,7 @@ const SettingsPage: React.FC = () => {
         { id: 'workspace-settings', title: '工作区管理', description: '创建和管理文件工作区', icon: <WorkspaceIcon />, path: '/settings/workspace', color: '#f59e0b' },
         { id: 'knowledge-settings', title: '知识库设置', description: '管理知识库配置和嵌入模型', icon: <MenuBookIcon />, path: '/settings/knowledge', color: '#059669' },
         { id: 'data-settings', title: '数据设置', description: '管理数据存储和隐私选项', icon: <StorageIcon />, path: '/settings/data', color: '#0ea5e9' },
+        { id: 'notion-settings', title: 'Notion 集成', description: '配置Notion数据库导出设置', icon: <DatabaseIcon />, path: '/settings/notion', color: '#6366f1' },
         { id: 'voice-settings', title: '语音功能', description: '语音识别和文本转语音设置', icon: <RecordVoiceOverIcon />, path: '/settings/voice', color: '#8b5cf6' },
         { id: 'features', title: '功能模块', description: '启用或禁用应用功能', icon: <ExtensionIcon />, path: '/settings/features', color: '#22c55e' },
         { id: 'vue-demo', title: 'Vue 组件演示', description: 'Vue与Capacitor功能演示', icon: <CodeIcon />, path: '/vue-demo', color: '#42b983' },
