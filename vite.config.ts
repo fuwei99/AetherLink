@@ -101,6 +101,15 @@ export default defineConfig({
           'Accept': 'application/json, text/event-stream',
           'Cache-Control': 'no-cache'
         }
+      },
+      // Notion API代理
+      '/api/notion': {
+        target: 'https://api.notion.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/notion/, ''),
+        headers: {
+          'Origin': 'https://api.notion.com'
+        }
       }
     }
   },

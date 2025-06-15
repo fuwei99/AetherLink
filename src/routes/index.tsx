@@ -53,6 +53,8 @@ const WorkspaceDetail = lazy(() => import('../pages/Settings/WorkspaceDetail'));
 const FilePermissionPage = lazy(() => import('../pages/Settings/FilePermissionPage'));
 // 导入思考过程设置页面
 const ThinkingProcessSettings = lazy(() => import('../pages/Settings/ThinkingProcessSettings'));
+// 导入Notion设置页面
+const NotionSettings = lazy(() => import('../pages/Settings/NotionSettings'));
 
 // 加载中组件
 const LoadingFallback = () => (
@@ -142,6 +144,7 @@ const AppRouter: React.FC = () => {
         <Route path="/settings/voice" element={<VoiceSettings />} />
         <Route path="/settings/data" element={<DataSettingsPage />} />
         <Route path="/settings/data/advanced-backup" element={<AdvancedBackupPage />} />
+        <Route path="/settings/notion" element={<NotionSettings />} />
         <Route path="/settings/web-search" element={<WebSearchSettings />} />
         <Route path="/settings/mcp-server" element={<MCPServerSettings />} />
         <Route path="/settings/mcp-server/:serverId" element={<MCPServerDetail />} />

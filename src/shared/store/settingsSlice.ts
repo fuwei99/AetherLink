@@ -143,6 +143,15 @@ interface SettingsState {
     position: 'center' | 'top' | 'bottom' | 'left' | 'right'; // 背景位置
     repeat: 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y'; // 背景重复
   };
+
+  // Notion集成设置
+  notion?: {
+    enabled: boolean;
+    apiKey: string;
+    databaseId: string;
+    pageTitleField: string;
+    dateField?: string; // 可选的日期字段名
+  };
 }
 
 

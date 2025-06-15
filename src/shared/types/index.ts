@@ -191,6 +191,15 @@ export interface WebSearchProviderResponse {
   results: WebSearchResult[];
 }
 
+// Notion配置类型
+export interface NotionSettings {
+  enabled: boolean;
+  apiKey: string;
+  databaseId: string;
+  pageTitleField: string; // 页面标题字段名，通常是"Name"或"名称"
+  dateField?: string; // 可选的日期字段名
+}
+
 // 引用类型
 export interface Citation {
   number: number;
@@ -313,6 +322,7 @@ export interface Settings {
   contextCount?: number; // 上下文数量控制
   mathRenderer?: MathRendererType; // 数学公式渲染器
   webSearch?: WebSearchSettings; // 网络搜索设置
+  notion?: NotionSettings; // Notion配置
 }
 
 // 预设模型提供商

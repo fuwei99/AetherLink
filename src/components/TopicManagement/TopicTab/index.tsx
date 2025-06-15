@@ -30,7 +30,8 @@ import {
   ArrowRight,
   Download,
   FileText,
-  Copy
+  Copy,
+  Database
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addItemToGroup } from '../../../shared/store/slices/groupsSlice';
@@ -50,6 +51,7 @@ import { TopicService } from '../../../shared/services/TopicService';
 import { TopicNamingService } from '../../../shared/services/TopicNamingService';
 import { TopicManager } from '../../../shared/services/assistant/TopicManager';
 import { exportTopicAsMarkdown, exportTopicAsDocx, copyTopicAsMarkdown } from '../../../utils/exportUtils';
+import { exportTopicToNotion } from '../../../utils/notionExport';
 
 interface TopicTabProps {
   currentAssistant: ({
@@ -734,6 +736,36 @@ export default function TopicTab({
     handleCloseMenu();
   };
 
+  // 导出话题到Notion
+  const handleExportTopicToNotion = async (includeReasoning = false) => {
+    if (!contextTopic) return;
+    
+    const notionSettings = store.getState().settings.notion;
+    
+    if (!notionSettings?.enabled) {
+      alert('请先在设置页面启用并配置Notion集成');
+      return;
+    }
+    
+    if (!notionSettings.apiKey || !notionSettings.databaseId) {
+      alert('请先在设置页面配置Notion API密钥和数据库ID');
+      return;
+    }
+    
+    try {
+      await exportTopicToNotion(contextTopic, {
+        apiKey: notionSettings.apiKey,
+        databaseId: notionSettings.databaseId,
+        pageTitleField: notionSettings.pageTitleField || 'Name',
+        dateField: notionSettings.dateField
+      }, includeReasoning);
+    } catch (error) {
+      console.error('导出话题到Notion失败:', error);
+      alert(`导出到Notion失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    }
+    handleCloseMenu();
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 标题和按钮区域 */}
@@ -912,6 +944,10 @@ export default function TopicTab({
           <MenuItem key="export-docx" onClick={() => handleExportTopicAsDocx(false)}>
             <FileText size={18} style={{ marginRight: 8 }} />
             导出为DOCX
+          </MenuItem>,
+          <MenuItem key="export-notion" onClick={() => handleExportTopicToNotion(false)}>
+            <Database size={18} style={{ marginRight: 8 }} />
+            导出到Notion
           </MenuItem>,
           <Divider key="divider-1" />,
           <MenuItem key="delete-topic" onClick={() => {
