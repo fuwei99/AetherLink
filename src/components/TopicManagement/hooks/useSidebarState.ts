@@ -159,13 +159,28 @@ export function useSidebarState() {
     }
   }, []);
 
-  // 监听SHOW_TOPIC_SIDEBAR事件，切换到话题标签页
+  // 优化的事件监听器，添加防抖处理避免频繁切换
   useEffect(() => {
-    const unsubscribe = EventEmitter.on(EVENT_NAMES.SHOW_TOPIC_SIDEBAR, () => {
-      setValue(1); // 切换到话题标签页（索引为1）
-    });
+    let debounceTimer: NodeJS.Timeout;
+
+    const handleShowTopicSidebar = () => {
+      // 清除之前的定时器
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+
+      // 使用防抖，避免频繁切换
+      debounceTimer = setTimeout(() => {
+        setValue(1); // 切换到话题标签页（索引为1）
+      }, 50); // 50ms防抖延迟
+    };
+
+    const unsubscribe = EventEmitter.on(EVENT_NAMES.SHOW_TOPIC_SIDEBAR, handleShowTopicSidebar);
 
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       unsubscribe();
     };
   }, []);

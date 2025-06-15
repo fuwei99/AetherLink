@@ -35,6 +35,7 @@ import {
   captureMessageAsImage,
   exportMessageAsImage
 } from '../../utils/exportUtils';
+import { toastManager } from '../EnhancedToast';
 
 interface ExportMenuProps {
   message: Message;
@@ -106,7 +107,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
     if (messageElement) {
       await captureMessageAsImage(messageElement);
     } else {
-      alert('无法找到消息元素');
+      toastManager.error('无法找到消息元素', '操作失败');
     }
   };
 
@@ -117,7 +118,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
     if (messageElement) {
       await exportMessageAsImage(messageElement);
     } else {
-      alert('无法找到消息元素');
+      toastManager.error('无法找到消息元素', '操作失败');
     }
   };
 

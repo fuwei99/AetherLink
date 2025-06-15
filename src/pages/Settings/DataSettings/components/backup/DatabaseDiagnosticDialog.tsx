@@ -34,6 +34,7 @@ import { cleanupOldDatabases, getDatabaseStatus, type DatabaseStatus } from '../
 import { TopicStatsService } from '../../../../../shared/services/TopicStatsService';
 import { AssistantService } from '../../../../../shared/services';
 import Dexie from 'dexie';
+import { toastManager } from '../../../../../components/EnhancedToast';
 
 interface DatabaseDiagnosticDialogProps {
   open: boolean;
@@ -182,7 +183,7 @@ const DatabaseDiagnosticDialog: React.FC<DatabaseDiagnosticDialogProps> = ({
         current: 'aetherlink-db-new'
       });
 
-      alert('数据库已重建。请重启应用以确保更改生效。');
+      toastManager.success('数据库已重建。请重启应用以确保更改生效。', '重建成功');
     } catch (err) {
       console.error('数据库重建失败:', err);
       setError('数据库重建失败: ' + (err instanceof Error ? err.message : '未知错误'));

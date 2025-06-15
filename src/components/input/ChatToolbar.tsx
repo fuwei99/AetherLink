@@ -318,31 +318,33 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     }
   };
 
-  // 创建新话题 - 使用统一的TopicService
+  // 优化的创建新话题函数，减少嵌套异步调用
   const handleCreateTopic = async () => {
     // 触发新建话题事件
     EventEmitter.emit(EVENT_NAMES.ADD_NEW_TOPIC);
-    console.log('[ChatToolbar] Emitted ADD_NEW_TOPIC event.');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ChatToolbar] Emitted ADD_NEW_TOPIC event.');
+    }
 
     // 创建新话题
     const newTopic = await TopicService.createNewTopic();
 
     // 如果成功创建话题，自动跳转到新话题
     if (newTopic) {
-      console.log('[ChatToolbar] 成功创建新话题，自动跳转:', newTopic.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ChatToolbar] 成功创建新话题，自动跳转:', newTopic.id);
+      }
 
-      // 设置当前话题 - 立即选择新创建的话题
-      dispatch(newMessagesActions.setCurrentTopicId(newTopic.id));
+      // 使用requestAnimationFrame批量处理状态更新
+      requestAnimationFrame(() => {
+        // 设置当前话题
+        dispatch(newMessagesActions.setCurrentTopicId(newTopic.id));
 
-      // 确保话题侧边栏显示并选中新话题
-      setTimeout(() => {
-        EventEmitter.emit(EVENT_NAMES.SHOW_TOPIC_SIDEBAR);
-
-        // 再次确保新话题被选中，防止其他逻辑覆盖
+        // 延迟触发侧边栏显示，确保状态更新完成
         setTimeout(() => {
-          dispatch(newMessagesActions.setCurrentTopicId(newTopic.id));
+          EventEmitter.emit(EVENT_NAMES.SHOW_TOPIC_SIDEBAR);
         }, 50);
-      }, 100);
+      });
     }
   };
 

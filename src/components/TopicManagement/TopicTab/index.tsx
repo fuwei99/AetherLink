@@ -52,6 +52,7 @@ import { TopicNamingService } from '../../../shared/services/TopicNamingService'
 import { TopicManager } from '../../../shared/services/assistant/TopicManager';
 import { exportTopicAsMarkdown, exportTopicAsDocx, copyTopicAsMarkdown } from '../../../utils/exportUtils';
 import { exportTopicToNotion } from '../../../utils/notionExport';
+import { toastManager } from '../../EnhancedToast';
 
 interface TopicTabProps {
   currentAssistant: ({
@@ -286,30 +287,44 @@ export default function TopicTab({
     }
   }, [topics, isLoading, onSelectTopic]);
 
-  // 监听SHOW_TOPIC_SIDEBAR事件，确保在切换到话题标签页时自动选择话题（优化：与主逻辑保持一致）
+  // 优化的事件监听器，减少不必要的话题选择操作
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout;
+
     const handleShowTopicSidebar = () => {
-      // 如果有话题但没有选中的话题，自动选择第一个话题
-      if (!isLoading && topics.length > 0) {
-        // 使用Redux状态检查，与主自动选择逻辑保持一致
-        const currentTopicId = store.getState().messages?.currentTopicId;
-
-        // 只有在完全没有选中话题时才自动选择第一个话题
-        // 移除"话题不在当前助手列表中"的检查，避免用户选择被覆盖
-        if (!currentTopicId) {
-          console.log('[TopicTab] SHOW_TOPIC_SIDEBAR事件触发自动选择第一个话题:', topics[0].name);
-
-          // 使用requestAnimationFrame确保在下一次渲染帧中执行
-          requestAnimationFrame(() => {
-            onSelectTopic(topics[0]);
-          });
-        }
+      // 清除之前的定时器
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
       }
+
+      // 使用防抖，避免频繁操作
+      debounceTimer = setTimeout(() => {
+        // 如果有话题但没有选中的话题，自动选择第一个话题
+        if (!isLoading && topics.length > 0) {
+          // 使用Redux状态检查，与主自动选择逻辑保持一致
+          const currentTopicId = store.getState().messages?.currentTopicId;
+
+          // 只有在完全没有选中话题时才自动选择第一个话题
+          if (!currentTopicId) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[TopicTab] 自动选择第一个话题:', topics[0].name);
+            }
+
+            // 使用requestAnimationFrame确保在下一次渲染帧中执行
+            requestAnimationFrame(() => {
+              onSelectTopic(topics[0]);
+            });
+          }
+        }
+      }, 100); // 100ms防抖延迟
     };
 
     const unsubscribe = EventEmitter.on(EVENT_NAMES.SHOW_TOPIC_SIDEBAR, handleShowTopicSidebar);
 
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       unsubscribe();
     };
   }, [topics, isLoading, onSelectTopic]);
@@ -739,19 +754,19 @@ export default function TopicTab({
   // 导出话题到Notion
   const handleExportTopicToNotion = async (includeReasoning = false) => {
     if (!contextTopic) return;
-    
+
     const notionSettings = store.getState().settings.notion;
-    
+
     if (!notionSettings?.enabled) {
-      alert('请先在设置页面启用并配置Notion集成');
+      toastManager.warning('请先在设置页面启用并配置Notion集成', '配置提醒');
       return;
     }
-    
+
     if (!notionSettings.apiKey || !notionSettings.databaseId) {
-      alert('请先在设置页面配置Notion API密钥和数据库ID');
+      toastManager.warning('请先在设置页面配置Notion API密钥和数据库ID', '配置提醒');
       return;
     }
-    
+
     try {
       await exportTopicToNotion(contextTopic, {
         apiKey: notionSettings.apiKey,
@@ -761,7 +776,7 @@ export default function TopicTab({
       }, includeReasoning);
     } catch (error) {
       console.error('导出话题到Notion失败:', error);
-      alert(`导出到Notion失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      // 错误处理已经在exportTopicToNotion函数内部处理了，这里不需要额外提示
     }
     handleCloseMenu();
   };

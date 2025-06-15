@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTheme, useMediaQuery } from '@mui/material';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../types';
 
@@ -253,12 +253,17 @@ export const useChatInputLogic = ({
     }
   };
 
-  // 监听消息变化以检测字符数（ChatInput 特有）
+  // 优化的字符数检测，使用useMemo减少计算
+  const shouldShowCharCount = useMemo(() => {
+    return enableCharacterCount && message.length > 500;
+  }, [enableCharacterCount, message.length]);
+
+  // 只在需要时更新showCharCount状态
   useEffect(() => {
-    if (enableCharacterCount && message.length <= 500) {
-      setShowCharCount(false);
+    if (enableCharacterCount) {
+      setShowCharCount(shouldShowCharCount);
     }
-  }, [message, enableCharacterCount]);
+  }, [enableCharacterCount, shouldShowCharCount]);
 
   return {
     message,

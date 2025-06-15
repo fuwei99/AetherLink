@@ -24,6 +24,7 @@ import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeSer
 import { dexieStorage } from '../../shared/services/DexieStorageService';
 import CreateKnowledgeDialog from '../../components/KnowledgeManagement/CreateKnowledgeDialog';
 import type { KnowledgeBase } from '../../shared/types/KnowledgeBase';
+import { toastManager } from '../../components/EnhancedToast';
 
 interface KnowledgeStats {
   totalKnowledgeBases: number;
@@ -109,10 +110,10 @@ const KnowledgeSettings: React.FC = () => {
       await loadStats();
 
       setClearDialogOpen(false);
-      alert('知识库数据已清理完成');
+      toastManager.success('知识库数据已清理完成', '清理成功');
     } catch (error) {
       console.error('清理知识库数据失败:', error);
-      alert('清理失败，请重试');
+      toastManager.error('清理失败，请重试', '清理失败');
     } finally {
       setLoading(false);
     }
@@ -130,12 +131,12 @@ const KnowledgeSettings: React.FC = () => {
       await MobileKnowledgeService.getInstance().createKnowledgeBase(formData as any);
       setCreateDialogOpen(false);
       await loadStats(); // 重新加载统计信息
-      alert('知识库创建成功！');
+      toastManager.success('知识库创建成功！', '创建成功');
       // 可以选择导航到知识库详情页
       // navigate(`/knowledge/${createdKB.id}`);
     } catch (error) {
       console.error('创建知识库失败:', error);
-      alert('创建失败，请重试');
+      toastManager.error('创建失败，请重试', '创建失败');
     } finally {
       setLoading(false);
     }
@@ -170,10 +171,10 @@ const KnowledgeSettings: React.FC = () => {
       URL.revokeObjectURL(url);
 
       setExportDialogOpen(false);
-      alert('知识库数据导出成功');
+      toastManager.success('知识库数据导出成功', '导出成功');
     } catch (error) {
       console.error('导出知识库数据失败:', error);
-      alert('导出失败，请重试');
+      toastManager.error('导出失败，请重试', '导出失败');
     } finally {
       setLoading(false);
     }

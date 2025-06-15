@@ -10,6 +10,7 @@ import dayjs from 'dayjs';
 import html2canvas from 'html2canvas';
 import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer, ShadingType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
+import { toastManager } from '../components/EnhancedToast';
 
 // 添加话题导出相关的导入
 import type { ChatTopic } from '../shared/types';
@@ -137,7 +138,7 @@ export async function exportMessageAsMarkdown(message: Message, exportReasoning 
         console.warn('分享失败，尝试复制到剪贴板:', shareError);
         // 回退到复制到剪贴板
         await Clipboard.write({ string: markdown });
-        alert('分享失败，内容已复制到剪贴板');
+        toastManager.warning('分享失败，内容已复制到剪贴板', '导出提醒');
       }
     } else {
       // Web端：使用下载链接
@@ -153,7 +154,7 @@ export async function exportMessageAsMarkdown(message: Message, exportReasoning 
     }
   } catch (error) {
     console.error('导出Markdown失败:', error);
-    alert('导出失败: ' + (error as Error).message);
+    toastManager.error('导出失败: ' + (error as Error).message, '导出错误');
   }
 }
 
@@ -175,10 +176,10 @@ export async function copyMessageAsMarkdown(message: Message, exportReasoning = 
     }
 
     // 复制成功，可以考虑使用更优雅的提示方式
-    alert('Markdown内容已复制到剪贴板');
+    toastManager.success('Markdown内容已复制到剪贴板', '复制成功');
   } catch (error) {
     console.error('复制Markdown失败:', error);
-    alert('复制失败');
+    toastManager.error('复制失败', '复制错误');
   }
 }
 
@@ -221,10 +222,10 @@ export async function exportToObsidian(message: Message, options: {
     // 打开Obsidian
     window.open(obsidianUrl, '_system');
     // 简化提示，避免过多弹窗
-    alert('正在打开Obsidian...');
+    toastManager.info('正在打开Obsidian...', '导出提醒');
   } catch (error) {
     console.error('导出到Obsidian失败:', error);
-    alert('导出到Obsidian失败');
+    toastManager.error('导出到Obsidian失败', '导出错误');
   }
 }
 
@@ -253,11 +254,11 @@ export async function shareMessage(message: Message, format: 'text' | 'markdown'
     } else {
       // Web端回退到复制到剪贴板
       await navigator.clipboard.writeText(content);
-      alert('内容已复制到剪贴板');
+      toastManager.success('内容已复制到剪贴板', '分享成功');
     }
   } catch (error) {
     console.error('分享失败:', error);
-    alert('分享失败');
+    toastManager.error('分享失败', '分享错误');
   }
 }
 
@@ -310,7 +311,7 @@ export async function captureMessageAsImage(messageElement: HTMLElement): Promis
 
       } catch (shareError) {
         console.warn('分享失败:', shareError);
-        alert('复制图片失败');
+        toastManager.error('复制图片失败', '操作失败');
       }
     } else {
       // Web端：转换为blob并复制到剪贴板
@@ -324,7 +325,7 @@ export async function captureMessageAsImage(messageElement: HTMLElement): Promis
           await navigator.clipboard.write([
             new ClipboardItem({ 'image/png': blob })
           ]);
-          alert('图片已复制到剪贴板');
+          toastManager.success('图片已复制到剪贴板', '复制成功');
         } catch (clipboardError) {
           console.warn('复制到剪贴板失败，尝试下载:', clipboardError);
 
@@ -342,7 +343,7 @@ export async function captureMessageAsImage(messageElement: HTMLElement): Promis
     }
   } catch (error) {
     console.error('截图失败:', error);
-    alert('截图失败');
+    toastManager.error('截图失败', '操作失败');
   }
 }
 
@@ -400,7 +401,7 @@ export async function exportMessageAsImage(messageElement: HTMLElement): Promise
 
       } catch (shareError) {
         console.warn('分享失败:', shareError);
-        alert('导出图片失败');
+        toastManager.error('导出图片失败', '导出失败');
       }
     } else {
       // Web端：直接下载
@@ -419,7 +420,7 @@ export async function exportMessageAsImage(messageElement: HTMLElement): Promise
     }
   } catch (error) {
     console.error('导出图片失败:', error);
-    alert('导出图片失败');
+    toastManager.error('导出图片失败', '导出失败');
   }
 }
 
@@ -574,7 +575,7 @@ export async function exportTopicAsMarkdown(topic: ChatTopic, exportReasoning = 
       } catch (shareError) {
         console.warn('分享失败，尝试复制到剪贴板:', shareError);
         await Clipboard.write({ string: markdown });
-        alert('分享失败，内容已复制到剪贴板');
+        toastManager.warning('分享失败，内容已复制到剪贴板', '导出提醒');
       }
     } else {
       // Web端：直接下载
@@ -590,7 +591,7 @@ export async function exportTopicAsMarkdown(topic: ChatTopic, exportReasoning = 
     }
   } catch (error) {
     console.error('导出话题Markdown失败:', error);
-    alert('导出失败: ' + (error as Error).message);
+    toastManager.error('导出失败: ' + (error as Error).message, '导出错误');
   }
 }
 
@@ -609,10 +610,10 @@ export async function copyTopicAsMarkdown(topic: ChatTopic, exportReasoning = fa
       await navigator.clipboard.writeText(markdown);
     }
 
-    alert('话题Markdown内容已复制到剪贴板');
+    toastManager.success('话题Markdown内容已复制到剪贴板', '复制成功');
   } catch (error) {
     console.error('复制话题Markdown失败:', error);
-    alert('复制失败');
+    toastManager.error('复制失败', '复制错误');
   }
 }
 
@@ -626,7 +627,7 @@ export async function exportTopicAsDocx(topic: ChatTopic, exportReasoning = fals
     const messages = await dexieStorage.getTopicMessages(topic.id);
     
     if (messages.length === 0) {
-      alert('话题没有消息内容，无法导出');
+      toastManager.warning('话题没有消息内容，无法导出', '导出提醒');
       return;
     }
 
@@ -692,7 +693,7 @@ export async function exportTopicAsDocx(topic: ChatTopic, exportReasoning = fals
 
       } catch (shareError) {
         console.warn('分享失败:', shareError);
-        alert('导出失败，请重试');
+        toastManager.error('导出失败，请重试', '导出失败');
       }
     } else {
       // Web端：使用file-saver直接下载
@@ -700,7 +701,7 @@ export async function exportTopicAsDocx(topic: ChatTopic, exportReasoning = fals
     }
   } catch (error) {
     console.error('导出话题DOCX失败:', error);
-    alert('导出失败: ' + (error as Error).message);
+    toastManager.error('导出失败: ' + (error as Error).message, '导出错误');
   }
 }
 

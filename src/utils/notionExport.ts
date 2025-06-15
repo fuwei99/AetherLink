@@ -1,6 +1,7 @@
 import type { ChatTopic } from '../shared/types';
 import { dexieStorage } from '../shared/services/DexieStorageService';
 import dayjs from 'dayjs';
+import { notionApiRequest, showSuccessMessage, showErrorMessage } from './notionApiUtils';
 
 // Notion API 相关类型定义
 interface NotionPageProperties {
@@ -51,11 +52,41 @@ interface InlineMatch {
   url?: string;
 }
 
+// 定义Notion富文本类型
+interface NotionRichText {
+  type: 'text';
+  text: {
+    content: string;
+    link?: { url: string };
+  };
+  annotations?: {
+    bold?: boolean;
+    italic?: boolean;
+    code?: boolean;
+    strikethrough?: boolean;
+  };
+}
+
+// 定义消息块类型（兼容项目中的MessageBlock类型）
+interface NotionMessageBlock {
+  id: string;
+  type: 'main_text' | 'thinking' | 'unknown';
+  content: string;
+}
+
+// 定义带块数据的消息类型
+interface MessageWithBlocks {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  blocks?: string[];
+  blockObjects?: NotionMessageBlock[];
+}
+
 /**
  * 解析内联Markdown格式并转换为Notion rich_text格式
  */
-function parseInlineMarkdown(text: string): Array<any> {
-  const richTextElements: Array<any> = [];
+function parseInlineMarkdown(text: string): NotionRichText[] {
+  const richTextElements: NotionRichText[] = [];
   let currentIndex = 0;
   
   // 正则表达式匹配各种内联格式
@@ -148,13 +179,21 @@ function parseInlineMarkdown(text: string): Array<any> {
         });
         break;
       case 'link':
-        richTextElements.push({
-          type: 'text',
-          text: { 
-            content: match.content,
-            link: { url: match.url }
-          }
-        });
+        if (match.url) {
+          richTextElements.push({
+            type: 'text',
+            text: {
+              content: match.content,
+              link: { url: match.url }
+            }
+          });
+        } else {
+          // 如果没有URL，当作普通文本处理
+          richTextElements.push({
+            type: 'text',
+            text: { content: match.content }
+          });
+        }
         break;
     }
     
@@ -431,27 +470,42 @@ async function topicToMarkdownForNotion(topic: ChatTopic, exportReasoning = fals
       return '*此话题暂无消息*';
     }
 
-    // 为每条消息加载完整的块数据
-    const messagesWithBlocks = [];
-    for (const message of messages) {
-      if (message.blocks && message.blocks.length > 0) {
-        const blocks = await dexieStorage.getMessageBlocksByMessageId(message.id);
-        messagesWithBlocks.push({
-          ...message,
-          blockObjects: blocks
-        });
-      } else {
-        messagesWithBlocks.push(message);
-      }
-    }
+    // 批量获取所有消息的块数据，避免循环查询
+    const messageIds = messages.filter(msg => msg.blocks && msg.blocks.length > 0).map(msg => msg.id);
+    const allBlocks = messageIds.length > 0
+      ? await Promise.all(messageIds.map(id => dexieStorage.getMessageBlocksByMessageId(id)))
+      : [];
 
-         // 创建消息内容
-     const messageContents = messagesWithBlocks.map((message: any) => {
+    // 创建块数据映射表，转换类型以兼容
+    const blocksMap = new Map<string, NotionMessageBlock[]>();
+    messageIds.forEach((id, index) => {
+      const blocks = allBlocks[index] || [];
+      // 转换块类型，过滤掉不支持的类型
+      const notionBlocks: NotionMessageBlock[] = blocks
+        .filter(block => block.type === 'main_text' || block.type === 'thinking')
+        .map(block => ({
+          id: block.id,
+          type: block.type as 'main_text' | 'thinking',
+          content: block.content
+        }));
+      blocksMap.set(id, notionBlocks);
+    });
+
+    // 组装消息数据，过滤掉system消息（Notion导出不需要）
+    const messagesWithBlocks: MessageWithBlocks[] = messages
+      .filter(message => message.role !== 'system')
+      .map(message => ({
+        ...message,
+        blockObjects: blocksMap.get(message.id) || []
+      }));
+
+    // 创建消息内容
+    const messageContents = messagesWithBlocks.map((message: MessageWithBlocks) => {
        const blocks = message.blockObjects || [];
       
       // 分类块
-      const mainTextBlocks = blocks.filter((block: any) => block.type === 'main_text');
-      const thinkingBlocks = blocks.filter((block: any) => block.type === 'thinking');
+      const mainTextBlocks = blocks.filter((block: NotionMessageBlock) => block.type === 'main_text');
+      const thinkingBlocks = blocks.filter((block: NotionMessageBlock) => block.type === 'thinking');
       
       // 角色标题
       const roleTitle = message.role === 'user' ? '## 用户' : '## 助手';
@@ -460,14 +514,14 @@ async function topicToMarkdownForNotion(topic: ChatTopic, exportReasoning = fals
       
       // 添加思考过程（如果需要）
       if (exportReasoning && thinkingBlocks.length > 0) {
-        const thinkingContent = thinkingBlocks.map((block: any) => block.content).join('\n\n');
+        const thinkingContent = thinkingBlocks.map((block: NotionMessageBlock) => block.content).join('\n\n');
         if (thinkingContent.trim()) {
           content += '### 思考过程\n\n' + thinkingContent + '\n\n### 回答\n\n';
         }
       }
-      
+
       // 添加主要内容
-      const mainContent = mainTextBlocks.map((block: any) => block.content).join('\n\n');
+      const mainContent = mainTextBlocks.map((block: NotionMessageBlock) => block.content).join('\n\n');
       content += mainContent;
       
       return content;
@@ -528,34 +582,23 @@ export async function exportTopicToNotion(
     };
 
     // 发送请求到Notion API
-    // 使用代理来避免CORS问题
-    const apiUrl = window.location.hostname === 'localhost'
-      ? '/api/notion/v1/pages' // 开发环境使用代理
-      : 'https://api.notion.com/v1/pages'; // 生产环境直接调用
-      
-    const response = await fetch(apiUrl, {
+    const result = await notionApiRequest('/v1/pages', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${settings.apiKey}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(createPageRequest)
+      apiKey: settings.apiKey,
+      body: createPageRequest
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('话题已成功导出到Notion:', result.url);
-    
+
     // 显示成功消息
-    alert(`话题 "${topic.name || topic.title || '未命名对话'}" 已成功导出到Notion数据库`);
+    showSuccessMessage(
+      `话题 "${topic.name || topic.title || '未命名对话'}" 已成功导出到Notion数据库`,
+      result.url
+    );
     
   } catch (error) {
     console.error('导出到Notion失败:', error);
+    showErrorMessage(error as Error);
     throw error;
   }
 } 

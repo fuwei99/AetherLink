@@ -36,6 +36,7 @@ import MessageEditor from './MessageEditor';
 import ExportMenu from './ExportMenu';
 import { TTSService } from '../../shared/services/TTSService';
 import { getMainTextContent } from '../../shared/utils/messageUtils';
+import { toastManager } from '../EnhancedToast';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { EventEmitter, EVENT_NAMES } from '../../shared/services/EventService';
@@ -279,7 +280,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
 
     } catch (error) {
       debugLog.error('[MessageActions] 复制内容失败', error);
-      alert('复制失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      toastManager.error('复制失败: ' + (error instanceof Error ? error.message : '未知错误'), '复制错误');
     } finally {
       // 确保菜单在操作完成后关闭
       handleMenuClose();
@@ -305,7 +306,7 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
       }
     } catch (error) {
       console.error('[MessageActions] 删除消息失败:', error);
-      alert('删除失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      toastManager.error('删除失败: ' + (error instanceof Error ? error.message : '未知错误'), '删除错误');
     } finally {
       // 重置删除按钮状态
       setDeleteButtonClicked(false);

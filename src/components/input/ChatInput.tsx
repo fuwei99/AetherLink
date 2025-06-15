@@ -45,7 +45,7 @@ interface ChatInputProps {
   availableModels?: any[]; // 可用模型列表
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({
+const ChatInputComponent: React.FC<ChatInputProps> = ({
   onSendMessage,
   onSendMultiModelMessage,
   onStartDebate,
@@ -379,23 +379,23 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
-  // 增强的焦点处理，适应iOS设备
+  // 优化的初始化处理，减少不必要的重新渲染
   useEffect(() => {
-    const currentTextarea = textareaRef.current; // 保存当前的 ref 值
+    const currentTextarea = textareaRef.current;
 
-    // 只设置初始高度，不执行焦点操作避免闪烁
-    const timer = setTimeout(() => {
+    // 使用requestAnimationFrame优化性能，避免阻塞主线程
+    const animationFrame = requestAnimationFrame(() => {
       if (currentTextarea) {
         // 确保初始高度正确设置，以显示完整的placeholder
         const initialHeight = isMobile ? 32 : isTablet ? 36 : 34;
         currentTextarea.style.height = `${initialHeight}px`;
 
-        // 只有在非页面切换状态下才执行焦点操作，且延迟更长时间
-        if (!isPageTransitioning) {
-          console.log('[ChatInput] 初始化完成，页面切换状态:', isPageTransitioning);
+        // 减少日志输出，避免性能影响
+        if (!isPageTransitioning && process.env.NODE_ENV === 'development') {
+          console.log('[ChatInput] 初始化完成');
         }
       }
-    }, 100); // 减少延迟时间
+    });
 
     // 添加键盘显示检测
     const handleFocus = () => {
@@ -451,13 +451,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
 
     return () => {
-      clearTimeout(timer);
+      cancelAnimationFrame(animationFrame);
       if (currentTextarea) {
         currentTextarea.removeEventListener('focus', handleFocus);
         currentTextarea.removeEventListener('blur', handleBlur);
       }
     };
-  }, [isIOS, shouldHandleFocus, isMobile, isTablet]); // 移除 isPageTransitioning 依赖避免重复绑定
+  }, []); // 移除所有依赖项，只在组件挂载时执行一次
 
 
 
@@ -1303,5 +1303,29 @@ const ChatInput: React.FC<ChatInputProps> = ({
     </div>
   );
 };
+
+// 使用React.memo优化性能，减少不必要的重新渲染
+const ChatInput = React.memo(ChatInputComponent, (prevProps, nextProps) => {
+  // 自定义比较函数，只在关键props变化时重新渲染
+  const keysToCompare = [
+    'isLoading', 'imageGenerationMode', 'videoGenerationMode',
+    'webSearchActive', 'isStreaming', 'isDebating', 'toolsEnabled'
+  ];
+
+  for (const key of keysToCompare) {
+    if (prevProps[key as keyof ChatInputProps] !== nextProps[key as keyof ChatInputProps]) {
+      return false; // props changed, should re-render
+    }
+  }
+
+  // 检查数组props
+  if (prevProps.availableModels?.length !== nextProps.availableModels?.length) {
+    return false;
+  }
+
+  return true; // props are the same, skip re-render
+});
+
+ChatInput.displayName = 'ChatInput';
 
 export default ChatInput;

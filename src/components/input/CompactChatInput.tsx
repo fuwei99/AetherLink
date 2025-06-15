@@ -48,7 +48,7 @@ interface CompactChatInputProps {
   toggleToolsEnabled?: () => void;
 }
 
-const CompactChatInput: React.FC<CompactChatInputProps> = ({
+const CompactChatInputComponent: React.FC<CompactChatInputProps> = ({
   onSendMessage,
   onSendMultiModelMessage, // 启用多模型功能
   onStartDebate, // 启用AI辩论功能
@@ -1335,5 +1335,29 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
     </Box>
   );
 };
+
+// 使用React.memo优化性能，减少不必要的重新渲染
+const CompactChatInput = React.memo(CompactChatInputComponent, (prevProps, nextProps) => {
+  // 自定义比较函数，只在关键props变化时重新渲染
+  const keysToCompare = [
+    'isLoading', 'imageGenerationMode', 'webSearchActive',
+    'isStreaming', 'isDebating', 'toolsEnabled'
+  ];
+
+  for (const key of keysToCompare) {
+    if (prevProps[key as keyof CompactChatInputProps] !== nextProps[key as keyof CompactChatInputProps]) {
+      return false; // props changed, should re-render
+    }
+  }
+
+  // 检查数组props
+  if (prevProps.availableModels?.length !== nextProps.availableModels?.length) {
+    return false;
+  }
+
+  return true; // props are the same, skip re-render
+});
+
+CompactChatInput.displayName = 'CompactChatInput';
 
 export default CompactChatInput;

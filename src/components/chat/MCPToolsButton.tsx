@@ -26,6 +26,7 @@ import type { MCPServer, MCPServerType } from '../../shared/types';
 import { mcpService } from '../../shared/services/MCPService';
 import CustomSwitch from '../CustomSwitch';
 import { getGlassmorphismToolbarStyles, getTransparentToolbarStyles } from '../input';
+import { useMCPServerStateManager } from '../../hooks/useMCPServerStateManager';
 
 interface MCPToolsButtonProps {
   toolsEnabled?: boolean;
@@ -42,6 +43,9 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = ({
   const [open, setOpen] = useState(false);
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [activeServers, setActiveServers] = useState<MCPServer[]>([]);
+
+  // 使用共享的MCP状态管理Hook
+  const { createMCPToggleHandler } = useMCPServerStateManager();
 
   // 获取工具栏显示样式设置
   const toolbarDisplayStyle = useSelector((state: RootState) =>
@@ -107,32 +111,8 @@ const MCPToolsButton: React.FC<MCPToolsButtonProps> = ({
     navigate('/settings/mcp-server');
   };
 
-  const handleToolsEnabledChange = async (enabled: boolean) => {
-    if (!enabled && onToolsEnabledChange) {
-      // 关闭总开关时，同时关闭所有已启动的MCP服务器
-      try {
-        await mcpService.stopAllActiveServers();
-        loadServers();
-        console.log('[MCP] 总开关关闭，已停止所有活跃服务器');
-      } catch (error) {
-        console.error('[MCP] 停止服务器失败:', error);
-      }
-    } else if (enabled && onToolsEnabledChange) {
-      // 开启总开关时，恢复之前保存的活跃服务器状态
-      try {
-        if (mcpService.hasSavedActiveServers()) {
-          await mcpService.restoreSavedActiveServers();
-          loadServers();
-          console.log('[MCP] 总开关开启，已恢复之前的活跃服务器状态');
-        }
-      } catch (error) {
-        console.error('[MCP] 恢复服务器状态失败:', error);
-      }
-    }
-    if (onToolsEnabledChange) {
-      onToolsEnabledChange(enabled);
-    }
-  };
+  // 使用共享的MCP状态管理逻辑
+  const handleToolsEnabledChange = createMCPToggleHandler(loadServers, onToolsEnabledChange);
 
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {

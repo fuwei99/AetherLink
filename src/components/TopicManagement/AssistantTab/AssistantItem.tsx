@@ -64,15 +64,18 @@ const AssistantItem = memo(function AssistantItem({
     };
   }, [assistant.id, assistant.name]);
 
-  // 使用 useCallback 缓存事件处理函数，避免每次渲染都创建新函数
+  // 优化的点击处理函数，减少连锁状态更新
   const handleAssistantClick = useCallback(() => {
-    // 先触发切换到话题标签页事件，确保UI已经切换到话题标签页
-    EventEmitter.emit(EVENT_NAMES.SHOW_TOPIC_SIDEBAR);
-
-    // 使用startTransition包装状态更新，减少渲染阻塞，提高性能
-    // 这会告诉React这是一个低优先级更新，可以被中断
-    startTransition(() => {
-      onSelectAssistant(assistant);
+    // 使用requestAnimationFrame批量处理状态更新，避免阻塞主线程
+    requestAnimationFrame(() => {
+      // 使用startTransition包装状态更新，减少渲染阻塞
+      startTransition(() => {
+        onSelectAssistant(assistant);
+        // 延迟触发侧边栏切换，避免同时进行多个状态更新
+        setTimeout(() => {
+          EventEmitter.emit(EVENT_NAMES.SHOW_TOPIC_SIDEBAR);
+        }, 0);
+      });
     });
   }, [assistant, onSelectAssistant]);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMediaQuery, useTheme } from '@mui/material';
 
@@ -12,15 +12,33 @@ export const useChatPageLayout = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [drawerOpen, setDrawerOpen] = useState(!isMobile);
 
-  // 当屏幕尺寸变化时更新抽屉状态
+  // 优化屏幕尺寸变化处理，使用防抖避免频繁更新
   useEffect(() => {
-    setDrawerOpen(!isMobile);
+    let timeoutId: NodeJS.Timeout;
+
+    const updateDrawerState = () => {
+      setDrawerOpen(!isMobile);
+    };
+
+    // 使用防抖，避免频繁的状态更新
+    timeoutId = setTimeout(updateDrawerState, 100);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [isMobile]);
+
+  // 使用useCallback缓存setDrawerOpen函数，避免子组件重新渲染
+  const handleSetDrawerOpen = useCallback((open: boolean) => {
+    setDrawerOpen(open);
+  }, []);
 
   return {
     isMobile,
-    drawerOpen, 
-    setDrawerOpen,
+    drawerOpen,
+    setDrawerOpen: handleSetDrawerOpen,
     navigate
   };
-}; 
+};

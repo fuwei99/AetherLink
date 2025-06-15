@@ -25,6 +25,7 @@ import {
   Settings
 } from 'lucide-react';
 import { advancedFileManagerService } from '../shared/services/AdvancedFileManagerService';
+import { toastManager } from './EnhancedToast';
 
 interface PermissionStatus {
   granted: boolean;
@@ -101,11 +102,11 @@ export const FilePermissionManager: React.FC = () => {
         });
       } else {
         // 在Web平台上显示指导信息
-        alert('请前往：设置 > 应用 > AetherLink > 权限 > 文件和媒体 > 允许管理所有文件');
+        toastManager.info('请前往：设置 > 应用 > AetherLink > 权限 > 文件和媒体 > 允许管理所有文件', '权限设置指导');
       }
     } catch (error) {
       // 如果无法打开设置，显示手动指导
-      alert('请手动前往：设置 > 应用 > AetherLink > 权限 > 文件和媒体 > 允许管理所有文件');
+      toastManager.info('请手动前往：设置 > 应用 > AetherLink > 权限 > 文件和媒体 > 允许管理所有文件', '权限设置指导');
     }
   };
 

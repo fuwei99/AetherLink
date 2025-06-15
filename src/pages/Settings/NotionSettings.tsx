@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { updateSettings } from '../../shared/store/settingsSlice';
+import { notionApiRequest, NotionApiError } from '../../utils/notionApiUtils';
 
 /**
  * Notion设置页面
@@ -80,27 +81,11 @@ const NotionSettingsPage: React.FC = () => {
     setTestResult(null);
 
     try {
-      // 测试获取数据库信息
-      // 使用代理来避免CORS问题
-      const apiUrl = window.location.hostname === 'localhost'
-        ? `/api/notion/v1/databases/${localSettings.databaseId}` // 开发环境使用代理
-        : `https://api.notion.com/v1/databases/${localSettings.databaseId}`; // 生产环境直接调用
-        
-      const response = await fetch(apiUrl, {
+      // 使用统一的API请求函数
+      const data = await notionApiRequest(`/v1/databases/${localSettings.databaseId}`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localSettings.apiKey}`,
-          'Notion-Version': '2022-06-28',
-          'Content-Type': 'application/json'
-        }
+        apiKey: localSettings.apiKey
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
       
       // 检查页面标题字段是否存在
       const properties = data.properties || {};
@@ -121,9 +106,13 @@ const NotionSettingsPage: React.FC = () => {
       }
     } catch (error) {
       console.error('测试Notion连接失败:', error);
+      const message = error instanceof NotionApiError
+        ? error.getUserFriendlyMessage()
+        : (error instanceof Error ? error.message : '未知错误');
+
       setTestResult({
         success: false,
-        message: `连接失败: ${error instanceof Error ? error.message : '未知错误'}`
+        message: `连接失败: ${message}`
       });
     } finally {
       setTesting(false);

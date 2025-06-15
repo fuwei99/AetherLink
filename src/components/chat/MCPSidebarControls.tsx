@@ -36,6 +36,7 @@ import {
   createOptimizedSwitchHandler,
   listItemOptimization,
 } from '../TopicManagement/SettingsTab/scrollOptimization';
+import { useMCPServerStateManager } from '../../hooks/useMCPServerStateManager';
 
 interface MCPSidebarControlsProps {
   onMCPModeChange?: (mode: 'prompt' | 'function') => void;
@@ -54,6 +55,9 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [activeServers, setActiveServers] = useState<MCPServer[]>([]);
   const [expanded, setExpanded] = useState(false);
+
+  // 使用共享的MCP状态管理Hook
+  const { createMCPToggleHandler } = useMCPServerStateManager();
 
   useEffect(() => {
     loadServers();
@@ -84,30 +88,8 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
     navigate('/settings/mcp-server');
   };
 
-  const handleToolsToggle = async (enabled: boolean) => {
-    if (!enabled) {
-      // 关闭总开关时，同时关闭所有已启动的MCP服务器
-      try {
-        await mcpService.stopAllActiveServers();
-        loadServers();
-        console.log('[MCP] 总开关关闭，已停止所有活跃服务器');
-      } catch (error) {
-        console.error('[MCP] 停止服务器失败:', error);
-      }
-    } else {
-      // 开启总开关时，恢复之前保存的活跃服务器状态
-      try {
-        if (mcpService.hasSavedActiveServers()) {
-          await mcpService.restoreSavedActiveServers();
-          loadServers();
-          console.log('[MCP] 总开关开启，已恢复之前的活跃服务器状态');
-        }
-      } catch (error) {
-        console.error('[MCP] 恢复服务器状态失败:', error);
-      }
-    }
-    onToolsToggle?.(enabled);
-  };
+  // 使用共享的MCP状态管理逻辑
+  const handleToolsToggle = createMCPToggleHandler(loadServers, onToolsToggle);
 
   const getServerTypeIcon = (type: MCPServerType) => {
     switch (type) {

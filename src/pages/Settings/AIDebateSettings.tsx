@@ -39,6 +39,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { DropdownModelSelector } from '../ChatPage/components/DropdownModelSelector';
 import { setShowAIDebateButton } from '../../shared/store/settingsSlice';
+import { toastManager } from '../../components/EnhancedToast';
 
 // AI辩论配置默认值常量
 const DEFAULT_CONFIG = {
@@ -561,7 +562,7 @@ const AIDebateSettings: React.FC = () => {
         : group
     );
     saveConfigGroups(updatedGroups);
-    alert('分组配置已更新！');
+    toastManager.success('分组配置已更新！', '更新成功');
   };
 
   // 处理返回
@@ -707,7 +708,11 @@ const AIDebateSettings: React.FC = () => {
 
     const defaultModelName = availableModels.length > 0 ? availableModels[0].name : '无可用模型';
 
-    alert(`✅ 已成功配置"${sceneName}"场景！\n\n包含 ${newRoles.length} 个角色：\n${newRoles.map(r => `• ${r.name}`).join('\n')}\n\n🤖 已自动配置默认模型：${defaultModelName}\n💡 您可以在角色管理中为每个角色单独指定不同的模型`);
+    toastManager.success(
+      `已成功配置"${sceneName}"场景！包含 ${newRoles.length} 个角色，已自动配置默认模型：${defaultModelName}`,
+      '场景配置成功',
+      { duration: 8000 }
+    );
   };
 
   return (
