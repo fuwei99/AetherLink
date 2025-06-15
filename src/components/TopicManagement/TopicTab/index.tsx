@@ -27,7 +27,10 @@ import {
   FolderPlus,
   Trash,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Download,
+  FileText,
+  Copy
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addItemToGroup } from '../../../shared/store/slices/groupsSlice';
@@ -46,6 +49,7 @@ import store from '../../../shared/store';
 import { TopicService } from '../../../shared/services/TopicService';
 import { TopicNamingService } from '../../../shared/services/TopicNamingService';
 import { TopicManager } from '../../../shared/services/assistant/TopicManager';
+import { exportTopicAsMarkdown, exportTopicAsDocx, copyTopicAsMarkdown } from '../../../utils/exportUtils';
 
 interface TopicTabProps {
   currentAssistant: ({
@@ -694,6 +698,42 @@ export default function TopicTab({
     }
   };
 
+  // 导出话题为Markdown格式
+  const handleExportTopicAsMarkdown = async (includeReasoning = false) => {
+    if (!contextTopic) return;
+    
+    try {
+      await exportTopicAsMarkdown(contextTopic, includeReasoning);
+    } catch (error) {
+      console.error('导出话题Markdown失败:', error);
+    }
+    handleCloseMenu();
+  };
+
+  // 导出话题为DOCX格式
+  const handleExportTopicAsDocx = async (includeReasoning = false) => {
+    if (!contextTopic) return;
+    
+    try {
+      await exportTopicAsDocx(contextTopic, includeReasoning);
+    } catch (error) {
+      console.error('导出话题DOCX失败:', error);
+    }
+    handleCloseMenu();
+  };
+
+  // 复制话题为Markdown格式
+  const handleCopyTopicAsMarkdown = async (includeReasoning = false) => {
+    if (!contextTopic) return;
+    
+    try {
+      await copyTopicAsMarkdown(contextTopic, includeReasoning);
+    } catch (error) {
+      console.error('复制话题Markdown失败:', error);
+    }
+    handleCloseMenu();
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 标题和按钮区域 */}
@@ -860,6 +900,19 @@ export default function TopicTab({
               移动到...
             </MenuItem>
           ),
+          <Divider key="divider-export" />,
+          <MenuItem key="copy-markdown" onClick={() => handleCopyTopicAsMarkdown(false)}>
+            <Copy size={18} style={{ marginRight: 8 }} />
+            复制为Markdown
+          </MenuItem>,
+          <MenuItem key="export-markdown" onClick={() => handleExportTopicAsMarkdown(false)}>
+            <Download size={18} style={{ marginRight: 8 }} />
+            导出为Markdown
+          </MenuItem>,
+          <MenuItem key="export-docx" onClick={() => handleExportTopicAsDocx(false)}>
+            <FileText size={18} style={{ marginRight: 8 }} />
+            导出为DOCX
+          </MenuItem>,
           <Divider key="divider-1" />,
           <MenuItem key="delete-topic" onClick={() => {
             if (contextTopic) {
