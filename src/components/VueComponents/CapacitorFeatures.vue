@@ -130,7 +130,7 @@ export default defineComponent({
     };
 
     // 显示Toast消息
-    const showToast = async (message: string, duration: 'short' | 'long' = 'short') => {
+    const showToast = async (message: string, duration: ToastDurationType = 'short') => {
       try {
         await capacitorBridge.showToast(message, duration);
       } catch (error) {
@@ -139,7 +139,7 @@ export default defineComponent({
     };
 
     // 振动设备
-    const vibrateDevice = async (style: 'HEAVY' | 'MEDIUM' | 'LIGHT') => {
+    const vibrateDevice = async (style: VibrateStyleType) => {
       try {
         await capacitorBridge.vibrate(style);
       } catch (error) {
@@ -148,7 +148,7 @@ export default defineComponent({
     };
 
     // 拍照或从相册选择
-    const takePicture = async (source: 'CAMERA' | 'PHOTOS') => {
+    const takePicture = async (source: CameraSourceType) => {
       try {
         const result = await capacitorBridge.takePicture(source);
         photoPath.value = result.webPath;

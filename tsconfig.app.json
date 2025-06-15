@@ -27,6 +27,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "src/rsbuild-env.d.ts"],
+  "include": ["src"],
   "exclude": ["vite.config.ts", "farm.config.ts", "node_modules", "dist"]
 }

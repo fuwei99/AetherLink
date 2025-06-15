@@ -1,15 +1,20 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'  // 使用SWC版本
+import reactOxc from '@vitejs/plugin-react-oxc'  // Oxc 处理 React
+import reactSwc from '@vitejs/plugin-react-swc'  // SWC 处理 Vue 中的 TS
 import vue from '@vitejs/plugin-vue'
-import checker from 'vite-plugin-checker' // 保留检查器用于开发模式
 
-// https://vitejs.dev/config/
+// Rolldown-Vite 混合配置：Oxc + SWC
+// Oxc 处理 React (最快)，SWC 处理 Vue 中的 TypeScript (最稳定)
 export default defineConfig({
   plugins: [
-    react({
-      // SWC 优化配置 - 使用现代 ES 目标以获得更好的性能
-      devTarget: 'es2022'
+    // Oxc 处理纯 React 文件 - 最快性能
+    reactOxc({
+      include: /\.(jsx|tsx)$/,  // 只处理 JSX/TSX 文件
+      exclude: [/\.vue$/, /node_modules/]
     }),
+
+    // SWC 处理普通 JS/TS 文件 - 稳定兼容性
+    reactSwc(),
     vue({
       template: {
         compilerOptions: {
@@ -17,19 +22,8 @@ export default defineConfig({
           isCustomElement: tag => tag.startsWith('vue-')
         }
       }
-    }),
-    // TypeScript 类型检查器 - 优化配置
-    checker({
-      typescript: {
-        buildMode: false, // 开发模式下不使用构建模式
-        tsconfigPath: './tsconfig.app.json'
-      },
-      enableBuild: true, // 生产构建时启用类型检查
-      overlay: {
-        initialIsOpen: false, // 不自动打开错误覆盖层
-        position: 'tl' // 错误显示在左上角
-      }
     })
+    // 注意：Rolldown-Vite 内置了类型检查，不需要额外的 checker 插件
   ],
 
   // 开发服务器配置
@@ -114,24 +108,22 @@ export default defineConfig({
     }
   },
 
-  // 优化构建配置
+  // 构建配置 - Rolldown-Vite 会自动使用 Oxc 进行优化
   build: {
     sourcemap: false, // 生产环境不生成sourcemap
-    minify: 'esbuild', // 使用 esbuild 进行更快的压缩（基于 Go，比 Terser 快很多）
     target: 'es2022', // 现代浏览器目标，生成更小的代码
-    // 参考电脑版策略 - 简单稳定的默认分割
+    outDir: 'dist',
     rollupOptions: {
       output: {
-        // 不设置 manualChunks，使用 Vite 默认的智能分割
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        // 使用 static 目录结构
+        chunkFileNames: 'static/js/[name]-[hash].js',
+        entryFileNames: 'static/js/[name]-[hash].js',
+        assetFileNames: 'static/[ext]/[name]-[hash].[ext]',
       },
     },
-    // 限制chunk大小警告阈值 - 设置为500KB
     chunkSizeWarningLimit: 500
   },
-  // 优化依赖预构建
+  // 优化依赖预构建 - Rolldown-Vite 会自动优化
   optimizeDeps: {
     include: [
       'react',
@@ -143,52 +135,18 @@ export default defineConfig({
       '@reduxjs/toolkit',
       'vue'
     ],
-    // 强制预构建这些依赖，即使它们没有被直接导入
-    force: true,
-    // 增加并行处理数量
-    esbuildOptions: {
-      // 使用多核并行处理
-      target: 'es2022',
-      // 启用更激进的优化
-      treeShaking: true,
-      // 移除调试信息
-      drop: ['console', 'debugger'],
-      // 优化标识符
-      minifyIdentifiers: true,
-      minifySyntax: true,
-      minifyWhitespace: true
-    }
-  },
-  // 启用esbuild优化 - 最大化性能
-  esbuild: {
-    // 移除调试相关代码
-    pure: ['console.log', 'console.debug', 'console.trace'],
-    // 移除法律注释以减小文件大小
-    legalComments: 'none',
-    // 启用更激进的优化
-    treeShaking: true,
-    // 目标现代浏览器
-    target: 'es2022',
-    // 启用压缩
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true,
+    force: true
+    // 注意：Rolldown-Vite 使用 Oxc 替代 esbuild，不需要 esbuildOptions
   },
 
   // 缓存配置
   cacheDir: 'node_modules/.vite',
 
-  // 性能优化配置
-  worker: {
-    // 使用 esbuild 处理 worker
-    format: 'es',
-    plugins: () => []
-  },
-
-  // 实验性功能优化
-  experimental: {
-    // 启用更快的依赖扫描
-    skipSsrTransform: true
+  // 解析配置
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
   },
 
   // 定义全局常量
