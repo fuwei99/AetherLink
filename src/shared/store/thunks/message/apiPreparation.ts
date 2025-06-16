@@ -8,6 +8,7 @@ import { newMessagesActions } from '../../slices/newMessagesSlice';
 import { AssistantMessageStatus } from '../../../types/newMessage';
 import store, { type RootState } from '../../index';
 import { injectSystemPromptVariables } from '../../../utils/systemPromptVariables';
+import { EventEmitter, EVENT_NAMES } from '../../../services/EventService';
 
 /**
  * 在API调用前检查是否需要进行知识库搜索（风格：新模式）
@@ -103,7 +104,6 @@ export const performKnowledgeSearchIfNeeded = async (topicId: string, assistantM
       console.log(`[performKnowledgeSearchIfNeeded] 知识库搜索结果已缓存: ${cacheKey}`);
 
       // 发送知识库搜索事件（借鉴MCP工具块的事件机制）
-      const { EventEmitter, EVENT_NAMES } = await import('../../../services/EventService');
 
       // 发送知识库搜索完成事件，携带搜索结果
       EventEmitter.emit(EVENT_NAMES.KNOWLEDGE_SEARCH_COMPLETED, {
@@ -252,8 +252,7 @@ export const prepareMessagesForApi = async (
             if (contextData.isSelected && contextData.searchOnSend) {
               console.log(`[prepareMessagesForApi] 检测到选中的知识库但没有缓存结果，进行实时搜索...`);
 
-              // 动态导入知识库服务
-              const { MobileKnowledgeService } = await import('../../../services/MobileKnowledgeService');
+              // 使用已导入的知识库服务
               const knowledgeService = MobileKnowledgeService.getInstance();
 
               // 搜索知识库

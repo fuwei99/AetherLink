@@ -5,6 +5,7 @@ import { newMessagesActions } from '../../shared/store/slices/newMessagesSlice';
 import type { Message } from '../../shared/types/newMessage.ts';
 import { UserMessageStatus, AssistantMessageStatus } from '../../shared/types/newMessage.ts';
 import { dexieStorage } from '../../shared/services/DexieStorageService';
+import { clearGetMainTextContentCache } from '../../shared/utils/messageUtils';
 // 开发环境日志工具 - 只保留错误日志
 const isDev = process.env.NODE_ENV === 'development';
 const devError = isDev ? console.error : () => {};
@@ -234,7 +235,6 @@ const MessageEditor: React.FC<MessageEditorProps> = ({ message, topicId, open, o
 
       // 🔧 修复：清除getMainTextContent缓存，确保立即获取最新内容
       try {
-        const { clearGetMainTextContentCache } = await import('../../shared/utils/messageUtils');
         clearGetMainTextContentCache();
       } catch (error) {
         console.warn('[MessageEditor] 清除缓存失败:', error);

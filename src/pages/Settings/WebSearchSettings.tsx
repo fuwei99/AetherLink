@@ -57,7 +57,10 @@ import {
   togglePostProcessing,
   toggleSmartSearch,
   setTimeRange,
-  setNewsSearchDays
+  setNewsSearchDays,
+
+  // 🚀 新增：搜索引擎选择相关actions
+  setSelectedSearchEngine
 } from '../../shared/store/slices/webSearchSlice';
 import type { RootState } from '../../shared/store';
 
@@ -192,6 +195,11 @@ const WebSearchSettings: React.FC = () => {
 
   const handleNewsSearchDaysChange = (_: Event, newValue: number | number[]) => {
     dispatch(setNewsSearchDays(newValue as number));
+  };
+
+  // 🚀 新增：搜索引擎选择处理函数
+  const handleSearchEngineChange = (event: SelectChangeEvent) => {
+    dispatch(setSelectedSearchEngine(event.target.value as any));
   };
 
   // 渲染主要内容
@@ -330,6 +338,30 @@ const WebSearchSettings: React.FC = () => {
 
           {webSearchSettings.provider !== 'custom' && (
             <>
+              {/* 🚀 新增：搜索引擎选择器（仅在bing-free时显示） */}
+              {webSearchSettings.provider === 'bing-free' && (
+                <FormControl fullWidth margin="normal">
+                  <InputLabel id="search-engine-label">搜索引擎</InputLabel>
+                  <Select
+                    labelId="search-engine-label"
+                    value={webSearchSettings.selectedSearchEngine || 'bing'}
+                    onChange={handleSearchEngineChange}
+                    input={<OutlinedInput label="搜索引擎" />}
+                    disabled={!webSearchSettings.enabled}
+                    MenuProps={{
+                      disableAutoFocus: true,
+                      disableRestoreFocus: true
+                    }}
+                  >
+                    <MenuItem value="bing">🔍 Bing</MenuItem>
+                    <MenuItem value="google">🌐 Google</MenuItem>
+                    <MenuItem value="baidu">🔍 百度</MenuItem>
+                    <MenuItem value="sogou">🔍 搜狗</MenuItem>
+                    <MenuItem value="yandex">🔍 Yandex</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+
               <TextField
                 fullWidth
                 margin="normal"
@@ -388,6 +420,13 @@ const WebSearchSettings: React.FC = () => {
                     bochaai.com
                   </a>
                   获取 API 密钥。
+                </Alert>
+              )}
+
+              {webSearchSettings.provider === 'bing-free' && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  免费搜索服务，无需API密钥。您可以选择不同的搜索引擎来获取搜索结果，包括Bing、Google、百度、搜狗等。
+                  使用 capacitor-cors-bypass-enhanced 插件解决移动端CORS问题。
                 </Alert>
               )}
 

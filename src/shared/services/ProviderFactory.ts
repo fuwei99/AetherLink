@@ -7,6 +7,7 @@ import * as openaiApi from '../api/openai';
 import * as anthropicApi from '../api/anthropic';
 import * as geminiApi from '../api/gemini';
 import { modelComboService } from './ModelComboService';
+import { OpenAIAISDKProvider } from '../api/openai-aisdk';
 
 
 /**
@@ -114,8 +115,7 @@ export function getProviderApi(model: Model): any {
       console.log(`[ProviderFactory] 使用AI SDK OpenAI API`);
       return {
         sendChatRequest: async (messages: any[], model: Model, onUpdate?: (content: string, reasoning?: string) => void) => {
-          // 动态导入AI SDK模块
-          const { OpenAIAISDKProvider } = await import('../api/openai-aisdk');
+          // 使用已导入的AI SDK模块
           const provider = new OpenAIAISDKProvider(model);
           return await provider.sendChatMessage(messages, { onUpdate });
         },

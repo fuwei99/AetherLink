@@ -237,15 +237,12 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     setSwipeDirection(direction);
   }, [drawerOpen]);
 
-  const sidebarSwipeGesture = useSidebarSwipeGesture(
+  const { swipeHandlers } = useSidebarSwipeGesture(
     handleOpenSidebar,
     drawerOpen ? handleCloseSidebar : undefined,
     true,
     handleSwipeProgress
   );
-
-  // 从手势对象中提取DOM事件处理器，排除非DOM属性
-  const { isSwipeActive, resetSwipeState, ...gestureHandlers } = sidebarSwipeGesture;
 
   // 话题管理
   const handleCreateTopic = useCallback(async () => {
@@ -521,11 +518,8 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
 
   return (
     <Box
-      sx={{
-        ...dynamicStyles.mainContainer,
-        touchAction: 'none' // 修复@use-gesture警告：设置为none以支持手势
-      }}
-      {...gestureHandlers} // 只传递DOM事件处理器，排除非DOM属性
+      sx={dynamicStyles.mainContainer}
+      {...swipeHandlers} // 添加滑动手势处理
     >
       {/* 桌面端可收起侧边栏，移动端可隐藏 */}
       {!isMobile && (

@@ -2,6 +2,7 @@ import store from '../../../store';
 import { dexieStorage } from '../../DexieStorageService';
 import { newMessagesActions } from '../../../store/slices/newMessagesSlice';
 import { addOneBlock } from '../../../store/slices/messageBlocksSlice';
+import { createKnowledgeReferenceBlock } from '../../../utils/messageUtils';
 
 /**
  * 知识库搜索处理器 - 处理知识库搜索相关的逻辑
@@ -28,8 +29,7 @@ export class KnowledgeSearchHandler {
     try {
       console.log(`[KnowledgeSearchHandler] 处理知识库搜索完成，创建综合引用块，包含 ${data.searchResults.length} 个结果`);
 
-      // 动态导入知识库引用块创建函数
-      const { createKnowledgeReferenceBlock } = await import('../../../utils/messageUtils');
+      // 使用已导入的知识库引用块创建函数
 
       // 创建一个综合的引用块，包含所有搜索结果
       const combinedContent = data.searchResults.map((result, index) =>
