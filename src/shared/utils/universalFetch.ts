@@ -87,7 +87,7 @@ function extractHeaders(headers?: HeadersInit): Record<string, string> {
 /**
  * 创建兼容标准Response的对象
  */
-function createCompatibleResponse(corsBypassResponse: any, originalUrl: string): UniversalResponse {
+function createCompatibleResponse(corsBypassResponse: any, _originalUrl: string): UniversalResponse {
   const { data, status, statusText, headers } = corsBypassResponse;
 
   // 创建一个兼容的Response对象

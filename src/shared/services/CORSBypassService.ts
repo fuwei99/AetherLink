@@ -28,26 +28,7 @@ export interface CORSBypassResponse<T = any> {
   duration?: number;
 }
 
-// 批量请求配置
-export interface BatchRequestConfig extends CORSBypassRequestOptions {
-  id: string;
-  priority?: number;
-  retry?: {
-    maxAttempts: number;
-    delay: number;
-  };
-}
 
-// 批量请求结果
-export interface BatchRequestResult {
-  id: string;
-  success: boolean;
-  data?: any;
-  error?: string;
-  status?: number;
-  duration: number;
-  attempts: number;
-}
 
 /**
  * CORS 绕过服务类
@@ -167,61 +148,7 @@ export class CORSBypassService {
     return this.request<T>({ ...options, url, method: 'DELETE' });
   }
 
-  /**
-   * 批量请求
-   */
-  public async batchRequests(requests: BatchRequestConfig[]): Promise<BatchRequestResult[]> {
-    LoggerService.log('INFO', `[CORS Bypass] 开始批量请求: ${requests.length} 个请求`);
 
-    if (!this.isAvailable()) {
-      throw new Error('CORS Bypass 服务不可用，请检查插件安装');
-    }
-
-    const results: BatchRequestResult[] = [];
-
-    // 按优先级排序
-    const sortedRequests = requests.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-
-    for (const request of sortedRequests) {
-      const startTime = Date.now();
-      let attempts = 0;
-      const maxAttempts = request.retry?.maxAttempts || 1;
-
-      while (attempts < maxAttempts) {
-        attempts++;
-        try {
-          const response = await this.request(request);
-          results.push({
-            id: request.id,
-            success: true,
-            data: response.data,
-            status: response.status,
-            duration: Date.now() - startTime,
-            attempts
-          });
-          break; // 成功，跳出重试循环
-        } catch (error: any) {
-          if (attempts >= maxAttempts) {
-            results.push({
-              id: request.id,
-              success: false,
-              error: error.message,
-              duration: Date.now() - startTime,
-              attempts
-            });
-          } else {
-            // 等待重试延迟
-            const delay = request.retry?.delay || 1000;
-            await new Promise(resolve => setTimeout(resolve, delay));
-            LoggerService.log('WARN', `[CORS Bypass] 请求重试: ${request.id} (第 ${attempts} 次)`);
-          }
-        }
-      }
-    }
-
-    LoggerService.log('INFO', `[CORS Bypass] 批量请求完成: 成功 ${results.filter(r => r.success).length}/${results.length}`);
-    return results;
-  }
 
   /**
    * 准备请求头
@@ -269,25 +196,7 @@ export class CORSBypassService {
     return error;
   }
 
-  /**
-   * 检查网络连接状态
-   */
-  public async checkNetworkStatus(): Promise<boolean> {
-    try {
-      // 使用一个轻量级的请求来检查网络状态
-      await this.get('https://api.notion.com/v1/users/me', {
-        timeout: 5000,
-        headers: { 'Authorization': 'Bearer test' } // 这会返回401，但证明网络可达
-      });
-      return true;
-    } catch (error: any) {
-      // 如果是401错误，说明网络是通的
-      if (error.message?.includes('401')) {
-        return true;
-      }
-      return false;
-    }
-  }
+
 }
 
 // 导出单例实例
