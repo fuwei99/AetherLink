@@ -121,8 +121,15 @@ export default function SidebarTabsContent() {
                 sx={{
                   minHeight: '32px',
                   borderRadius: '8px',
+                  color: themeColors.textPrimary, // 使用主题文字颜色
                   '& .MuiTab-iconWrapper': {
                     marginBottom: '2px',
+                  },
+                  '&.Mui-selected': {
+                    color: themeColors.textPrimary, // 选中状态保持文字颜色
+                  },
+                  '&:hover': {
+                    color: themeColors.textPrimary, // 悬停状态保持文字颜色
                   },
                 }}
               />
@@ -133,8 +140,15 @@ export default function SidebarTabsContent() {
                 sx={{
                   minHeight: '32px',
                   borderRadius: '8px',
+                  color: themeColors.textPrimary, // 使用主题文字颜色
                   '& .MuiTab-iconWrapper': {
                     marginBottom: '2px',
+                  },
+                  '&.Mui-selected': {
+                    color: themeColors.textPrimary, // 选中状态保持文字颜色
+                  },
+                  '&:hover': {
+                    color: themeColors.textPrimary, // 悬停状态保持文字颜色
                   },
                 }}
               />
@@ -145,8 +159,15 @@ export default function SidebarTabsContent() {
                 sx={{
                   minHeight: '32px',
                   borderRadius: '8px',
+                  color: themeColors.textPrimary, // 使用主题文字颜色
                   '& .MuiTab-iconWrapper': {
                     marginBottom: '2px',
+                  },
+                  '&.Mui-selected': {
+                    color: themeColors.textPrimary, // 选中状态保持文字颜色
+                  },
+                  '&:hover': {
+                    color: themeColors.textPrimary, // 悬停状态保持文字颜色
                   },
                 }}
               />

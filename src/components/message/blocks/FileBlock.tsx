@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, IconButton, Chip } from '@mui/material';
+import { Box, Typography, IconButton, Chip, useTheme } from '@mui/material';
 import {
   File as FileIcon,
   FileText as DocumentIcon,
@@ -76,6 +76,7 @@ const createFileReaderService = (fileBlock: FileMessageBlock) => {
  * 用于显示文件信息和提供下载功能
  */
 const FileBlock: React.FC<Props> = ({ block }) => {
+  const theme = useTheme();
   const [viewerOpen, setViewerOpen] = useState(false);
   const [workspaceFile, setWorkspaceFile] = useState<WorkspaceFile | null>(null);
 
@@ -196,15 +197,19 @@ const FileBlock: React.FC<Props> = ({ block }) => {
           display: 'flex',
           alignItems: 'center',
           p: 2,
-          border: '1px solid #e0e0e0',
+          border: `1px solid ${theme.palette.divider}`,
           borderRadius: 1,
-          backgroundColor: '#f9f9f9',
+          backgroundColor: theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.05)'
+            : 'rgba(0, 0, 0, 0.02)',
           maxWidth: '400px',
           gap: 2,
           cursor: isEditableFile() ? 'pointer' : 'default',
           '&:hover': isEditableFile() ? {
-            backgroundColor: '#f0f0f0',
-            borderColor: '#1976d2'
+            backgroundColor: theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.08)'
+              : 'rgba(0, 0, 0, 0.04)',
+            borderColor: theme.palette.primary.main
           } : {}
         }}
         onClick={isEditableFile() ? handleViewFile : undefined}
@@ -218,8 +223,10 @@ const FileBlock: React.FC<Props> = ({ block }) => {
           width: 40,
           height: 40,
           borderRadius: 1,
-          backgroundColor: '#e3f2fd',
-          color: '#1976d2'
+          backgroundColor: theme.palette.mode === 'dark'
+            ? 'rgba(33, 150, 243, 0.15)'
+            : 'rgba(33, 150, 243, 0.1)',
+          color: theme.palette.primary.main
         }}
       >
         {getFileIcon()}
@@ -272,9 +279,11 @@ const FileBlock: React.FC<Props> = ({ block }) => {
               handleViewFile();
             }}
             sx={{
-              color: '#1976d2',
+              color: theme.palette.primary.main,
               '&:hover': {
-                backgroundColor: '#e3f2fd'
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? 'rgba(33, 150, 243, 0.15)'
+                  : 'rgba(33, 150, 243, 0.1)'
               }
             }}
             title="查看/编辑文件"
@@ -292,9 +301,11 @@ const FileBlock: React.FC<Props> = ({ block }) => {
               handleDownload();
             }}
             sx={{
-              color: '#1976d2',
+              color: theme.palette.primary.main,
               '&:hover': {
-                backgroundColor: '#e3f2fd'
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? 'rgba(33, 150, 243, 0.15)'
+                  : 'rgba(33, 150, 243, 0.1)'
               }
             }}
             title="下载文件"
