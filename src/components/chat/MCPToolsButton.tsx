@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import type { MCPServer, MCPServerType } from '../../shared/types';
-import { mcpService } from '../../shared/services/MCPService';
+import { mcpService } from '../../shared/services/mcp';
 import CustomSwitch from '../CustomSwitch';
 import { getGlassmorphismToolbarStyles, getTransparentToolbarStyles } from '../input';
 import { useMCPServerStateManager } from '../../hooks/useMCPServerStateManager';

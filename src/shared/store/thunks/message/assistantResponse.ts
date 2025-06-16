@@ -6,7 +6,7 @@ import { generateImage as generateOpenAIImage } from '../../../api/openai/image'
 import { generateImage as generateGeminiImage } from '../../../api/gemini/image';
 import { createImageBlock } from '../../../utils/messageUtils';
 import { createAbortController } from '../../../utils/abortController';
-import { mcpService } from '../../../services/MCPService';
+import { mcpService } from '../../../services/mcp';
 import { newMessagesActions } from '../../slices/newMessagesSlice';
 import { upsertOneBlock, addOneBlock } from '../../slices/messageBlocksSlice';
 import { dexieStorage } from '../../../services/DexieStorageService';

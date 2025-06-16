@@ -1,11 +1,11 @@
-import type { MCPServer, MCPTool, MCPPrompt, MCPResource, MCPCallToolResponse } from '../types';
-import { getStorageItem, setStorageItem } from '../utils/storage';
+import type { MCPServer, MCPTool, MCPPrompt, MCPResource, MCPCallToolResponse } from '../../../types';
+import { getStorageItem, setStorageItem } from '../../../utils/storage';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createInMemoryMCPServer } from './MCPServerFactory';
-import { getBuiltinMCPServers } from '../config/builtinMCPServers';
-import { HttpStreamMCPClient } from './HttpStreamMCPClient';
-import { CapacitorCorsMCPClient } from './CapacitorCorsMCPClient';
+import { getBuiltinMCPServers } from '../../../config/builtinMCPServers';
+import { HttpStreamMCPClient } from '../clients/HttpStreamMCPClient';
+import { CapacitorCorsMCPClient } from '../clients/CapacitorCorsMCPClient';
 
 import { Capacitor } from '@capacitor/core';
 

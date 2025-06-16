@@ -5,7 +5,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 import DOMPurify from 'dompurify';
-import { universalFetch } from '../../utils/universalFetch';
+import { universalFetch } from '../../../utils/universalFetch';
 
 // 工具定义
 const FETCH_HTML_TOOL: Tool = {

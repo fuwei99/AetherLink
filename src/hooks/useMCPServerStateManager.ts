@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { mcpService } from '../shared/services/MCPService';
+import { mcpService } from '../shared/services/mcp';
 
 /**
  * 自定义Hook：管理MCP服务器状态的通用逻辑

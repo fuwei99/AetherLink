@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { MCPServer, MCPTool, MCPPrompt, MCPResource } from '../shared/types';
-import { mcpService } from '../shared/services/MCPService';
+import { mcpService } from '../shared/services/mcp';
 
 export type MCPMode = 'prompt' | 'function';
 

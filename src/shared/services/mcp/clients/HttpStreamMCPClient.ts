@@ -3,7 +3,7 @@
  * 兼容 mcp-framework 的 HTTP Stream Transport 协议
  */
 
-import { universalFetch, getFullProxyUrl } from '../utils/universalFetch';
+import { universalFetch, getFullProxyUrl } from '../../../utils/universalFetch';
 import { Capacitor } from '@capacitor/core';
 
 export interface HttpStreamMCPClientOptions {

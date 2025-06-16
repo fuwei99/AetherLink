@@ -21,7 +21,7 @@ import { Wrench, Settings, Database, Globe, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CustomSwitch from '../CustomSwitch';
 import type { MCPServer, MCPServerType } from '../../shared/types';
-import { mcpService } from '../../shared/services/MCPService';
+import { mcpService } from '../../shared/services/mcp';
 import { useMCPServerStateManager } from '../../hooks/useMCPServerStateManager';
 
 interface MCPButtonProps {

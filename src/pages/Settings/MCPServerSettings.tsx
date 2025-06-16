@@ -41,7 +41,7 @@ import {
 } from 'lucide-react';
 
 import type { MCPServer, MCPServerType } from '../../shared/types';
-import { mcpService } from '../../shared/services/MCPService';
+import { mcpService } from '../../shared/services/mcp';
 
 const MCPServerSettings: React.FC = () => {
   const navigate = useNavigate();

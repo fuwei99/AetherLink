@@ -42,7 +42,7 @@ import {
   Folder as FolderIcon
 } from 'lucide-react';
 import type { MCPServer, MCPServerType, MCPTool, MCPPrompt, MCPResource } from '../../shared/types';
-import { mcpService } from '../../shared/services/MCPService';
+import { mcpService } from '../../shared/services/mcp';
 
 const MCPServerDetail: React.FC = () => {
   const navigate = useNavigate();

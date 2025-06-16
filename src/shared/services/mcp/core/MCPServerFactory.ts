@@ -1,13 +1,13 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { BraveSearchServer } from './mcpServers/BraveSearchServer';
-import { FetchServer } from './mcpServers/FetchServer';
-import { MemoryServer } from './mcpServers/MemoryServer';
-import { ThinkingServer } from './mcpServers/ThinkingServer';
-import { FileSystemServer } from './mcpServers/FileSystemServer';
-import { DifyKnowledgeServer } from './mcpServers/DifyKnowledgeServer';
-import { LocalGoogleSearchServer } from './mcpServers/LocalGoogleSearchServer';
-import { CalculatorServer } from './mcpServers/CalculatorServer';
-import { getBuiltinMCPServers, isBuiltinServer, getBuiltinServerConfig } from '../config/builtinMCPServers';
+import { BraveSearchServer } from '../servers/BraveSearchServer';
+import { FetchServer } from '../servers/FetchServer';
+import { MemoryServer } from '../servers/MemoryServer';
+import { ThinkingServer } from '../servers/ThinkingServer';
+import { FileSystemServer } from '../servers/FileSystemServer';
+import { DifyKnowledgeServer } from '../servers/DifyKnowledgeServer';
+import { LocalGoogleSearchServer } from '../servers/LocalGoogleSearchServer';
+import { CalculatorServer } from '../servers/CalculatorServer';
+import { getBuiltinMCPServers, isBuiltinServer, getBuiltinServerConfig } from '../../../config/builtinMCPServers';
 
 /**
  * 创建内存 MCP 服务器

@@ -1,6 +1,6 @@
 import type { MCPTool, MCPToolResponse, MCPCallToolResponse } from '../types';
 import { ChunkType } from '../types/chunk';
-import { mcpService } from '../services/MCPService';
+import { mcpService } from '../services/mcp';
 import { nanoid } from './index';
 
 /**
