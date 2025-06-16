@@ -83,9 +83,9 @@ export class CORSBypassService {
         url,
         method: method as any,
         headers: this.prepareHeaders(headers),
-        data: data ? JSON.stringify(data) : undefined,
+        data: this.serializeData(data),
         timeout,
-        responseType: (responseType === 'json' ? 'json' : 'text') as 'json' | 'text' | 'blob' | 'arraybuffer'
+        responseType: this.validateResponseType(responseType)
       };
 
       // 执行请求
@@ -196,6 +196,60 @@ export class CORSBypassService {
     return error;
   }
 
+  /**
+   * 序列化数据，保护非JSON数据不被破坏
+   */
+  private serializeData(data: any): string | undefined {
+    if (data === null || data === undefined) {
+      return undefined;
+    }
+
+    // 如果已经是字符串，直接返回
+    if (typeof data === 'string') {
+      return data;
+    }
+
+    // 如果是Buffer、ArrayBuffer、Blob等二进制数据，转换为字符串
+    if (data instanceof ArrayBuffer) {
+      return new TextDecoder().decode(data);
+    }
+
+    if (data instanceof Uint8Array) {
+      return new TextDecoder().decode(data);
+    }
+
+    // 如果是FormData，不能直接序列化，抛出错误提示
+    if (data instanceof FormData) {
+      throw new Error('FormData is not supported by CORS bypass plugin. Please convert to JSON object.');
+    }
+
+    // 如果是Blob，不能直接序列化，抛出错误提示  
+    if (data instanceof Blob) {
+      throw new Error('Blob is not supported by CORS bypass plugin. Please convert to appropriate format.');
+    }
+
+    // 对于普通对象，使用JSON序列化
+    try {
+      return JSON.stringify(data);
+    } catch (error) {
+      throw new Error(`Failed to serialize data: ${error}`);
+    }
+  }
+
+  /**
+   * 验证并返回有效的响应类型
+   */
+  private validateResponseType(responseType: 'json' | 'text' | 'blob' | 'arraybuffer'): 'json' | 'text' | 'blob' | 'arraybuffer' {
+    const validTypes: Array<'json' | 'text' | 'blob' | 'arraybuffer'> = ['json', 'text', 'blob', 'arraybuffer'];
+    
+    if (validTypes.includes(responseType)) {
+      return responseType;
+    }
+    
+    // 如果类型无效，默认为text，同时记录警告
+    LoggerService.log('WARN', `[CORS Bypass] 无效的响应类型: ${responseType}，回退到 'text'`);
+    return 'text';
+  }
 
 }
 

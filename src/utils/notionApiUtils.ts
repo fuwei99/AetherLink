@@ -23,6 +23,48 @@ export const getNotionApiUrl = (endpoint: string): string => {
   return `${baseUrl}${endpoint}`;
 };
 
+/**
+ * 智能序列化数据，确保不破坏不同类型的数据
+ */
+const serializeRequestData = (data: any): string | undefined => {
+  if (data === null || data === undefined) {
+    return undefined;
+  }
+
+  // 如果已经是字符串，直接返回
+  if (typeof data === 'string') {
+    return data;
+  }
+
+  // 对于普通对象，使用JSON序列化
+  if (typeof data === 'object' && data.constructor === Object) {
+    try {
+      return JSON.stringify(data);
+    } catch (error) {
+      console.warn('[Notion API] JSON序列化失败:', error);
+      throw new Error(`Failed to serialize request data: ${error}`);
+    }
+  }
+
+  // 对于数组，也使用JSON序列化  
+  if (Array.isArray(data)) {
+    try {
+      return JSON.stringify(data);
+    } catch (error) {
+      console.warn('[Notion API] JSON序列化失败:', error);
+      throw new Error(`Failed to serialize request data: ${error}`);
+    }
+  }
+
+  // 其他类型尝试转换为字符串
+  try {
+    return String(data);
+  } catch (error) {
+    console.warn('[Notion API] 数据序列化失败:', error);
+    throw new Error(`Unable to serialize request data`);
+  }
+};
+
 // 通用的Notion API请求函数
 export const notionApiRequest = async (
   endpoint: string,
@@ -49,7 +91,7 @@ export const notionApiRequest = async (
         url,
         method: options.method,
         headers,
-        data: options.body ? JSON.stringify(options.body) : undefined,
+        data: serializeRequestData(options.body),
         timeout: 30000,
         responseType: 'json'
       });
@@ -80,7 +122,7 @@ export const notionApiRequest = async (
   const response = await fetch(url, {
     method: options.method,
     headers,
-    body: options.body ? JSON.stringify(options.body) : undefined
+    body: serializeRequestData(options.body)
   });
 
   if (!response.ok) {

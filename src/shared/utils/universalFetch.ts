@@ -37,9 +37,9 @@ export async function universalFetch(url: string, options: UniversalFetchOptions
         url,
         method: (fetchOptions.method || 'GET') as any,
         headers: extractHeaders(fetchOptions.headers),
-        data: fetchOptions.body,
+        data: serializeRequestBody(fetchOptions.body),
         timeout,
-        responseType: responseType === 'json' ? 'json' : 'text'
+        responseType: validateResponseType(responseType)
       });
 
       // 创建兼容的Response对象
@@ -209,4 +209,62 @@ export function getFullProxyUrl(originalUrl: string): string {
  */
 export function logFetchUsage(originalUrl: string, finalUrl: string, method: string = 'GET') {
   console.log(`[Universal Fetch] ${method} ${originalUrl} -> ${finalUrl}`);
+}
+
+/**
+ * 序列化请求体，确保兼容 CorsBypass 插件
+ */
+function serializeRequestBody(body?: BodyInit | null): string | undefined {
+  if (!body) {
+    return undefined;
+  }
+
+  // 如果已经是字符串，直接返回
+  if (typeof body === 'string') {
+    return body;
+  }
+
+  // 处理 FormData
+  if (body instanceof FormData) {
+    // FormData 需要转换为 JSON 对象或者回退到标准 fetch
+    console.warn('[Universal Fetch] FormData detected, falling back to standard fetch for this request');
+    throw new Error('FormData not supported by CorsBypass, will fallback to standard fetch');
+  }
+
+  // 处理 Blob
+  if (body instanceof Blob) {
+    console.warn('[Universal Fetch] Blob detected, falling back to standard fetch for this request');
+    throw new Error('Blob not supported by CorsBypass, will fallback to standard fetch');
+  }
+
+  // 处理 ArrayBuffer
+  if (body instanceof ArrayBuffer) {
+    return new TextDecoder().decode(body);
+  }
+
+  // 处理 Uint8Array
+  if (body instanceof Uint8Array) {
+    return new TextDecoder().decode(body);
+  }
+
+  // 处理 URLSearchParams
+  if (body instanceof URLSearchParams) {
+    return body.toString();
+  }
+
+  // 其他情况尝试转换为字符串
+  try {
+    return String(body);
+  } catch (error) {
+    console.warn('[Universal Fetch] Failed to serialize body:', error);
+    throw new Error('Unable to serialize request body for CorsBypass');
+  }
+}
+
+/**
+ * 验证响应类型
+ */
+function validateResponseType(responseType: string): 'json' | 'text' {
+  // CorsBypass 插件目前只支持 json 和 text
+  return responseType === 'json' ? 'json' : 'text';
 }
