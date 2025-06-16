@@ -7,6 +7,7 @@ import { useFileUpload } from '../../shared/hooks/useFileUpload';
 
 import { useInputStyles } from '../../shared/hooks/useInputStyles';
 import MultiModelSelector from './MultiModelSelector';
+import OptimizedTextarea from './OptimizedTextarea';
 import type { ImageContent, SiliconFlowImageFormat, FileContent } from '../../shared/types';
 import { Image, Search } from 'lucide-react';
 
@@ -129,7 +130,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
     handleSubmit,
     handleKeyDown,
     handleChange,
-    textareaHeight,
     showCharCount,
     handleCompositionStart,
     handleCompositionEnd,
@@ -301,7 +301,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   // 输入处理逻辑现在由 useChatInputLogic 和 useUrlScraper hooks 提供
 
-  // 检测是否需要显示展开按钮和隐藏语音按钮 - 改为基于字数判断
+  // 防抖定时器引用
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 检测是否需要显示展开按钮和隐藏语音按钮 - 改为基于字数判断，添加防抖和平滑过渡
   const checkButtonVisibility = useCallback(() => {
     if (!expanded) {
       // 计算文本行数：根据字符数估算行数
@@ -315,17 +318,25 @@ const ChatInput: React.FC<ChatInputProps> = ({
       // 估算总行数：字符行数 + 换行符行数
       const estimatedLines = Math.ceil(textLength / charsPerLine) + newlineCount;
 
-      // 当文本超过3行时隐藏语音按钮，为输入区域让出空间
-      setShouldHideVoiceButton(estimatedLines > 3);
+      // 添加滞后机制：显示时需要超过4行，隐藏时需要少于3行，避免频繁切换
+      const shouldHide = estimatedLines > 4;
+      const shouldShow = estimatedLines < 3;
 
-      // 当文本超过4行时显示展开按钮
+      // 只有在状态真正需要改变时才更新
+      if (shouldHide && !shouldHideVoiceButton) {
+        setShouldHideVoiceButton(true);
+      } else if (shouldShow && shouldHideVoiceButton) {
+        setShouldHideVoiceButton(false);
+      }
+
+      // 展开按钮的显示逻辑保持不变
       setShowExpandButton(estimatedLines > 4);
     } else {
       // 展开状态下始终显示展开按钮（用于收起），隐藏语音按钮
       setShowExpandButton(true);
       setShouldHideVoiceButton(true);
     }
-  }, [expanded, message, isMobile, isTablet]);
+  }, [expanded, message, isMobile, isTablet, shouldHideVoiceButton]);
 
   // 监听消息内容变化，检测按钮显示状态
   useEffect(() => {
@@ -338,12 +349,29 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setTimeout(checkButtonVisibility, 100);
   }, [expanded, checkButtonVisibility]);
 
+  // 清理防抖定时器
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
   // 优化的 handleChange - 移除URL检测，添加防抖机制
   const enhancedHandleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // 调用 hook 提供的 handleChange
     handleChange(e);
-    // 使用防抖延迟检测按钮显示状态，避免频繁计算
-    setTimeout(checkButtonVisibility, 100);
+
+    // 清除之前的防抖定时器
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // 使用防抖延迟检测按钮显示状态，避免频繁计算和状态切换
+    debounceTimerRef.current = setTimeout(() => {
+      checkButtonVisibility();
+    }, 150); // 增加防抖延迟到150ms，减少抖动
   }, [handleChange, checkButtonVisibility]);
 
   // 增强的 handleKeyDown 以支持展开功能
@@ -370,9 +398,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     // 只设置初始高度，不执行焦点操作避免闪烁
     const timer = setTimeout(() => {
       if (currentTextarea && currentTextarea.dataset.initialized !== 'true') {
-        // 确保初始高度正确设置，以显示完整的placeholder
-        const initialHeight = isMobile ? 32 : isTablet ? 36 : 34;
-        currentTextarea.style.height = `${initialHeight}px`;
+        // 确保初始高度正确设置 - 空文本时使用较小高度
+        const initialHeight = isMobile ? 19 : isTablet ? 21 : 19;
+        currentTextarea.style.height = `${initialHeight}px !important`;
 
         // 标记为已初始化
         currentTextarea.dataset.initialized = 'true';
@@ -1041,17 +1069,24 @@ const ChatInput: React.FC<ChatInputProps> = ({
             </Tooltip>
           </div>
         )}
-        {/* 语音识别按钮 - 根据状态显示不同图标，当文本超过3行时隐藏 */}
-        {!shouldHideVoiceButton && (
+        {/* 语音识别按钮 - 根据状态显示不同图标，当文本超过4行时隐藏，添加平滑过渡 */}
+        <div style={{
+          width: shouldHideVoiceButton ? '0px' : (isTablet ? '56px' : '48px'),
+          overflow: 'hidden',
+          transition: 'width 0.3s ease-in-out, opacity 0.2s ease-in-out',
+          opacity: shouldHideVoiceButton ? 0 : 1,
+          display: 'flex',
+          alignItems: 'center'
+        }}>
           <IconButton
             onClick={handleToggleVoiceMode}
-            disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+            disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages) || shouldHideVoiceButton}
             size={isTablet ? "large" : "medium"}
             style={{
               color: voiceState !== 'normal' ? '#f44336' : iconColor,
               padding: isTablet ? '10px' : '8px',
               backgroundColor: voiceState !== 'normal' ? 'rgba(211, 47, 47, 0.15)' : 'transparent',
-              transition: 'all 0.25s ease-in-out'
+              transition: 'all 0.2s ease-in-out'
             }}
           >
           {voiceState === 'normal' ? (
@@ -1064,7 +1099,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             </Tooltip>
           )}
           </IconButton>
-        )}
+        </div>
 
         {/* 输入区域 - 根据三状态显示不同的输入方式 */}
         <div style={{
@@ -1092,7 +1127,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           ) : (
             /* 状态1：正常输入框 */
             <>
-              <textarea
+              <OptimizedTextarea
                 ref={textareaRef}
                 className="hide-scrollbar"
                 style={{
@@ -1106,10 +1141,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   fontFamily: 'inherit',
                   resize: 'none',
                   overflow: message.trim().length > 0 ? 'auto' : 'hidden',
-                  minHeight: expanded ? `${expandedHeight}px` : `${isMobile ? 32 : isTablet ? 36 : 34}px`,
-                  height: expanded ? `${expandedHeight}px` : `${textareaHeight}px`,
-                  maxHeight: expanded ? `${expandedHeight}px` : `${isMobile ? 200 : 250}px`,
-                  color: textColor,
                   transition: 'height 0.3s ease-out, min-height 0.3s ease-out, max-height 0.3s ease'
                   // 滚动条隐藏通过 hide-scrollbar CSS类处理
                 }}
@@ -1129,7 +1160,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 onCompositionEnd={handleCompositionEnd}
                 onPaste={handlePaste}
                 disabled={isLoading && !allowConsecutiveMessages}
-                rows={1}
+                minRows={1}
+                maxRows={expanded ? undefined : (isMobile ? 8 : 10)}
+                expanded={expanded}
+                expandedHeight={expandedHeight}
+                textColor={textColor}
               />
 
               {/* 字符计数显示 */}

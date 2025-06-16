@@ -60,32 +60,36 @@ export const useChatInputLogic = ({
     return hasContent && (allowConsecutiveMessages || !isLoading);
   };
 
-  // 防抖定时器引用
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // 移除防抖定时器，使用直接响应的高度调整
 
-  // 优化的文本区域高度自适应（ChatInput 特有）- 添加防抖机制
+  // 重写的文本区域高度自适应逻辑 - 简化且直接
   const adjustTextareaHeight = useCallback((textarea: HTMLTextAreaElement) => {
-    if (!enableTextareaResize) return;
+    if (!enableTextareaResize || !textarea) return;
 
-    // 清除之前的防抖定时器
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+    // 获取当前文本内容
+    const textValue = textarea.value || '';
+    const isEmpty = textValue.trim().length === 0;
+
+    // 如果文本为空，直接设置为最小高度
+    if (isEmpty) {
+      const emptyHeight = 19; // 统一使用19px作为空文本高度
+      setTextareaHeight(emptyHeight);
+      textarea.style.setProperty('height', `${emptyHeight}px`, 'important');
+      return;
     }
 
-    // 使用防抖机制，避免频繁计算
-    debounceTimerRef.current = setTimeout(() => {
-      // 重置高度以获取正确的scrollHeight
-      textarea.style.height = 'auto';
+    // 如果有文本内容，计算自适应高度
+    // 临时重置高度以获取真实的scrollHeight
+    textarea.style.height = 'auto';
 
-      // 计算新高度
-      const newHeight = Math.max(
-        isMobile ? 32 : isTablet ? 36 : 34, // 最小高度
-        Math.min(textarea.scrollHeight, 120) // 最大高度120px
-      );
+    const scrollHeight = textarea.scrollHeight;
+    const minHeight = isMobile ? 32 : isTablet ? 36 : 34;
+    const maxHeight = 120;
 
-      setTextareaHeight(newHeight);
-      textarea.style.height = `${newHeight}px`;
-    }, 16); // 16ms防抖，约60fps
+    const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+
+    setTextareaHeight(newHeight);
+    textarea.style.setProperty('height', `${newHeight}px`, 'important');
   }, [enableTextareaResize, isMobile, isTablet]);
 
   // 处理消息发送
@@ -102,13 +106,11 @@ export const useChatInputLogic = ({
       onSendImagePrompt(processedMessage);
       setMessage('');
 
-      // 重置输入框高度到默认值（ChatInput 特有）
-      if (enableTextareaResize) {
-        const defaultHeight = isMobile ? 24 : 28;
-        setTextareaHeight(defaultHeight);
-        if (textareaRef.current) {
-          textareaRef.current.style.height = `${defaultHeight}px`;
-        }
+      // 重置输入框高度到空文本状态（ChatInput 特有）
+      if (enableTextareaResize && textareaRef.current) {
+        const emptyHeight = 19; // 统一使用19px
+        setTextareaHeight(emptyHeight);
+        textareaRef.current.style.setProperty('height', `${emptyHeight}px`, 'important');
       }
       return;
     }
@@ -118,13 +120,11 @@ export const useChatInputLogic = ({
       onSendImagePrompt(processedMessage);
       setMessage('');
 
-      // 重置输入框高度到默认值（ChatInput 特有）
-      if (enableTextareaResize) {
-        const defaultHeight = isMobile ? 24 : 28;
-        setTextareaHeight(defaultHeight);
-        if (textareaRef.current) {
-          textareaRef.current.style.height = `${defaultHeight}px`;
-        }
+      // 重置输入框高度到空文本状态（ChatInput 特有）
+      if (enableTextareaResize && textareaRef.current) {
+        const emptyHeight = 19; // 统一使用19px
+        setTextareaHeight(emptyHeight);
+        textareaRef.current.style.setProperty('height', `${emptyHeight}px`, 'important');
       }
       return;
     }
@@ -192,13 +192,11 @@ export const useChatInputLogic = ({
     setImages([]);
     setFiles([]);
 
-    // 重置输入框高度到默认值（ChatInput 特有）
-    if (enableTextareaResize) {
-      const defaultHeight = isMobile ? 24 : 28;
-      setTextareaHeight(defaultHeight);
-      if (textareaRef.current) {
-        textareaRef.current.style.height = `${defaultHeight}px`;
-      }
+    // 重置输入框高度到空文本状态（ChatInput 特有）
+    if (enableTextareaResize && textareaRef.current) {
+      const emptyHeight = 19; // 统一使用19px
+      setTextareaHeight(emptyHeight);
+      textareaRef.current.style.setProperty('height', `${emptyHeight}px`, 'important');
     }
   };
 
@@ -261,14 +259,7 @@ export const useChatInputLogic = ({
     }
   }, [message, enableCharacterCount]);
 
-  // 清理防抖定时器
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
+  // 移除防抖清理逻辑，因为新的高度调整不使用防抖
 
   return {
     message,
