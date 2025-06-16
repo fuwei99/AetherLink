@@ -4,6 +4,7 @@ import type { ChatTopic } from '../types';
 import { getStorageItem, setStorageItem } from '../utils/storage';
 import { saveTopicToDB } from './storageService';
 import { getMainTextContent } from '../utils/messageUtils';
+import { dexieStorage } from './DexieStorageService';
 
 /**
  * 话题命名服务
@@ -109,7 +110,6 @@ export class TopicNamingService {
         // 方法2: 如果块系统没有内容，尝试从数据库直接获取块
         if (!content || content.trim().length === 0) {
           try {
-            const { dexieStorage } = await import('./DexieStorageService');
             const blocks = await dexieStorage.getMessageBlocksByMessageId(msg.id);
             const mainTextBlock = blocks.find(block => block.type === 'main_text');
             if (mainTextBlock && 'content' in mainTextBlock) {

@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { WebSearchSettings, WebSearchCustomProvider, WebSearchProvider, WebSearchProviderConfig } from '../../types';
+import type { WebSearchSettings, WebSearchCustomProvider, WebSearchProvider, WebSearchProviderConfig, SearchEngine } from '../../types';
 import { getStorageItem, setStorageItem } from '../../utils/storage';
 
 // 存储键名
@@ -86,7 +86,10 @@ const loadFromStorage = async (): Promise<WebSearchSettings> => {
     enablePostProcessing: true,
     enableSmartSearch: false,
     timeRange: 'week',
-    newsSearchDays: 7
+    newsSearchDays: 7,
+
+    // 🚀 新增：搜索引擎选择默认设置
+    selectedSearchEngine: 'bing'
   };
 };
 
@@ -118,7 +121,10 @@ const initialState: WebSearchSettings = {
   enablePostProcessing: true,
   enableSmartSearch: false,
   timeRange: 'week',
-  newsSearchDays: 7
+  newsSearchDays: 7,
+
+  // 🚀 新增：搜索引擎选择默认设置
+  selectedSearchEngine: 'bing'
 };
 
 // 延迟加载数据，避免循环导入
@@ -171,7 +177,10 @@ const saveToStorage = (state: WebSearchSettings) => {
     enablePostProcessing: state.enablePostProcessing,
     enableSmartSearch: state.enableSmartSearch,
     timeRange: state.timeRange,
-    newsSearchDays: state.newsSearchDays
+    newsSearchDays: state.newsSearchDays,
+
+    // 🚀 新增：搜索引擎选择相关字段
+    selectedSearchEngine: state.selectedSearchEngine
   };
 
   setStorageItem(STORAGE_KEY, serializableState).catch(error => {
@@ -287,6 +296,11 @@ const webSearchSlice = createSlice({
     },
     setNewsSearchDays: (state, action: PayloadAction<number>) => {
       state.newsSearchDays = action.payload;
+      saveToStorage(state);
+    },
+    // 🚀 新增：搜索引擎选择相关action
+    setSelectedSearchEngine: (state, action: PayloadAction<SearchEngine>) => {
+      state.selectedSearchEngine = action.payload;
       saveToStorage(state);
     },
     addCustomProvider: (state, action: PayloadAction<WebSearchCustomProvider>) => {
@@ -415,7 +429,10 @@ export const {
   togglePostProcessing,
   toggleSmartSearch,
   setTimeRange,
-  setNewsSearchDays
+  setNewsSearchDays,
+
+  // 🚀 新增：搜索引擎选择相关actions
+  setSelectedSearchEngine
 } = webSearchSlice.actions;
 
 export default webSearchSlice.reducer;

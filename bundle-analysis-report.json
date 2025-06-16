@@ -1,0 +1,106 @@
+{
+  "timestamp": "2025-06-15T23:02:05.712Z",
+  "totalFiles": 473,
+  "totalSize": 14359752,
+  "totalSizeFormatted": "13.69 MB",
+  "typeStats": {
+    "JavaScript": {
+      "count": 405,
+      "totalSize": 13150736,
+      "totalSizeFormatted": "12.54 MB",
+      "percentage": "91.6"
+    },
+    "Other": {
+      "count": 1,
+      "totalSize": 88244,
+      "totalSizeFormatted": "86.18 KB",
+      "percentage": "0.6"
+    },
+    "Font": {
+      "count": 59,
+      "totalSize": 1072948,
+      "totalSizeFormatted": "1.02 MB",
+      "percentage": "7.5"
+    },
+    "CSS": {
+      "count": 2,
+      "totalSize": 43193,
+      "totalSizeFormatted": "42.18 KB",
+      "percentage": "0.3"
+    },
+    "Image": {
+      "count": 5,
+      "totalSize": 3509,
+      "totalSizeFormatted": "3.43 KB",
+      "percentage": "0.0"
+    },
+    "HTML": {
+      "count": 1,
+      "totalSize": 1122,
+      "totalSizeFormatted": "1.1 KB",
+      "percentage": "0.0"
+    }
+  },
+  "largestFiles": [
+    {
+      "name": "static\\js\\index-CfLRJT2y.js",
+      "type": "JavaScript",
+      "size": 6011629,
+      "sizeFormatted": "5.73 MB"
+    },
+    {
+      "name": "static\\js\\ChatPage-BVwM08VI.js",
+      "type": "JavaScript",
+      "size": 1784147,
+      "sizeFormatted": "1.7 MB"
+    },
+    {
+      "name": "static\\js\\WorkspaceDetail-Bu45hdJW.js",
+      "type": "JavaScript",
+      "size": 541167,
+      "sizeFormatted": "528.48 KB"
+    },
+    {
+      "name": "static\\js\\TTSService-a9IRElFd.js",
+      "type": "JavaScript",
+      "size": 504191,
+      "sizeFormatted": "492.37 KB"
+    },
+    {
+      "name": "static\\js\\cytoscape.esm-DSGJh1Gn.js",
+      "type": "JavaScript",
+      "size": 434277,
+      "sizeFormatted": "424.1 KB"
+    },
+    {
+      "name": "static\\js\\dist-BKiJ4PLl.js",
+      "type": "JavaScript",
+      "size": 333349,
+      "sizeFormatted": "325.54 KB"
+    },
+    {
+      "name": "static\\js\\chunk-7PKI6E2E-XA5d81d0.js",
+      "type": "JavaScript",
+      "size": 307053,
+      "sizeFormatted": "299.86 KB"
+    },
+    {
+      "name": "static\\js\\architectureDiagram-IEHRJDOE-C-7gnra_.js",
+      "type": "JavaScript",
+      "size": 147041,
+      "sizeFormatted": "143.59 KB"
+    },
+    {
+      "name": "static\\js\\web-ZKzpLogZ.js",
+      "type": "JavaScript",
+      "size": 130886,
+      "sizeFormatted": "127.82 KB"
+    },
+    {
+      "name": "static\\js\\mindmap-definition-ALO5MXBD-BWdlPWBM.js",
+      "type": "JavaScript",
+      "size": 101473,
+      "sizeFormatted": "99.09 KB"
+    }
+  ]
+}

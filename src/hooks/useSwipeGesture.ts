@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from 'react';
-import { useDrag } from '@use-gesture/react';
 
 interface SwipeGestureOptions {
   onSwipeRight?: () => void;
@@ -13,8 +12,17 @@ interface SwipeGestureOptions {
   enableEdgeDetection?: boolean; // 是否启用边缘检测
 }
 
+interface SwipeState {
+  startX: number;
+  startY: number;
+  startTime: number;
+  isTracking: boolean;
+  currentX: number;
+  currentY: number;
+}
+
 /**
- * 基于 @use-gesture/react 的滑动手势Hook
+ * 滑动手势Hook
  * 支持左滑和右滑检测，可用于侧边栏控制等场景
  */
 export const useSwipeGesture = (options: SwipeGestureOptions = {}) => {
@@ -30,132 +38,193 @@ export const useSwipeGesture = (options: SwipeGestureOptions = {}) => {
     enableEdgeDetection = false // 默认不启用边缘检测
   } = options;
 
+  const swipeStateRef = useRef<SwipeState>({
+    startX: 0,
+    startY: 0,
+    startTime: 0,
+    isTracking: false,
+    currentX: 0,
+    currentY: 0
+  });
+
   const [isSwipeActive, setIsSwipeActive] = useState(false);
-  const startPositionRef = useRef<{ x: number; y: number } | null>(null);
 
-  // 使用 @use-gesture/react 的 useDrag Hook
-  const bind = useDrag(
-    ({
-      movement: [mx, my],
-      velocity: [vx],
-      initial: [ix, iy],
-      cancel,
-      first,
-      last,
-      event
-    }) => {
-      // 如果手势被禁用，直接返回
-      if (!enabled) return;
+  // 重置滑动状态
+  const resetSwipeState = useCallback(() => {
+    swipeStateRef.current = {
+      startX: 0,
+      startY: 0,
+      startTime: 0,
+      isTracking: false,
+      currentX: 0,
+      currentY: 0
+    };
+    setIsSwipeActive(false);
+  }, []);
 
-      // 记录起始位置（用于边缘检测）
-      if (first) {
-        startPositionRef.current = { x: ix, y: iy };
-        setIsSwipeActive(true);
-      }
+  // 触摸开始
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (!enabled) return;
 
-      // 检查是否为水平滑动（垂直滑动距离不应超过水平滑动距离）
-      const isHorizontalSwipe = Math.abs(mx) > Math.abs(my);
+    const touch = e.touches[0];
+    const now = Date.now();
 
-      if (!isHorizontalSwipe && Math.abs(my) > 20) {
-        // 如果垂直滑动距离过大，取消手势
-        cancel();
-        return;
-      }
+    // 如果启用边缘检测，在后续的滑动处理中会进行边缘检查
+    // 这里不做预先过滤，让所有触摸都通过，在滑动结束时再判断是否有效
 
-      // 边缘检测逻辑
-      if (enableEdgeDetection && startPositionRef.current) {
-        const startX = startPositionRef.current.x;
+    swipeStateRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startTime: now,
+      isTracking: true,
+      currentX: touch.clientX,
+      currentY: touch.clientY
+    };
+
+    setIsSwipeActive(true);
+  }, [enabled, enableEdgeDetection, edgeThreshold]);
+
+  // 触摸移动
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!enabled || !swipeStateRef.current.isTracking) return;
+
+    const touch = e.touches[0];
+    const state = swipeStateRef.current;
+
+    state.currentX = touch.clientX;
+    state.currentY = touch.clientY;
+
+    const deltaX = touch.clientX - state.startX;
+    const deltaY = touch.clientY - state.startY;
+
+    // 如果垂直滑动距离大于水平滑动距离，则不处理（可能是滚动）
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      return;
+    }
+
+    // 计算滑动进度并触发回调
+    if (onSwipeProgress && Math.abs(deltaX) > 10) {
+      // 如果启用边缘检测，只在有效的边缘区域内才显示进度
+      let shouldShowProgress = true;
+
+      if (enableEdgeDetection) {
+        const startX = state.startX;
         const isStartInLeftEdge = startX <= edgeThreshold;
 
         // 右滑：必须从左边缘开始（打开侧边栏）
         // 左滑：任意位置都可以（关闭侧边栏）
-        const shouldAllowGesture = (mx > 0 && isStartInLeftEdge) || (mx < 0);
-
-        if (!shouldAllowGesture) {
-          cancel();
-          return;
-        }
+        shouldShowProgress = (deltaX > 0 && isStartInLeftEdge) || (deltaX < 0);
       }
 
-      // 滑动进度回调
-      if (onSwipeProgress && Math.abs(mx) > 10) {
-        let shouldShowProgress = true;
-
-        if (enableEdgeDetection && startPositionRef.current) {
-          const startX = startPositionRef.current.x;
-          const isStartInLeftEdge = startX <= edgeThreshold;
-
-          // 只在有效的边缘区域内才显示进度
-          shouldShowProgress = (mx > 0 && isStartInLeftEdge) || (mx < 0);
-        }
-
-        if (shouldShowProgress) {
-          const progress = Math.min(Math.abs(mx), threshold * 2) / threshold * 50;
-          const direction = mx > 0 ? 'right' : 'left';
-          onSwipeProgress(progress, direction);
-        }
+      if (shouldShowProgress) {
+        const progress = Math.min(Math.abs(deltaX), threshold * 2) / threshold * 50;
+        const direction = deltaX > 0 ? 'right' : 'left';
+        onSwipeProgress(progress, direction);
       }
-
-      // 手势结束时的处理
-      if (last) {
-        const isDistanceEnough = Math.abs(mx) > threshold;
-        const isVelocityEnough = Math.abs(vx) > velocityThreshold;
-
-        if (isHorizontalSwipe && (isDistanceEnough || isVelocityEnough)) {
-          // 边缘检测验证
-          if (enableEdgeDetection && startPositionRef.current) {
-            const startX = startPositionRef.current.x;
-            const isStartInLeftEdge = startX <= edgeThreshold;
-
-            if (mx > 0 && onSwipeRight && isStartInLeftEdge) {
-              // 右滑：从左边缘开始，用于打开侧边栏
-              onSwipeRight();
-            } else if (mx < 0 && onSwipeLeft) {
-              // 左滑：任意位置都可以，用于关闭侧边栏
-              onSwipeLeft();
-            }
-          } else {
-            // 不启用边缘检测时的逻辑
-            if (mx > 0 && onSwipeRight) {
-              onSwipeRight();
-            } else if (mx < 0 && onSwipeLeft) {
-              onSwipeLeft();
-            }
-          }
-        }
-
-        // 重置进度
-        if (onSwipeProgress) {
-          onSwipeProgress(0, 'right');
-        }
-
-        setIsSwipeActive(false);
-        startPositionRef.current = null;
-      }
-
-      // 阻止默认行为
-      if (preventDefaultOnSwipe && Math.abs(mx) > threshold / 2) {
-        event.preventDefault();
-      }
-    },
-    {
-      enabled,
-      axis: 'lock', // 锁定到检测到的第一个轴
-      threshold: [threshold / 4, threshold / 4], // 设置较小的阈值以便早期检测
-      preventDefault: preventDefaultOnSwipe,
-      pointer: { touch: true }, // 启用触摸支持
-      filterTaps: true, // 过滤点击事件
     }
-  );
 
-  // 重置滑动状态
-  const resetSwipeState = useCallback(() => {
-    setIsSwipeActive(false);
-    startPositionRef.current = null;
-  }, []);
+    // 如果水平滑动距离超过阈值，阻止默认行为（如果启用）
+    if (preventDefaultOnSwipe && Math.abs(deltaX) > threshold / 2) {
+      e.preventDefault();
+    }
+  }, [enabled, threshold, preventDefaultOnSwipe, onSwipeProgress, enableEdgeDetection, edgeThreshold]);
+
+  // 触摸结束
+  const handleTouchEnd = useCallback((_e: TouchEvent) => {
+    if (!enabled || !swipeStateRef.current.isTracking) return;
+
+    const state = swipeStateRef.current;
+    const endTime = Date.now();
+    const deltaTime = endTime - state.startTime;
+    const deltaX = state.currentX - state.startX;
+    const deltaY = state.currentY - state.startY;
+
+    // 计算速度 (px/ms)
+    const velocity = Math.abs(deltaX) / deltaTime;
+
+    // 检查是否满足滑动条件
+    const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
+    const isDistanceEnough = Math.abs(deltaX) > threshold;
+    const isVelocityEnough = velocity > velocityThreshold;
+
+    if (isHorizontalSwipe && (isDistanceEnough || isVelocityEnough)) {
+      // 如果启用边缘检测，还需要验证滑动方向和起始位置的匹配
+      if (enableEdgeDetection) {
+        const startX = state.startX;
+        const isStartInLeftEdge = startX <= edgeThreshold;
+
+        if (deltaX > 0 && onSwipeRight && isStartInLeftEdge) {
+          // 右滑：从左边缘开始，用于打开侧边栏
+          onSwipeRight();
+        } else if (deltaX < 0 && onSwipeLeft) {
+          // 左滑：任意位置都可以，用于关闭侧边栏
+          onSwipeLeft();
+        }
+      } else {
+        // 不启用边缘检测时的原有逻辑
+        if (deltaX > 0 && onSwipeRight) {
+          // 右滑
+          onSwipeRight();
+        } else if (deltaX < 0 && onSwipeLeft) {
+          // 左滑
+          onSwipeLeft();
+        }
+      }
+    }
+
+    // 重置进度
+    if (onSwipeProgress) {
+      onSwipeProgress(0, 'right');
+    }
+
+    resetSwipeState();
+  }, [enabled, threshold, velocityThreshold, onSwipeRight, onSwipeLeft, onSwipeProgress, enableEdgeDetection, edgeThreshold, resetSwipeState]);
+
+  // 触摸取消
+  const handleTouchCancel = useCallback(() => {
+    // 重置进度
+    if (onSwipeProgress) {
+      onSwipeProgress(0, 'right');
+    }
+    resetSwipeState();
+  }, [resetSwipeState, onSwipeProgress]);
+
+  // 绑定事件监听器的函数
+  const bindSwipeEvents = useCallback((element: HTMLElement | null) => {
+    if (!element || !enabled) return;
+
+    element.addEventListener('touchstart', handleTouchStart, { passive: false });
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    element.addEventListener('touchend', handleTouchEnd, { passive: true });
+    element.addEventListener('touchcancel', handleTouchCancel, { passive: true });
+
+    return () => {
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
+      element.removeEventListener('touchend', handleTouchEnd);
+      element.removeEventListener('touchcancel', handleTouchCancel);
+    };
+  }, [enabled, handleTouchStart, handleTouchMove, handleTouchEnd, handleTouchCancel]);
+
+  // React事件处理器（用于React组件）
+  const swipeHandlers = {
+    onTouchStart: (e: React.TouchEvent) => {
+      handleTouchStart(e.nativeEvent);
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      handleTouchMove(e.nativeEvent);
+    },
+    onTouchEnd: (e: React.TouchEvent) => {
+      handleTouchEnd(e.nativeEvent);
+    },
+    onTouchCancel: () => {
+      handleTouchCancel();
+    }
+  };
 
   return {
-    ...bind(),
+    swipeHandlers,
+    bindSwipeEvents,
     isSwipeActive,
     resetSwipeState
   };
@@ -163,7 +232,7 @@ export const useSwipeGesture = (options: SwipeGestureOptions = {}) => {
 
 /**
  * 专门用于侧边栏的滑动手势Hook
- * 预配置了适合侧边栏的参数，基于 @use-gesture/react
+ * 预配置了适合侧边栏的参数
  */
 export const useSidebarSwipeGesture = (
   onOpenSidebar?: () => void,

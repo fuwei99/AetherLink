@@ -118,6 +118,9 @@ export interface GeneratedImage {
 // 网络搜索提供商类型 - 包含免费和收费API服务
 export type WebSearchProvider = 'bing-free' | 'tavily' | 'exa' | 'bocha' | 'firecrawl' | 'custom';
 
+// 搜索引擎类型 - 用于bing-free提供商
+export type SearchEngine = 'bing' | 'google' | 'baidu' | 'sogou' | 'yandex';
+
 // 网络搜索提供商配置
 export interface WebSearchProviderConfig {
   id: string;
@@ -163,6 +166,9 @@ export interface WebSearchSettings {
   enableSmartSearch?: boolean;        // 启用智能搜索（自动应用最佳实践）
   timeRange?: 'day' | 'week' | 'month' | 'year'; // 时间范围过滤
   newsSearchDays?: number;            // 新闻搜索的天数范围
+
+  // 🚀 新增：搜索引擎选择（仅对bing-free有效）
+  selectedSearchEngine?: SearchEngine;    // 选择的搜索引擎
 }
 
 // 自定义搜索提供商

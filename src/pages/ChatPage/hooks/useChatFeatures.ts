@@ -16,7 +16,7 @@ import {
 } from '../../../shared/types/newMessage.ts';
 
 
-import EnhancedWebSearchService from '../../../shared/services/EnhancedWebSearchService';
+import { EnhancedWebSearchService } from '../../../shared/services/webSearch';
 import { abortCompletion } from '../../../shared/utils/abortController';
 import store from '../../../shared/store';
 import { TopicService } from '../../../shared/services/TopicService';

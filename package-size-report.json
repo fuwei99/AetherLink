@@ -1,0 +1,4587 @@
+{
+  "timestamp": "2025-06-15T23:01:58.689Z",
+  "totalPackages": 916,
+  "totalSize": 544963711,
+  "packages": [
+    {
+      "name": "mermaid",
+      "size": 64183717,
+      "sizeFormatted": "61.21 MB"
+    },
+    {
+      "name": "@swc/core-win32-x64-msvc",
+      "size": 53778305,
+      "sizeFormatted": "51.29 MB"
+    },
+    {
+      "name": "mathjax-full",
+      "size": 34300800,
+      "sizeFormatted": "32.71 MB"
+    },
+    {
+      "name": "lucide-react",
+      "size": 33483156,
+      "sizeFormatted": "31.93 MB"
+    },
+    {
+      "name": "typescript",
+      "size": 22867703,
+      "sizeFormatted": "21.81 MB"
+    },
+    {
+      "name": "date-fns",
+      "size": 22601076,
+      "sizeFormatted": "21.55 MB"
+    },
+    {
+      "name": "@rolldown/binding-win32-x64-msvc",
+      "size": 18120284,
+      "sizeFormatted": "17.28 MB"
+    },
+    {
+      "name": "cytoscape-fcose",
+      "size": 9316162,
+      "sizeFormatted": "8.88 MB"
+    },
+    {
+      "name": "microsoft-cognitiveservices-speech-sdk",
+      "size": 9249430,
+      "sizeFormatted": "8.82 MB"
+    },
+    {
+      "name": "lightningcss-win32-x64-msvc",
+      "size": 8760936,
+      "sizeFormatted": "8.36 MB"
+    },
+    {
+      "name": "@google/genai",
+      "size": 8178238,
+      "sizeFormatted": "7.8 MB"
+    },
+    {
+      "name": "docx",
+      "size": 8167674,
+      "sizeFormatted": "7.79 MB"
+    },
+    {
+      "name": "@shikijs/langs",
+      "size": 7603212,
+      "sizeFormatted": "7.25 MB"
+    },
+    {
+      "name": "speech-rule-engine",
+      "size": 6912296,
+      "sizeFormatted": "6.59 MB"
+    },
+    {
+      "name": "@reduxjs/toolkit",
+      "size": 6752591,
+      "sizeFormatted": "6.44 MB"
+    },
+    {
+      "name": "react-dom",
+      "size": 6552660,
+      "sizeFormatted": "6.25 MB"
+    },
+    {
+      "name": "openai",
+      "size": 6369115,
+      "sizeFormatted": "6.07 MB"
+    },
+    {
+      "name": "chart.js",
+      "size": 6173464,
+      "sizeFormatted": "5.89 MB"
+    },
+    {
+      "name": "cytoscape",
+      "size": 5617557,
+      "sizeFormatted": "5.36 MB"
+    },
+    {
+      "name": "@mui/material",
+      "size": 5600157,
+      "sizeFormatted": "5.34 MB"
+    },
+    {
+      "name": "@mermaid-js/parser",
+      "size": 5175426,
+      "sizeFormatted": "4.94 MB"
+    },
+    {
+      "name": "@modelcontextprotocol/sdk",
+      "size": 4868820,
+      "sizeFormatted": "4.64 MB"
+    },
+    {
+      "name": "rxjs",
+      "size": 4497673,
+      "sizeFormatted": "4.29 MB"
+    },
+    {
+      "name": "@ai-sdk/provider-utils",
+      "size": 4368023,
+      "sizeFormatted": "4.17 MB"
+    },
+    {
+      "name": "katex",
+      "size": 4135286,
+      "sizeFormatted": "3.94 MB"
+    },
+    {
+      "name": "xml2js",
+      "size": 3604621,
+      "sizeFormatted": "3.44 MB"
+    },
+    {
+      "name": "langium",
+      "size": 3587519,
+      "sizeFormatted": "3.42 MB"
+    },
+    {
+      "name": "html2canvas",
+      "size": 3379055,
+      "sizeFormatted": "3.22 MB"
+    },
+    {
+      "name": "refractor",
+      "size": 3079735,
+      "sizeFormatted": "2.94 MB"
+    },
+    {
+      "name": "dexie",
+      "size": 2986544,
+      "sizeFormatted": "2.85 MB"
+    },
+    {
+      "name": "eslint",
+      "size": 2951771,
+      "sizeFormatted": "2.82 MB"
+    },
+    {
+      "name": "@capacitor/android",
+      "size": 2782201,
+      "sizeFormatted": "2.65 MB"
+    },
+    {
+      "name": "vite",
+      "size": 2614385,
+      "sizeFormatted": "2.49 MB"
+    },
+    {
+      "name": "@babel/types",
+      "size": 2597685,
+      "sizeFormatted": "2.48 MB"
+    },
+    {
+      "name": "ai",
+      "size": 2547906,
+      "sizeFormatted": "2.43 MB"
+    },
+    {
+      "name": "@vue/compiler-sfc",
+      "size": 2530109,
+      "sizeFormatted": "2.41 MB"
+    },
+    {
+      "name": "vue",
+      "size": 2404877,
+      "sizeFormatted": "2.29 MB"
+    },
+    {
+      "name": "@types/node",
+      "size": 2379369,
+      "sizeFormatted": "2.27 MB"
+    },
+    {
+      "name": "react-router",
+      "size": 2363214,
+      "sizeFormatted": "2.25 MB"
+    },
+    {
+      "name": "framer-motion",
+      "size": 2300112,
+      "sizeFormatted": "2.19 MB"
+    },
+    {
+      "name": "@capacitor/filesystem",
+      "size": 2297106,
+      "sizeFormatted": "2.19 MB"
+    },
+    {
+      "name": "react-syntax-highlighter",
+      "size": 2213107,
+      "sizeFormatted": "2.11 MB"
+    },
+    {
+      "name": "axios",
+      "size": 2165128,
+      "sizeFormatted": "2.06 MB"
+    },
+    {
+      "name": "native-run",
+      "size": 2150681,
+      "sizeFormatted": "2.05 MB"
+    },
+    {
+      "name": "@typescript-eslint/eslint-plugin",
+      "size": 2066103,
+      "sizeFormatted": "1.97 MB"
+    },
+    {
+      "name": "prismjs",
+      "size": 2052735,
+      "sizeFormatted": "1.96 MB"
+    },
+    {
+      "name": "@babel/parser",
+      "size": 1964592,
+      "sizeFormatted": "1.87 MB"
+    },
+    {
+      "name": "@codemirror/legacy-modes",
+      "size": 1957704,
+      "sizeFormatted": "1.87 MB"
+    },
+    {
+      "name": "@anthropic-ai/sdk",
+      "size": 1772655,
+      "sizeFormatted": "1.69 MB"
+    },
+    {
+      "name": "highlight.js",
+      "size": 1710256,
+      "sizeFormatted": "1.63 MB"
+    },
+    {
+      "name": "zod",
+      "size": 1631426,
+      "sizeFormatted": "1.56 MB"
+    },
+    {
+      "name": "@popperjs/core",
+      "size": 1463042,
+      "sizeFormatted": "1.4 MB"
+    },
+    {
+      "name": "codemirror-lang-mermaid",
+      "size": 1430810,
+      "sizeFormatted": "1.36 MB"
+    },
+    {
+      "name": "lodash",
+      "size": 1412415,
+      "sizeFormatted": "1.35 MB"
+    },
+    {
+      "name": "@shikijs/themes",
+      "size": 1355289,
+      "sizeFormatted": "1.29 MB"
+    },
+    {
+      "name": "chevrotain",
+      "size": 1347066,
+      "sizeFormatted": "1.28 MB"
+    },
+    {
+      "name": "core-js",
+      "size": 1300961,
+      "sizeFormatted": "1.24 MB"
+    },
+    {
+      "name": "@hello-pangea/dnd",
+      "size": 1263171,
+      "sizeFormatted": "1.2 MB"
+    },
+    {
+      "name": "csstype",
+      "size": 1246074,
+      "sizeFormatted": "1.19 MB"
+    },
+    {
+      "name": "@capacitor/cli",
+      "size": 1244160,
+      "sizeFormatted": "1.19 MB"
+    },
+    {
+      "name": "parse5",
+      "size": 1236424,
+      "sizeFormatted": "1.18 MB"
+    },
+    {
+      "name": "@opentelemetry/api",
+      "size": 1218213,
+      "sizeFormatted": "1.16 MB"
+    },
+    {
+      "name": "glob",
+      "size": 1200020,
+      "sizeFormatted": "1.14 MB"
+    },
+    {
+      "name": "@codemirror/view",
+      "size": 1184642,
+      "sizeFormatted": "1.13 MB"
+    },
+    {
+      "name": "react-katex",
+      "size": 1177712,
+      "sizeFormatted": "1.12 MB"
+    },
+    {
+      "name": "@vue/runtime-dom",
+      "size": 1175560,
+      "sizeFormatted": "1.12 MB"
+    },
+    {
+      "name": "@ai-sdk/openai",
+      "size": 1137572,
+      "sizeFormatted": "1.08 MB"
+    },
+    {
+      "name": "esquery",
+      "size": 1037210,
+      "sizeFormatted": "1012.9 KB"
+    },
+    {
+      "name": "pngjs",
+      "size": 1021215,
+      "sizeFormatted": "997.28 KB"
+    },
+    {
+      "name": "oniguruma-to-es",
+      "size": 994705,
+      "sizeFormatted": "971.39 KB"
+    },
+    {
+      "name": "ajv",
+      "size": 929154,
+      "sizeFormatted": "907.38 KB"
+    },
+    {
+      "name": "rolldown",
+      "size": 892404,
+      "sizeFormatted": "871.49 KB"
+    },
+    {
+      "name": "concurrently",
+      "size": 891242,
+      "sizeFormatted": "870.35 KB"
+    },
+    {
+      "name": "d3",
+      "size": 876052,
+      "sizeFormatted": "855.52 KB"
+    },
+    {
+      "name": "@types/lodash",
+      "size": 868065,
+      "sizeFormatted": "847.72 KB"
+    },
+    {
+      "name": "@typescript-eslint/typescript-estree",
+      "size": 850039,
+      "sizeFormatted": "830.12 KB"
+    },
+    {
+      "name": "react-redux",
+      "size": 822524,
+      "sizeFormatted": "803.25 KB"
+    },
+    {
+      "name": "path-scurry",
+      "size": 821608,
+      "sizeFormatted": "802.35 KB"
+    },
+    {
+      "name": "lru-cache",
+      "size": 819995,
+      "sizeFormatted": "800.78 KB"
+    },
+    {
+      "name": "@emotion/react",
+      "size": 816759,
+      "sizeFormatted": "797.62 KB"
+    },
+    {
+      "name": "@vue/runtime-core",
+      "size": 812733,
+      "sizeFormatted": "793.68 KB"
+    },
+    {
+      "name": "graphemer",
+      "size": 811810,
+      "sizeFormatted": "792.78 KB"
+    },
+    {
+      "name": "dompurify",
+      "size": 808637,
+      "sizeFormatted": "789.68 KB"
+    },
+    {
+      "name": "@eslint/eslintrc",
+      "size": 808612,
+      "sizeFormatted": "789.66 KB"
+    },
+    {
+      "name": "@types/react",
+      "size": 806086,
+      "sizeFormatted": "787.19 KB"
+    },
+    {
+      "name": "pako",
+      "size": 788283,
+      "sizeFormatted": "769.81 KB"
+    },
+    {
+      "name": "@uiw/react-codemirror",
+      "size": 772969,
+      "sizeFormatted": "754.85 KB"
+    },
+    {
+      "name": "source-map",
+      "size": 766471,
+      "sizeFormatted": "748.51 KB"
+    },
+    {
+      "name": "jszip",
+      "size": 762000,
+      "sizeFormatted": "744.14 KB"
+    },
+    {
+      "name": "marked",
+      "size": 757923,
+      "sizeFormatted": "740.16 KB"
+    },
+    {
+      "name": "@capacitor/camera",
+      "size": 751430,
+      "sizeFormatted": "733.82 KB"
+    },
+    {
+      "name": "@babel/traverse",
+      "size": 733235,
+      "sizeFormatted": "716.05 KB"
+    },
+    {
+      "name": "motion-dom",
+      "size": 695518,
+      "sizeFormatted": "679.22 KB"
+    },
+    {
+      "name": "plist",
+      "size": 687198,
+      "sizeFormatted": "671.09 KB"
+    },
+    {
+      "name": "yaml",
+      "size": 683419,
+      "sizeFormatted": "667.4 KB"
+    },
+    {
+      "name": "@capacitor-community/safe-area",
+      "size": 671509,
+      "sizeFormatted": "655.77 KB"
+    },
+    {
+      "name": "dayjs",
+      "size": 670277,
+      "sizeFormatted": "654.57 KB"
+    },
+    {
+      "name": "oniguruma-parser",
+      "size": 662523,
+      "sizeFormatted": "647 KB"
+    },
+    {
+      "name": "capacitor-advanced-file-manager",
+      "size": 654010,
+      "sizeFormatted": "638.68 KB"
+    },
+    {
+      "name": "reselect",
+      "size": 646106,
+      "sizeFormatted": "630.96 KB"
+    },
+    {
+      "name": "@shikijs/engine-oniguruma",
+      "size": 643779,
+      "sizeFormatted": "628.69 KB"
+    },
+    {
+      "name": "@iconify/utils",
+      "size": 643294,
+      "sizeFormatted": "628.22 KB"
+    },
+    {
+      "name": "@vue/compiler-dom",
+      "size": 640722,
+      "sizeFormatted": "625.71 KB"
+    },
+    {
+      "name": "lodash-es",
+      "size": 636080,
+      "sizeFormatted": "621.17 KB"
+    },
+    {
+      "name": "@mui/system",
+      "size": 634601,
+      "sizeFormatted": "619.73 KB"
+    },
+    {
+      "name": "immer",
+      "size": 627402,
+      "sizeFormatted": "612.7 KB"
+    },
+    {
+      "name": "@vue/compiler-core",
+      "size": 621790,
+      "sizeFormatted": "607.22 KB"
+    },
+    {
+      "name": "google-auth-library",
+      "size": 611526,
+      "sizeFormatted": "597.19 KB"
+    },
+    {
+      "name": "shiki",
+      "size": 589331,
+      "sizeFormatted": "575.52 KB"
+    },
+    {
+      "name": "@babel/generator",
+      "size": 562785,
+      "sizeFormatted": "549.59 KB"
+    },
+    {
+      "name": "regex",
+      "size": 555301,
+      "sizeFormatted": "542.29 KB"
+    },
+    {
+      "name": "capacitor-cors-bypass-enhanced",
+      "size": 554950,
+      "sizeFormatted": "541.94 KB"
+    },
+    {
+      "name": "acorn",
+      "size": 554942,
+      "sizeFormatted": "541.94 KB"
+    },
+    {
+      "name": "css-line-break",
+      "size": 552977,
+      "sizeFormatted": "540.02 KB"
+    },
+    {
+      "name": "cosmiconfig",
+      "size": 540160,
+      "sizeFormatted": "527.5 KB"
+    },
+    {
+      "name": "@eslint-community/eslint-utils",
+      "size": 515741,
+      "sizeFormatted": "503.65 KB"
+    },
+    {
+      "name": "lightningcss",
+      "size": 501111,
+      "sizeFormatted": "489.37 KB"
+    },
+    {
+      "name": "@eslint-community/regexpp",
+      "size": 472794,
+      "sizeFormatted": "461.71 KB"
+    },
+    {
+      "name": "uri-js",
+      "size": 469879,
+      "sizeFormatted": "458.87 KB"
+    },
+    {
+      "name": "magic-string",
+      "size": 467464,
+      "sizeFormatted": "456.51 KB"
+    },
+    {
+      "name": "@capacitor/splash-screen",
+      "size": 466311,
+      "sizeFormatted": "455.38 KB"
+    },
+    {
+      "name": "notistack",
+      "size": 464925,
+      "sizeFormatted": "454.03 KB"
+    },
+    {
+      "name": "@typescript-eslint/scope-manager",
+      "size": 458745,
+      "sizeFormatted": "447.99 KB"
+    },
+    {
+      "name": "d3-sankey",
+      "size": 443961,
+      "sizeFormatted": "433.56 KB"
+    },
+    {
+      "name": "@lezer/markdown",
+      "size": 443939,
+      "sizeFormatted": "433.53 KB"
+    },
+    {
+      "name": "@lezer/cpp",
+      "size": 440476,
+      "sizeFormatted": "430.15 KB"
+    },
+    {
+      "name": "@codemirror/state",
+      "size": 431834,
+      "sizeFormatted": "421.71 KB"
+    },
+    {
+      "name": "web-streams-polyfill",
+      "size": 422901,
+      "sizeFormatted": "412.99 KB"
+    },
+    {
+      "name": "xml-js",
+      "size": 420551,
+      "sizeFormatted": "410.69 KB"
+    },
+    {
+      "name": "@google/generative-ai",
+      "size": 419936,
+      "sizeFormatted": "410.09 KB"
+    },
+    {
+      "name": "redux-persist",
+      "size": 417857,
+      "sizeFormatted": "408.06 KB"
+    },
+    {
+      "name": "entities",
+      "size": 412892,
+      "sizeFormatted": "403.21 KB"
+    },
+    {
+      "name": "patch-package",
+      "size": 411436,
+      "sizeFormatted": "401.79 KB"
+    },
+    {
+      "name": "@vue/server-renderer",
+      "size": 409916,
+      "sizeFormatted": "400.31 KB"
+    },
+    {
+      "name": "@ai-sdk/ui-utils",
+      "size": 405869,
+      "sizeFormatted": "396.36 KB"
+    },
+    {
+      "name": "js-yaml",
+      "size": 404738,
+      "sizeFormatted": "395.25 KB"
+    },
+    {
+      "name": "@capacitor/ios",
+      "size": 395960,
+      "sizeFormatted": "386.68 KB"
+    },
+    {
+      "name": "vscode-languageserver-types",
+      "size": 376701,
+      "sizeFormatted": "367.87 KB"
+    },
+    {
+      "name": "@lezer/php",
+      "size": 374188,
+      "sizeFormatted": "365.42 KB"
+    },
+    {
+      "name": "vscode-languageserver-protocol",
+      "size": 365342,
+      "sizeFormatted": "356.78 KB"
+    },
+    {
+      "name": "utrie",
+      "size": 359371,
+      "sizeFormatted": "350.95 KB"
+    },
+    {
+      "name": "@capawesome/capacitor-file-picker",
+      "size": 357419,
+      "sizeFormatted": "349.04 KB"
+    },
+    {
+      "name": "ts-api-utils",
+      "size": 357204,
+      "sizeFormatted": "348.83 KB"
+    },
+    {
+      "name": "bignumber.js",
+      "size": 351328,
+      "sizeFormatted": "343.09 KB"
+    },
+    {
+      "name": "iconv-lite",
+      "size": 348518,
+      "sizeFormatted": "340.35 KB"
+    },
+    {
+      "name": "@capacitor/core",
+      "size": 347745,
+      "sizeFormatted": "339.59 KB"
+    },
+    {
+      "name": "@capacitor-community/native-audio",
+      "size": 343571,
+      "sizeFormatted": "335.52 KB"
+    },
+    {
+      "name": "@replit/codemirror-lang-nix",
+      "size": 337073,
+      "sizeFormatted": "329.17 KB"
+    },
+    {
+      "name": "@use-gesture/core",
+      "size": 329192,
+      "sizeFormatted": "321.48 KB"
+    },
+    {
+      "name": "@replit/codemirror-lang-csharp",
+      "size": 328731,
+      "sizeFormatted": "321.03 KB"
+    },
+    {
+      "name": "@vue/reactivity",
+      "size": 324719,
+      "sizeFormatted": "317.11 KB"
+    },
+    {
+      "name": "@lezer/javascript",
+      "size": 324205,
+      "sizeFormatted": "316.61 KB"
+    },
+    {
+      "name": "xmlbuilder",
+      "size": 321263,
+      "sizeFormatted": "313.73 KB"
+    },
+    {
+      "name": "@eslint/config-array",
+      "size": 319671,
+      "sizeFormatted": "312.18 KB"
+    },
+    {
+      "name": "esm",
+      "size": 308556,
+      "sizeFormatted": "301.32 KB"
+    },
+    {
+      "name": "@codemirror/language",
+      "size": 307985,
+      "sizeFormatted": "300.77 KB"
+    },
+    {
+      "name": "layout-base",
+      "size": 301942,
+      "sizeFormatted": "294.87 KB"
+    },
+    {
+      "name": "@lezer/rust",
+      "size": 298533,
+      "sizeFormatted": "291.54 KB"
+    },
+    {
+      "name": "robust-predicates",
+      "size": 296008,
+      "sizeFormatted": "289.07 KB"
+    },
+    {
+      "name": "gaxios",
+      "size": 291092,
+      "sizeFormatted": "284.27 KB"
+    },
+    {
+      "name": "redux",
+      "size": 289804,
+      "sizeFormatted": "283.01 KB"
+    },
+    {
+      "name": "@capacitor-community/speech-recognition",
+      "size": 289596,
+      "sizeFormatted": "282.81 KB"
+    },
+    {
+      "name": "jackspeak",
+      "size": 287780,
+      "sizeFormatted": "281.04 KB"
+    },
+    {
+      "name": "@yarnpkg/lockfile",
+      "size": 279773,
+      "sizeFormatted": "273.22 KB"
+    },
+    {
+      "name": "eslint-plugin-react-hooks",
+      "size": 278384,
+      "sizeFormatted": "271.86 KB"
+    },
+    {
+      "name": "mhchemparser",
+      "size": 276593,
+      "sizeFormatted": "270.11 KB"
+    },
+    {
+      "name": "mj-context-menu",
+      "size": 273866,
+      "sizeFormatted": "267.45 KB"
+    },
+    {
+      "name": "@capacitor/status-bar",
+      "size": 270771,
+      "sizeFormatted": "264.42 KB"
+    },
+    {
+      "name": "text-segmentation",
+      "size": 269254,
+      "sizeFormatted": "262.94 KB"
+    },
+    {
+      "name": "@typescript-eslint/utils",
+      "size": 269139,
+      "sizeFormatted": "262.83 KB"
+    },
+    {
+      "name": "confbox",
+      "size": 269092,
+      "sizeFormatted": "262.79 KB"
+    },
+    {
+      "name": "tr46",
+      "size": 268388,
+      "sizeFormatted": "262.1 KB"
+    },
+    {
+      "name": "qs",
+      "size": 268238,
+      "sizeFormatted": "261.95 KB"
+    },
+    {
+      "name": "form-data",
+      "size": 268209,
+      "sizeFormatted": "261.92 KB"
+    },
+    {
+      "name": "micromark-core-commonmark",
+      "size": 266840,
+      "sizeFormatted": "260.59 KB"
+    },
+    {
+      "name": "swr",
+      "size": 264138,
+      "sizeFormatted": "257.95 KB"
+    },
+    {
+      "name": "yargs",
+      "size": 263432,
+      "sizeFormatted": "257.26 KB"
+    },
+    {
+      "name": "@mui/utils",
+      "size": 254806,
+      "sizeFormatted": "248.83 KB"
+    },
+    {
+      "name": "@capacitor/keyboard",
+      "size": 251145,
+      "sizeFormatted": "245.26 KB"
+    },
+    {
+      "name": "@codemirror/autocomplete",
+      "size": 249941,
+      "sizeFormatted": "244.08 KB"
+    },
+    {
+      "name": "@capacitor/browser",
+      "size": 249901,
+      "sizeFormatted": "244.04 KB"
+    },
+    {
+      "name": "@babel/runtime",
+      "size": 248205,
+      "sizeFormatted": "242.39 KB"
+    },
+    {
+      "name": "d3-shape",
+      "size": 247267,
+      "sizeFormatted": "241.47 KB"
+    },
+    {
+      "name": "@emotion/styled",
+      "size": 246692,
+      "sizeFormatted": "240.91 KB"
+    },
+    {
+      "name": "react-transition-group",
+      "size": 244547,
+      "sizeFormatted": "238.82 KB"
+    },
+    {
+      "name": "@emotion/cache",
+      "size": 244106,
+      "sizeFormatted": "238.38 KB"
+    },
+    {
+      "name": "@lezer/common",
+      "size": 239806,
+      "sizeFormatted": "234.19 KB"
+    },
+    {
+      "name": "eventsource-parser",
+      "size": 236922,
+      "sizeFormatted": "231.37 KB"
+    },
+    {
+      "name": "tar",
+      "size": 236599,
+      "sizeFormatted": "231.05 KB"
+    },
+    {
+      "name": "@codemirror/commands",
+      "size": 235720,
+      "sizeFormatted": "230.2 KB"
+    },
+    {
+      "name": "@oxc-project/runtime",
+      "size": 234655,
+      "sizeFormatted": "229.16 KB"
+    },
+    {
+      "name": "mlly",
+      "size": 232760,
+      "sizeFormatted": "227.3 KB"
+    },
+    {
+      "name": "d3-geo",
+      "size": 227065,
+      "sizeFormatted": "221.74 KB"
+    },
+    {
+      "name": "mime-db",
+      "size": 225566,
+      "sizeFormatted": "220.28 KB"
+    },
+    {
+      "name": "css-select",
+      "size": 224084,
+      "sizeFormatted": "218.83 KB"
+    },
+    {
+      "name": "@capacitor/device",
+      "size": 218810,
+      "sizeFormatted": "213.68 KB"
+    },
+    {
+      "name": "@capacitor/haptics",
+      "size": 214229,
+      "sizeFormatted": "209.21 KB"
+    },
+    {
+      "name": "zod-to-json-schema",
+      "size": 211797,
+      "sizeFormatted": "206.83 KB"
+    },
+    {
+      "name": "micromark",
+      "size": 209635,
+      "sizeFormatted": "204.72 KB"
+    },
+    {
+      "name": "vscode-jsonrpc",
+      "size": 208371,
+      "sizeFormatted": "203.49 KB"
+    },
+    {
+      "name": "postcss",
+      "size": 204818,
+      "sizeFormatted": "200.02 KB"
+    },
+    {
+      "name": "vscode-uri",
+      "size": 204488,
+      "sizeFormatted": "199.7 KB"
+    },
+    {
+      "name": "@ai-sdk/react",
+      "size": 204461,
+      "sizeFormatted": "199.67 KB"
+    },
+    {
+      "name": "@capacitor/preferences",
+      "size": 203601,
+      "sizeFormatted": "198.83 KB"
+    },
+    {
+      "name": "@vitejs/plugin-vue",
+      "size": 201653,
+      "sizeFormatted": "196.93 KB"
+    },
+    {
+      "name": "@capacitor/app",
+      "size": 199969,
+      "sizeFormatted": "195.28 KB"
+    },
+    {
+      "name": "express",
+      "size": 197014,
+      "sizeFormatted": "192.4 KB"
+    },
+    {
+      "name": "prompts",
+      "size": 196708,
+      "sizeFormatted": "192.1 KB"
+    },
+    {
+      "name": "@types/react-syntax-highlighter",
+      "size": 196422,
+      "sizeFormatted": "191.82 KB"
+    },
+    {
+      "name": "d3-dsv",
+      "size": 195943,
+      "sizeFormatted": "191.35 KB"
+    },
+    {
+      "name": "vscode-languageserver",
+      "size": 195873,
+      "sizeFormatted": "191.28 KB"
+    },
+    {
+      "name": "globals",
+      "size": 191336,
+      "sizeFormatted": "186.85 KB"
+    },
+    {
+      "name": "local-pkg",
+      "size": 190755,
+      "sizeFormatted": "186.28 KB"
+    },
+    {
+      "name": "@replit/codemirror-lang-svelte",
+      "size": 190445,
+      "sizeFormatted": "185.98 KB"
+    },
+    {
+      "name": "event-target-shim",
+      "size": 188883,
+      "sizeFormatted": "184.46 KB"
+    },
+    {
+      "name": "commander",
+      "size": 186398,
+      "sizeFormatted": "182.03 KB"
+    },
+    {
+      "name": "@xmldom/xmldom",
+      "size": 181806,
+      "sizeFormatted": "177.54 KB"
+    },
+    {
+      "name": "@lezer/java",
+      "size": 179577,
+      "sizeFormatted": "175.37 KB"
+    },
+    {
+      "name": "@capacitor/clipboard",
+      "size": 176949,
+      "sizeFormatted": "172.8 KB"
+    },
+    {
+      "name": "big-integer",
+      "size": 175004,
+      "sizeFormatted": "170.9 KB"
+    },
+    {
+      "name": "@ai-sdk/provider",
+      "size": 174890,
+      "sizeFormatted": "170.79 KB"
+    },
+    {
+      "name": "@capacitor/share",
+      "size": 174436,
+      "sizeFormatted": "170.35 KB"
+    },
+    {
+      "name": "d3-scale",
+      "size": 174363,
+      "sizeFormatted": "170.28 KB"
+    },
+    {
+      "name": "@capawesome/capacitor-android-edge-to-edge-support",
+      "size": 173680,
+      "sizeFormatted": "169.61 KB"
+    },
+    {
+      "name": "argparse",
+      "size": 171548,
+      "sizeFormatted": "167.53 KB"
+    },
+    {
+      "name": "@typescript-eslint/types",
+      "size": 171397,
+      "sizeFormatted": "167.38 KB"
+    },
+    {
+      "name": "@isaacs/cliui",
+      "size": 170516,
+      "sizeFormatted": "166.52 KB"
+    },
+    {
+      "name": "roughjs",
+      "size": 169684,
+      "sizeFormatted": "165.71 KB"
+    },
+    {
+      "name": "@jridgewell/trace-mapping",
+      "size": 169330,
+      "sizeFormatted": "165.36 KB"
+    },
+    {
+      "name": "react",
+      "size": 167000,
+      "sizeFormatted": "163.09 KB"
+    },
+    {
+      "name": "domutils",
+      "size": 166738,
+      "sizeFormatted": "162.83 KB"
+    },
+    {
+      "name": "@lezer/lr",
+      "size": 165976,
+      "sizeFormatted": "162.09 KB"
+    },
+    {
+      "name": "node-html-parser",
+      "size": 164656,
+      "sizeFormatted": "160.8 KB"
+    },
+    {
+      "name": "d3-array",
+      "size": 163730,
+      "sizeFormatted": "159.89 KB"
+    },
+    {
+      "name": "node-fetch",
+      "size": 162253,
+      "sizeFormatted": "158.45 KB"
+    },
+    {
+      "name": "eslint-scope",
+      "size": 159607,
+      "sizeFormatted": "155.87 KB"
+    },
+    {
+      "name": "@capacitor-community/file-opener",
+      "size": 153607,
+      "sizeFormatted": "150.01 KB"
+    },
+    {
+      "name": "dagre-d3-es",
+      "size": 152750,
+      "sizeFormatted": "149.17 KB"
+    },
+    {
+      "name": "@emotion/babel-plugin",
+      "size": 152334,
+      "sizeFormatted": "148.76 KB"
+    },
+    {
+      "name": "jsondiffpatch",
+      "size": 149956,
+      "sizeFormatted": "146.44 KB"
+    },
+    {
+      "name": "@eslint/plugin-kit",
+      "size": 149736,
+      "sizeFormatted": "146.23 KB"
+    },
+    {
+      "name": "mdast-util-to-markdown",
+      "size": 148937,
+      "sizeFormatted": "145.45 KB"
+    },
+    {
+      "name": "through2",
+      "size": 147744,
+      "sizeFormatted": "144.28 KB"
+    },
+    {
+      "name": "eventsource",
+      "size": 147304,
+      "sizeFormatted": "143.85 KB"
+    },
+    {
+      "name": "micromatch",
+      "size": 146551,
+      "sizeFormatted": "143.12 KB"
+    },
+    {
+      "name": "unified",
+      "size": 145932,
+      "sizeFormatted": "142.51 KB"
+    },
+    {
+      "name": "resolve",
+      "size": 145619,
+      "sizeFormatted": "142.21 KB"
+    },
+    {
+      "name": "foreground-child",
+      "size": 145268,
+      "sizeFormatted": "141.86 KB"
+    },
+    {
+      "name": "khroma",
+      "size": 143253,
+      "sizeFormatted": "139.9 KB"
+    },
+    {
+      "name": "source-map-js",
+      "size": 139872,
+      "sizeFormatted": "136.59 KB"
+    },
+    {
+      "name": "chevrotain-allstar",
+      "size": 138887,
+      "sizeFormatted": "135.63 KB"
+    },
+    {
+      "name": "@types/d3-shape",
+      "size": 136630,
+      "sizeFormatted": "133.43 KB"
+    },
+    {
+      "name": "d3-hierarchy",
+      "size": 136230,
+      "sizeFormatted": "133.04 KB"
+    },
+    {
+      "name": "@codemirror/search",
+      "size": 135556,
+      "sizeFormatted": "132.38 KB"
+    },
+    {
+      "name": "qrcode",
+      "size": 135364,
+      "sizeFormatted": "132.19 KB"
+    },
+    {
+      "name": "@types/d3-scale",
+      "size": 134973,
+      "sizeFormatted": "131.81 KB"
+    },
+    {
+      "name": "d3-selection",
+      "size": 134715,
+      "sizeFormatted": "131.56 KB"
+    },
+    {
+      "name": "stylis",
+      "size": 134152,
+      "sizeFormatted": "131.01 KB"
+    },
+    {
+      "name": "@lezer/python",
+      "size": 133922,
+      "sizeFormatted": "130.78 KB"
+    },
+    {
+      "name": "uuid",
+      "size": 132894,
+      "sizeFormatted": "129.78 KB"
+    },
+    {
+      "name": "fs-extra",
+      "size": 129795,
+      "sizeFormatted": "126.75 KB"
+    },
+    {
+      "name": "@shikijs/vscode-textmate",
+      "size": 129126,
+      "sizeFormatted": "126.1 KB"
+    },
+    {
+      "name": "mdast-util-mdx-jsx",
+      "size": 128955,
+      "sizeFormatted": "125.93 KB"
+    },
+    {
+      "name": "dom-helpers",
+      "size": 126584,
+      "sizeFormatted": "123.62 KB"
+    },
+    {
+      "name": "@codemirror/lang-sql",
+      "size": 126052,
+      "sizeFormatted": "123.1 KB"
+    },
+    {
+      "name": "elementtree",
+      "size": 125616,
+      "sizeFormatted": "122.67 KB"
+    },
+    {
+      "name": "hast-util-to-parse5",
+      "size": 124883,
+      "sizeFormatted": "121.96 KB"
+    },
+    {
+      "name": "mdast-util-to-hast",
+      "size": 124715,
+      "sizeFormatted": "121.79 KB"
+    },
+    {
+      "name": "express-rate-limit",
+      "size": 124427,
+      "sizeFormatted": "121.51 KB"
+    },
+    {
+      "name": "he",
+      "size": 124138,
+      "sizeFormatted": "121.23 KB"
+    },
+    {
+      "name": "readable-stream",
+      "size": 123687,
+      "sizeFormatted": "120.79 KB"
+    },
+    {
+      "name": "@swc/core",
+      "size": 123483,
+      "sizeFormatted": "120.59 KB"
+    },
+    {
+      "name": "ws",
+      "size": 122307,
+      "sizeFormatted": "119.44 KB"
+    },
+    {
+      "name": "vfile",
+      "size": 121686,
+      "sizeFormatted": "118.83 KB"
+    },
+    {
+      "name": "@capacitor/toast",
+      "size": 121268,
+      "sizeFormatted": "118.43 KB"
+    },
+    {
+      "name": "@lezer/sass",
+      "size": 118283,
+      "sizeFormatted": "115.51 KB"
+    },
+    {
+      "name": "goober",
+      "size": 117785,
+      "sizeFormatted": "115.02 KB"
+    },
+    {
+      "name": "property-information",
+      "size": 116619,
+      "sizeFormatted": "113.89 KB"
+    },
+    {
+      "name": "@replit/codemirror-lang-solidity",
+      "size": 116592,
+      "sizeFormatted": "113.86 KB"
+    },
+    {
+      "name": "@types/mathjax",
+      "size": 113353,
+      "sizeFormatted": "110.7 KB"
+    },
+    {
+      "name": "@jridgewell/sourcemap-codec",
+      "size": 112815,
+      "sizeFormatted": "110.17 KB"
+    },
+    {
+      "name": "@antfu/utils",
+      "size": 111075,
+      "sizeFormatted": "108.47 KB"
+    },
+    {
+      "name": "fast-glob",
+      "size": 110530,
+      "sizeFormatted": "107.94 KB"
+    },
+    {
+      "name": "d3-transition",
+      "size": 110525,
+      "sizeFormatted": "107.93 KB"
+    },
+    {
+      "name": "ufo",
+      "size": 104757,
+      "sizeFormatted": "102.3 KB"
+    },
+    {
+      "name": "d3-delaunay",
+      "size": 104453,
+      "sizeFormatted": "102 KB"
+    },
+    {
+      "name": "undici-types",
+      "size": 103421,
+      "sizeFormatted": "101 KB"
+    },
+    {
+      "name": "object-inspect",
+      "size": 102920,
+      "sizeFormatted": "100.51 KB"
+    },
+    {
+      "name": "@lezer/go",
+      "size": 100572,
+      "sizeFormatted": "98.21 KB"
+    },
+    {
+      "name": "@lezer/highlight",
+      "size": 98529,
+      "sizeFormatted": "96.22 KB"
+    },
+    {
+      "name": "@lezer/yaml",
+      "size": 97871,
+      "sizeFormatted": "95.58 KB"
+    },
+    {
+      "name": "mdast-util-from-markdown",
+      "size": 97828,
+      "sizeFormatted": "95.54 KB"
+    },
+    {
+      "name": "@typescript-eslint/type-utils",
+      "size": 97750,
+      "sizeFormatted": "95.46 KB"
+    },
+    {
+      "name": "diff-match-patch",
+      "size": 97445,
+      "sizeFormatted": "95.16 KB"
+    },
+    {
+      "name": "semver",
+      "size": 97420,
+      "sizeFormatted": "95.14 KB"
+    },
+    {
+      "name": "@chevrotain/types",
+      "size": 95969,
+      "sizeFormatted": "93.72 KB"
+    },
+    {
+      "name": "prop-types",
+      "size": 95056,
+      "sizeFormatted": "92.83 KB"
+    },
+    {
+      "name": "@lezer/html",
+      "size": 94333,
+      "sizeFormatted": "92.12 KB"
+    },
+    {
+      "name": "cose-base",
+      "size": 93352,
+      "sizeFormatted": "91.16 KB"
+    },
+    {
+      "name": "micromark-extension-gfm-table",
+      "size": 92074,
+      "sizeFormatted": "89.92 KB"
+    },
+    {
+      "name": "@codemirror/lint",
+      "size": 91526,
+      "sizeFormatted": "89.38 KB"
+    },
+    {
+      "name": "zustand",
+      "size": 91494,
+      "sizeFormatted": "89.35 KB"
+    },
+    {
+      "name": "buffer",
+      "size": 91279,
+      "sizeFormatted": "89.14 KB"
+    },
+    {
+      "name": "@shikijs/core",
+      "size": 90974,
+      "sizeFormatted": "88.84 KB"
+    },
+    {
+      "name": "tslib",
+      "size": 90359,
+      "sizeFormatted": "88.24 KB"
+    },
+    {
+      "name": "@chevrotain/regexp-to-ast",
+      "size": 90196,
+      "sizeFormatted": "88.08 KB"
+    },
+    {
+      "name": "d3-force",
+      "size": 89551,
+      "sizeFormatted": "87.45 KB"
+    },
+    {
+      "name": "@humanfs/node",
+      "size": 89535,
+      "sizeFormatted": "87.44 KB"
+    },
+    {
+      "name": "formdata-node",
+      "size": 87540,
+      "sizeFormatted": "85.49 KB"
+    },
+    {
+      "name": "d3-zoom",
+      "size": 86878,
+      "sizeFormatted": "84.84 KB"
+    },
+    {
+      "name": "@vue/shared",
+      "size": 86525,
+      "sizeFormatted": "84.5 KB"
+    },
+    {
+      "name": "fdir",
+      "size": 85936,
+      "sizeFormatted": "83.92 KB"
+    },
+    {
+      "name": "d3-time-format",
+      "size": 85603,
+      "sizeFormatted": "83.6 KB"
+    },
+    {
+      "name": "picomatch",
+      "size": 85237,
+      "sizeFormatted": "83.24 KB"
+    },
+    {
+      "name": "gcp-metadata",
+      "size": 82941,
+      "sizeFormatted": "81 KB"
+    },
+    {
+      "name": "idb",
+      "size": 82779,
+      "sizeFormatted": "80.84 KB"
+    },
+    {
+      "name": "scheduler",
+      "size": 82665,
+      "sizeFormatted": "80.73 KB"
+    },
+    {
+      "name": "cytoscape-cose-bilkent",
+      "size": 82395,
+      "sizeFormatted": "80.46 KB"
+    },
+    {
+      "name": "@jridgewell/gen-mapping",
+      "size": 81596,
+      "sizeFormatted": "79.68 KB"
+    },
+    {
+      "name": "espree",
+      "size": 80886,
+      "sizeFormatted": "78.99 KB"
+    },
+    {
+      "name": "micromark-extension-gfm-footnote",
+      "size": 79466,
+      "sizeFormatted": "77.6 KB"
+    },
+    {
+      "name": "@kurkle/color",
+      "size": 78965,
+      "sizeFormatted": "77.11 KB"
+    },
+    {
+      "name": "@codemirror/lang-html",
+      "size": 78207,
+      "sizeFormatted": "76.37 KB"
+    },
+    {
+      "name": "@swc/types",
+      "size": 78190,
+      "sizeFormatted": "76.36 KB"
+    },
+    {
+      "name": "abort-controller",
+      "size": 76297,
+      "sizeFormatted": "74.51 KB"
+    },
+    {
+      "name": "d3-scale-chromatic",
+      "size": 75697,
+      "sizeFormatted": "73.92 KB"
+    },
+    {
+      "name": "domhandler",
+      "size": 75339,
+      "sizeFormatted": "73.57 KB"
+    },
+    {
+      "name": "pkg-types",
+      "size": 74137,
+      "sizeFormatted": "72.4 KB"
+    },
+    {
+      "name": "@lezer/css",
+      "size": 73761,
+      "sizeFormatted": "72.03 KB"
+    },
+    {
+      "name": "@humanfs/core",
+      "size": 72735,
+      "sizeFormatted": "71.03 KB"
+    },
+    {
+      "name": "hast-util-to-html",
+      "size": 71798,
+      "sizeFormatted": "70.12 KB"
+    },
+    {
+      "name": "@codemirror/language-data",
+      "size": 71545,
+      "sizeFormatted": "69.87 KB"
+    },
+    {
+      "name": "yargs-parser",
+      "size": 71482,
+      "sizeFormatted": "69.81 KB"
+    },
+    {
+      "name": "@babel/template",
+      "size": 71310,
+      "sizeFormatted": "69.64 KB"
+    },
+    {
+      "name": "rimraf",
+      "size": 70527,
+      "sizeFormatted": "68.87 KB"
+    },
+    {
+      "name": "d3-interpolate",
+      "size": 69687,
+      "sizeFormatted": "68.05 KB"
+    },
+    {
+      "name": "style-to-js",
+      "size": 67575,
+      "sizeFormatted": "65.99 KB"
+    },
+    {
+      "name": "@codemirror/lang-liquid",
+      "size": 67176,
+      "sizeFormatted": "65.6 KB"
+    },
+    {
+      "name": "@eslint/core",
+      "size": 67087,
+      "sizeFormatted": "65.51 KB"
+    },
+    {
+      "name": "d3-brush",
+      "size": 66555,
+      "sizeFormatted": "65 KB"
+    },
+    {
+      "name": "micromark-extension-cjk-friendly-util",
+      "size": 66356,
+      "sizeFormatted": "64.8 KB"
+    },
+    {
+      "name": "yauzl",
+      "size": 66204,
+      "sizeFormatted": "64.65 KB"
+    },
+    {
+      "name": "css-what",
+      "size": 66038,
+      "sizeFormatted": "64.49 KB"
+    },
+    {
+      "name": "@mui/styled-engine",
+      "size": 66021,
+      "sizeFormatted": "64.47 KB"
+    },
+    {
+      "name": "@types/d3-selection",
+      "size": 66002,
+      "sizeFormatted": "64.46 KB"
+    },
+    {
+      "name": "@humanwhocodes/retry",
+      "size": 65711,
+      "sizeFormatted": "64.17 KB"
+    },
+    {
+      "name": "@types/d3-geo",
+      "size": 65512,
+      "sizeFormatted": "63.98 KB"
+    },
+    {
+      "name": "micromark-extension-gfm-autolink-literal",
+      "size": 65381,
+      "sizeFormatted": "63.85 KB"
+    },
+    {
+      "name": "@uiw/codemirror-extensions-langs",
+      "size": 65181,
+      "sizeFormatted": "63.65 KB"
+    },
+    {
+      "name": "d3-time",
+      "size": 64483,
+      "sizeFormatted": "62.97 KB"
+    },
+    {
+      "name": "@babel/helper-module-imports",
+      "size": 63724,
+      "sizeFormatted": "62.23 KB"
+    },
+    {
+      "name": "wicked-good-xpath",
+      "size": 63444,
+      "sizeFormatted": "61.96 KB"
+    },
+    {
+      "name": "@codemirror/lang-markdown",
+      "size": 62929,
+      "sizeFormatted": "61.45 KB"
+    },
+    {
+      "name": "@codemirror/lang-javascript",
+      "size": 62315,
+      "sizeFormatted": "60.85 KB"
+    },
+    {
+      "name": "d3-color",
+      "size": 61152,
+      "sizeFormatted": "59.72 KB"
+    },
+    {
+      "name": "hast-util-from-html",
+      "size": 60670,
+      "sizeFormatted": "59.25 KB"
+    },
+    {
+      "name": "exsolve",
+      "size": 59435,
+      "sizeFormatted": "58.04 KB"
+    },
+    {
+      "name": "body-parser",
+      "size": 59258,
+      "sizeFormatted": "57.87 KB"
+    },
+    {
+      "name": "lie",
+      "size": 59145,
+      "sizeFormatted": "57.76 KB"
+    },
+    {
+      "name": "@nextjournal/lezer-clojure",
+      "size": 58721,
+      "sizeFormatted": "57.34 KB"
+    },
+    {
+      "name": "event-source-polyfill",
+      "size": 58055,
+      "sizeFormatted": "56.69 KB"
+    },
+    {
+      "name": "d3-format",
+      "size": 57833,
+      "sizeFormatted": "56.48 KB"
+    },
+    {
+      "name": "google-logging-utils",
+      "size": 57377,
+      "sizeFormatted": "56.03 KB"
+    },
+    {
+      "name": "@eslint/object-schema",
+      "size": 56960,
+      "sizeFormatted": "55.63 KB"
+    },
+    {
+      "name": "@eslint/config-helpers",
+      "size": 56681,
+      "sizeFormatted": "55.35 KB"
+    },
+    {
+      "name": "hast-util-to-jsx-runtime",
+      "size": 56610,
+      "sizeFormatted": "55.28 KB"
+    },
+    {
+      "name": "@chevrotain/gast",
+      "size": 56314,
+      "sizeFormatted": "54.99 KB"
+    },
+    {
+      "name": "sax",
+      "size": 56017,
+      "sizeFormatted": "54.7 KB"
+    },
+    {
+      "name": "react-chartjs-2",
+      "size": 55890,
+      "sizeFormatted": "54.58 KB"
+    },
+    {
+      "name": "delaunator",
+      "size": 55274,
+      "sizeFormatted": "53.98 KB"
+    },
+    {
+      "name": "path-to-regexp",
+      "size": 55246,
+      "sizeFormatted": "53.95 KB"
+    },
+    {
+      "name": "minimist",
+      "size": 54477,
+      "sizeFormatted": "53.2 KB"
+    },
+    {
+      "name": "micromark-extension-math",
+      "size": 54375,
+      "sizeFormatted": "53.1 KB"
+    },
+    {
+      "name": "lodash.merge",
+      "size": 54132,
+      "sizeFormatted": "52.86 KB"
+    },
+    {
+      "name": "decode-named-character-reference",
+      "size": 54081,
+      "sizeFormatted": "52.81 KB"
+    },
+    {
+      "name": "regex-recursion",
+      "size": 53810,
+      "sizeFormatted": "52.55 KB"
+    },
+    {
+      "name": "ignore",
+      "size": 53630,
+      "sizeFormatted": "52.37 KB"
+    },
+    {
+      "name": "@jridgewell/resolve-uri",
+      "size": 53153,
+      "sizeFormatted": "51.91 KB"
+    },
+    {
+      "name": "@emotion/serialize",
+      "size": 52736,
+      "sizeFormatted": "51.5 KB"
+    },
+    {
+      "name": "react-markdown",
+      "size": 52637,
+      "sizeFormatted": "51.4 KB"
+    },
+    {
+      "name": "@types/d3-array",
+      "size": 51404,
+      "sizeFormatted": "50.2 KB"
+    },
+    {
+      "name": "pathe",
+      "size": 51332,
+      "sizeFormatted": "50.13 KB"
+    },
+    {
+      "name": "micromark-util-subtokenize",
+      "size": 51162,
+      "sizeFormatted": "49.96 KB"
+    },
+    {
+      "name": "kolorist",
+      "size": 51023,
+      "sizeFormatted": "49.83 KB"
+    },
+    {
+      "name": "@types/d3-force",
+      "size": 50825,
+      "sizeFormatted": "49.63 KB"
+    },
+    {
+      "name": "esutils",
+      "size": 50582,
+      "sizeFormatted": "49.4 KB"
+    },
+    {
+      "name": "estree-walker",
+      "size": 50243,
+      "sizeFormatted": "49.07 KB"
+    },
+    {
+      "name": "optionator",
+      "size": 50157,
+      "sizeFormatted": "48.98 KB"
+    },
+    {
+      "name": "whatwg-url",
+      "size": 49886,
+      "sizeFormatted": "48.72 KB"
+    },
+    {
+      "name": "hastscript",
+      "size": 49362,
+      "sizeFormatted": "48.21 KB"
+    },
+    {
+      "name": "d3-contour",
+      "size": 49313,
+      "sizeFormatted": "48.16 KB"
+    },
+    {
+      "name": "@babel/helper-validator-identifier",
+      "size": 48330,
+      "sizeFormatted": "47.2 KB"
+    },
+    {
+      "name": "remark-rehype",
+      "size": 48301,
+      "sizeFormatted": "47.17 KB"
+    },
+    {
+      "name": "emoji-regex",
+      "size": 48255,
+      "sizeFormatted": "47.12 KB"
+    },
+    {
+      "name": "minipass",
+      "size": 48090,
+      "sizeFormatted": "46.96 KB"
+    },
+    {
+      "name": "@vue/compiler-ssr",
+      "size": 47748,
+      "sizeFormatted": "46.63 KB"
+    },
+    {
+      "name": "character-entities",
+      "size": 47679,
+      "sizeFormatted": "46.56 KB"
+    },
+    {
+      "name": "emittery",
+      "size": 47488,
+      "sizeFormatted": "46.38 KB"
+    },
+    {
+      "name": "form-data-encoder",
+      "size": 47271,
+      "sizeFormatted": "46.16 KB"
+    },
+    {
+      "name": "string_decoder",
+      "size": 46984,
+      "sizeFormatted": "45.88 KB"
+    },
+    {
+      "name": "send",
+      "size": 46921,
+      "sizeFormatted": "45.82 KB"
+    },
+    {
+      "name": "router",
+      "size": 46851,
+      "sizeFormatted": "45.75 KB"
+    },
+    {
+      "name": "@types/webrtc",
+      "size": 46702,
+      "sizeFormatted": "45.61 KB"
+    },
+    {
+      "name": "get-intrinsic",
+      "size": 46542,
+      "sizeFormatted": "45.45 KB"
+    },
+    {
+      "name": "fastq",
+      "size": 45922,
+      "sizeFormatted": "44.85 KB"
+    },
+    {
+      "name": "@codemirror/lang-xml",
+      "size": 45745,
+      "sizeFormatted": "44.67 KB"
+    },
+    {
+      "name": "motion-utils",
+      "size": 45498,
+      "sizeFormatted": "44.43 KB"
+    },
+    {
+      "name": "@isaacs/brace-expansion",
+      "size": 45347,
+      "sizeFormatted": "44.28 KB"
+    },
+    {
+      "name": "@vitejs/plugin-react-swc",
+      "size": 45277,
+      "sizeFormatted": "44.22 KB"
+    },
+    {
+      "name": "@lezer/xml",
+      "size": 45097,
+      "sizeFormatted": "44.04 KB"
+    },
+    {
+      "name": "@mui/private-theming",
+      "size": 44853,
+      "sizeFormatted": "43.8 KB"
+    },
+    {
+      "name": "braces",
+      "size": 44635,
+      "sizeFormatted": "43.59 KB"
+    },
+    {
+      "name": "@mui/types",
+      "size": 44291,
+      "sizeFormatted": "43.25 KB"
+    },
+    {
+      "name": "@codemirror/lang-less",
+      "size": 43626,
+      "sizeFormatted": "42.6 KB"
+    },
+    {
+      "name": "@lezer/lezer",
+      "size": 43503,
+      "sizeFormatted": "42.48 KB"
+    },
+    {
+      "name": "d3-quadtree",
+      "size": 43391,
+      "sizeFormatted": "42.37 KB"
+    },
+    {
+      "name": "d3-drag",
+      "size": 43023,
+      "sizeFormatted": "42.01 KB"
+    },
+    {
+      "name": "debug",
+      "size": 42793,
+      "sizeFormatted": "41.79 KB"
+    },
+    {
+      "name": "nth-check",
+      "size": 42555,
+      "sizeFormatted": "41.56 KB"
+    },
+    {
+      "name": "rehype-mathjax",
+      "size": 42499,
+      "sizeFormatted": "41.5 KB"
+    },
+    {
+      "name": "open",
+      "size": 42429,
+      "sizeFormatted": "41.43 KB"
+    },
+    {
+      "name": "micromark-util-character",
+      "size": 42421,
+      "sizeFormatted": "41.43 KB"
+    },
+    {
+      "name": "@types/d3-transition",
+      "size": 42311,
+      "sizeFormatted": "41.32 KB"
+    },
+    {
+      "name": "safer-buffer",
+      "size": 42299,
+      "sizeFormatted": "41.31 KB"
+    },
+    {
+      "name": "style-to-object",
+      "size": 42236,
+      "sizeFormatted": "41.25 KB"
+    },
+    {
+      "name": "tiny-pinyin",
+      "size": 42185,
+      "sizeFormatted": "41.2 KB"
+    },
+    {
+      "name": "ipaddr.js",
+      "size": 42145,
+      "sizeFormatted": "41.16 KB"
+    },
+    {
+      "name": "hash.js",
+      "size": 41697,
+      "sizeFormatted": "40.72 KB"
+    },
+    {
+      "name": "gtoken",
+      "size": 41388,
+      "sizeFormatted": "40.42 KB"
+    },
+    {
+      "name": "@codemirror/lang-css",
+      "size": 41188,
+      "sizeFormatted": "40.22 KB"
+    },
+    {
+      "name": "@oxc-project/types",
+      "size": 40992,
+      "sizeFormatted": "40.03 KB"
+    },
+    {
+      "name": "secure-json-parse",
+      "size": 40656,
+      "sizeFormatted": "39.7 KB"
+    },
+    {
+      "name": "https-proxy-agent",
+      "size": 40593,
+      "sizeFormatted": "39.64 KB"
+    },
+    {
+      "name": "micromark-util-symbol",
+      "size": 40530,
+      "sizeFormatted": "39.58 KB"
+    },
+    {
+      "name": "vscode-languageserver-textdocument",
+      "size": 40277,
+      "sizeFormatted": "39.33 KB"
+    },
+    {
+      "name": "@types/d3-hierarchy",
+      "size": 39915,
+      "sizeFormatted": "38.98 KB"
+    },
+    {
+      "name": "inline-style-parser",
+      "size": 39561,
+      "sizeFormatted": "38.63 KB"
+    },
+    {
+      "name": "micromark-util-types",
+      "size": 38950,
+      "sizeFormatted": "38.04 KB"
+    },
+    {
+      "name": "hoist-non-react-statics",
+      "size": 38855,
+      "sizeFormatted": "37.94 KB"
+    },
+    {
+      "name": "@uiw/codemirror-extensions-basic-setup",
+      "size": 38666,
+      "sizeFormatted": "37.76 KB"
+    },
+    {
+      "name": "d3-chord",
+      "size": 38549,
+      "sizeFormatted": "37.65 KB"
+    },
+    {
+      "name": "babel-plugin-macros",
+      "size": 38502,
+      "sizeFormatted": "37.6 KB"
+    },
+    {
+      "name": "d3-random",
+      "size": 38102,
+      "sizeFormatted": "37.21 KB"
+    },
+    {
+      "name": "json-bigint",
+      "size": 37345,
+      "sizeFormatted": "36.47 KB"
+    },
+    {
+      "name": "micromark-extension-cjk-friendly",
+      "size": 37222,
+      "sizeFormatted": "36.35 KB"
+    },
+    {
+      "name": "@use-gesture/react",
+      "size": 37189,
+      "sizeFormatted": "36.32 KB"
+    },
+    {
+      "name": "eslint-visitor-keys",
+      "size": 37151,
+      "sizeFormatted": "36.28 KB"
+    },
+    {
+      "name": "estraverse",
+      "size": 37094,
+      "sizeFormatted": "36.22 KB"
+    },
+    {
+      "name": "@codemirror/lang-python",
+      "size": 36987,
+      "sizeFormatted": "36.12 KB"
+    },
+    {
+      "name": "prelude-ls",
+      "size": 36741,
+      "sizeFormatted": "35.88 KB"
+    },
+    {
+      "name": "@types/d3-zoom",
+      "size": 36666,
+      "sizeFormatted": "35.81 KB"
+    },
+    {
+      "name": "package-json-from-dist",
+      "size": 36453,
+      "sizeFormatted": "35.6 KB"
+    },
+    {
+      "name": "json-stable-stringify",
+      "size": 36408,
+      "sizeFormatted": "35.55 KB"
+    },
+    {
+      "name": "file-saver",
+      "size": 35990,
+      "sizeFormatted": "35.15 KB"
+    },
+    {
+      "name": "chalk",
+      "size": 35047,
+      "sizeFormatted": "34.23 KB"
+    },
+    {
+      "name": "minimatch",
+      "size": 34902,
+      "sizeFormatted": "34.08 KB"
+    },
+    {
+      "name": "hast-util-raw",
+      "size": 34875,
+      "sizeFormatted": "34.06 KB"
+    },
+    {
+      "name": "d3-ease",
+      "size": 34629,
+      "sizeFormatted": "33.82 KB"
+    },
+    {
+      "name": "agent-base",
+      "size": 34582,
+      "sizeFormatted": "33.77 KB"
+    },
+    {
+      "name": "@vitejs/plugin-react-oxc",
+      "size": 34142,
+      "sizeFormatted": "33.34 KB"
+    },
+    {
+      "name": "hast-util-to-text",
+      "size": 34075,
+      "sizeFormatted": "33.28 KB"
+    },
+    {
+      "name": "agentkeepalive",
+      "size": 33916,
+      "sizeFormatted": "33.12 KB"
+    },
+    {
+      "name": "path-data-parser",
+      "size": 33682,
+      "sizeFormatted": "32.89 KB"
+    },
+    {
+      "name": "@chevrotain/cst-dts-gen",
+      "size": 33626,
+      "sizeFormatted": "32.84 KB"
+    },
+    {
+      "name": "punycode",
+      "size": 33514,
+      "sizeFormatted": "32.73 KB"
+    },
+    {
+      "name": "is-core-module",
+      "size": 33475,
+      "sizeFormatted": "32.69 KB"
+    },
+    {
+      "name": "@babel/code-frame",
+      "size": 33160,
+      "sizeFormatted": "32.38 KB"
+    },
+    {
+      "name": "unist-util-visit-parents",
+      "size": 32885,
+      "sizeFormatted": "32.11 KB"
+    },
+    {
+      "name": "nanoid",
+      "size": 32583,
+      "sizeFormatted": "31.82 KB"
+    },
+    {
+      "name": "graceful-fs",
+      "size": 32535,
+      "sizeFormatted": "31.77 KB"
+    },
+    {
+      "name": "jsesc",
+      "size": 32280,
+      "sizeFormatted": "31.52 KB"
+    },
+    {
+      "name": "safe-buffer",
+      "size": 32101,
+      "sizeFormatted": "31.35 KB"
+    },
+    {
+      "name": "@shikijs/types",
+      "size": 31831,
+      "sizeFormatted": "31.08 KB"
+    },
+    {
+      "name": "@babel/helper-string-parser",
+      "size": 31816,
+      "sizeFormatted": "31.07 KB"
+    },
+    {
+      "name": "parse-entities",
+      "size": 31803,
+      "sizeFormatted": "31.06 KB"
+    },
+    {
+      "name": "@types/json-schema",
+      "size": 31748,
+      "sizeFormatted": "31 KB"
+    },
+    {
+      "name": "css-box-model",
+      "size": 31610,
+      "sizeFormatted": "30.87 KB"
+    },
+    {
+      "name": "flatted",
+      "size": 31530,
+      "sizeFormatted": "30.79 KB"
+    },
+    {
+      "name": "function-bind",
+      "size": 31427,
+      "sizeFormatted": "30.69 KB"
+    },
+    {
+      "name": "d3-axis",
+      "size": 31410,
+      "sizeFormatted": "30.67 KB"
+    },
+    {
+      "name": "@types/d3-time",
+      "size": 31274,
+      "sizeFormatted": "30.54 KB"
+    },
+    {
+      "name": "lowlight",
+      "size": 31138,
+      "sizeFormatted": "30.41 KB"
+    },
+    {
+      "name": "tinyglobby",
+      "size": 31120,
+      "sizeFormatted": "30.39 KB"
+    },
+    {
+      "name": "http-errors",
+      "size": 30924,
+      "sizeFormatted": "30.2 KB"
+    },
+    {
+      "name": "mdast-util-gfm-table",
+      "size": 30873,
+      "sizeFormatted": "30.15 KB"
+    },
+    {
+      "name": "define-data-property",
+      "size": 30851,
+      "sizeFormatted": "30.13 KB"
+    },
+    {
+      "name": "@ionic/cli-framework-output",
+      "size": 29995,
+      "sizeFormatted": "29.29 KB"
+    },
+    {
+      "name": "follow-redirects",
+      "size": 29918,
+      "sizeFormatted": "29.22 KB"
+    },
+    {
+      "name": "fd-slicer",
+      "size": 29813,
+      "sizeFormatted": "29.11 KB"
+    },
+    {
+      "name": "@emotion/sheet",
+      "size": 29483,
+      "sizeFormatted": "28.79 KB"
+    },
+    {
+      "name": "proxy-from-env",
+      "size": 29452,
+      "sizeFormatted": "28.76 KB"
+    },
+    {
+      "name": "@types/mdast",
+      "size": 29432,
+      "sizeFormatted": "28.74 KB"
+    },
+    {
+      "name": "flat-cache",
+      "size": 29321,
+      "sizeFormatted": "28.63 KB"
+    },
+    {
+      "name": "node-domexception",
+      "size": 29162,
+      "sizeFormatted": "28.48 KB"
+    },
+    {
+      "name": "dom-serializer",
+      "size": 28813,
+      "sizeFormatted": "28.14 KB"
+    },
+    {
+      "name": "negotiator",
+      "size": 28710,
+      "sizeFormatted": "28.04 KB"
+    },
+    {
+      "name": "typescript-eslint",
+      "size": 28604,
+      "sizeFormatted": "27.93 KB"
+    },
+    {
+      "name": "@types/d3-dsv",
+      "size": 28579,
+      "sizeFormatted": "27.91 KB"
+    },
+    {
+      "name": "unist-util-visit",
+      "size": 28480,
+      "sizeFormatted": "27.81 KB"
+    },
+    {
+      "name": "mdast-util-math",
+      "size": 28323,
+      "sizeFormatted": "27.66 KB"
+    },
+    {
+      "name": "use-sync-external-store",
+      "size": 28186,
+      "sizeFormatted": "27.53 KB"
+    },
+    {
+      "name": "@types/d3-color",
+      "size": 27916,
+      "sizeFormatted": "27.26 KB"
+    },
+    {
+      "name": "keyv",
+      "size": 27751,
+      "sizeFormatted": "27.1 KB"
+    },
+    {
+      "name": "@types/d3-scale-chromatic",
+      "size": 27736,
+      "sizeFormatted": "27.09 KB"
+    },
+    {
+      "name": "micromark-extension-gfm-strikethrough",
+      "size": 27585,
+      "sizeFormatted": "26.94 KB"
+    },
+    {
+      "name": "@ungap/structured-clone",
+      "size": 27500,
+      "sizeFormatted": "26.86 KB"
+    },
+    {
+      "name": "asynckit",
+      "size": 27362,
+      "sizeFormatted": "26.72 KB"
+    },
+    {
+      "name": "color-convert",
+      "size": 27189,
+      "sizeFormatted": "26.55 KB"
+    },
+    {
+      "name": "depd",
+      "size": 27117,
+      "sizeFormatted": "26.48 KB"
+    },
+    {
+      "name": "unist-util-is",
+      "size": 27111,
+      "sizeFormatted": "26.48 KB"
+    },
+    {
+      "name": "mdast-util-find-and-replace",
+      "size": 27059,
+      "sizeFormatted": "26.42 KB"
+    },
+    {
+      "name": "tinyexec",
+      "size": 26993,
+      "sizeFormatted": "26.36 KB"
+    },
+    {
+      "name": "remark-cjk-friendly",
+      "size": 26842,
+      "sizeFormatted": "26.21 KB"
+    },
+    {
+      "name": "redux-thunk",
+      "size": 26757,
+      "sizeFormatted": "26.13 KB"
+    },
+    {
+      "name": "bent",
+      "size": 26687,
+      "sizeFormatted": "26.06 KB"
+    },
+    {
+      "name": "ts-dedent",
+      "size": 26646,
+      "sizeFormatted": "26.02 KB"
+    },
+    {
+      "name": "@ionic/utils-fs",
+      "size": 26615,
+      "sizeFormatted": "25.99 KB"
+    },
+    {
+      "name": "@uiw/codemirror-themes",
+      "size": 26607,
+      "sizeFormatted": "25.98 KB"
+    },
+    {
+      "name": "object-keys",
+      "size": 26544,
+      "sizeFormatted": "25.92 KB"
+    },
+    {
+      "name": "@nodelib/fs.walk",
+      "size": 26377,
+      "sizeFormatted": "25.76 KB"
+    },
+    {
+      "name": "hast-util-is-element",
+      "size": 26338,
+      "sizeFormatted": "25.72 KB"
+    },
+    {
+      "name": "raw-body",
+      "size": 26315,
+      "sizeFormatted": "25.7 KB"
+    },
+    {
+      "name": "@types/estree",
+      "size": 26173,
+      "sizeFormatted": "25.56 KB"
+    },
+    {
+      "name": "markdown-table",
+      "size": 26109,
+      "sizeFormatted": "25.5 KB"
+    },
+    {
+      "name": "json-schema",
+      "size": 26079,
+      "sizeFormatted": "25.47 KB"
+    },
+    {
+      "name": "ci-info",
+      "size": 26061,
+      "sizeFormatted": "25.45 KB"
+    },
+    {
+      "name": "tmp",
+      "size": 26021,
+      "sizeFormatted": "25.41 KB"
+    },
+    {
+      "name": "@types/d3-drag",
+      "size": 25755,
+      "sizeFormatted": "25.15 KB"
+    },
+    {
+      "name": "mdast-util-mdx-expression",
+      "size": 25728,
+      "sizeFormatted": "25.13 KB"
+    },
+    {
+      "name": "serve-static",
+      "size": 25672,
+      "sizeFormatted": "25.07 KB"
+    },
+    {
+      "name": "@iconify/types",
+      "size": 25671,
+      "sizeFormatted": "25.07 KB"
+    },
+    {
+      "name": "@types/d3-chord",
+      "size": 25368,
+      "sizeFormatted": "24.77 KB"
+    },
+    {
+      "name": "@standard-schema/spec",
+      "size": 25008,
+      "sizeFormatted": "24.42 KB"
+    },
+    {
+      "name": "levn",
+      "size": 24947,
+      "sizeFormatted": "24.36 KB"
+    },
+    {
+      "name": "acorn-jsx",
+      "size": 24888,
+      "sizeFormatted": "24.3 KB"
+    },
+    {
+      "name": "@uiw/codemirror-theme-vscode",
+      "size": 24817,
+      "sizeFormatted": "24.24 KB"
+    },
+    {
+      "name": "hast-util-from-parse5",
+      "size": 24588,
+      "sizeFormatted": "24.01 KB"
+    },
+    {
+      "name": "@rolldown/pluginutils",
+      "size": 24506,
+      "sizeFormatted": "23.93 KB"
+    },
+    {
+      "name": "@types/d3-interpolate",
+      "size": 24501,
+      "sizeFormatted": "23.93 KB"
+    },
+    {
+      "name": "micromark-extension-gfm-task-list-item",
+      "size": 24410,
+      "sizeFormatted": "23.84 KB"
+    },
+    {
+      "name": "cliui",
+      "size": 24373,
+      "sizeFormatted": "23.8 KB"
+    },
+    {
+      "name": "@emotion/is-prop-valid",
+      "size": 24298,
+      "sizeFormatted": "23.73 KB"
+    },
+    {
+      "name": "base64-arraybuffer",
+      "size": 24289,
+      "sizeFormatted": "23.72 KB"
+    },
+    {
+      "name": "@types/react-dom",
+      "size": 24231,
+      "sizeFormatted": "23.66 KB"
+    },
+    {
+      "name": "rw",
+      "size": 24152,
+      "sizeFormatted": "23.59 KB"
+    },
+    {
+      "name": "bplist-parser",
+      "size": 24125,
+      "sizeFormatted": "23.56 KB"
+    },
+    {
+      "name": "mdast-util-gfm-footnote",
+      "size": 24051,
+      "sizeFormatted": "23.49 KB"
+    },
+    {
+      "name": "react-is",
+      "size": 23954,
+      "sizeFormatted": "23.39 KB"
+    },
+    {
+      "name": "quansync",
+      "size": 23881,
+      "sizeFormatted": "23.32 KB"
+    },
+    {
+      "name": "@braintree/sanitize-url",
+      "size": 23826,
+      "sizeFormatted": "23.27 KB"
+    },
+    {
+      "name": "stringify-entities",
+      "size": 23780,
+      "sizeFormatted": "23.22 KB"
+    },
+    {
+      "name": "shell-quote",
+      "size": 23744,
+      "sizeFormatted": "23.19 KB"
+    },
+    {
+      "name": "detect-libc",
+      "size": 23652,
+      "sizeFormatted": "23.1 KB"
+    },
+    {
+      "name": "style-mod",
+      "size": 23605,
+      "sizeFormatted": "23.05 KB"
+    },
+    {
+      "name": "extend",
+      "size": 23461,
+      "sizeFormatted": "22.91 KB"
+    },
+    {
+      "name": "has-symbols",
+      "size": 23409,
+      "sizeFormatted": "22.86 KB"
+    },
+    {
+      "name": "xml",
+      "size": 23400,
+      "sizeFormatted": "22.85 KB"
+    },
+    {
+      "name": "cookie",
+      "size": 23382,
+      "sizeFormatted": "22.83 KB"
+    },
+    {
+      "name": "@types/fs-extra",
+      "size": 23165,
+      "sizeFormatted": "22.62 KB"
+    },
+    {
+      "name": "to-regex-range",
+      "size": 22939,
+      "sizeFormatted": "22.4 KB"
+    },
+    {
+      "name": "@codemirror/lang-go",
+      "size": 22934,
+      "sizeFormatted": "22.4 KB"
+    },
+    {
+      "name": "call-bind",
+      "size": 22902,
+      "sizeFormatted": "22.37 KB"
+    },
+    {
+      "name": "trough",
+      "size": 22877,
+      "sizeFormatted": "22.34 KB"
+    },
+    {
+      "name": "package-manager-detector",
+      "size": 22408,
+      "sizeFormatted": "21.88 KB"
+    },
+    {
+      "name": "vfile-message",
+      "size": 22348,
+      "sizeFormatted": "21.82 KB"
+    },
+    {
+      "name": "mime-types",
+      "size": 22341,
+      "sizeFormatted": "21.82 KB"
+    },
+    {
+      "name": "@codemirror/lang-angular",
+      "size": 22303,
+      "sizeFormatted": "21.78 KB"
+    },
+    {
+      "name": "@nodelib/fs.scandir",
+      "size": 22155,
+      "sizeFormatted": "21.64 KB"
+    },
+    {
+      "name": "mdast-util-gfm",
+      "size": 22153,
+      "sizeFormatted": "21.63 KB"
+    },
+    {
+      "name": "devlop",
+      "size": 22010,
+      "sizeFormatted": "21.49 KB"
+    },
+    {
+      "name": "remark-gfm",
+      "size": 21993,
+      "sizeFormatted": "21.48 KB"
+    },
+    {
+      "name": "react-error-boundary",
+      "size": 21910,
+      "sizeFormatted": "21.4 KB"
+    },
+    {
+      "name": "mdast-util-gfm-autolink-literal",
+      "size": 21703,
+      "sizeFormatted": "21.19 KB"
+    },
+    {
+      "name": "side-channel",
+      "size": 21545,
+      "sizeFormatted": "21.04 KB"
+    },
+    {
+      "name": "type-is",
+      "size": 21269,
+      "sizeFormatted": "20.77 KB"
+    },
+    {
+      "name": "d3-fetch",
+      "size": 21186,
+      "sizeFormatted": "20.69 KB"
+    },
+    {
+      "name": "@humanwhocodes/module-importer",
+      "size": 21177,
+      "sizeFormatted": "20.68 KB"
+    },
+    {
+      "name": "type-check",
+      "size": 21167,
+      "sizeFormatted": "20.67 KB"
+    },
+    {
+      "name": "d3-path",
+      "size": 20858,
+      "sizeFormatted": "20.37 KB"
+    },
+    {
+      "name": "ecdsa-sig-formatter",
+      "size": 20588,
+      "sizeFormatted": "20.11 KB"
+    },
+    {
+      "name": "micromark-factory-destination",
+      "size": 20549,
+      "sizeFormatted": "20.07 KB"
+    },
+    {
+      "name": "mdast-util-mdxjs-esm",
+      "size": 20343,
+      "sizeFormatted": "19.87 KB"
+    },
+    {
+      "name": "micromark-extension-gfm",
+      "size": 20321,
+      "sizeFormatted": "19.84 KB"
+    },
+    {
+      "name": "kleur",
+      "size": 20250,
+      "sizeFormatted": "19.78 KB"
+    },
+    {
+      "name": "cors",
+      "size": 19988,
+      "sizeFormatted": "19.52 KB"
+    },
+    {
+      "name": "@emotion/utils",
+      "size": 19952,
+      "sizeFormatted": "19.48 KB"
+    },
+    {
+      "name": "jsonfile",
+      "size": 19750,
+      "sizeFormatted": "19.29 KB"
+    },
+    {
+      "name": "remark-stringify",
+      "size": 19639,
+      "sizeFormatted": "19.18 KB"
+    },
+    {
+      "name": "json-schema-traverse",
+      "size": 19564,
+      "sizeFormatted": "19.11 KB"
+    },
+    {
+      "name": "remark-parse",
+      "size": 19481,
+      "sizeFormatted": "19.02 KB"
+    },
+    {
+      "name": "jsonify",
+      "size": 19360,
+      "sizeFormatted": "18.91 KB"
+    },
+    {
+      "name": "content-disposition",
+      "size": 19111,
+      "sizeFormatted": "18.66 KB"
+    },
+    {
+      "name": "eslint-plugin-react-refresh",
+      "size": 19104,
+      "sizeFormatted": "18.66 KB"
+    },
+    {
+      "name": "mkdirp",
+      "size": 19088,
+      "sizeFormatted": "18.64 KB"
+    },
+    {
+      "name": "@codemirror/theme-one-dark",
+      "size": 19084,
+      "sizeFormatted": "18.64 KB"
+    },
+    {
+      "name": "@types/react-transition-group",
+      "size": 18574,
+      "sizeFormatted": "18.14 KB"
+    },
+    {
+      "name": "@types/qrcode",
+      "size": 18424,
+      "sizeFormatted": "17.99 KB"
+    },
+    {
+      "name": "d3-timer",
+      "size": 18405,
+      "sizeFormatted": "17.97 KB"
+    },
+    {
+      "name": "points-on-curve",
+      "size": 18400,
+      "sizeFormatted": "17.97 KB"
+    },
+    {
+      "name": "mdast-util-gfm-task-list-item",
+      "size": 18341,
+      "sizeFormatted": "17.91 KB"
+    },
+    {
+      "name": "@isaacs/balanced-match",
+      "size": 18204,
+      "sizeFormatted": "17.78 KB"
+    },
+    {
+      "name": "@chevrotain/utils",
+      "size": 18150,
+      "sizeFormatted": "17.72 KB"
+    },
+    {
+      "name": "@types/d3-format",
+      "size": 17953,
+      "sizeFormatted": "17.53 KB"
+    },
+    {
+      "name": "@jridgewell/set-array",
+      "size": 17945,
+      "sizeFormatted": "17.52 KB"
+    },
+    {
+      "name": "micromark-util-sanitize-uri",
+      "size": 17917,
+      "sizeFormatted": "17.5 KB"
+    },
+    {
+      "name": "mdast-util-gfm-strikethrough",
+      "size": 17828,
+      "sizeFormatted": "17.41 KB"
+    },
+    {
+      "name": "codemirror",
+      "size": 17785,
+      "sizeFormatted": "17.37 KB"
+    },
+    {
+      "name": "jws",
+      "size": 17682,
+      "sizeFormatted": "17.27 KB"
+    },
+    {
+      "name": "has-tostringtag",
+      "size": 17603,
+      "sizeFormatted": "17.19 KB"
+    },
+    {
+      "name": "micromark-factory-label",
+      "size": 17588,
+      "sizeFormatted": "17.18 KB"
+    },
+    {
+      "name": "finalhandler",
+      "size": 17525,
+      "sizeFormatted": "17.11 KB"
+    },
+    {
+      "name": "split2",
+      "size": 17419,
+      "sizeFormatted": "17.01 KB"
+    },
+    {
+      "name": "math-intrinsics",
+      "size": 17323,
+      "sizeFormatted": "16.92 KB"
+    },
+    {
+      "name": "minizlib",
+      "size": 17309,
+      "sizeFormatted": "16.9 KB"
+    },
+    {
+      "name": "call-bound",
+      "size": 17106,
+      "sizeFormatted": "16.71 KB"
+    },
+    {
+      "name": "ansi-styles",
+      "size": 16978,
+      "sizeFormatted": "16.58 KB"
+    },
+    {
+      "name": "fast-json-stable-stringify",
+      "size": 16959,
+      "sizeFormatted": "16.56 KB"
+    },
+    {
+      "name": "accepts",
+      "size": 16917,
+      "sizeFormatted": "16.52 KB"
+    },
+    {
+      "name": "@types/d3-fetch",
+      "size": 16903,
+      "sizeFormatted": "16.51 KB"
+    },
+    {
+      "name": "fill-range",
+      "size": 16743,
+      "sizeFormatted": "16.35 KB"
+    },
+    {
+      "name": "find-yarn-workspace-root",
+      "size": 16706,
+      "sizeFormatted": "16.31 KB"
+    },
+    {
+      "name": "cross-spawn",
+      "size": 16617,
+      "sizeFormatted": "16.23 KB"
+    },
+    {
+      "name": "micromark-factory-title",
+      "size": 16527,
+      "sizeFormatted": "16.14 KB"
+    },
+    {
+      "name": "rehype-katex",
+      "size": 16526,
+      "sizeFormatted": "16.14 KB"
+    },
+    {
+      "name": "hast-util-from-dom",
+      "size": 16369,
+      "sizeFormatted": "15.99 KB"
+    },
+    {
+      "name": "micromark-util-chunked",
+      "size": 16255,
+      "sizeFormatted": "15.87 KB"
+    },
+    {
+      "name": "@typescript-eslint/project-service",
+      "size": 16102,
+      "sizeFormatted": "15.72 KB"
+    },
+    {
+      "name": "set-cookie-parser",
+      "size": 16074,
+      "sizeFormatted": "15.7 KB"
+    },
+    {
+      "name": "file-entry-cache",
+      "size": 16022,
+      "sizeFormatted": "15.65 KB"
+    },
+    {
+      "name": "@typescript-eslint/parser",
+      "size": 15966,
+      "sizeFormatted": "15.59 KB"
+    },
+    {
+      "name": "call-bind-apply-helpers",
+      "size": 15952,
+      "sizeFormatted": "15.58 KB"
+    },
+    {
+      "name": "@types/d3-brush",
+      "size": 15862,
+      "sizeFormatted": "15.49 KB"
+    },
+    {
+      "name": "@codemirror/lang-vue",
+      "size": 15759,
+      "sizeFormatted": "15.39 KB"
+    },
+    {
+      "name": "get-east-asian-width",
+      "size": 15688,
+      "sizeFormatted": "15.32 KB"
+    },
+    {
+      "name": "@types/d3-axis",
+      "size": 15655,
+      "sizeFormatted": "15.29 KB"
+    },
+    {
+      "name": "d3-dispatch",
+      "size": 15604,
+      "sizeFormatted": "15.24 KB"
+    },
+    {
+      "name": "regex-utilities",
+      "size": 15439,
+      "sizeFormatted": "15.08 KB"
+    },
+    {
+      "name": "proxy-addr",
+      "size": 15399,
+      "sizeFormatted": "15.04 KB"
+    },
+    {
+      "name": "unist-util-find-after",
+      "size": 15347,
+      "sizeFormatted": "14.99 KB"
+    },
+    {
+      "name": "@codemirror/lang-yaml",
+      "size": 15341,
+      "sizeFormatted": "14.98 KB"
+    },
+    {
+      "name": "bytesish",
+      "size": 15240,
+      "sizeFormatted": "14.88 KB"
+    },
+    {
+      "name": "@ionic/utils-terminal",
+      "size": 15116,
+      "sizeFormatted": "14.76 KB"
+    },
+    {
+      "name": "js-tokens",
+      "size": 15069,
+      "sizeFormatted": "14.72 KB"
+    },
+    {
+      "name": "@ionic/utils-subprocess",
+      "size": 14851,
+      "sizeFormatted": "14.5 KB"
+    },
+    {
+      "name": "d3-polygon",
+      "size": 14827,
+      "sizeFormatted": "14.48 KB"
+    },
+    {
+      "name": "tiny-invariant",
+      "size": 14809,
+      "sizeFormatted": "14.46 KB"
+    },
+    {
+      "name": "yallist",
+      "size": 14752,
+      "sizeFormatted": "14.41 KB"
+    },
+    {
+      "name": "set-function-length",
+      "size": 14747,
+      "sizeFormatted": "14.4 KB"
+    },
+    {
+      "name": "side-channel-list",
+      "size": 14741,
+      "sizeFormatted": "14.4 KB"
+    },
+    {
+      "name": "side-channel-weakmap",
+      "size": 14667,
+      "sizeFormatted": "14.32 KB"
+    },
+    {
+      "name": "pkce-challenge",
+      "size": 14647,
+      "sizeFormatted": "14.3 KB"
+    },
+    {
+      "name": "immediate",
+      "size": 14646,
+      "sizeFormatted": "14.3 KB"
+    },
+    {
+      "name": "@types/d3-random",
+      "size": 14631,
+      "sizeFormatted": "14.29 KB"
+    },
+    {
+      "name": "es-set-tostringtag",
+      "size": 14544,
+      "sizeFormatted": "14.2 KB"
+    },
+    {
+      "name": "@eslint/js",
+      "size": 14504,
+      "sizeFormatted": "14.16 KB"
+    },
+    {
+      "name": "caseless",
+      "size": 14250,
+      "sizeFormatted": "13.92 KB"
+    },
+    {
+      "name": "dequal",
+      "size": 14229,
+      "sizeFormatted": "13.9 KB"
+    },
+    {
+      "name": "json-stable-stringify-without-jsonify",
+      "size": 14224,
+      "sizeFormatted": "13.89 KB"
+    },
+    {
+      "name": "hast-util-from-html-isomorphic",
+      "size": 14201,
+      "sizeFormatted": "13.87 KB"
+    },
+    {
+      "name": "@types/d3-delaunay",
+      "size": 14197,
+      "sizeFormatted": "13.86 KB"
+    },
+    {
+      "name": "fs-minipass",
+      "size": 14089,
+      "sizeFormatted": "13.76 KB"
+    },
+    {
+      "name": "jwa",
+      "size": 14052,
+      "sizeFormatted": "13.72 KB"
+    },
+    {
+      "name": "@typescript-eslint/visitor-keys",
+      "size": 14011,
+      "sizeFormatted": "13.68 KB"
+    },
+    {
+      "name": "micromark-factory-space",
+      "size": 13753,
+      "sizeFormatted": "13.43 KB"
+    },
+    {
+      "name": "zwitch",
+      "size": 13752,
+      "sizeFormatted": "13.43 KB"
+    },
+    {
+      "name": "on-finished",
+      "size": 13679,
+      "sizeFormatted": "13.36 KB"
+    },
+    {
+      "name": "@lezer/json",
+      "size": 13660,
+      "sizeFormatted": "13.34 KB"
+    },
+    {
+      "name": "eastasianwidth",
+      "size": 13640,
+      "sizeFormatted": "13.32 KB"
+    },
+    {
+      "name": "is-glob",
+      "size": 13609,
+      "sizeFormatted": "13.29 KB"
+    },
+    {
+      "name": "@marijn/find-cluster-break",
+      "size": 13551,
+      "sizeFormatted": "13.23 KB"
+    },
+    {
+      "name": "esrecurse",
+      "size": 13527,
+      "sizeFormatted": "13.21 KB"
+    },
+    {
+      "name": "@types/d3-contour",
+      "size": 13477,
+      "sizeFormatted": "13.16 KB"
+    },
+    {
+      "name": "fs.realpath",
+      "size": 13433,
+      "sizeFormatted": "13.12 KB"
+    },
+    {
+      "name": "@types/d3-ease",
+      "size": 13405,
+      "sizeFormatted": "13.09 KB"
+    },
+    {
+      "name": "side-channel-map",
+      "size": 13348,
+      "sizeFormatted": "13.04 KB"
+    },
+    {
+      "name": "@ionic/utils-array",
+      "size": 13232,
+      "sizeFormatted": "12.92 KB"
+    },
+    {
+      "name": "unist-util-stringify-position",
+      "size": 13180,
+      "sizeFormatted": "12.87 KB"
+    },
+    {
+      "name": "vfile-location",
+      "size": 13089,
+      "sizeFormatted": "12.78 KB"
+    },
+    {
+      "name": "dunder-proto",
+      "size": 13003,
+      "sizeFormatted": "12.7 KB"
+    },
+    {
+      "name": "fast-deep-equal",
+      "size": 12966,
+      "sizeFormatted": "12.66 KB"
+    },
+    {
+      "name": "@antfu/install-pkg",
+      "size": 12918,
+      "sizeFormatted": "12.62 KB"
+    },
+    {
+      "name": "remark-math",
+      "size": 12891,
+      "sizeFormatted": "12.59 KB"
+    },
+    {
+      "name": "unist-util-position",
+      "size": 12779,
+      "sizeFormatted": "12.48 KB"
+    },
+    {
+      "name": "mdast-util-to-string",
+      "size": 12692,
+      "sizeFormatted": "12.39 KB"
+    },
+    {
+      "name": "hast-util-parse-selector",
+      "size": 12652,
+      "sizeFormatted": "12.36 KB"
+    },
+    {
+      "name": "@types/d3-time-format",
+      "size": 12594,
+      "sizeFormatted": "12.3 KB"
+    },
+    {
+      "name": "rehype-raw",
+      "size": 12527,
+      "sizeFormatted": "12.23 KB"
+    },
+    {
+      "name": "statuses",
+      "size": 12505,
+      "sizeFormatted": "12.21 KB"
+    },
+    {
+      "name": "micromark-util-combine-extensions",
+      "size": 12387,
+      "sizeFormatted": "12.1 KB"
+    },
+    {
+      "name": "escalade",
+      "size": 12385,
+      "sizeFormatted": "12.09 KB"
+    },
+    {
+      "name": "webidl-conversions",
+      "size": 12370,
+      "sizeFormatted": "12.08 KB"
+    },
+    {
+      "name": "es-errors",
+      "size": 12324,
+      "sizeFormatted": "12.04 KB"
+    },
+    {
+      "name": "bytes",
+      "size": 12270,
+      "sizeFormatted": "11.98 KB"
+    },
+    {
+      "name": "micromark-util-normalize-identifier",
+      "size": 12256,
+      "sizeFormatted": "11.97 KB"
+    },
+    {
+      "name": "@codemirror/lang-php",
+      "size": 12179,
+      "sizeFormatted": "11.89 KB"
+    },
+    {
+      "name": "micromark-factory-whitespace",
+      "size": 12143,
+      "sizeFormatted": "11.86 KB"
+    },
+    {
+      "name": "ini",
+      "size": 12132,
+      "sizeFormatted": "11.85 KB"
+    },
+    {
+      "name": "require-directory",
+      "size": 12071,
+      "sizeFormatted": "11.79 KB"
+    },
+    {
+      "name": "@codemirror/lang-wast",
+      "size": 11982,
+      "sizeFormatted": "11.7 KB"
+    },
+    {
+      "name": "micromark-extension-gfm-tagfilter",
+      "size": 11960,
+      "sizeFormatted": "11.68 KB"
+    },
+    {
+      "name": "@types/node-fetch",
+      "size": 11940,
+      "sizeFormatted": "11.66 KB"
+    },
+    {
+      "name": "imurmurhash",
+      "size": 11887,
+      "sizeFormatted": "11.61 KB"
+    },
+    {
+      "name": "estree-util-is-identifier-name",
+      "size": 11862,
+      "sizeFormatted": "11.58 KB"
+    },
+    {
+      "name": "@nodelib/fs.stat",
+      "size": 11845,
+      "sizeFormatted": "11.57 KB"
+    },
+    {
+      "name": "word-wrap",
+      "size": 11845,
+      "sizeFormatted": "11.57 KB"
+    },
+    {
+      "name": "hast-util-whitespace",
+      "size": 11781,
+      "sizeFormatted": "11.5 KB"
+    },
+    {
+      "name": "find-up",
+      "size": 11761,
+      "sizeFormatted": "11.49 KB"
+    },
+    {
+      "name": "reusify",
+      "size": 11696,
+      "sizeFormatted": "11.42 KB"
+    },
+    {
+      "name": "@types/d3-quadtree",
+      "size": 11581,
+      "sizeFormatted": "11.31 KB"
+    },
+    {
+      "name": "combined-stream",
+      "size": 11514,
+      "sizeFormatted": "11.24 KB"
+    },
+    {
+      "name": "es-object-atoms",
+      "size": 11442,
+      "sizeFormatted": "11.17 KB"
+    },
+    {
+      "name": "convert-source-map",
+      "size": 11434,
+      "sizeFormatted": "11.17 KB"
+    },
+    {
+      "name": "micromark-util-classify-character",
+      "size": 11428,
+      "sizeFormatted": "11.16 KB"
+    },
+    {
+      "name": "micromark-util-decode-numeric-character-reference",
+      "size": 11414,
+      "sizeFormatted": "11.15 KB"
+    },
+    {
+      "name": "character-entities-html4",
+      "size": 11364,
+      "sizeFormatted": "11.1 KB"
+    },
+    {
+      "name": "domelementtype",
+      "size": 11359,
+      "sizeFormatted": "11.09 KB"
+    },
+    {
+      "name": "brace-expansion",
+      "size": 11107,
+      "sizeFormatted": "10.85 KB"
+    },
+    {
+      "name": "micromark-util-decode-string",
+      "size": 11088,
+      "sizeFormatted": "10.83 KB"
+    },
+    {
+      "name": "unist-util-remove-position",
+      "size": 11038,
+      "sizeFormatted": "10.78 KB"
+    },
+    {
+      "name": "@codemirror/lang-sass",
+      "size": 11024,
+      "sizeFormatted": "10.77 KB"
+    },
+    {
+      "name": "y18n",
+      "size": 10991,
+      "sizeFormatted": "10.73 KB"
+    },
+    {
+      "name": "isexe",
+      "size": 10956,
+      "sizeFormatted": "10.7 KB"
+    },
+    {
+      "name": "@shikijs/engine-javascript",
+      "size": 10952,
+      "sizeFormatted": "10.7 KB"
+    },
+    {
+      "name": "@emotion/use-insertion-effect-with-fallbacks",
+      "size": 10941,
+      "sizeFormatted": "10.68 KB"
+    },
+    {
+      "name": "has-property-descriptors",
+      "size": 10911,
+      "sizeFormatted": "10.66 KB"
+    },
+    {
+      "name": "@nextjournal/lang-clojure",
+      "size": 10884,
+      "sizeFormatted": "10.63 KB"
+    },
+    {
+      "name": "get-proto",
+      "size": 10840,
+      "sizeFormatted": "10.59 KB"
+    },
+    {
+      "name": "etag",
+      "size": 10809,
+      "sizeFormatted": "10.56 KB"
+    },
+    {
+      "name": "dijkstrajs",
+      "size": 10798,
+      "sizeFormatted": "10.54 KB"
+    },
+    {
+      "name": "@ionic/utils-process",
+      "size": 10761,
+      "sizeFormatted": "10.51 KB"
+    },
+    {
+      "name": "@typescript-eslint/tsconfig-utils",
+      "size": 10678,
+      "sizeFormatted": "10.43 KB"
+    },
+    {
+      "name": "wrap-ansi",
+      "size": 10648,
+      "sizeFormatted": "10.4 KB"
+    },
+    {
+      "name": "wrap-ansi-cjs",
+      "size": 10648,
+      "sizeFormatted": "10.4 KB"
+    },
+    {
+      "name": "raf-schd",
+      "size": 10604,
+      "sizeFormatted": "10.36 KB"
+    },
+    {
+      "name": "content-type",
+      "size": 10471,
+      "sizeFormatted": "10.23 KB"
+    },
+    {
+      "name": "internmap",
+      "size": 10470,
+      "sizeFormatted": "10.22 KB"
+    },
+    {
+      "name": "klaw-sync",
+      "size": 10427,
+      "sizeFormatted": "10.18 KB"
+    },
+    {
+      "name": "json-parse-even-better-errors",
+      "size": 10426,
+      "sizeFormatted": "10.18 KB"
+    },
+    {
+      "name": "micromark-util-html-tag-name",
+      "size": 10426,
+      "sizeFormatted": "10.18 KB"
+    },
+    {
+      "name": "micromark-util-resolve-all",
+      "size": 10316,
+      "sizeFormatted": "10.07 KB"
+    },
+    {
+      "name": "parseurl",
+      "size": 10299,
+      "sizeFormatted": "10.06 KB"
+    },
+    {
+      "name": "fresh",
+      "size": 10289,
+      "sizeFormatted": "10.05 KB"
+    },
+    {
+      "name": "es-define-property",
+      "size": 10217,
+      "sizeFormatted": "9.98 KB"
+    },
+    {
+      "name": "tokenx",
+      "size": 10170,
+      "sizeFormatted": "9.93 KB"
+    },
+    {
+      "name": "env-paths",
+      "size": 10163,
+      "sizeFormatted": "9.92 KB"
+    },
+    {
+      "name": "@types/katex",
+      "size": 10147,
+      "sizeFormatted": "9.91 KB"
+    },
+    {
+      "name": "mdast-util-phrasing",
+      "size": 10032,
+      "sizeFormatted": "9.8 KB"
+    },
+    {
+      "name": "which",
+      "size": 9975,
+      "sizeFormatted": "9.74 KB"
+    },
+    {
+      "name": "comma-separated-tokens",
+      "size": 9971,
+      "sizeFormatted": "9.74 KB"
+    },
+    {
+      "name": "signal-exit",
+      "size": 9958,
+      "sizeFormatted": "9.72 KB"
+    },
+    {
+      "name": "@emotion/hash",
+      "size": 9928,
+      "sizeFormatted": "9.7 KB"
+    },
+    {
+      "name": "gopd",
+      "size": 9869,
+      "sizeFormatted": "9.64 KB"
+    },
+    {
+      "name": "@codemirror/lang-json",
+      "size": 9804,
+      "sizeFormatted": "9.57 KB"
+    },
+    {
+      "name": "@types/hast",
+      "size": 9703,
+      "sizeFormatted": "9.48 KB"
+    },
+    {
+      "name": "points-on-path",
+      "size": 9657,
+      "sizeFormatted": "9.43 KB"
+    },
+    {
+      "name": "base64-js",
+      "size": 9624,
+      "sizeFormatted": "9.4 KB"
+    },
+    {
+      "name": "is-number",
+      "size": 9615,
+      "sizeFormatted": "9.39 KB"
+    },
+    {
+      "name": "@types/geojson",
+      "size": 9514,
+      "sizeFormatted": "9.29 KB"
+    },
+    {
+      "name": "fast-levenshtein",
+      "size": 9444,
+      "sizeFormatted": "9.22 KB"
+    },
+    {
+      "name": "media-typer",
+      "size": 9256,
+      "sizeFormatted": "9.04 KB"
+    },
+    {
+      "name": "supports-preserve-symlinks-flag",
+      "size": 9178,
+      "sizeFormatted": "8.96 KB"
+    },
+    {
+      "name": "character-entities-legacy",
+      "size": 9141,
+      "sizeFormatted": "8.93 KB"
+    },
+    {
+      "name": "error-ex",
+      "size": 9035,
+      "sizeFormatted": "8.82 KB"
+    },
+    {
+      "name": "@codemirror/lang-java",
+      "size": 8960,
+      "sizeFormatted": "8.75 KB"
+    },
+    {
+      "name": "merge2",
+      "size": 8897,
+      "sizeFormatted": "8.69 KB"
+    },
+    {
+      "name": "@standard-schema/utils",
+      "size": 8886,
+      "sizeFormatted": "8.68 KB"
+    },
+    {
+      "name": "hasown",
+      "size": 8765,
+      "sizeFormatted": "8.56 KB"
+    },
+    {
+      "name": "vary",
+      "size": 8747,
+      "sizeFormatted": "8.54 KB"
+    },
+    {
+      "name": "hachure-fill",
+      "size": 8675,
+      "sizeFormatted": "8.47 KB"
+    },
+    {
+      "name": "html-url-attributes",
+      "size": 8675,
+      "sizeFormatted": "8.47 KB"
+    },
+    {
+      "name": "@codemirror/lang-cpp",
+      "size": 8660,
+      "sizeFormatted": "8.46 KB"
+    },
+    {
+      "name": "@types/trusted-types",
+      "size": 8577,
+      "sizeFormatted": "8.38 KB"
+    },
+    {
+      "name": "setimmediate",
+      "size": 8558,
+      "sizeFormatted": "8.36 KB"
+    },
+    {
+      "name": "clsx",
+      "size": 8555,
+      "sizeFormatted": "8.35 KB"
+    },
+    {
+      "name": "@ionic/utils-object",
+      "size": 8462,
+      "sizeFormatted": "8.26 KB"
+    },
+    {
+      "name": "range-parser",
+      "size": 8457,
+      "sizeFormatted": "8.26 KB"
+    },
+    {
+      "name": "@types/d3-path",
+      "size": 8384,
+      "sizeFormatted": "8.19 KB"
+    },
+    {
+      "name": "w3c-keyname",
+      "size": 8381,
+      "sizeFormatted": "8.18 KB"
+    },
+    {
+      "name": "@types/d3",
+      "size": 8376,
+      "sizeFormatted": "8.18 KB"
+    },
+    {
+      "name": "queue-microtask",
+      "size": 8367,
+      "sizeFormatted": "8.17 KB"
+    },
+    {
+      "name": "@codemirror/lang-rust",
+      "size": 8219,
+      "sizeFormatted": "8.03 KB"
+    },
+    {
+      "name": "deep-is",
+      "size": 8114,
+      "sizeFormatted": "7.92 KB"
+    },
+    {
+      "name": "format",
+      "size": 8086,
+      "sizeFormatted": "7.9 KB"
+    },
+    {
+      "name": "highlightjs-vue",
+      "size": 8083,
+      "sizeFormatted": "7.89 KB"
+    },
+    {
+      "name": "delayed-stream",
+      "size": 8021,
+      "sizeFormatted": "7.83 KB"
+    },
+    {
+      "name": "micromark-util-encode",
+      "size": 7971,
+      "sizeFormatted": "7.78 KB"
+    },
+    {
+      "name": "buffer-crc32",
+      "size": 7952,
+      "sizeFormatted": "7.77 KB"
+    },
+    {
+      "name": "@types/uuid",
+      "size": 7823,
+      "sizeFormatted": "7.64 KB"
+    },
+    {
+      "name": "tree-kill",
+      "size": 7816,
+      "sizeFormatted": "7.63 KB"
+    },
+    {
+      "name": "p-limit",
+      "size": 7754,
+      "sizeFormatted": "7.57 KB"
+    },
+    {
+      "name": "space-separated-tokens",
+      "size": 7753,
+      "sizeFormatted": "7.57 KB"
+    },
+    {
+      "name": "glob-parent",
+      "size": 7719,
+      "sizeFormatted": "7.54 KB"
+    },
+    {
+      "name": "longest-streak",
+      "size": 7661,
+      "sizeFormatted": "7.48 KB"
+    },
+    {
+      "name": "trim-lines",
+      "size": 7493,
+      "sizeFormatted": "7.32 KB"
+    },
+    {
+      "name": "@ionic/utils-stream",
+      "size": 7489,
+      "sizeFormatted": "7.31 KB"
+    },
+    {
+      "name": "camelcase",
+      "size": 7447,
+      "sizeFormatted": "7.27 KB"
+    },
+    {
+      "name": "web-namespaces",
+      "size": 7443,
+      "sizeFormatted": "7.27 KB"
+    },
+    {
+      "name": "@types/prop-types",
+      "size": 7416,
+      "sizeFormatted": "7.24 KB"
+    },
+    {
+      "name": "ccount",
+      "size": 7344,
+      "sizeFormatted": "7.17 KB"
+    },
+    {
+      "name": "p-locate",
+      "size": 7240,
+      "sizeFormatted": "7.07 KB"
+    },
+    {
+      "name": "supports-color",
+      "size": 7035,
+      "sizeFormatted": "6.87 KB"
+    },
+    {
+      "name": "locate-path",
+      "size": 7017,
+      "sizeFormatted": "6.85 KB"
+    },
+    {
+      "name": "encodeurl",
+      "size": 6980,
+      "sizeFormatted": "6.82 KB"
+    },
+    {
+      "name": "@codemirror/lang-lezer",
+      "size": 6967,
+      "sizeFormatted": "6.8 KB"
+    },
+    {
+      "name": "strip-json-comments",
+      "size": 6959,
+      "sizeFormatted": "6.8 KB"
+    },
+    {
+      "name": "fault",
+      "size": 6940,
+      "sizeFormatted": "6.78 KB"
+    },
+    {
+      "name": "balanced-match",
+      "size": 6939,
+      "sizeFormatted": "6.78 KB"
+    },
+    {
+      "name": "html-void-elements",
+      "size": 6899,
+      "sizeFormatted": "6.74 KB"
+    },
+    {
+      "name": "ieee754",
+      "size": 6796,
+      "sizeFormatted": "6.64 KB"
+    },
+    {
+      "name": "sisteransi",
+      "size": 6791,
+      "sizeFormatted": "6.63 KB"
+    },
+    {
+      "name": "@types/d3-timer",
+      "size": 6755,
+      "sizeFormatted": "6.6 KB"
+    },
+    {
+      "name": "ms",
+      "size": 6721,
+      "sizeFormatted": "6.56 KB"
+    },
+    {
+      "name": "color-name",
+      "size": 6693,
+      "sizeFormatted": "6.54 KB"
+    },
+    {
+      "name": "run-parallel",
+      "size": 6563,
+      "sizeFormatted": "6.41 KB"
+    },
+    {
+      "name": "@types/d3-polygon",
+      "size": 6495,
+      "sizeFormatted": "6.34 KB"
+    },
+    {
+      "name": "xtend",
+      "size": 6465,
+      "sizeFormatted": "6.31 KB"
+    },
+    {
+      "name": "@types/debug",
+      "size": 6450,
+      "sizeFormatted": "6.3 KB"
+    },
+    {
+      "name": "slice-ansi",
+      "size": 6434,
+      "sizeFormatted": "6.28 KB"
+    },
+    {
+      "name": "picocolors",
+      "size": 6373,
+      "sizeFormatted": "6.22 KB"
+    },
+    {
+      "name": "bail",
+      "size": 6353,
+      "sizeFormatted": "6.2 KB"
+    },
+    {
+      "name": "callsites",
+      "size": 6332,
+      "sizeFormatted": "6.18 KB"
+    },
+    {
+      "name": "@types/file-saver",
+      "size": 6313,
+      "sizeFormatted": "6.17 KB"
+    },
+    {
+      "name": "@types/unist",
+      "size": 6262,
+      "sizeFormatted": "6.12 KB"
+    },
+    {
+      "name": "ee-first",
+      "size": 6259,
+      "sizeFormatted": "6.11 KB"
+    },
+    {
+      "name": "is-extglob",
+      "size": 6217,
+      "sizeFormatted": "6.07 KB"
+    },
+    {
+      "name": "yocto-queue",
+      "size": 6027,
+      "sizeFormatted": "5.89 KB"
+    },
+    {
+      "name": "@emotion/unitless",
+      "size": 6026,
+      "sizeFormatted": "5.88 KB"
+    },
+    {
+      "name": "pend",
+      "size": 6015,
+      "sizeFormatted": "5.87 KB"
+    },
+    {
+      "name": "@capacitor/synapse",
+      "size": 6013,
+      "sizeFormatted": "5.87 KB"
+    },
+    {
+      "name": "@types/d3-dispatch",
+      "size": 5991,
+      "sizeFormatted": "5.85 KB"
+    },
+    {
+      "name": "is-stream",
+      "size": 5927,
+      "sizeFormatted": "5.79 KB"
+    },
+    {
+      "name": "forwarded",
+      "size": 5876,
+      "sizeFormatted": "5.74 KB"
+    },
+    {
+      "name": "@types/diff-match-patch",
+      "size": 5828,
+      "sizeFormatted": "5.69 KB"
+    },
+    {
+      "name": "loose-envify",
+      "size": 5814,
+      "sizeFormatted": "5.68 KB"
+    },
+    {
+      "name": "@emotion/weak-memoize",
+      "size": 5807,
+      "sizeFormatted": "5.67 KB"
+    },
+    {
+      "name": "@types/estree-jsx",
+      "size": 5773,
+      "sizeFormatted": "5.64 KB"
+    },
+    {
+      "name": "chownr",
+      "size": 5748,
+      "sizeFormatted": "5.61 KB"
+    },
+    {
+      "name": "ansis",
+      "size": 5713,
+      "sizeFormatted": "5.58 KB"
+    },
+    {
+      "name": "natural-compare",
+      "size": 5647,
+      "sizeFormatted": "5.51 KB"
+    },
+    {
+      "name": "ansi-regex",
+      "size": 5609,
+      "sizeFormatted": "5.48 KB"
+    },
+    {
+      "name": "character-reference-invalid",
+      "size": 5545,
+      "sizeFormatted": "5.42 KB"
+    },
+    {
+      "name": "object-assign",
+      "size": 5493,
+      "sizeFormatted": "5.36 KB"
+    },
+    {
+      "name": "util-deprecate",
+      "size": 5481,
+      "sizeFormatted": "5.35 KB"
+    },
+    {
+      "name": "react-router-dom",
+      "size": 5460,
+      "sizeFormatted": "5.33 KB"
+    },
+    {
+      "name": "parse-json",
+      "size": 5409,
+      "sizeFormatted": "5.28 KB"
+    },
+    {
+      "name": "path-type",
+      "size": 5407,
+      "sizeFormatted": "5.28 KB"
+    },
+    {
+      "name": "json-buffer",
+      "size": 5404,
+      "sizeFormatted": "5.28 KB"
+    },
+    {
+      "name": "crelt",
+      "size": 5387,
+      "sizeFormatted": "5.26 KB"
+    },
+    {
+      "name": "lines-and-columns",
+      "size": 5386,
+      "sizeFormatted": "5.26 KB"
+    },
+    {
+      "name": "find-root",
+      "size": 5272,
+      "sizeFormatted": "5.15 KB"
+    },
+    {
+      "name": "buffer-equal-constant-time",
+      "size": 5232,
+      "sizeFormatted": "5.11 KB"
+    },
+    {
+      "name": "string-width",
+      "size": 5161,
+      "sizeFormatted": "5.04 KB"
+    },
+    {
+      "name": "string-width-cjs",
+      "size": 5161,
+      "sizeFormatted": "5.04 KB"
+    },
+    {
+      "name": "throttleit",
+      "size": 5133,
+      "sizeFormatted": "5.01 KB"
+    },
+    {
+      "name": "is-alphanumerical",
+      "size": 5114,
+      "sizeFormatted": "4.99 KB"
+    },
+    {
+      "name": "@types/ms",
+      "size": 5101,
+      "sizeFormatted": "4.98 KB"
+    },
+    {
+      "name": "is-alphabetical",
+      "size": 5011,
+      "sizeFormatted": "4.89 KB"
+    },
+    {
+      "name": "is-fullwidth-code-point",
+      "size": 4994,
+      "sizeFormatted": "4.88 KB"
+    },
+    {
+      "name": "cookie-signature",
+      "size": 4993,
+      "sizeFormatted": "4.88 KB"
+    },
+    {
+      "name": "is-hexadecimal",
+      "size": 4987,
+      "sizeFormatted": "4.87 KB"
+    },
+    {
+      "name": "core-util-is",
+      "size": 4982,
+      "sizeFormatted": "4.87 KB"
+    },
+    {
+      "name": "concat-map",
+      "size": 4861,
+      "sizeFormatted": "4.75 KB"
+    },
+    {
+      "name": "get-caller-file",
+      "size": 4719,
+      "sizeFormatted": "4.61 KB"
+    },
+    {
+      "name": "import-fresh",
+      "size": 4693,
+      "sizeFormatted": "4.58 KB"
+    },
+    {
+      "name": "toidentifier",
+      "size": 4685,
+      "sizeFormatted": "4.58 KB"
+    },
+    {
+      "name": "is-decimal",
+      "size": 4679,
+      "sizeFormatted": "4.57 KB"
+    },
+    {
+      "name": "universalify",
+      "size": 4675,
+      "sizeFormatted": "4.57 KB"
+    },
+    {
+      "name": "resolve-from",
+      "size": 4641,
+      "sizeFormatted": "4.53 KB"
+    },
+    {
+      "name": "path-key",
+      "size": 4553,
+      "sizeFormatted": "4.45 KB"
+    },
+    {
+      "name": "path-parse",
+      "size": 4511,
+      "sizeFormatted": "4.41 KB"
+    },
+    {
+      "name": "define-lazy-prop",
+      "size": 4446,
+      "sizeFormatted": "4.34 KB"
+    },
+    {
+      "name": "has-flag",
+      "size": 4419,
+      "sizeFormatted": "4.32 KB"
+    },
+    {
+      "name": "merge-descriptors",
+      "size": 4373,
+      "sizeFormatted": "4.27 KB"
+    },
+    {
+      "name": "p-try",
+      "size": 4371,
+      "sizeFormatted": "4.27 KB"
+    },
+    {
+      "name": "unpipe",
+      "size": 4311,
+      "sizeFormatted": "4.21 KB"
+    },
+    {
+      "name": "is-wsl",
+      "size": 4264,
+      "sizeFormatted": "4.16 KB"
+    },
+    {
+      "name": "set-blocking",
+      "size": 4224,
+      "sizeFormatted": "4.13 KB"
+    },
+    {
+      "name": "is-plain-obj",
+      "size": 4080,
+      "sizeFormatted": "3.98 KB"
+    },
+    {
+      "name": "is-arrayish",
+      "size": 4053,
+      "sizeFormatted": "3.96 KB"
+    },
+    {
+      "name": "once",
+      "size": 4046,
+      "sizeFormatted": "3.95 KB"
+    },
+    {
+      "name": "which-module",
+      "size": 4036,
+      "sizeFormatted": "3.94 KB"
+    },
+    {
+      "name": "strip-ansi",
+      "size": 4029,
+      "sizeFormatted": "3.93 KB"
+    },
+    {
+      "name": "strip-ansi-cjs",
+      "size": 4029,
+      "sizeFormatted": "3.93 KB"
+    },
+    {
+      "name": "setprototypeof",
+      "size": 4025,
+      "sizeFormatted": "3.93 KB"
+    },
+    {
+      "name": "@emotion/memoize",
+      "size": 4009,
+      "sizeFormatted": "3.92 KB"
+    },
+    {
+      "name": "inherits",
+      "size": 3958,
+      "sizeFormatted": "3.87 KB"
+    },
+    {
+      "name": "require-main-filename",
+      "size": 3928,
+      "sizeFormatted": "3.84 KB"
+    },
+    {
+      "name": "parent-module",
+      "size": 3922,
+      "sizeFormatted": "3.83 KB"
+    },
+    {
+      "name": "path-exists",
+      "size": 3919,
+      "sizeFormatted": "3.83 KB"
+    },
+    {
+      "name": "@types/react-katex",
+      "size": 3849,
+      "sizeFormatted": "3.76 KB"
+    },
+    {
+      "name": "escape-string-regexp",
+      "size": 3790,
+      "sizeFormatted": "3.7 KB"
+    },
+    {
+      "name": "inflight",
+      "size": 3762,
+      "sizeFormatted": "3.67 KB"
+    },
+    {
+      "name": "escape-html",
+      "size": 3660,
+      "sizeFormatted": "3.57 KB"
+    },
+    {
+      "name": "humanize-ms",
+      "size": 3656,
+      "sizeFormatted": "3.57 KB"
+    },
+    {
+      "name": "path-is-absolute",
+      "size": 3616,
+      "sizeFormatted": "3.53 KB"
+    },
+    {
+      "name": "isarray",
+      "size": 3430,
+      "sizeFormatted": "3.35 KB"
+    },
+    {
+      "name": "astral-regex",
+      "size": 3401,
+      "sizeFormatted": "3.32 KB"
+    },
+    {
+      "name": "@types/use-sync-external-store",
+      "size": 3290,
+      "sizeFormatted": "3.21 KB"
+    },
+    {
+      "name": "@types/slice-ansi",
+      "size": 3230,
+      "sizeFormatted": "3.15 KB"
+    },
+    {
+      "name": "process-nextick-args",
+      "size": 3175,
+      "sizeFormatted": "3.1 KB"
+    },
+    {
+      "name": "os-tmpdir",
+      "size": 3056,
+      "sizeFormatted": "2.98 KB"
+    },
+    {
+      "name": "is-docker",
+      "size": 3013,
+      "sizeFormatted": "2.94 KB"
+    },
+    {
+      "name": "untildify",
+      "size": 3013,
+      "sizeFormatted": "2.94 KB"
+    },
+    {
+      "name": "wrappy",
+      "size": 2961,
+      "sizeFormatted": "2.89 KB"
+    },
+    {
+      "name": "is-promise",
+      "size": 2958,
+      "sizeFormatted": "2.89 KB"
+    },
+    {
+      "name": "@types/parse-json",
+      "size": 2946,
+      "sizeFormatted": "2.88 KB"
+    },
+    {
+      "name": "decamelize",
+      "size": 2940,
+      "sizeFormatted": "2.87 KB"
+    },
+    {
+      "name": "shebang-regex",
+      "size": 2828,
+      "sizeFormatted": "2.76 KB"
+    },
+    {
+      "name": "slash",
+      "size": 2819,
+      "sizeFormatted": "2.75 KB"
+    },
+    {
+      "name": "at-least-node",
+      "size": 2625,
+      "sizeFormatted": "2.56 KB"
+    },
+    {
+      "name": "@mui/core-downloads-tracker",
+      "size": 2585,
+      "sizeFormatted": "2.52 KB"
+    },
+    {
+      "name": "shebang-command",
+      "size": 2556,
+      "sizeFormatted": "2.5 KB"
+    },
+    {
+      "name": "@types/dompurify",
+      "size": 1739,
+      "sizeFormatted": "1.7 KB"
+    },
+    {
+      "name": "minimalistic-assert",
+      "size": 1547,
+      "sizeFormatted": "1.51 KB"
+    },
+    {
+      "name": "boolbase",
+      "size": 1330,
+      "sizeFormatted": "1.3 KB"
+    },
+    {
+      "name": "@swc/counter",
+      "size": 1182,
+      "sizeFormatted": "1.15 KB"
+    }
+  ]
+}

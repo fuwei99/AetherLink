@@ -14,6 +14,7 @@ import type { Message, MessageBlock } from '../../../types/newMessage';
 import type { Model, MCPTool } from '../../../types';
 import type { RootState, AppDispatch } from '../../index';
 import { prepareMessagesForApi, performKnowledgeSearchIfNeeded } from './apiPreparation';
+import { getActualProviderType } from '../../../services/ProviderFactory';
 
 export const processAssistantResponse = async (
   dispatch: AppDispatch,
@@ -313,7 +314,6 @@ export const processAssistantResponse = async (
 
         // 修复：根据实际provider类型选择合适的消息格式
         //  关键修复：使用getActualProviderType来正确判断Gemini provider
-        const { getActualProviderType } = await import('../../../services/ProviderFactory');
         const actualProviderType = getActualProviderType(model);
         const isActualGeminiProvider = actualProviderType === 'gemini';
         const messagesToSend = isActualGeminiProvider ? filteredOriginalMessages : apiMessages;
