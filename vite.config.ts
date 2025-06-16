@@ -1,15 +1,16 @@
 import { defineConfig } from 'vite'
-import reactOxc from '@vitejs/plugin-react-oxc'  // Oxc 处理 React
+import reactSwc from '@vitejs/plugin-react-swc'  // 使用 SWC 替代 Oxc
 import vue from '@vitejs/plugin-vue'
 
-// Rolldown-Vite + Oxc 配置
-// Oxc 处理 React (最快性能)，Vue 使用标准插件
+// Rolldown-Vite + SWC 配置
+// SWC 处理 React (与 rolldown-vite 兼容)，Vue 使用标准插件
 export default defineConfig({
   plugins: [
-    // 只使用 Oxc 处理 React - 避免插件冲突
-    reactOxc({
-      include: /\.(jsx|tsx)$/,  // 只处理 JSX/TSX 文件
-      exclude: [/\.vue$/, /node_modules/]
+    // 使用 SWC 处理 React - 与 rolldown-vite 完全兼容
+    reactSwc({
+      // SWC 配置选项
+      jsxImportSource: undefined, // 使用默认的 React JSX
+      plugins: []
     }),
     vue({
       template: {
@@ -19,7 +20,7 @@ export default defineConfig({
         }
       }
     })
-    // 注意：Rolldown-Vite 内置了类型检查，不需要额外的 checker 插件
+    // 注意：Rolldown-Vite + SWC 提供最佳性能和兼容性
   ],
 
   // 开发服务器配置
@@ -36,7 +37,7 @@ export default defineConfig({
       '/api/exa': {
         target: 'https://api.exa.ai',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/exa/, ''),
+        rewrite: (path: string) => path.replace(/^\/api\/exa/, ''),
         headers: {
           'Origin': 'https://api.exa.ai'
         }
@@ -45,7 +46,7 @@ export default defineConfig({
       '/api/bocha': {
         target: 'https://api.bochaai.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/bocha/, ''),
+        rewrite: (path: string) => path.replace(/^\/api\/bocha/, ''),
         headers: {
           'Origin': 'https://api.bochaai.com'
         }
@@ -54,7 +55,7 @@ export default defineConfig({
       '/api/firecrawl': {
         target: 'https://api.firecrawl.dev',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/firecrawl/, ''),
+        rewrite: (path: string) => path.replace(/^\/api\/firecrawl/, ''),
         headers: {
           'Origin': 'https://api.firecrawl.dev'
         }
@@ -63,7 +64,7 @@ export default defineConfig({
       '/api/mcp-glama': {
         target: 'https://glama.ai',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/mcp-glama/, ''),
+        rewrite: (path: string) => path.replace(/^\/api\/mcp-glama/, ''),
         headers: {
           'Origin': 'https://glama.ai',
           'Accept': 'text/event-stream',
@@ -74,7 +75,7 @@ export default defineConfig({
       '/api/mcp-modelscope': {
         target: 'https://mcp.api-inference.modelscope.net',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/mcp-modelscope/, ''),
+        rewrite: (path: string) => path.replace(/^\/api\/mcp-modelscope/, ''),
         headers: {
           'Origin': 'https://mcp.api-inference.modelscope.net',
           'Accept': 'text/event-stream',
@@ -85,7 +86,7 @@ export default defineConfig({
       '/api/mcp-router': {
         target: 'https://router.mcp.so',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/mcp-router/, ''),
+        rewrite: (path: string) => path.replace(/^\/api\/mcp-router/, ''),
         headers: {
           'Origin': 'https://router.mcp.so',
           'Accept': 'application/json, text/event-stream',
@@ -96,7 +97,7 @@ export default defineConfig({
       '/api/notion': {
         target: 'https://api.notion.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/notion/, ''),
+        rewrite: (path: string) => path.replace(/^\/api\/notion/, ''),
         headers: {
           'Origin': 'https://api.notion.com'
         }

@@ -5,10 +5,16 @@
 import { toastManager } from '../components/EnhancedToast';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
+import { CorsBypass } from 'capacitor-cors-bypass-enhanced';
 
 // Notion API 配置
 export const getNotionApiUrl = (endpoint: string): string => {
-  // 简化环境判断逻辑
+  // 移动端直接使用原始API URL，通过 CorsBypass 插件处理 CORS
+  if (Capacitor.isNativePlatform()) {
+    return `https://api.notion.com${endpoint}`;
+  }
+  
+  // Web 端使用代理
   const isDevelopment = process.env.NODE_ENV === 'development' || 
                        window.location.hostname === 'localhost' ||
                        window.location.hostname === '127.0.0.1';
@@ -28,13 +34,52 @@ export const notionApiRequest = async (
 ): Promise<any> => {
   const url = getNotionApiUrl(endpoint);
   
+  const headers = {
+    'Authorization': `Bearer ${options.apiKey}`,
+    'Notion-Version': '2022-06-28',
+    'Content-Type': 'application/json'
+  };
+
+  // 移动端使用 CorsBypass 插件
+  if (Capacitor.isNativePlatform()) {
+    console.log('[Notion API] 移动端使用 CorsBypass 插件:', url);
+    
+    try {
+      const response = await CorsBypass.request({
+        url,
+        method: options.method,
+        headers,
+        data: options.body ? JSON.stringify(options.body) : undefined,
+        timeout: 30000,
+        responseType: 'json'
+      });
+
+      if (response.status < 200 || response.status >= 300) {
+        const errorData = typeof response.data === 'object' ? response.data : {};
+        throw new NotionApiError(
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          errorData.code
+        );
+      }
+
+      return response.data;
+    } catch (error: any) {
+      console.error('[Notion API] CorsBypass 请求失败:', error);
+      
+      // 如果是网络错误，转换为合适的 NotionApiError
+      if (error?.message?.includes('timeout') || error?.message?.includes('network')) {
+        throw new NotionApiError('网络连接超时，请检查网络设置', 0, 'NETWORK_ERROR');
+      }
+      
+      throw error;
+    }
+  }
+
+  // Web 端使用标准 fetch
   const response = await fetch(url, {
     method: options.method,
-    headers: {
-      'Authorization': `Bearer ${options.apiKey}`,
-      'Notion-Version': '2022-06-28',
-      'Content-Type': 'application/json'
-    },
+    headers,
     body: options.body ? JSON.stringify(options.body) : undefined
   });
 
@@ -64,6 +109,8 @@ export class NotionApiError extends Error {
   // 获取用户友好的错误信息
   getUserFriendlyMessage(): string {
     switch (this.status) {
+      case 0:
+        return '网络连接失败，请检查网络设置';
       case 401:
         return 'API密钥无效，请检查配置';
       case 404:
@@ -80,47 +127,38 @@ export class NotionApiError extends Error {
   }
 }
 
-// 统一的成功提示函数
-export const showSuccessMessage = async (message: string, url?: string): Promise<void> => {
+// 显示成功消息的工具函数
+export const showSuccessMessage = async (message: string, _url?: string) => {
   if (Capacitor.isNativePlatform()) {
-    // 移动端使用原生Toast
     await Toast.show({
       text: message,
-      duration: 'long'
+      duration: 'long',
+      position: 'bottom'
     });
-
-    // 如果有URL，可以考虑添加额外的操作按钮
-    if (url) {
-      console.log('Notion页面链接:', url);
-    }
   } else {
-    // Web端使用自定义Toast组件
-    toastManager.success(message, '导出成功', {
-      duration: 6000,
-      action: url ? {
-        label: '查看',
-        onClick: () => window.open(url, '_blank')
-      } : undefined
-    });
+    // Web端使用toastManager
+    if (toastManager) {
+      toastManager.success(message);
+    }
   }
 };
 
-// 统一的错误提示函数
-export const showErrorMessage = async (error: Error | NotionApiError): Promise<void> => {
-  const message = error instanceof NotionApiError
-    ? error.getUserFriendlyMessage()
+// 显示错误消息的工具函数
+export const showErrorMessage = async (error: Error) => {
+  const message = error instanceof NotionApiError 
+    ? error.getUserFriendlyMessage() 
     : error.message;
 
   if (Capacitor.isNativePlatform()) {
-    // 移动端使用原生Toast
     await Toast.show({
-      text: `操作失败: ${message}`,
-      duration: 'long'
+      text: `导出失败: ${message}`,
+      duration: 'long',
+      position: 'bottom'
     });
   } else {
-    // Web端使用自定义Toast组件
-    toastManager.error(message, '操作失败', {
-      duration: 8000 // 错误消息显示时间稍长
-    });
+    // Web端使用toastManager
+    if (toastManager) {
+      toastManager.error(`导出失败: ${message}`);
+    }
   }
 };

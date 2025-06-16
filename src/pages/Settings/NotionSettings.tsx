@@ -22,6 +22,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { updateSettings } from '../../shared/store/settingsSlice';
 import { notionApiRequest, NotionApiError } from '../../utils/notionApiUtils';
+import { runCORSTests, testNotionWorkflow, generateTestReport } from '../../utils/corsTestUtils';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * Notion设置页面
@@ -43,6 +45,10 @@ const NotionSettingsPage: React.FC = () => {
     success: boolean;
     message: string;
   } | null>(null);
+  
+  // CORS 测试相关状态
+  const [corstesting, setCORSTesting] = useState(false);
+  const [corsTestResults, setCORSTestResults] = useState<string>('');
 
   const [localSettings, setLocalSettings] = useState(notionSettings);
 
@@ -116,6 +122,34 @@ const NotionSettingsPage: React.FC = () => {
       });
     } finally {
       setTesting(false);
+    }
+  };
+
+  // 运行 CORS 测试
+  const runCORSTest = async () => {
+    setCORSTesting(true);
+    setCORSTestResults('');
+
+    try {
+      // 运行基础 CORS 测试
+      const basicResults = await runCORSTests();
+      
+      // 如果有API Key和数据库ID，也测试Notion工作流
+      let workflowResult = null;
+      if (localSettings.apiKey && localSettings.databaseId) {
+        workflowResult = await testNotionWorkflow(localSettings.apiKey, localSettings.databaseId);
+      }
+
+      // 合并结果
+      const allResults = workflowResult ? [...basicResults, workflowResult] : basicResults;
+      const report = generateTestReport(allResults);
+      setCORSTestResults(report);
+
+    } catch (error) {
+      console.error('CORS测试失败:', error);
+      setCORSTestResults(`CORS测试失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    } finally {
+      setCORSTesting(false);
     }
   };
 
@@ -272,16 +306,30 @@ const NotionSettingsPage: React.FC = () => {
               fullWidth
             />
 
-            {/* 测试连接按钮 */}
-            <Button
-              variant="outlined"
-              onClick={testNotionConnection}
-              disabled={!localSettings.enabled || testing || !localSettings.apiKey || !localSettings.databaseId}
-              startIcon={testing ? <CircularProgress size={16} /> : <CheckCircle size={16} />}
-              sx={{ alignSelf: 'flex-start', mt: 1 }}
-            >
-              {testing ? '测试中...' : '测试连接'}
-            </Button>
+            {/* 测试连接按钮组 */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                onClick={testNotionConnection}
+                disabled={!localSettings.enabled || testing || !localSettings.apiKey || !localSettings.databaseId}
+                startIcon={testing ? <CircularProgress size={16} /> : <CheckCircle size={16} />}
+              >
+                {testing ? '测试中...' : '测试连接'}
+              </Button>
+              
+              {/* CORS 测试按钮（仅移动端显示） */}
+              {Capacitor.isNativePlatform() && (
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={runCORSTest}
+                  disabled={corstesting}
+                  startIcon={corstesting ? <CircularProgress size={16} /> : <CheckCircle size={16} />}
+                >
+                  {corstesting ? 'CORS测试中...' : 'CORS绕过测试'}
+                </Button>
+              )}
+            </Box>
 
             {/* 测试结果 */}
             {testResult && (
@@ -293,20 +341,42 @@ const NotionSettingsPage: React.FC = () => {
               </Alert>
             )}
 
+            {/* CORS 测试结果 */}
+            {corsTestResults && (
+              <Alert 
+                severity="info"
+                sx={{ mt: 1 }}
+              >
+                <Typography variant="body2" component="pre" sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                  {corsTestResults}
+                </Typography>
+              </Alert>
+            )}
+
             {/* CORS 说明 */}
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 <strong>关于跨域问题：</strong>
                 <br />
-                开发环境下已配置代理，可直接使用。生产环境下如遇到跨域错误，建议：
-                <br />
-                1. 使用桌面应用版本
-                <br />
-                2. 部署时配置服务器代理
-                <br />
-                3. 使用支持CORS的环境
-                <br />
-                <strong>注意：</strong>请重启开发服务器以使代理配置生效。
+                {Capacitor.isNativePlatform() ? (
+                  <>
+                    移动端应用已配置 CORS 绕过插件，可直接访问 Notion API。
+                    <br />
+                    如遇到网络问题，请点击上方的"CORS绕过测试"按钮进行诊断。
+                  </>
+                ) : (
+                  <>
+                    Web端开发环境下已配置代理，可直接使用。生产环境下如遇到跨域错误，建议：
+                    <br />
+                    1. 使用移动应用版本（自动绕过CORS）
+                    <br />
+                    2. 部署时配置服务器代理
+                    <br />
+                    3. 使用支持CORS的环境
+                    <br />
+                    <strong>注意：</strong>请重启开发服务器以使代理配置生效。
+                  </>
+                )}
               </Typography>
             </Alert>
           </Box>

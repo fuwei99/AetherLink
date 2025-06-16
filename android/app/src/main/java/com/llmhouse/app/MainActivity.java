@@ -41,6 +41,8 @@ public class MainActivity extends BridgeActivity {
         // 在Capacitor 4+中，必须在super.onCreate之前注册插件
          registerPlugin(ModernWebViewPlugin.class);
          registerPlugin(NativeHttpPlugin.class);
+         // 注册 CorsBypass 插件以解决移动端 CORS 问题
+         registerPlugin(com.capacitor.cors.CorsBypassPlugin.class);
 
         super.onCreate(savedInstanceState);
 

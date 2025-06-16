@@ -24,6 +24,9 @@
         <domain includeSubdomains="true">generativelanguage.googleapis.com</domain>
         <domain includeSubdomains="true">api.cohere.ai</domain>
         <domain includeSubdomains="true">api.mistral.ai</domain>
+        <!-- Notion API 域名 -->
+        <domain includeSubdomains="true">api.notion.com</domain>
+        <domain includeSubdomains="true">notion.com</domain>
     </domain-config>
     
     <!-- 开发环境允许所有HTTP连接 -->
