@@ -237,14 +237,17 @@ function serializeRequestBody(body?: BodyInit | null): string | undefined {
     throw new Error('Blob not supported by CorsBypass, will fallback to standard fetch');
   }
 
-  // 处理 ArrayBuffer
+  // 处理 ArrayBuffer - 使用Base64编码防止数据损坏
   if (body instanceof ArrayBuffer) {
-    return new TextDecoder().decode(body);
+    console.warn('[Universal Fetch] ArrayBuffer detected, using Base64 encoding');
+    const uint8Array = new Uint8Array(body);
+    return btoa(String.fromCharCode(...uint8Array));
   }
 
-  // 处理 Uint8Array
+  // 处理 Uint8Array - 使用Base64编码防止数据损坏
   if (body instanceof Uint8Array) {
-    return new TextDecoder().decode(body);
+    console.warn('[Universal Fetch] Uint8Array detected, using Base64 encoding');
+    return btoa(String.fromCharCode(...body));
   }
 
   // 处理 URLSearchParams
@@ -262,9 +265,15 @@ function serializeRequestBody(body?: BodyInit | null): string | undefined {
 }
 
 /**
- * 验证响应类型
+ * 验证响应类型（根据CorsBypass插件实际支持的类型）
  */
 function validateResponseType(responseType: string): 'json' | 'text' {
-  // CorsBypass 插件目前只支持 json 和 text
+  // CorsBypass 插件目前实际只支持 json 和 text
+  // 如果请求了不支持的类型，记录警告并回退到合适的类型
+  if (responseType !== 'json' && responseType !== 'text') {
+    console.warn(`[Universal Fetch] 响应类型 '${responseType}' 暂不支持，回退到 'text'`);
+    return 'text';
+  }
+  
   return responseType === 'json' ? 'json' : 'text';
 }
