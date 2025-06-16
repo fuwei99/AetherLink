@@ -9,13 +9,15 @@ interface EnhancedVoiceInputProps {
   onInsertText: (text: string) => void;
   onClose: () => void; // 关闭录音面板
   startRecognition: (options?: { language?: string; maxResults?: number; partialResults?: boolean; popup?: boolean }) => Promise<void>; // 启动语音识别函数
+  currentMessage: string; // 当前输入框的文本
 }
 
 const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
   isDarkMode = false,
   onInsertText,
   onClose,
-  startRecognition
+  startRecognition,
+  currentMessage
 }) => {
   // 语音识别Hook
   const {
@@ -37,15 +39,19 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
   const [hasStartedRecording, setHasStartedRecording] = useState(false);
   const [longPressProgress, setLongPressProgress] = useState(0);
 
+  // 保存录音开始时的基础文本
+  const [baseMessage, setBaseMessage] = useState('');
+
 
 
   // 实时将识别文本添加到输入框
   useEffect(() => {
     if (recognitionText && isListening) {
-      // 实时更新输入框内容
-      onInsertText(recognitionText);
+      // 将基础文本和识别文本合并，替换整个输入框内容
+      const fullText = baseMessage + (baseMessage && recognitionText ? ' ' : '') + recognitionText;
+      onInsertText(fullText);
     }
-  }, [recognitionText, isListening, onInsertText]);
+  }, [recognitionText, isListening, onInsertText, baseMessage]);
 
   // 清理资源
   useEffect(() => {
@@ -83,6 +89,8 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
     if (hasStartedRecording) return;
 
     try {
+      // 保存录音开始时的基础文本
+      setBaseMessage(currentMessage);
       setHasStartedRecording(true);
       await startRecognition({
         language: 'zh-CN',
@@ -92,7 +100,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
       console.error('启动录音失败:', error);
       setHasStartedRecording(false);
     }
-  }, [hasStartedRecording, startRecognition]);
+  }, [hasStartedRecording, startRecognition, currentMessage]);
 
   // 长按开始
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -172,8 +180,8 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
       // 松开发送 - 停止录音并等待结果
       try {
         await stopRecognition();
-        // 注意：这里不调用 onClose()，让语音识别结果通过 onInsertText 处理
-        // onClose() 会在 ChatInput 中的 onInsertText 回调中调用
+        // 录音结束后关闭录音界面，识别结果已通过 onInsertText 实时更新到输入框
+        onClose();
       } catch (error) {
         console.error('发送录音失败:', error);
         onClose();
@@ -257,6 +265,8 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
     } else {
       try {
         await stopRecognition();
+        // 录音结束后关闭录音界面，识别结果已通过 onInsertText 实时更新到输入框
+        onClose();
       } catch (error) {
         console.error('发送录音失败:', error);
         onClose();

@@ -99,6 +99,25 @@ export const getDrawerContentStyles = () => ({
   height: '100%',
   display: 'flex',
   flexDirection: 'column' as const,
+  // 添加统一的滚动条在最外层容器
+  overflow: 'auto',
+  // 自定义滚动条样式，避免宽度变化
+  '&::-webkit-scrollbar': {
+    width: '1px', /* 尝试更细的宽度，以确认样式是否生效 */
+  },
+  '&::-webkit-scrollbar-track': {
+    background: 'transparent',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: '3px',
+    '&:hover': {
+      background: 'rgba(0, 0, 0, 0.3)',
+    },
+  },
+  // Firefox 滚动条样式
+  scrollbarWidth: 'thin',
+  scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent',
   // 性能优化
   ...PERFORMANCE_CSS.HARDWARE_ACCELERATION,
   ...PERFORMANCE_CSS.RENDER_OPTIMIZATION,

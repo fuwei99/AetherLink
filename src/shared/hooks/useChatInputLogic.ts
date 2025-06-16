@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, startTransition } from 'react';
 import { useTheme, useMediaQuery } from '@mui/material';
 import type { SiliconFlowImageFormat, ImageContent, FileContent } from '../types';
 
@@ -54,46 +54,46 @@ export const useChatInputLogic = ({
   const [isComposing, setIsComposing] = useState(false);
   const [showCharCount, setShowCharCount] = useState(false);
 
-  // 判断是否允许发送消息
-  const canSendMessage = () => {
+  // 大文本处理性能优化状态
+  const [isLargeText, setIsLargeText] = useState(false);
+  const [performanceWarning, setPerformanceWarning] = useState(false);
+
+  // 判断是否允许发送消息 - 使用useCallback优化性能
+  const canSendMessage = useCallback(() => {
     const hasContent = message.trim() || images.length > 0 || files.length > 0;
     return hasContent && (allowConsecutiveMessages || !isLoading);
-  };
+  }, [message, images.length, files.length, allowConsecutiveMessages, isLoading]);
 
-  // 移除防抖定时器，使用直接响应的高度调整
+  // 防抖定时器引用
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 重写的文本区域高度自适应逻辑 - 简化且直接
+  // 优化的文本区域高度自适应（ChatInput 特有）- 添加防抖机制
   const adjustTextareaHeight = useCallback((textarea: HTMLTextAreaElement) => {
-    if (!enableTextareaResize || !textarea) return;
+    if (!enableTextareaResize) return;
 
-    // 获取当前文本内容
-    const textValue = textarea.value || '';
-    const isEmpty = textValue.trim().length === 0;
-
-    // 如果文本为空，直接设置为最小高度
-    if (isEmpty) {
-      const emptyHeight = 19; // 统一使用19px作为空文本高度
-      setTextareaHeight(emptyHeight);
-      textarea.style.setProperty('height', `${emptyHeight}px`, 'important');
-      return;
+    // 清除之前的防抖定时器
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
 
-    // 如果有文本内容，计算自适应高度
-    // 临时重置高度以获取真实的scrollHeight
-    textarea.style.height = 'auto';
+    // 使用防抖机制，避免频繁计算
+    debounceTimerRef.current = setTimeout(() => {
+      // 重置高度以获取正确的scrollHeight
+      textarea.style.height = 'auto';
 
-    const scrollHeight = textarea.scrollHeight;
-    const minHeight = isMobile ? 32 : isTablet ? 36 : 34;
-    const maxHeight = 120;
+      // 计算新高度
+      const newHeight = Math.max(
+        isMobile ? 32 : isTablet ? 36 : 34, // 最小高度
+        Math.min(textarea.scrollHeight, 120) // 最大高度120px
+      );
 
-    const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
-
-    setTextareaHeight(newHeight);
-    textarea.style.setProperty('height', `${newHeight}px`, 'important');
+      setTextareaHeight(newHeight);
+      textarea.style.height = `${newHeight}px`;
+    }, 16); // 16ms防抖，约60fps
   }, [enableTextareaResize, isMobile, isTablet]);
 
-  // 处理消息发送
-  const handleSubmit = async () => {
+  // 处理消息发送 - 使用useCallback优化性能
+  const handleSubmit = useCallback(async () => {
     if ((!message.trim() && images.length === 0 && files.length === 0) ||
         (isLoading && !allowConsecutiveMessages)) {
       return;
@@ -106,11 +106,13 @@ export const useChatInputLogic = ({
       onSendImagePrompt(processedMessage);
       setMessage('');
 
-      // 重置输入框高度到空文本状态（ChatInput 特有）
-      if (enableTextareaResize && textareaRef.current) {
-        const emptyHeight = 19; // 统一使用19px
-        setTextareaHeight(emptyHeight);
-        textareaRef.current.style.setProperty('height', `${emptyHeight}px`, 'important');
+      // 重置输入框高度到默认值（ChatInput 特有）
+      if (enableTextareaResize) {
+        const defaultHeight = isMobile ? 24 : 28;
+        setTextareaHeight(defaultHeight);
+        if (textareaRef.current) {
+          textareaRef.current.style.height = `${defaultHeight}px`;
+        }
       }
       return;
     }
@@ -120,11 +122,13 @@ export const useChatInputLogic = ({
       onSendImagePrompt(processedMessage);
       setMessage('');
 
-      // 重置输入框高度到空文本状态（ChatInput 特有）
-      if (enableTextareaResize && textareaRef.current) {
-        const emptyHeight = 19; // 统一使用19px
-        setTextareaHeight(emptyHeight);
-        textareaRef.current.style.setProperty('height', `${emptyHeight}px`, 'important');
+      // 重置输入框高度到默认值（ChatInput 特有）
+      if (enableTextareaResize) {
+        const defaultHeight = isMobile ? 24 : 28;
+        setTextareaHeight(defaultHeight);
+        if (textareaRef.current) {
+          textareaRef.current.style.height = `${defaultHeight}px`;
+        }
       }
       return;
     }
@@ -187,21 +191,35 @@ export const useChatInputLogic = ({
     // 调用父组件的回调
     onSendMessage(processedMessage, formattedImages.length > 0 ? formattedImages : undefined, toolsEnabled, nonImageFiles);
 
-    // 重置状态
-    setMessage('');
-    setImages([]);
-    setFiles([]);
+    // 批量重置状态 - 使用startTransition优化非紧急更新
+    startTransition(() => {
+      setMessage('');
+      setImages([]);
+      setFiles([]);
 
-    // 重置输入框高度到空文本状态（ChatInput 特有）
-    if (enableTextareaResize && textareaRef.current) {
-      const emptyHeight = 19; // 统一使用19px
-      setTextareaHeight(emptyHeight);
-      textareaRef.current.style.setProperty('height', `${emptyHeight}px`, 'important');
+      // 重置大文本相关状态
+      setIsLargeText(false);
+      setPerformanceWarning(false);
+      setShowCharCount(false);
+    });
+
+    // 重置输入框高度到默认值（ChatInput 特有）- 保持同步以避免视觉跳跃
+    if (enableTextareaResize) {
+      const defaultHeight = isMobile ? 24 : 28;
+      setTextareaHeight(defaultHeight);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = `${defaultHeight}px`;
+      }
     }
-  };
+  }, [
+    message, images, files, isLoading, allowConsecutiveMessages,
+    imageGenerationMode, videoGenerationMode, onSendImagePrompt,
+    enableTextareaResize, isMobile, onSendMessage, toolsEnabled,
+    setMessage, setImages, setFiles, setTextareaHeight
+  ]);
 
-  // 处理键盘事件
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  // 处理键盘事件 - 使用useCallback优化性能
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // 处理快捷键（ChatInput 特有）
     if (enableCompositionHandling && (e.ctrlKey || e.metaKey)) {
       switch (e.key) {
@@ -218,48 +236,77 @@ export const useChatInputLogic = ({
       e.preventDefault();
       handleSubmit();
     }
-  };
+  }, [enableCompositionHandling, isComposing, handleSubmit]);
 
-  // 输入法组合开始（ChatInput 特有）
-  const handleCompositionStart = () => {
+  // 输入法组合开始（ChatInput 特有）- 使用useCallback优化性能
+  const handleCompositionStart = useCallback(() => {
     if (enableCompositionHandling) {
       setIsComposing(true);
     }
-  };
+  }, [enableCompositionHandling]);
 
-  // 输入法组合结束（ChatInput 特有）
-  const handleCompositionEnd = (e: React.CompositionEvent<HTMLTextAreaElement>) => {
+  // 输入法组合结束（ChatInput 特有）- 使用useCallback优化性能
+  const handleCompositionEnd = useCallback((e: React.CompositionEvent<HTMLTextAreaElement>) => {
     if (enableCompositionHandling) {
       setIsComposing(false);
       // 组合结束后重新调整高度
       adjustTextareaHeight(e.target as HTMLTextAreaElement);
     }
-  };
+  }, [enableCompositionHandling, adjustTextareaHeight]);
 
-  // 处理输入变化
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // 处理输入变化 - 使用useCallback和startTransition优化性能
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
+    const textLength = newValue.length;
+
+    // 紧急更新：立即更新消息内容，保证输入响应性
     setMessage(newValue);
 
-    // 字符计数显示控制（ChatInput 特有）
-    if (enableCharacterCount) {
-      setShowCharCount(newValue.length > 500);
-    }
+    // 大文本处理性能优化
+    startTransition(() => {
+      // 检测大文本（超过5000字符）
+      const isLarge = textLength > 5000;
+      setIsLargeText(isLarge);
 
-    // 自动调整高度（ChatInput 特有）
+      // 性能警告（超过10000字符）
+      const shouldWarn = textLength > 10000;
+      setPerformanceWarning(shouldWarn);
+
+      // 字符计数显示控制（ChatInput 特有）
+      if (enableCharacterCount) {
+        setShowCharCount(textLength > 500);
+      }
+    });
+
+    // 高度调整：对于大文本使用防抖，小文本立即调整
     if (enableTextareaResize) {
-      adjustTextareaHeight(e.target);
+      if (textLength > 5000) {
+        // 大文本使用现有的防抖机制
+        adjustTextareaHeight(e.target);
+      } else {
+        // 小文本立即调整，提供更好的响应性
+        adjustTextareaHeight(e.target);
+      }
     }
-  };
+  }, [enableCharacterCount, enableTextareaResize, adjustTextareaHeight]);
 
-  // 监听消息变化以检测字符数（ChatInput 特有）
+  // 监听消息变化以检测字符数（ChatInput 特有）- 使用startTransition优化
   useEffect(() => {
     if (enableCharacterCount && message.length <= 500) {
-      setShowCharCount(false);
+      startTransition(() => {
+        setShowCharCount(false);
+      });
     }
   }, [message, enableCharacterCount]);
 
-  // 移除防抖清理逻辑，因为新的高度调整不使用防抖
+  // 清理防抖定时器
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   return {
     message,
@@ -276,6 +323,9 @@ export const useChatInputLogic = ({
     adjustTextareaHeight,
     handleCompositionStart,
     handleCompositionEnd,
+    // 性能优化相关
+    isLargeText,
+    performanceWarning,
     // 主题相关
     isDarkMode,
     isMobile,

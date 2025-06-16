@@ -6,7 +6,6 @@ import KnowledgeSelector from '../chat/KnowledgeSelector';
 import AIDebateButton from '../AIDebateButton';
 import QuickPhraseButton from '../QuickPhraseButton';
 import MultiModelSelector from './MultiModelSelector';
-import OptimizedTextarea from './OptimizedTextarea';
 import EnhancedToast, { toastManager } from '../EnhancedToast';
 import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
 import { useFileUpload } from '../../shared/hooks/useFileUpload';
@@ -787,7 +786,7 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
             pointerEvents: 'none'
           }
         }}>
-          <OptimizedTextarea
+          <textarea
             ref={textareaRef}
             className="hide-scrollbar"
             style={{
@@ -799,6 +798,11 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
               fontSize: '14px',
               lineHeight: '1.4',
               fontFamily: 'inherit',
+              color: isDarkMode ? '#ffffff' : '#000000',
+              minHeight: textareaExpanded ? `${expandedHeight}px` : (isActivated ? '24px' : '40px'), // 展开时使用大高度
+              height: textareaExpanded ? `${expandedHeight}px` : 'auto', // 展开时固定高度
+              maxHeight: textareaExpanded ? `${expandedHeight}px` : (isActivated ? '120px' : '40px'), // 展开时使用大高度
+              overflow: textareaExpanded || isActivated ? 'auto' : 'hidden', // 展开或激活时显示滚动条
               padding: '0',
               transition: 'all 0.3s ease', // 添加过渡动画
             }}
@@ -816,16 +820,11 @@ const CompactChatInput: React.FC<CompactChatInputProps> = ({
             onKeyDown={handleInputKeyDown}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
-            onPaste={handlePaste}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             onClick={handleInputClick}
+            onPaste={handlePaste}
             disabled={isLoading && !allowConsecutiveMessages}
-            minRows={1}
-            maxRows={textareaExpanded ? undefined : (isActivated ? 5 : 2)}
-            expanded={textareaExpanded}
-            expandedHeight={expandedHeight}
-            textColor={isDarkMode ? '#ffffff' : '#000000'}
           />
 
           {/* 字符计数显示 */}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Keyboard as CapacitorKeyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 import { useLocation } from 'react-router-dom';
 
 /**
@@ -19,26 +20,31 @@ export const useKeyboardManager = () => {
     let keyboardHideListener: any = null;
 
     const setupKeyboardListeners = async () => {
-      try {
-        // 监听键盘显示事件
-        keyboardShowListener = await CapacitorKeyboard.addListener('keyboardWillShow', () => {
-          console.log('[KeyboardManager] 键盘将要显示');
-          setIsKeyboardVisible(true);
-          // 键盘显示时清除页面切换状态，但要延迟一点确保页面已稳定
-          setTimeout(() => {
-            setIsPageTransitioning(false);
-          }, 100);
-        });
+      // 只在原生移动平台上设置键盘监听器
+      if (Capacitor.isNativePlatform()) {
+        try {
+          // 监听键盘显示事件
+          keyboardShowListener = await CapacitorKeyboard.addListener('keyboardWillShow', () => {
+            console.log('[KeyboardManager] 键盘将要显示');
+            setIsKeyboardVisible(true);
+            // 键盘显示时清除页面切换状态，但要延迟一点确保页面已稳定
+            setTimeout(() => {
+              setIsPageTransitioning(false);
+            }, 100);
+          });
 
-        // 监听键盘隐藏事件
-        keyboardHideListener = await CapacitorKeyboard.addListener('keyboardDidHide', () => {
-          console.log('[KeyboardManager] 键盘已隐藏');
-          setIsKeyboardVisible(false);
-        });
+          // 监听键盘隐藏事件
+          keyboardHideListener = await CapacitorKeyboard.addListener('keyboardDidHide', () => {
+            console.log('[KeyboardManager] 键盘已隐藏');
+            setIsKeyboardVisible(false);
+          });
 
-        console.log('[KeyboardManager] 键盘事件监听器设置成功');
-      } catch (error) {
-        console.warn('[KeyboardManager] 键盘事件监听器设置失败:', error);
+          console.log('[KeyboardManager] 键盘事件监听器设置成功');
+        } catch (error) {
+          console.warn('[KeyboardManager] 键盘事件监听器设置失败:', error);
+        }
+      } else {
+        console.log('[KeyboardManager] Web 平台，跳过 Capacitor 键盘监听器设置');
       }
     };
 
@@ -92,11 +98,16 @@ export const useKeyboardManager = () => {
    * 手动隐藏键盘
    */
   const hideKeyboard = async () => {
-    try {
-      await CapacitorKeyboard.hide();
-      console.log('[KeyboardManager] 手动隐藏键盘');
-    } catch (error) {
-      console.warn('[KeyboardManager] 隐藏键盘失败:', error);
+    // 只在原生移动平台上隐藏键盘
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await CapacitorKeyboard.hide();
+        console.log('[KeyboardManager] 手动隐藏键盘');
+      } catch (error) {
+        console.warn('[KeyboardManager] 隐藏键盘失败:', error);
+      }
+    } else {
+      console.log('[KeyboardManager] Web 平台，跳过键盘隐藏操作');
     }
   };
 
