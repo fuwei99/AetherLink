@@ -43,6 +43,8 @@ const NotionSettingsPage: React.FC = () => {
     success: boolean;
     message: string;
   } | null>(null);
+  
+
 
   const [localSettings, setLocalSettings] = useState(notionSettings);
 
@@ -118,6 +120,8 @@ const NotionSettingsPage: React.FC = () => {
       setTesting(false);
     }
   };
+
+
 
   return (
     <Box sx={{
@@ -293,14 +297,18 @@ const NotionSettingsPage: React.FC = () => {
               </Alert>
             )}
 
+
+
             {/* CORS 说明 */}
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 <strong>关于跨域问题：</strong>
                 <br />
-                开发环境下已配置代理，可直接使用。生产环境下如遇到跨域错误，建议：
+                Web端开发环境下已配置代理，可直接使用。移动端应用已配置 CORS 绕过插件。
                 <br />
-                1. 使用桌面应用版本
+                生产环境下如遇到跨域错误，建议：
+                <br />
+                1. 使用移动应用版本（自动绕过CORS）
                 <br />
                 2. 部署时配置服务器代理
                 <br />

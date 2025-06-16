@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!--  允许所有HTTP和HTTPS连接 -->
+    <!--  允许HTTP连接的域名配置（排除外部API） -->
     <domain-config cleartextTrafficPermitted="true">
         <!-- 原有的服务器 -->
         <domain includeSubdomains="false">8.138.108.72</domain>
@@ -14,19 +14,30 @@
         <domain includeSubdomains="true">192.168.0.1</domain>
         <domain includeSubdomains="true">10.0.0.1</domain>
 
-        <!--  常见的外部API域名 -->
+        <!--  MCP相关API域名 -->
         <domain includeSubdomains="true">router.mcp.so</domain>
         <domain includeSubdomains="true">mcp.api-inference.modelscope.net</domain>
         <domain includeSubdomains="true">glama.ai</domain>
         <domain includeSubdomains="true">api-inference.modelscope.net</domain>
+        
+        <!--  其他AI API域名 -->
         <domain includeSubdomains="true">api.openai.com</domain>
         <domain includeSubdomains="true">api.anthropic.com</domain>
         <domain includeSubdomains="true">generativelanguage.googleapis.com</domain>
         <domain includeSubdomains="true">api.cohere.ai</domain>
         <domain includeSubdomains="true">api.mistral.ai</domain>
     </domain-config>
+
+    <!-- Notion API 专用配置：仅HTTPS，禁用明文流量 -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.notion.com</domain>
+        <domain includeSubdomains="true">notion.com</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
     
-    <!-- 开发环境允许所有HTTP连接 -->
+    <!-- 基础配置：开发环境允许HTTP，生产环境建议设为false -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system"/>

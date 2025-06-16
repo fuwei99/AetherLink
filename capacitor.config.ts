@@ -29,7 +29,16 @@ const config: CapacitorConfig = {
       enabled: false  //  禁用CapacitorHttp，使用标准fetch支持流式输出
     },
     CorsBypass: {
-      // CORS 绕过插件配置 - 暂时不启用功能，仅确保插件加载
+      // CORS 绕过插件配置
+      enabled: true, // 启用 CORS 绕过功能
+      timeout: 30000, // 默认超时时间 30 秒
+      retries: 3, // 默认重试次数
+      userAgent: 'AetherLink-Mobile/1.0', // 自定义 User-Agent
+      // 添加常用的请求头
+      defaultHeaders: {
+        'Accept': 'application/json, text/plain, */*',
+        'Cache-Control': 'no-cache'
+      }
     },
     WebView: {
       scrollEnabled: true,
