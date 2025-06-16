@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, IconButton, Chip } from '@mui/material';
 import {
   File as FileIcon,
@@ -6,20 +6,79 @@ import {
   Image as ImageIcon,
   Code as CodeIcon,
   Archive as ArchiveIcon,
-  Download as DownloadIcon
+  Download as DownloadIcon,
+  Eye as ViewIcon
 } from 'lucide-react';
 import type { FileMessageBlock } from '../../../shared/types/newMessage';
 import { FileTypes } from '../../../shared/utils/fileUtils';
+import { MobileFileViewer } from '../../MobileFileViewer';
+import type { WorkspaceFile } from '../../MobileFileViewer/types';
 
 interface Props {
   block: FileMessageBlock;
 }
+
+// 将 FileMessageBlock 的文件数据转换为 WorkspaceFile 格式
+const convertToWorkspaceFile = (fileBlock: FileMessageBlock): WorkspaceFile | null => {
+  if (!fileBlock.file) return null;
+
+  const { file } = fileBlock;
+  const fileName = file.origin_name || file.name || '未知文件';
+
+  return {
+    name: fileName,
+    path: `temp://${file.id}`, // 使用特殊路径标识这是临时文件
+    size: file.size || 0,
+    isDirectory: false,
+    type: file.type || 'unknown',
+    modifiedTime: Date.now(),
+    extension: fileName.includes('.') ? fileName.split('.').pop() : undefined
+  };
+};
+
+// 自定义文件读取服务，从 base64 数据读取内容
+const createFileReaderService = (fileBlock: FileMessageBlock) => {
+  return {
+    readFile: async (options: { path: string; encoding: string }) => {
+      if (!fileBlock.file?.base64Data) {
+        throw new Error('文件没有可用的内容数据');
+      }
+
+      try {
+        // 从 base64 数据解码文件内容
+        let base64Data = fileBlock.file.base64Data;
+        if (base64Data.includes(',')) {
+          base64Data = base64Data.split(',')[1];
+        }
+
+        // 解码为文本内容
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        // 尝试解码为 UTF-8 文本
+        const decoder = new TextDecoder('utf-8');
+        const content = decoder.decode(bytes);
+
+        return { content, encoding: options.encoding };
+      } catch (error) {
+        console.error('解码文件内容失败:', error);
+        throw new Error('无法读取文件内容，可能不是文本文件');
+      }
+    }
+  };
+};
 
 /**
  * 文件块组件
  * 用于显示文件信息和提供下载功能
  */
 const FileBlock: React.FC<Props> = ({ block }) => {
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [workspaceFile, setWorkspaceFile] = useState<WorkspaceFile | null>(null);
+
   if (!block.file) {
     return (
       <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
@@ -29,6 +88,37 @@ const FileBlock: React.FC<Props> = ({ block }) => {
   }
 
   const { file } = block;
+
+  // 判断文件是否可以编辑（文本或代码文件）
+  const isEditableFile = () => {
+    const fileName = file.origin_name || file.name || '';
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    const textExts = ['txt', 'md', 'json', 'xml', 'csv', 'log', 'yaml', 'yml'];
+    const codeExts = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'scss', 'py', 'java', 'cpp', 'c', 'h'];
+    return textExts.includes(ext) || codeExts.includes(ext);
+  };
+
+  // 处理文件查看
+  const handleViewFile = () => {
+    const convertedFile = convertToWorkspaceFile(block);
+    if (convertedFile) {
+      setWorkspaceFile(convertedFile);
+      setViewerOpen(true);
+    }
+  };
+
+  // 处理编辑器关闭
+  const handleCloseViewer = () => {
+    setViewerOpen(false);
+    setWorkspaceFile(null);
+  };
+
+  // 处理文件保存（暂时只是提示，实际保存需要更复杂的逻辑）
+  const handleSaveFile = async (content: string) => {
+    console.log('保存文件内容:', content);
+    // TODO: 实现实际的保存逻辑
+    alert('文件保存功能暂未实现，这是演示版本');
+  };
 
   // 根据文件类型选择图标
   const getFileIcon = () => {
@@ -100,18 +190,25 @@ const FileBlock: React.FC<Props> = ({ block }) => {
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        p: 2,
-        border: '1px solid #e0e0e0',
-        borderRadius: 1,
-        backgroundColor: '#f9f9f9',
-        maxWidth: '400px',
-        gap: 2
-      }}
-    >
+    <>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          p: 2,
+          border: '1px solid #e0e0e0',
+          borderRadius: 1,
+          backgroundColor: '#f9f9f9',
+          maxWidth: '400px',
+          gap: 2,
+          cursor: isEditableFile() ? 'pointer' : 'default',
+          '&:hover': isEditableFile() ? {
+            backgroundColor: '#f0f0f0',
+            borderColor: '#1976d2'
+          } : {}
+        }}
+        onClick={isEditableFile() ? handleViewFile : undefined}
+      >
       {/* 文件图标 */}
       <Box
         sx={{
@@ -164,22 +261,59 @@ const FileBlock: React.FC<Props> = ({ block }) => {
         </Box>
       </Box>
 
-      {/* 下载按钮 */}
-      {file.base64Data && (
-        <IconButton
-          size="small"
-          onClick={handleDownload}
-          sx={{
-            color: '#1976d2',
-            '&:hover': {
-              backgroundColor: '#e3f2fd'
-            }
-          }}
-        >
-          <DownloadIcon size={16} />
-        </IconButton>
-      )}
+      {/* 操作按钮 */}
+      <Box sx={{ display: 'flex', gap: 0.5 }}>
+        {/* 查看按钮 - 仅对可编辑文件显示 */}
+        {isEditableFile() && (
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation(); // 防止触发外层点击事件
+              handleViewFile();
+            }}
+            sx={{
+              color: '#1976d2',
+              '&:hover': {
+                backgroundColor: '#e3f2fd'
+              }
+            }}
+            title="查看/编辑文件"
+          >
+            <ViewIcon size={16} />
+          </IconButton>
+        )}
+
+        {/* 下载按钮 */}
+        {file.base64Data && (
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation(); // 防止触发外层点击事件
+              handleDownload();
+            }}
+            sx={{
+              color: '#1976d2',
+              '&:hover': {
+                backgroundColor: '#e3f2fd'
+              }
+            }}
+            title="下载文件"
+          >
+            <DownloadIcon size={16} />
+          </IconButton>
+        )}
+      </Box>
     </Box>
+
+    {/* 文件查看器 */}
+    <MobileFileViewer
+      open={viewerOpen}
+      file={workspaceFile}
+      onClose={handleCloseViewer}
+      onSave={handleSaveFile}
+      customFileReader={createFileReaderService(block)}
+    />
+  </>
   );
 };
 

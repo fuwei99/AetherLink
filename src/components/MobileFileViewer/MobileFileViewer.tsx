@@ -33,7 +33,8 @@ export const MobileFileViewer: React.FC<MobileFileViewerProps> = ({
   open,
   file,
   onClose,
-  onSave
+  onSave,
+  customFileReader
 }) => {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -107,9 +108,11 @@ export const MobileFileViewer: React.FC<MobileFileViewerProps> = ({
 
     try {
       const fileType = getFileType(file.name);
-      
+
       if (fileType === 'text' || fileType === 'code') {
-        const result = await advancedFileManagerService.readFile({
+        // 使用自定义文件读取服务或默认服务
+        const fileReader = customFileReader || advancedFileManagerService;
+        const result = await fileReader.readFile({
           path: file.path,
           encoding: 'utf8'
         });

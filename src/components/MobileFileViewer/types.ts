@@ -13,6 +13,9 @@ export interface MobileFileViewerProps {
   file: WorkspaceFile | null;
   onClose: () => void;
   onSave?: (content: string) => Promise<void>;
+  customFileReader?: {
+    readFile: (options: { path: string; encoding: string }) => Promise<{ content: string; encoding: string }>;
+  };
 }
 
 export type FileType = 'text' | 'image' | 'pdf' | 'code' | 'unknown';
