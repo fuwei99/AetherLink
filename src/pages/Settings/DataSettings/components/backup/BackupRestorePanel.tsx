@@ -3,7 +3,7 @@ import { Paper, LinearProgress, Typography, Box, Dialog, DialogActions, DialogCo
 import BackupHeader from './BackupHeader';
 import BackupButtons from './BackupButtons';
 import BackupFilesList from './BackupFilesList';
-import CustomBackupDialog from './CustomBackupDialog';
+import SelectiveBackupDialog from './SelectiveBackupDialog';
 import ImportExternalBackupDialog from './ImportExternalBackupDialog';
 import DatabaseDiagnosticDialog from './DatabaseDiagnosticDialog';
 import NotificationSnackbar from './NotificationSnackbar';
@@ -17,9 +17,10 @@ import {
   createAndShareBackupFile
 } from '../../utils/backupUtils';
 import {
-  performCustomBackup
-} from '../../utils/customBackupUtils';
-import type { CustomBackupOptions } from '../../utils/customBackupUtils';
+  performSelectiveBackup,
+  getDefaultSelectiveBackupOptions
+} from '../../utils/selectiveBackupUtils';
+import type { SelectiveBackupOptions } from '../../utils/selectiveBackupUtils';
 import {
   readJSONFromFile,
   performFullRestore,
@@ -48,17 +49,13 @@ const BackupRestorePanel: React.FC = () => {
   // 备份文件列表刷新触发器
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // 自定义备份对话框状态
-  const [customBackupOpen, setCustomBackupOpen] = useState(false);
-  const [customBackupOptions, setCustomBackupOptions] = useState<CustomBackupOptions>({
-    topics: true,
-    assistants: true,
-    settings: true,
-    modelSettings: true,
-    uiSettings: true,
-    backupSettings: true,
-    otherData: true
-  });
+  // 选择性备份对话框状态
+  const [selectiveBackupOpen, setSelectiveBackupOpen] = useState(false);
+  const [selectiveBackupOptions, setSelectiveBackupOptions] = useState<SelectiveBackupOptions>(
+    getDefaultSelectiveBackupOptions()
+  );
+
+
 
   // 外部备份导入对话框状态
   const [importExternalOpen, setImportExternalOpen] = useState(false);
@@ -172,51 +169,42 @@ const BackupRestorePanel: React.FC = () => {
     }
   };
 
-  // 处理自定义备份选项变更
-  const handleCustomBackupOptionChange = (option: keyof CustomBackupOptions) => {
-    setCustomBackupOptions(prev => {
-      // 如果取消了settings选项，则启用modelSettings和uiSettings
-      if (option === 'settings' && prev.settings) {
-        return {
-          ...prev,
-          [option]: !prev[option]
-        };
-      }
-
-      // 如果选中了settings选项，则禁用modelSettings和uiSettings
-      if (option === 'settings' && !prev.settings) {
-        return {
-          ...prev,
-          [option]: !prev[option],
-          modelSettings: false,
-          uiSettings: false
-        };
-      }
-
-      return {
-        ...prev,
-        [option]: !prev[option]
-      };
-    });
+  // 选择性备份相关函数
+  const openSelectiveBackupDialog = () => {
+    setSelectiveBackupOptions(getDefaultSelectiveBackupOptions());
+    setSelectiveBackupOpen(true);
   };
 
-  // 打开自定义备份对话框
-  const openCustomBackupDialog = () => {
-    setCustomBackupOptions({
-      topics: true,
-      assistants: true,
-      settings: true,
-      modelSettings: true,
-      uiSettings: true,
-      backupSettings: true,
-      otherData: true
-    });
-    setCustomBackupOpen(true);
+  const closeSelectiveBackupDialog = () => {
+    setSelectiveBackupOpen(false);
   };
 
-  // 关闭自定义备份对话框
-  const closeCustomBackupDialog = () => {
-    setCustomBackupOpen(false);
+  const handleSelectiveBackupOptionChange = (option: keyof SelectiveBackupOptions) => {
+    setSelectiveBackupOptions(prev => ({
+      ...prev,
+      [option]: !prev[option]
+    }));
+  };
+
+  const handleSelectiveBackup = async () => {
+    try {
+      setIsLoading(true);
+      closeSelectiveBackupDialog();
+
+      await performSelectiveBackup(
+        selectiveBackupOptions,
+        (message) => {
+          showMessage(message, 'success');
+          refreshBackupFilesList();
+        },
+        (error) => showMessage('创建选择性备份失败: ' + error.message, 'error')
+      );
+    } catch (error) {
+      console.error('创建选择性备份失败:', error);
+      showMessage('创建备份失败: ' + (error instanceof Error ? error.message : '未知错误'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // 打开导入外部备份对话框
@@ -229,29 +217,7 @@ const BackupRestorePanel: React.FC = () => {
     setImportExternalOpen(false);
   };
 
-  // 执行自定义备份
-  const handleCustomBackup = async () => {
-    try {
-      setIsLoading(true);
-      closeCustomBackupDialog();
 
-      // 执行自定义备份
-      await performCustomBackup(
-        customBackupOptions,
-        (message) => {
-          showMessage(message, 'info');
-          // 在备份完成后刷新文件列表
-          refreshBackupFilesList();
-        },
-        (error) => showMessage('创建自定义备份失败: ' + error.message, 'error')
-      );
-    } catch (error) {
-      console.error('创建自定义备份失败:', error);
-      showMessage('创建备份失败: ' + (error instanceof Error ? error.message : '未知错误'), 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // 处理恢复备份
   const handleRestore = async () => {
@@ -523,7 +489,7 @@ const BackupRestorePanel: React.FC = () => {
         isLoading={isLoading}
         onBasicBackup={handleBasicBackup}
         onFullBackup={handleFullBackup}
-        onCustomBackup={openCustomBackupDialog}
+        onSelectiveBackup={openSelectiveBackupDialog}
         onRestore={handleRestore}
         onImportExternal={openImportExternalDialog}
         onClearAll={handleClearAll}
@@ -541,14 +507,14 @@ const BackupRestorePanel: React.FC = () => {
         refreshTrigger={refreshTrigger}
       />
 
-      {/* 自定义备份对话框 */}
-      <CustomBackupDialog
-        open={customBackupOpen}
-        options={customBackupOptions}
+      {/* 选择性备份对话框 */}
+      <SelectiveBackupDialog
+        open={selectiveBackupOpen}
+        options={selectiveBackupOptions}
         isLoading={isLoading}
-        onClose={closeCustomBackupDialog}
-        onOptionChange={handleCustomBackupOptionChange}
-        onBackup={handleCustomBackup}
+        onClose={closeSelectiveBackupDialog}
+        onOptionChange={handleSelectiveBackupOptionChange}
+        onBackup={handleSelectiveBackup}
       />
 
       {/* 清理确认对话框 */}
