@@ -262,23 +262,45 @@ const BackupRestorePanel: React.FC = () => {
             // 生成成功消息
             let restoreMessage = '';
 
-            if (result.topicsCount > 0) {
-              restoreMessage += `• 已恢复 ${result.topicsCount} 个对话话题\n`;
+            // 根据备份类型显示不同的消息
+            if (result.backupType === 'selective') {
+              restoreMessage += `选择性备份恢复完成！\n`;
+
+              if (result.modelConfigRestored) {
+                restoreMessage += `• 已恢复模型配置\n`;
+              }
+
+              if (result.topicsCount > 0) {
+                restoreMessage += `• 已恢复 ${result.topicsCount} 个对话话题\n`;
+              }
+
+              if (result.assistantsCount > 0) {
+                restoreMessage += `• 已恢复 ${result.assistantsCount} 个助手\n`;
+              }
+            } else {
+              // 完整备份恢复消息
+              if (result.topicsCount > 0) {
+                restoreMessage += `• 已恢复 ${result.topicsCount} 个对话话题\n`;
+              }
+
+              if (result.assistantsCount > 0) {
+                restoreMessage += `• 已恢复 ${result.assistantsCount} 个助手\n`;
+              }
+
+              if (result.settingsRestored) {
+                restoreMessage += `• 已恢复应用设置\n`;
+              }
+
+              if (result.localStorageCount > 0) {
+                restoreMessage += `• 已恢复 ${result.localStorageCount} 项其他应用数据\n`;
+              }
             }
 
-            if (result.assistantsCount > 0) {
-              restoreMessage += `• 已恢复 ${result.assistantsCount} 个助手\n`;
-            }
+            const finalMessage = result.backupType === 'selective'
+              ? restoreMessage
+              : `备份恢复成功：\n${restoreMessage}\n请重启应用以应用所有更改`;
 
-            if (result.settingsRestored) {
-              restoreMessage += `• 已恢复应用设置\n`;
-            }
-
-            if (result.localStorageCount > 0) {
-              restoreMessage += `• 已恢复 ${result.localStorageCount} 项其他应用数据\n`;
-            }
-
-            showMessage(`备份恢复成功：\n${restoreMessage}\n请重启应用以应用所有更改`, 'success');
+            showMessage(finalMessage, 'success');
           } else {
             // 显示错误信息
             showMessage(`恢复备份失败: ${result.error || '未知错误'}`, 'error');
