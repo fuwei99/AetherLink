@@ -29,7 +29,9 @@ import {
   Alert,
   Divider,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  Menu,
+  Tooltip
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -37,7 +39,9 @@ import {
   Plus as AddIcon,
   Settings as SettingsIcon,
   Database as StorageIcon,
-  Globe as HttpIcon
+  Globe as HttpIcon,
+  Trash2 as DeleteIcon,
+  MoreVertical as MoreIcon
 } from 'lucide-react';
 
 import type { MCPServer, MCPServerType } from '../../shared/types';
@@ -51,6 +55,10 @@ const MCPServerSettings: React.FC = () => {
   const [builtinServers, setBuiltinServers] = useState<MCPServer[]>([]);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importJson, setImportJson] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [serverToDelete, setServerToDelete] = useState<MCPServer | null>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedServer, setSelectedServer] = useState<MCPServer | null>(null);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'warning' }>({
     open: false,
     message: '',
@@ -207,6 +215,56 @@ const MCPServerSettings: React.FC = () => {
 
   const handleEditServer = (server: MCPServer) => {
     navigate(`/settings/mcp-server/${server.id}`, { state: { server } });
+  };
+
+  const handleDeleteServer = async (server: MCPServer) => {
+    try {
+      await mcpService.removeServer(server.id);
+      loadServers();
+      setSnackbar({
+        open: true,
+        message: `服务器 ${server.name} 已删除`,
+        severity: 'success'
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: '删除服务器失败',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, server: MCPServer) => {
+    event.stopPropagation();
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedServer(server);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setSelectedServer(null);
+  };
+
+  const handleDeleteClick = () => {
+    if (selectedServer) {
+      setServerToDelete(selectedServer);
+      setDeleteDialogOpen(true);
+      handleMenuClose();
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (serverToDelete) {
+      handleDeleteServer(serverToDelete);
+      setDeleteDialogOpen(false);
+      setServerToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setServerToDelete(null);
   };
 
 
@@ -604,15 +662,32 @@ const MCPServerSettings: React.FC = () => {
                         </Box>
                       }
                     />
-                    <Switch
-                      checked={server.isActive}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        handleToggleServer(server.id, e.target.checked);
-                      }}
-                      color="primary"
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Switch
+                        checked={server.isActive}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleToggleServer(server.id, e.target.checked);
+                        }}
+                        color="primary"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <Tooltip title="更多选项">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuClick(e, server)}
+                          sx={{
+                            color: 'text.secondary',
+                            '&:hover': {
+                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                              color: 'primary.main'
+                            }
+                          }}
+                        >
+                          <MoreIcon size={16} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </ListItemButton>
                   {index < servers.length - 1 && <Divider variant="inset" component="li" sx={{ ml: 0 }} />}
                 </React.Fragment>
@@ -1120,6 +1195,75 @@ const MCPServerSettings: React.FC = () => {
             }}
           >
             关闭
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 操作菜单 */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={() => {
+          if (selectedServer) {
+            handleEditServer(selectedServer);
+          }
+          handleMenuClose();
+        }}>
+          <SettingsIcon size={16} style={{ marginRight: 8 }} />
+          编辑设置
+        </MenuItem>
+        <MenuItem 
+          onClick={handleDeleteClick}
+          sx={{ 
+            color: 'error.main',
+            '&:hover': {
+              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.1)
+            }
+          }}
+        >
+          <DeleteIcon size={16} style={{ marginRight: 8 }} />
+          删除服务器
+        </MenuItem>
+      </Menu>
+
+      {/* 删除确认对话框 */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCancelDelete}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          确认删除服务器
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            您确定要删除服务器 <strong>{serverToDelete?.name}</strong> 吗？
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            此操作无法撤销，服务器的所有配置信息将被永久删除。
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>
+            取消
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained"
+          >
+            删除
           </Button>
         </DialogActions>
       </Dialog>
