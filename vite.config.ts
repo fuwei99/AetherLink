@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite'
-import reactOxc from '@vitejs/plugin-react-oxc'  // Oxc 处理 React
+import react from '@vitejs/plugin-react-swc'  // 使用 SWC 处理 React，兼容 rolldown-vite
 import vue from '@vitejs/plugin-vue'
 
-// Rolldown-Vite + Oxc 配置
-// Oxc 处理 React (最快性能)，Vue 使用标准插件
+// Rolldown-Vite + SWC 配置
+// SWC 处理 React (高性能且兼容)，Vue 使用标准插件
 export default defineConfig({
   plugins: [
-    // 只使用 Oxc 处理 React - 避免插件冲突
-    reactOxc({
+    // 使用 SWC 处理 React - 兼容 rolldown-vite
+    react({
       include: /\.(jsx|tsx)$/,  // 只处理 JSX/TSX 文件
       exclude: [/\.vue$/, /node_modules/]
     }),
@@ -104,7 +104,7 @@ export default defineConfig({
     }
   },
 
-  // 构建配置 - Rolldown-Vite 会自动使用 Oxc 进行优化
+  // 构建配置 - Rolldown-Vite 会自动使用内置优化
   build: {
     sourcemap: false, // 生产环境不生成sourcemap
     target: 'es2022', // 现代浏览器目标，生成更小的代码
@@ -132,7 +132,7 @@ export default defineConfig({
       'vue'
     ],
     force: true
-    // 注意：Rolldown-Vite 使用 Oxc 替代 esbuild，不需要 esbuildOptions
+    // 注意：Rolldown-Vite 使用内置优化，不需要 esbuildOptions
   },
 
   // 缓存配置
