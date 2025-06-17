@@ -5,21 +5,24 @@ FROM node:22-alpine AS builder
 # 设置工作目录
 WORKDIR /app
 
-# 设置npm镜像源（可选，提高国内下载速度）
-RUN npm config set registry https://registry.npmmirror.com
+# 启用 Corepack 以使用 Yarn
+RUN corepack enable
+
+# 设置yarn镜像源（可选，提高国内下载速度）
+RUN yarn config set registry https://registry.npmmirror.com
 
 # 复制package文件
 COPY package*.json ./
 COPY yarn.lock ./
 
-# 安装依赖（使用npm ci获得更快、更可靠的构建）
-RUN npm ci --only=production=false --silent
+# 安装依赖（使用yarn获得更快、更可靠的构建）
+RUN yarn install --frozen-lockfile
 
 # 复制源代码
 COPY . .
 
 # 构建应用
-RUN npm run build
+RUN yarn build
 
 # 阶段2: 生产阶段
 FROM nginx:alpine AS production
