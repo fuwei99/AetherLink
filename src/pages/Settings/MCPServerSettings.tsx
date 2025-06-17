@@ -220,7 +220,7 @@ const MCPServerSettings: React.FC = () => {
   const handleDeleteServer = async (server: MCPServer) => {
     try {
       await mcpService.removeServer(server.id);
-      loadServers();
+      await loadServers(); // 确保列表刷新完成
       setSnackbar({
         open: true,
         message: `服务器 ${server.name} 已删除`,
@@ -229,9 +229,10 @@ const MCPServerSettings: React.FC = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: '删除服务器失败',
+        message: `删除服务器 ${server.name} 失败`,
         severity: 'error'
       });
+      throw error; // 重新抛出错误，让调用方知道操作失败
     }
   };
 
@@ -254,11 +255,17 @@ const MCPServerSettings: React.FC = () => {
     }
   };
 
-  const handleConfirmDelete = () => {
-    if (serverToDelete) {
-      handleDeleteServer(serverToDelete);
+  const handleConfirmDelete = async () => {
+    if (!serverToDelete) return;
+    
+    try {
+      await handleDeleteServer(serverToDelete);
+      // 只有在删除成功后才关闭对话框
       setDeleteDialogOpen(false);
       setServerToDelete(null);
+    } catch (error) {
+      // 删除失败时不关闭对话框，让用户看到错误信息
+      console.error('删除服务器失败:', error);
     }
   };
 
@@ -672,10 +679,13 @@ const MCPServerSettings: React.FC = () => {
                         color="primary"
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <Tooltip title="更多选项">
+                      <Tooltip title="更多操作">
                         <IconButton
                           size="small"
                           onClick={(e) => handleMenuClick(e, server)}
+                          aria-label="服务器操作菜单"
+                          aria-controls={Boolean(menuAnchorEl) && selectedServer?.id === server.id ? 'server-actions-menu' : undefined}
+                          aria-haspopup="true"
                           sx={{
                             color: 'text.secondary',
                             '&:hover': {
@@ -1201,9 +1211,11 @@ const MCPServerSettings: React.FC = () => {
 
       {/* 操作菜单 */}
       <Menu
+        id="server-actions-menu"
         anchorEl={menuAnchorEl}
         open={Boolean(menuAnchorEl)}
         onClose={handleMenuClose}
+        keepMounted
         anchorOrigin={{
           vertical: 'bottom',
           horizontal: 'right',
