@@ -29,9 +29,7 @@ import {
   Alert,
   Divider,
   FormControlLabel,
-  Checkbox,
-  Menu,
-  Tooltip
+  Checkbox
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -40,8 +38,7 @@ import {
   Settings as SettingsIcon,
   Database as StorageIcon,
   Globe as HttpIcon,
-  Trash2 as DeleteIcon,
-  MoreVertical as MoreIcon
+  Trash2 as DeleteIcon
 } from 'lucide-react';
 
 import type { MCPServer, MCPServerType } from '../../shared/types';
@@ -55,15 +52,13 @@ const MCPServerSettings: React.FC = () => {
   const [builtinServers, setBuiltinServers] = useState<MCPServer[]>([]);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importJson, setImportJson] = useState('');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [serverToDelete, setServerToDelete] = useState<MCPServer | null>(null);
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedServer, setSelectedServer] = useState<MCPServer | null>(null);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'warning' }>({
     open: false,
     message: '',
     severity: 'success'
   });
+
+
 
   // 新服务器表单状态
   const [newServer, setNewServer] = useState<Partial<MCPServer>>({
@@ -217,61 +212,23 @@ const MCPServerSettings: React.FC = () => {
     navigate(`/settings/mcp-server/${server.id}`, { state: { server } });
   };
 
+  // 处理删除服务器
   const handleDeleteServer = async (server: MCPServer) => {
     try {
       await mcpService.removeServer(server.id);
-      await loadServers(); // 确保列表刷新完成
+      loadServers();
       setSnackbar({
         open: true,
-        message: `服务器 ${server.name} 已删除`,
+        message: `服务器 "${server.name}" 已删除`,
         severity: 'success'
       });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: `删除服务器 ${server.name} 失败`,
+        message: '删除失败',
         severity: 'error'
       });
-      throw error; // 重新抛出错误，让调用方知道操作失败
     }
-  };
-
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, server: MCPServer) => {
-    event.stopPropagation();
-    setMenuAnchorEl(event.currentTarget);
-    setSelectedServer(server);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-    setSelectedServer(null);
-  };
-
-  const handleDeleteClick = () => {
-    if (selectedServer) {
-      setServerToDelete(selectedServer);
-      setDeleteDialogOpen(true);
-      handleMenuClose();
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!serverToDelete) return;
-    
-    try {
-      await handleDeleteServer(serverToDelete);
-      // 只有在删除成功后才关闭对话框
-      setDeleteDialogOpen(false);
-      setServerToDelete(null);
-    } catch (error) {
-      // 删除失败时不关闭对话框，让用户看到错误信息
-      console.error('删除服务器失败:', error);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setDeleteDialogOpen(false);
-    setServerToDelete(null);
   };
 
 
@@ -573,8 +530,8 @@ const MCPServerSettings: React.FC = () => {
             <List disablePadding>
               {servers.map((server, index) => (
                 <React.Fragment key={server.id}>
-                  <ListItemButton
-                    onClick={() => handleEditServer(server)}
+                  <ListItem
+                    disablePadding
                     sx={{
                       transition: 'all 0.2s',
                       '&:hover': {
@@ -582,94 +539,106 @@ const MCPServerSettings: React.FC = () => {
                       }
                     }}
                   >
-                    <ListItemAvatar>
-                      <Avatar
-                        sx={{
-                          bgcolor: alpha(getServerTypeColor(server.type), 0.12),
-                          color: getServerTypeColor(server.type),
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
-                        }}
-                      >
-                        {getServerTypeIcon(server.type)}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Box sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: { xs: 0.5, sm: 1 },
-                          flexWrap: 'wrap'
-                        }}>
-                          <Typography sx={{
-                            fontWeight: 600,
-                            color: 'text.primary',
-                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                    <ListItemButton
+                      onClick={() => handleEditServer(server)}
+                      sx={{ flex: 1 }}
+                    >
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            bgcolor: alpha(getServerTypeColor(server.type), 0.12),
+                            color: getServerTypeColor(server.type),
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                          }}
+                        >
+                          {getServerTypeIcon(server.type)}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: { xs: 0.5, sm: 1 },
+                            flexWrap: 'wrap'
                           }}>
-                            {server.name}
-                          </Typography>
-                          <Chip
-                            label={getServerTypeLabel(server.type)}
-                            size="small"
-                            sx={{
-                              bgcolor: alpha(getServerTypeColor(server.type), 0.1),
-                              color: getServerTypeColor(server.type),
-                              fontWeight: 500,
-                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                              height: { xs: 20, sm: 24 }
-                            }}
-                          />
-                          {server.isActive && (
+                            <Typography sx={{
+                              fontWeight: 600,
+                              color: 'text.primary',
+                              fontSize: { xs: '0.9rem', sm: '1rem' }
+                            }}>
+                              {server.name}
+                            </Typography>
                             <Chip
-                              label="运行中"
+                              label={getServerTypeLabel(server.type)}
                               size="small"
-                              color="success"
-                              variant="outlined"
                               sx={{
+                                bgcolor: alpha(getServerTypeColor(server.type), 0.1),
+                                color: getServerTypeColor(server.type),
+                                fontWeight: 500,
                                 fontSize: { xs: '0.7rem', sm: '0.75rem' },
                                 height: { xs: 20, sm: 24 }
                               }}
                             />
-                          )}
-                        </Box>
-                      }
-                      secondary={
-                        <Box component="div" sx={{ mt: { xs: 0.5, sm: 1 } }}>
-                          {server.description && (
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              component="div"
-                              sx={{
-                                fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                                lineHeight: 1.4,
-                                display: '-webkit-box',
-                                WebkitLineClamp: { xs: 2, sm: 3 },
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden'
-                              }}
-                            >
-                              {server.description}
-                            </Typography>
-                          )}
-                          {server.baseUrl && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              component="div"
-                              sx={{
-                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                                mt: 0.5,
-                                wordBreak: 'break-all'
-                              }}
-                            >
-                              {server.baseUrl}
-                            </Typography>
-                          )}
-                        </Box>
-                      }
-                    />
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {server.isActive && (
+                              <Chip
+                                label="运行中"
+                                size="small"
+                                color="success"
+                                variant="outlined"
+                                sx={{
+                                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                  height: { xs: 20, sm: 24 }
+                                }}
+                              />
+                            )}
+                          </Box>
+                        }
+                        secondary={
+                          <Box component="div" sx={{ mt: { xs: 0.5, sm: 1 } }}>
+                            {server.description && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                component="div"
+                                sx={{
+                                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                                  lineHeight: 1.4,
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: { xs: 2, sm: 3 },
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden'
+                                }}
+                              >
+                                {server.description}
+                              </Typography>
+                            )}
+                            {server.baseUrl && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                component="div"
+                                sx={{
+                                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                  mt: 0.5,
+                                  wordBreak: 'break-all'
+                                }}
+                              >
+                                {server.baseUrl}
+                              </Typography>
+                            )}
+                          </Box>
+                        }
+                      />
+                    </ListItemButton>
+
+                    {/* 操作按钮区域 */}
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      pr: 2
+                    }}>
                       <Switch
                         checked={server.isActive}
                         onChange={(e) => {
@@ -679,26 +648,23 @@ const MCPServerSettings: React.FC = () => {
                         color="primary"
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <Tooltip title="更多操作">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleMenuClick(e, server)}
-                          aria-label="服务器操作菜单"
-                          aria-controls={Boolean(menuAnchorEl) && selectedServer?.id === server.id ? 'server-actions-menu' : undefined}
-                          aria-haspopup="true"
-                          sx={{
-                            color: 'text.secondary',
-                            '&:hover': {
-                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                              color: 'primary.main'
-                            }
-                          }}
-                        >
-                          <MoreIcon size={16} />
-                        </IconButton>
-                      </Tooltip>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteServer(server);
+                        }}
+                        size="small"
+                        sx={{
+                          color: 'error.main',
+                          '&:hover': {
+                            bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+                          }
+                        }}
+                      >
+                        <DeleteIcon size={18} />
+                      </IconButton>
                     </Box>
-                  </ListItemButton>
+                  </ListItem>
                   {index < servers.length - 1 && <Divider variant="inset" component="li" sx={{ ml: 0 }} />}
                 </React.Fragment>
               ))}
@@ -1209,76 +1175,7 @@ const MCPServerSettings: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* 操作菜单 */}
-      <Menu
-        id="server-actions-menu"
-        anchorEl={menuAnchorEl}
-        open={Boolean(menuAnchorEl)}
-        onClose={handleMenuClose}
-        keepMounted
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        <MenuItem onClick={() => {
-          if (selectedServer) {
-            handleEditServer(selectedServer);
-          }
-          handleMenuClose();
-        }}>
-          <SettingsIcon size={16} style={{ marginRight: 8 }} />
-          编辑设置
-        </MenuItem>
-        <MenuItem 
-          onClick={handleDeleteClick}
-          sx={{ 
-            color: 'error.main',
-            '&:hover': {
-              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.1)
-            }
-          }}
-        >
-          <DeleteIcon size={16} style={{ marginRight: 8 }} />
-          删除服务器
-        </MenuItem>
-      </Menu>
 
-      {/* 删除确认对话框 */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCancelDelete}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          确认删除服务器
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            您确定要删除服务器 <strong>{serverToDelete?.name}</strong> 吗？
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            此操作无法撤销，服务器的所有配置信息将被永久删除。
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete}>
-            取消
-          </Button>
-          <Button 
-            onClick={handleConfirmDelete} 
-            color="error" 
-            variant="contained"
-          >
-            删除
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Snackbar
         open={snackbar.open}
