@@ -7,5 +7,5 @@ services:
       dockerfile: Dockerfile
     container_name: aetherlink
     ports:
-      - "80:80"
+      - "3020:3020"
     restart: unless-stopped

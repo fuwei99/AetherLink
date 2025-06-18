@@ -53,11 +53,11 @@ RUN chown -R nginx:nginx /usr/share/nginx/html \
 USER nginx
 
 # 暴露端口
-EXPOSE 80
+EXPOSE 3020
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD curl -f http://localhost:3020/health || exit 1
 
 # 启动nginx
 CMD ["nginx", "-g", "daemon off;"]
