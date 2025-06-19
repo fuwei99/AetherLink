@@ -142,6 +142,7 @@ export async function retryApiKeyError(messageId: string, topicId: string): Prom
           if (model) {
             currentModel = {
               ...model,
+              provider: provider.id, // 确保provider字段设置为正确的provider ID
               apiKey: model.apiKey || provider.apiKey,
               baseUrl: model.baseUrl || provider.baseUrl,
               providerType: model.providerType || provider.providerType || provider.id,

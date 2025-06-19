@@ -14,11 +14,11 @@ import {
   CardContent,
   Stack,
   FormControlLabel,
-  Switch,
   Chip,
   Tooltip
 } from '@mui/material';
 import { Search, X, Copy, Sparkles, Zap } from 'lucide-react';
+import CustomSwitch from '../CustomSwitch';
 import { MobileKnowledgeService } from '../../shared/services/MobileKnowledgeService';
 import type { KnowledgeSearchResult } from '../../shared/types/KnowledgeBase';
 import { BlockManager } from '../../shared/services/messages/BlockManager';
@@ -144,10 +144,9 @@ export const KnowledgeSearch: React.FC<KnowledgeSearchProps> = ({
           <Tooltip title={useEnhancedRAG ? "增强RAG搜索：使用查询扩展、混合搜索和重排序" : "简单搜索：仅使用向量相似度"}>
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={useEnhancedRAG}
                   onChange={(e) => setUseEnhancedRAG(e.target.checked)}
-                  size="small"
                 />
               }
               label={

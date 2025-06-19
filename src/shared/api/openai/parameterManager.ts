@@ -56,10 +56,26 @@ export interface OpenAISpecificParameters {
 }
 
 /**
- * 推理参数接口
+ * 推理参数接口 - Chat Completions API 格式
  */
 export interface ReasoningParameters {
   reasoning_effort?: string;
+  enable_thinking?: boolean;
+  thinking_budget?: number;
+  thinking?: {
+    type: string;
+    budget_tokens?: number;
+  };
+}
+
+/**
+ * Responses API 推理参数接口
+ */
+export interface ResponsesAPIReasoningParameters {
+  reasoning?: {
+    effort?: string;
+    summary?: 'auto' | 'concise' | 'detailed';
+  };
   enable_thinking?: boolean;
   thinking_budget?: number;
   thinking?: {
@@ -167,7 +183,7 @@ export class OpenAIParameterManager {
   }
 
   /**
-   * 获取推理参数
+   * 获取推理参数 - Chat Completions API 格式
    */
   public getReasoningParameters(): ReasoningParameters {
     // 如果模型不支持推理，返回空对象
@@ -186,6 +202,28 @@ export class OpenAIParameterManager {
     }
 
     return this.getEnabledReasoningParameters(reasoningEffort);
+  }
+
+  /**
+   * 获取 Responses API 格式的推理参数
+   */
+  public getResponsesAPIReasoningParameters(): ResponsesAPIReasoningParameters {
+    // 如果模型不支持推理，返回空对象
+    if (!isReasoningModel(this.model)) {
+      return {};
+    }
+
+    // 获取推理努力程度 - 优先使用助手设置，否则使用全局默认设置
+    const reasoningEffort = this.assistant?.settings?.reasoning_effort || getDefaultThinkingEffort();
+
+    console.log(`[OpenAIParameterManager] Responses API 模型 ${this.model.id} 推理努力程度: ${reasoningEffort}`);
+
+    // 如果明确禁用推理或设置为 'off'
+    if (reasoningEffort === 'disabled' || reasoningEffort === 'none' || reasoningEffort === 'off') {
+      return this.getDisabledResponsesAPIReasoningParameters();
+    }
+
+    return this.getEnabledResponsesAPIReasoningParameters(reasoningEffort);
   }
 
   /**
@@ -280,7 +318,7 @@ export class OpenAIParameterManager {
   }
 
   /**
-   * 获取禁用推理的参数
+   * 获取禁用推理的参数 - Chat Completions API 格式
    */
   private getDisabledReasoningParameters(): ReasoningParameters {
     // Qwen模型
@@ -299,8 +337,8 @@ export class OpenAIParameterManager {
     }
 
     // DeepSeek、OpenAI、Grok模型：不支持禁用推理，返回空对象
-    if (isDeepSeekReasoningModel(this.model) || 
-        isOpenAIReasoningModel(this.model) || 
+    if (isDeepSeekReasoningModel(this.model) ||
+        isOpenAIReasoningModel(this.model) ||
         isGrokReasoningModel(this.model)) {
       console.log(`[OpenAIParameterManager] ${this.model.id} 模型不支持禁用推理，跳过推理参数`);
       return {};
@@ -311,7 +349,31 @@ export class OpenAIParameterManager {
   }
 
   /**
-   * 获取启用推理的参数
+   * 获取禁用推理的参数 - Responses API 格式
+   */
+  private getDisabledResponsesAPIReasoningParameters(): ResponsesAPIReasoningParameters {
+    // Qwen模型
+    if (isQwenReasoningModel(this.model)) {
+      return { enable_thinking: false };
+    }
+
+    // Claude模型
+    if (isClaudeReasoningModel(this.model)) {
+      return { thinking: { type: 'disabled' } };
+    }
+
+    // OpenAI 推理模型：Responses API 不支持禁用推理
+    if (isOpenAIReasoningModel(this.model)) {
+      console.log(`[OpenAIParameterManager] Responses API ${this.model.id} 模型不支持禁用推理，跳过推理参数`);
+      return {};
+    }
+
+    // 其他模型
+    return {};
+  }
+
+  /**
+   * 获取启用推理的参数 - Chat Completions API 格式
    */
   private getEnabledReasoningParameters(reasoningEffort: string): ReasoningParameters {
     // 计算推理token预算
@@ -331,10 +393,58 @@ export class OpenAIParameterManager {
   }
 
   /**
-   * 获取默认推理参数（当找不到token限制时）
+   * 获取启用推理的参数 - Responses API 格式
+   */
+  private getEnabledResponsesAPIReasoningParameters(reasoningEffort: string): ResponsesAPIReasoningParameters {
+    // 计算推理token预算
+    const effortRatio = EFFORT_RATIO[reasoningEffort as keyof typeof EFFORT_RATIO] || 0.3;
+    const tokenLimit = findTokenLimit(this.model.id);
+
+    // 如果找不到token限制，使用默认值
+    if (!tokenLimit) {
+      return this.getDefaultResponsesAPIReasoningParameters(reasoningEffort);
+    }
+
+    const budgetTokens = Math.floor(
+      (tokenLimit.max - tokenLimit.min) * effortRatio + tokenLimit.min
+    );
+
+    return this.getModelSpecificResponsesAPIReasoningParameters(reasoningEffort, budgetTokens, effortRatio);
+  }
+
+  /**
+   * 获取默认推理参数（当找不到token限制时）- Chat Completions API 格式
    */
   private getDefaultReasoningParameters(reasoningEffort: string): ReasoningParameters {
     // 对于DeepSeek模型，检查是否支持该推理努力程度
+    if (isDeepSeekReasoningModel(this.model)) {
+      const supportedEffort = reasoningEffort === 'medium' ? 'high' : reasoningEffort;
+      if (supportedEffort === 'low' || supportedEffort === 'high') {
+        return { reasoning_effort: supportedEffort };
+      } else {
+        console.log(`[OpenAIParameterManager] DeepSeek模型不支持推理努力程度 ${reasoningEffort}，跳过推理参数`);
+        return {};
+      }
+    }
+
+    return { reasoning_effort: reasoningEffort };
+  }
+
+  /**
+   * 获取默认推理参数（当找不到token限制时）- Responses API 格式
+   */
+  private getDefaultResponsesAPIReasoningParameters(reasoningEffort: string): ResponsesAPIReasoningParameters {
+    // OpenAI 推理模型使用 Responses API 格式
+    if (isOpenAIReasoningModel(this.model)) {
+      return {
+        reasoning: {
+          effort: reasoningEffort,
+          summary: 'auto' // 默认使用自动摘要
+        }
+      };
+    }
+
+    // 对于其他模型，保持原有格式
     if (isDeepSeekReasoningModel(this.model)) {
       const supportedEffort = reasoningEffort === 'medium' ? 'high' : reasoningEffort;
       if (supportedEffort === 'low' || supportedEffort === 'high') {
@@ -394,6 +504,58 @@ export class OpenAIParameterManager {
     // Gemini模型
     if (isGeminiReasoningModel(this.model)) {
       return { reasoning_effort: reasoningEffort };
+    }
+
+    // Claude模型
+    if (isClaudeReasoningModel(this.model)) {
+      const maxTokens = this.assistant?.settings?.maxTokens;
+      return {
+        thinking: {
+          type: 'enabled',
+          budget_tokens: Math.max(1024, Math.min(budgetTokens, (maxTokens || DEFAULT_MAX_TOKENS) * effortRatio))
+        }
+      };
+    }
+
+    // 默认情况
+    return {};
+  }
+
+  /**
+   * 获取特定模型的推理参数 - Responses API 格式
+   */
+  private getModelSpecificResponsesAPIReasoningParameters(
+    reasoningEffort: string,
+    budgetTokens: number,
+    effortRatio: number
+  ): ResponsesAPIReasoningParameters {
+    // OpenAI模型 - 使用 Responses API 格式
+    if (isOpenAIReasoningModel(this.model)) {
+      return {
+        reasoning: {
+          effort: reasoningEffort,
+          summary: 'auto' // 默认使用自动摘要
+        }
+      };
+    }
+
+    // DeepSeek推理模型
+    if (isDeepSeekReasoningModel(this.model)) {
+      const supportedEffort = reasoningEffort === 'medium' ? 'high' : reasoningEffort;
+      if (supportedEffort === 'low' || supportedEffort === 'high') {
+        return { reasoning_effort: supportedEffort };
+      } else {
+        console.log(`[OpenAIParameterManager] DeepSeek模型不支持推理努力程度 ${reasoningEffort}，跳过推理参数`);
+        return {};
+      }
+    }
+
+    // Qwen模型
+    if (isQwenReasoningModel(this.model)) {
+      return {
+        enable_thinking: true,
+        thinking_budget: budgetTokens
+      };
     }
 
     // Claude模型

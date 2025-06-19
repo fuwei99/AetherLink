@@ -23,9 +23,9 @@ interface TopicItemProps {
 }
 
 /**
- * 单个话题项组件
+ * 单个话题项组件 - 使用 memo 优化性能
  */
-export default function TopicItem({
+const TopicItem = React.memo(function TopicItem({
   topic,
   isSelected,
   onSelectTopic,
@@ -124,12 +124,20 @@ export default function TopicItem({
       sx={{
         borderRadius: '8px',
         mb: 1,
+        // 性能优化
+        contain: 'layout style',
+        transform: 'translateZ(0)', // 硬件加速
+        willChange: 'auto', // 避免长期占用 GPU
+        // 选中状态样式
         '&.Mui-selected': {
           backgroundColor: 'rgba(25, 118, 210, 0.08)',
         },
         '&.Mui-selected:hover': {
           backgroundColor: 'rgba(25, 118, 210, 0.12)',
-        }
+        },
+        // 优化触摸响应
+        touchAction: 'manipulation',
+        userSelect: 'none',
       }}
     >
       <ListItemText
@@ -211,4 +219,6 @@ export default function TopicItem({
       </div>
     </ListItemButton>
   );
-}
+});
+
+export default TopicItem;

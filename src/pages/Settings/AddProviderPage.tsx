@@ -24,6 +24,7 @@ import { generateId } from '../../shared/utils';
 // 供应商类型列表
 const providerTypes = [
   { value: 'openai', label: 'OpenAI' },
+  { value: 'openai-response', label: 'OpenAI (Responses API) - 新版API' },
   { value: 'openai-aisdk', label: 'OpenAI (AI SDK) - 流式优化' },
   { value: 'azure-openai', label: 'Azure OpenAI' },
   { value: 'gemini', label: 'Gemini' },
@@ -78,6 +79,8 @@ const AddProviderPage: React.FC = () => {
   const getDefaultBaseUrl = (type: string): string => {
     switch (type) {
       case 'openai':
+        return 'https://api.openai.com/v1';
+      case 'openai-response':
         return 'https://api.openai.com/v1';
       case 'openai-aisdk':
         return 'https://api.openai.com/v1';
@@ -296,6 +299,7 @@ const AddProviderPage: React.FC = () => {
                 sx={{ mt: 1, fontSize: '0.8rem' }}
               >
                 {providerType === 'openai' ? '添加OpenAI兼容的API服务' :
+                 providerType === 'openai-response' ? '添加OpenAI Responses API服务（支持最新的响应格式和推理功能）' :
                  providerType === 'openai-aisdk' ? '添加OpenAI API服务（使用AI SDK，专为浏览器优化，解决流式响应延迟问题）' :
                  providerType === 'azure-openai' ? '添加Azure OpenAI API服务（需要配置endpoint和apiVersion）' :
                  providerType === 'anthropic' ? '添加Anthropic Claude API服务' :

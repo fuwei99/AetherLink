@@ -91,14 +91,8 @@ export const useAppInitialization = () => {
 
       dispatch(initGroups() as any);
 
-      const hasLoadedTopics = sessionStorage.getItem('_topicsLoaded');
-      if (!hasLoadedTopics) {
-        sessionStorage.setItem('_topicsLoaded', 'true');
-        const topics = await dexieStorage.getAllTopics();
-        topics.forEach(topic => {
-          dispatch(loadTopicMessagesThunk(topic.id) as any);
-        });
-      }
+      // ：消息加载由useActiveTopic Hook按需自动处理，无需批量预加载
+      console.log('[useAppInitialization] ：跳过批量消息预加载，由Hook按需加载');
 
       if (signal.aborted) return;
 

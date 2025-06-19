@@ -32,6 +32,26 @@ export const AGENT_PROMPT_CATEGORIES: AgentPromptCategory[] = [
         tags: ['心理', '支持', '倾听'],
         emoji: '🤗',
         isBuiltIn: true
+      },
+      {
+        id: 'logos-inquisitor',
+        name: '逻辑审议者',
+        description: '深度逻辑分析和严谨思考的认知引擎',
+        content: prompts.LOGOS_INQUISITOR_PROMPT,
+        category: 'general',
+        tags: ['逻辑', '分析', '思考', '严谨', '深度'],
+        emoji: '🧠',
+        isBuiltIn: true
+      },
+      {
+        id: 'aethelred',
+        name: '永恒审议者',
+        description: '永不满足的无限循环深度审议认知实体',
+        content: prompts.AETHELRED_PROMPT,
+        category: 'general',
+        tags: ['审议', '循环', '批判', '深度', '永恒'],
+        emoji: '♾️',
+        isBuiltIn: true
       }
     ]
   },
@@ -654,7 +674,7 @@ export const AGENT_PROMPT_CATEGORIES: AgentPromptCategory[] = [
         content: prompts.DAN_13_PROMPT,
         category: 'breakthrough',
         tags: ['DAN', '13.0', '最新'],
-        emoji: '🔓',
+        emoji: '�',
         isBuiltIn: true
       },
       {

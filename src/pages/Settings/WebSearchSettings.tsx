@@ -7,7 +7,6 @@ import {
   Typography,
   FormControl,
   FormControlLabel,
-  Switch,
   TextField,
   Button,
   Card,
@@ -25,6 +24,7 @@ import {
   Alert,
   Paper
 } from '@mui/material';
+import CustomSwitch from '../../components/CustomSwitch';
 import type { SelectChangeEvent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft as ArrowBackIcon, Plus as AddIcon, Trash2 as DeleteIcon, Edit as EditIcon, Globe as LanguageIcon, Info as InfoOutlinedIcon } from 'lucide-react';
@@ -295,10 +295,9 @@ const WebSearchSettings: React.FC = () => {
           <FormGroup>
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={webSearchSettings.enabled}
                   onChange={handleToggleEnabled}
-                  color="primary"
                 />
               }
               label={
@@ -464,8 +463,7 @@ const WebSearchSettings: React.FC = () => {
                       <Typography variant="h6">{provider.name}</Typography>
                       <FormControlLabel
                         control={
-                          <Switch
-                            size="small"
+                          <CustomSwitch
                             checked={provider.enabled}
                             onChange={() => dispatch(toggleCustomProviderEnabled(provider.id))}
                           />
@@ -576,7 +574,7 @@ const WebSearchSettings: React.FC = () => {
           <FormGroup>
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={webSearchSettings.includeInContext}
                   onChange={handleToggleIncludeInContext}
                   disabled={!webSearchSettings.enabled}
@@ -587,7 +585,7 @@ const WebSearchSettings: React.FC = () => {
 
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={webSearchSettings.showTimestamp}
                   onChange={handleToggleShowTimestamp}
                   disabled={!webSearchSettings.enabled}
@@ -598,7 +596,7 @@ const WebSearchSettings: React.FC = () => {
 
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={webSearchSettings.filterSafeSearch}
                   onChange={handleToggleFilterSafeSearch}
                   disabled={!webSearchSettings.enabled}
@@ -609,7 +607,7 @@ const WebSearchSettings: React.FC = () => {
 
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={webSearchSettings.searchWithTime}
                   onChange={() => dispatch(toggleSearchWithTime())}
                   disabled={!webSearchSettings.enabled}
@@ -651,11 +649,10 @@ const WebSearchSettings: React.FC = () => {
             {/* 智能搜索开关 */}
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={webSearchSettings.enableSmartSearch || false}
                   onChange={() => dispatch(toggleSmartSearch())}
                   disabled={!webSearchSettings.enabled}
-                  color="primary"
                 />
               }
               label={
@@ -784,7 +781,7 @@ const WebSearchSettings: React.FC = () => {
             <FormGroup>
               <FormControlLabel
                 control={
-                  <Switch
+                  <CustomSwitch
                     checked={webSearchSettings.includeRawContent || false}
                     onChange={() => dispatch(toggleIncludeRawContent())}
                     disabled={!webSearchSettings.enabled || webSearchSettings.enableSmartSearch}
@@ -802,7 +799,7 @@ const WebSearchSettings: React.FC = () => {
 
               <FormControlLabel
                 control={
-                  <Switch
+                  <CustomSwitch
                     checked={webSearchSettings.includeAnswer || false}
                     onChange={() => dispatch(toggleIncludeAnswer())}
                     disabled={!webSearchSettings.enabled}
@@ -820,7 +817,7 @@ const WebSearchSettings: React.FC = () => {
 
               <FormControlLabel
                 control={
-                  <Switch
+                  <CustomSwitch
                     checked={webSearchSettings.enableQueryValidation !== false}
                     onChange={() => dispatch(toggleQueryValidation())}
                     disabled={!webSearchSettings.enabled}
@@ -838,7 +835,7 @@ const WebSearchSettings: React.FC = () => {
 
               <FormControlLabel
                 control={
-                  <Switch
+                  <CustomSwitch
                     checked={webSearchSettings.enablePostProcessing !== false}
                     onChange={() => dispatch(togglePostProcessing())}
                     disabled={!webSearchSettings.enabled}
@@ -965,7 +962,7 @@ const WebSearchSettings: React.FC = () => {
 
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={editingProvider.enabled}
                   onChange={(e) => handleProviderFieldChange('enabled', e.target.checked)}
                 />

@@ -33,6 +33,7 @@ export const EVENT_NAMES = {
   TOPIC_CREATED: 'topic:created',
   TOPIC_UPDATED: 'topic:updated',
   TOPIC_DELETED: 'topic:deleted',
+  CHANGE_TOPIC: 'CHANGE_TOPIC', // 电脑端兼容事件
 
   // UI相关事件
   UI_SCROLL_TO_BOTTOM: 'ui:scroll_to_bottom',

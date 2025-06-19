@@ -4,7 +4,6 @@ import {
   Typography,
   Chip,
   FormControlLabel,
-  Switch,
   FormHelperText,
   Tooltip,
   IconButton,
@@ -12,6 +11,7 @@ import {
   alpha,
   Paper
 } from '@mui/material';
+import CustomSwitch from '../CustomSwitch';
 import { Info as InfoOutlinedIcon, Settings as SettingsIcon } from 'lucide-react';
 import { ModelType } from '../../shared/types';
 import type { ModelTypeRule } from '../../shared/types';
@@ -254,10 +254,9 @@ const EnhancedModelTypeSelector: React.FC<EnhancedModelTypeSelectorProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <FormControlLabel
             control={
-              <Switch
+              <CustomSwitch
                 checked={autoDetect}
                 onChange={(e) => onAutoDetectChange(e.target.checked)}
-                size="small"
               />
             }
             label="自动检测"

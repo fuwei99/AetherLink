@@ -175,7 +175,7 @@ export default class GeminiProvider extends BaseProvider {
   }
 
   /**
-   * 获取消息文本内容 - 模拟电脑版的 getMainTextContent
+   * 获取消息文本内容 - 模拟的 getMainTextContent
    */
   protected async getMessageContent(message: Message): Promise<string> {
     return getMainTextContent(message);
@@ -199,7 +199,7 @@ export default class GeminiProvider extends BaseProvider {
 
     const { contextCount, maxTokens, streamOutput } = this.getAssistantSettings(assistant);
 
-    // 过滤消息 - 参考电脑版实现
+    // 过滤消息 - 参考实现
     const userMessages = filterUserRoleStartMessages(
       filterEmptyMessages(takeRight(messages, contextCount + 2))
     );
@@ -381,7 +381,7 @@ export default class GeminiProvider extends BaseProvider {
                 thinkingContent += part.text;
                 onChunk({ type: ChunkType.THINKING_DELTA, text: part.text || '' });
               } else {
-                // 正常内容 - 修复电脑版的bug
+                // 正常内容 - 修复的bug
                 if (time_first_token_millsec == 0) {
                   time_first_token_millsec = new Date().getTime();
                 }
@@ -773,7 +773,7 @@ export default class GeminiProvider extends BaseProvider {
       assistantPromptLength: assistant.prompt?.length || 0
     });
 
-    // 按照电脑版的方式：直接使用 SDK 的流式响应
+    // 按照的方式：直接使用 SDK 的流式响应
     let content = '';
     let reasoning = '';
     let reasoningTime = 0;
@@ -811,7 +811,7 @@ export default class GeminiProvider extends BaseProvider {
       config: config
     });
 
-    // 按照电脑版的方式处理流式响应
+    // 按照的方式处理流式响应
     for await (const chunk of response) {
       if (chunk.candidates?.[0]?.content?.parts) {
         const parts = chunk.candidates[0].content.parts;

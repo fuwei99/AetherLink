@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Box } from '@mui/material';
-import { throttle } from 'lodash';
 
 interface VirtualScrollerProps<T> {
   items: T[];
@@ -61,20 +60,21 @@ function VirtualScroller<T>({
     };
   }, [scrollTop, containerHeight, itemHeight, overscanCount, items]);
 
-  // 处理滚动事件
-  const handleScroll = useCallback(
-    throttle((e: React.UIEvent<HTMLDivElement>) => {
-      // 检查事件对象和目标元素是否存在
-      if (!e || !e.currentTarget) {
-        return;
-      }
+  // 处理滚动事件 - 优化版本，减少节流开销
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    // 检查事件对象和目标元素是否存在
+    if (!e || !e.currentTarget) {
+      return;
+    }
 
-      const scrollTop = e.currentTarget.scrollTop;
+    const scrollTop = e.currentTarget.scrollTop;
+
+    // 使用requestAnimationFrame代替throttle，更适合滚动优化
+    requestAnimationFrame(() => {
       setScrollTop(scrollTop);
       onScroll?.(e);
-    }, 16), // 约60fps
-    [onScroll]
-  );
+    });
+  }, [onScroll]);
 
   // 测量容器高度
   useEffect(() => {
@@ -101,12 +101,18 @@ function VirtualScroller<T>({
   return (
     <Box
       ref={containerRef}
-      className={className}
+      className={`${className || ''} hide-scrollbar`}
       sx={{
         height,
         width,
         overflow: 'auto',
         position: 'relative',
+        // 隐藏滚动条样式 - 与助手列表保持一致
+        scrollbarWidth: 'none', // Firefox
+        msOverflowStyle: 'none', // IE/Edge
+        '&::-webkit-scrollbar': {
+          display: 'none', // WebKit浏览器
+        },
         ...style,
       }}
       onScroll={handleScroll}
@@ -118,7 +124,10 @@ function VirtualScroller<T>({
             top: 0,
             left: 0,
             width: '100%',
-            transform: `translateY(${offsetY}px)`,
+            // 使用transform3d启用硬件加速，提升性能
+            transform: `translate3d(0, ${offsetY}px, 0)`,
+            // 添加will-change提示浏览器优化
+            willChange: 'transform',
           }}
         >
           {visibleItems.map((item, index) => {
@@ -126,7 +135,14 @@ function VirtualScroller<T>({
             return (
               <Box
                 key={itemKey(item, actualIndex)}
-                sx={{ height: itemHeight, boxSizing: 'border-box' }}
+                sx={{
+                  height: itemHeight,
+                  boxSizing: 'border-box',
+                  // 启用硬件加速
+                  transform: 'translateZ(0)',
+                  // 减少重排
+                  contain: 'layout style paint',
+                }}
               >
                 {renderItem(item, actualIndex)}
               </Box>

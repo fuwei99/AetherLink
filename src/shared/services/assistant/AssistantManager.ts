@@ -19,28 +19,27 @@ export class AssistantManager {
         console.log(`[AssistantManager.getUserAssistants] 助手 ${assistant.name} (${assistant.id}) emoji: "${assistant.emoji}"`);
       });
 
-      // 为每个助手加载话题
+      // ：为每个助手预加载话题数据
+      const allTopics = await dexieStorage.getAllTopics();
+
       for (const assistant of assistants) {
-        const topicIds = assistant.topicIds || [];
-        const topics: ChatTopic[] = [];
+        // 直接从所有话题中筛选属于当前助手的话题
+        const assistantTopics = allTopics.filter(topic => topic.assistantId === assistant.id);
 
-        // 加载关联的话题
-        for (const topicId of topicIds) {
-          const topic = await dexieStorage.getTopic(topicId);
-          if (topic) {
-            topics.push(topic);
-          }
-        }
+        // 按固定状态和最后消息时间排序（固定的在前面，然后按时间降序）
+        assistantTopics.sort((a, b) => {
+          // 首先按固定状态排序，固定的话题在前面
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
 
-        // 按最后消息时间排序
-        topics.sort((a, b) => {
-          const timeA = new Date(a.lastMessageTime || 0).getTime();
-          const timeB = new Date(b.lastMessageTime || 0).getTime();
-          return timeB - timeA; // 降序排列，最新的在前面
+          // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
+          const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
+          const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
+          return timeB - timeA;
         });
 
         // 设置话题数组
-        assistant.topics = topics;
+        assistant.topics = assistantTopics;
       }
 
       // 直接返回助手数据，emoji字段已经在数据库中正确保存
@@ -78,27 +77,24 @@ export class AssistantManager {
       const assistant = await dexieStorage.getAssistant(currentAssistantId);
       if (!assistant) return null;
 
-      // 加载助手关联的话题
-      const topicIds = assistant.topicIds || [];
-      const topics: ChatTopic[] = [];
+      // ：预加载助手的话题数据
+      const allTopics = await dexieStorage.getAllTopics();
+      const assistantTopics = allTopics.filter(topic => topic.assistantId === assistant.id);
 
-      // 加载每个话题
-      for (const topicId of topicIds) {
-        const topic = await dexieStorage.getTopic(topicId);
-        if (topic) {
-          topics.push(topic);
-        }
-      }
+      // 按固定状态和最后消息时间排序（固定的在前面，然后按时间降序）
+      assistantTopics.sort((a, b) => {
+        // 首先按固定状态排序，固定的话题在前面
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
 
-      // 按最后消息时间排序
-      topics.sort((a, b) => {
-        const timeA = new Date(a.lastMessageTime || 0).getTime();
-        const timeB = new Date(b.lastMessageTime || 0).getTime();
-        return timeB - timeA; // 降序排列
+        // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
+        const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
+        const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
+        return timeB - timeA;
       });
 
       // 设置话题数组
-      assistant.topics = topics;
+      assistant.topics = assistantTopics;
 
       // 确保助手有type字段
       if (!assistant.type) {

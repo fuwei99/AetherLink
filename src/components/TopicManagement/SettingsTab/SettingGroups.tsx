@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Box,
-  Collapse,
+
   IconButton,
   ListItem,
   ListItemText,
@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import SettingItem from './SettingItem';
-import { animationOptimization, createOptimizedClickHandler } from './scrollOptimization';
+import { createOptimizedClickHandler } from './scrollOptimization';
+import OptimizedCollapse from './OptimizedCollapse';
 
 interface Setting {
   id: string;
@@ -126,12 +127,10 @@ export default function SettingGroups({ groups, onSettingChange }: SettingGroups
           </ListItem>
 
           {/* 可折叠的设置项内容 */}
-          <Collapse
+          <OptimizedCollapse
             in={expandedGroups[group.id]}
-            timeout={animationOptimization.timeout}
-            easing={animationOptimization.easing}
+            timeout={150}
             unmountOnExit
-            sx={animationOptimization.sx}
           >
             <Box sx={{
               pb: 0.5,
@@ -147,7 +146,7 @@ export default function SettingGroups({ groups, onSettingChange }: SettingGroups
                 />
               ))}
             </Box>
-          </Collapse>
+          </OptimizedCollapse>
 
           {/* 最后一个分组不需要底部外边距 */}
           {index < groups.length - 1 && <Box sx={{ height: 4 }} />}

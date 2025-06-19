@@ -14,13 +14,13 @@ import {
   Divider,
   alpha,
   FormControlLabel,
-  Switch,
   Button,
   Slider
 } from '@mui/material';
 import { ArrowLeft, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
+import CustomSwitch from '../../components/CustomSwitch';
 import { updateSettings } from '../../shared/store/settingsSlice';
 import MessageBubblePreview from '../../components/preview/MessageBubblePreview';
 import ColorPicker from '../../components/common/ColorPicker';
@@ -260,10 +260,9 @@ const MessageBubbleSettings: React.FC = () => {
               <>
                 <FormControlLabel
                   control={
-                    <Switch
+                    <CustomSwitch
                       checked={showMicroBubbles}
                       onChange={handleMicroBubblesChange}
-                      color="primary"
                     />
                   }
                   label={

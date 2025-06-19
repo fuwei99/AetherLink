@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import { AlignJustify, Settings, Plus, Trash2 } from 'lucide-react';
 
@@ -16,7 +16,6 @@ import { getThemeColors } from '../../../shared/utils/themeUtils';
 import { generateBackgroundStyle } from '../../../shared/utils/backgroundUtils';
 import { useTheme } from '@mui/material/styles';
 import { useSidebarSwipeGesture } from '../../../hooks/useSwipeGesture';
-import { SwipeIndicator, SwipeProgressIndicator } from '../../../components/SwipeIndicator';
 
 
 
@@ -116,8 +115,6 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
   const theme = useTheme();
 
   // 本地状态
-  const [swipeProgress, setSwipeProgress] = useState(0);
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right'>('right');
 
   // Redux 状态选择器
   const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
@@ -229,19 +226,10 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
     }
   }, [drawerOpen, setDrawerOpen]);
 
-  const handleSwipeProgress = useCallback((progress: number, direction: 'left' | 'right') => {
-    if (direction === 'left' && !drawerOpen) {
-      return;
-    }
-    setSwipeProgress(progress);
-    setSwipeDirection(direction);
-  }, [drawerOpen]);
-
   const { swipeHandlers } = useSidebarSwipeGesture(
     handleOpenSidebar,
     drawerOpen ? handleCloseSidebar : undefined,
-    true,
-    handleSwipeProgress
+    true
   );
 
   // 话题管理
@@ -546,6 +534,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
             position: 'relative',
             minHeight: '56px !important',
             justifyContent: mergedTopToolbarSettings.componentPositions?.length > 0 ? 'center' : 'space-between',
+            userSelect: 'none', // 禁止工具栏文本选择
           }}>
             {/* 如果有DIY布局，使用绝对定位渲染组件 */}
             {mergedTopToolbarSettings.componentPositions?.length > 0 ? (
@@ -562,7 +551,8 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
                         left: `${position.x}%`,
                         top: `${position.y}%`,
                         transform: 'translate(-50%, -50%)',
-                        zIndex: 10
+                        zIndex: 10,
+                        userSelect: 'none' // 禁止DIY布局组件文本选择
                       }}
                     >
                       {component}
@@ -573,10 +563,10 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
             ) : (
               /* 传统左右布局 */
               <>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, userSelect: 'none' }}>
                   {mergedTopToolbarSettings.leftComponents?.map(renderToolbarComponent).filter(Boolean)}
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, userSelect: 'none' }}>
                   {mergedTopToolbarSettings.rightComponents?.map(renderToolbarComponent).filter(Boolean)}
                 </Box>
               </>
@@ -651,24 +641,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
         </Box>
       </Box>
 
-      {/* 滑动提示指示器 - 仅在移动端显示，且只在侧边栏关闭时显示 */}
-      {isMobile && !drawerOpen && (
-        <SwipeIndicator
-          show={true}
-          autoHide={true}
-          autoHideDelay={5000}
-          storageKey="sidebar-swipe-hint-seen"
-        />
-      )}
 
-      {/* 滑动进度指示器 - 仅在移动端显示 */}
-      {isMobile && (
-        <SwipeProgressIndicator
-          progress={swipeProgress}
-          show={swipeProgress > 0}
-          direction={swipeDirection}
-        />
-      )}
     </Box>
   );
 };

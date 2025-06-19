@@ -2,7 +2,7 @@ import { Preferences } from '@capacitor/preferences';
 import type { Assistant } from '../types/Assistant';
 import type { ChatTopic, Message } from '../types';
 import { dexieStorage } from './DexieStorageService';
-import { DB_CONFIG } from '../types/DatabaseSchema';
+import { DB_CONFIG } from '../database/config';
 import Dexie from 'dexie';
 
 // 定义 DatabaseStatus 类型
@@ -15,6 +15,7 @@ export interface DatabaseStatus {
   imagesCount: number;
   settingsCount: number;
   metadataCount: number;
+  memoriesCount: number;
   missingStores: string[];
   dbVersion?: number; // Dexie的原生verno是数字
   isDBOpen: boolean;
@@ -30,8 +31,11 @@ export { dexieStorage };
  */
 export async function initStorageService(): Promise<void> {
   try {
-    // 移除激进清理机制，让 Dexie 自己处理版本升级
-    // await cleanupOldDatabases(); // 已注释，避免数据丢失
+    // 启用数据库清理机制，清理旧版本数据库
+    const cleanupResult = await cleanupOldDatabases();
+    if (cleanupResult.found > 0) {
+      console.log(`[StorageService] 清理了 ${cleanupResult.cleaned}/${cleanupResult.found} 个旧数据库`);
+    }
 
     // Dexie会自动打开数据库，无需手动initialize
     // console.log('存储服务: 数据库初始化检查完成，或已通过initialize()处理。');
@@ -80,22 +84,31 @@ export async function cleanupOldDatabases(): Promise<{
     // 获取所有数据库
     const databases = await Dexie.getDatabaseNames();
 
-    // 筛选出旧版本的数据库名称
-    const oldDatabases = databases.filter((name: string) =>
-      name.startsWith('aetherlink-db-') &&
-      name !== DB_CONFIG.NAME
-    );
+    // 筛选出需要清理的数据库名称
+    const oldDatabases = databases.filter((name: string) => {
+      // 清理旧版本的aetherlink数据库
+      if (name.startsWith('aetherlink-db-') && name !== DB_CONFIG.NAME) {
+        return true;
+      }
+      // 清理其他已知的旧数据库
+      if (name === 'samantha-web' || name === 'Disc' || name === 'CherryStudio') {
+        return true;
+      }
+      return false;
+    });
 
-    console.log(`清理旧数据库: 找到 ${oldDatabases.length} 个旧数据库`);
+    console.log(`[StorageService] 清理旧数据库: 找到 ${oldDatabases.length} 个旧数据库`, oldDatabases);
 
     // 删除旧数据库
     let cleanedCount = 0;
     for (const dbName of oldDatabases) {
       try {
+        console.log(`[StorageService] 正在删除数据库: ${dbName}`);
         await Dexie.delete(dbName);
         cleanedCount++;
+        console.log(`[StorageService] 已删除数据库: ${dbName}`);
       } catch (e) {
-        console.error(`删除数据库 ${dbName} 失败:`, e);
+        console.error(`[StorageService] 删除数据库 ${dbName} 失败:`, e);
       }
     }
 
@@ -105,7 +118,7 @@ export async function cleanupOldDatabases(): Promise<{
       current: DB_CONFIG.NAME
     };
   } catch (error) {
-    console.error('清理旧数据库失败:', error);
+    console.error('[StorageService] 清理旧数据库失败:', error);
     return {
       found: 0,
       cleaned: 0,
@@ -130,6 +143,7 @@ export async function getDatabaseStatus(): Promise<DatabaseStatus> { // 使用�
       imagesCount: 0,
       settingsCount: 0,
       metadataCount: 0,
+      memoriesCount: 0,
       missingStores: [],
       dbVersion: 0,
       isDBOpen: false
@@ -144,6 +158,7 @@ export async function getDatabaseStatus(): Promise<DatabaseStatus> { // 使用�
       try { status.imagesCount = await dexieStorage.images.count(); } catch(e) { console.warn('Failed to count images', e); }
       try { status.settingsCount = await dexieStorage.settings.count(); } catch(e) { console.warn('Failed to count settings', e); }
       try { status.metadataCount = await dexieStorage.metadata.count(); } catch(e) { console.warn('Failed to count metadata', e); }
+      try { status.memoriesCount = await dexieStorage.memories.count(); } catch(e) { console.warn('Failed to count memories', e); }
 
       const expectedStores = Object.values(DB_CONFIG.STORES);
       status.missingStores = expectedStores.filter(storeName => !status.objectStores.includes(storeName));
@@ -163,6 +178,7 @@ export async function getDatabaseStatus(): Promise<DatabaseStatus> { // 使用�
       imagesCount: 0,
       settingsCount: 0,
       metadataCount: 0,
+      memoriesCount: 0,
       missingStores: Object.values(DB_CONFIG.STORES),
       dbVersion: 0,
       isDBOpen: false,

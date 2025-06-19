@@ -46,23 +46,19 @@ export function useTopicManagement(currentTopic: ChatTopic | null) {
         // 设置当前主题
         dispatch(newMessagesActions.setCurrentTopicId(validTopics[0].id));
 
-        // 加载每个话题的消息到Redux
+        // ：消息加载由useActiveTopic Hook自动处理，无需手动加载
+        // 只需要处理数据迁移
         for (const topic of validTopics) {
-          // 判断消息格式：
-          // 新格式：使用 messageIds 数组，messages 为空或不存在
-          // 旧格式：使用 messages 数组存储完整消息对象
-          if (topic.messageIds && topic.messageIds.length > 0) {
-            // 新格式：已经在 App.tsx 中使用 loadTopicMessagesThunk 加载了所有话题的消息
-            // 无需额外处理
-          } else if (topic.messages && topic.messages.length > 0) {
+          // 检查是否需要迁移旧格式数据
+          if (topic.messages && topic.messages.length > 0 && (!topic.messageIds || topic.messageIds.length === 0)) {
             // 旧格式：需要迁移
             try {
+              console.log(`[useTopicManagement] 迁移话题 ${topic.id} 的旧格式数据`);
               await dexieStorage.migrateTopicMessages(topic.id);
             } catch (error) {
               console.error(`话题 ${topic.id} 迁移失败:`, error);
             }
           }
-          // 空话题无需处理
         }
       }
 

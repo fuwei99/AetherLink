@@ -20,12 +20,14 @@ import {
   ListItemText,
   Avatar,
   Divider,
-  alpha
+  alpha,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
 import { ArrowLeft, ChevronRight, MessageSquare, MessageCircle, Wrench, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
-import { setTheme, setFontSize, setFontFamily } from '../../shared/store/settingsSlice';
+import { setTheme, setFontSize, setFontFamily, setShowPerformanceMonitor } from '../../shared/store/settingsSlice';
 import ThemeStyleSelector from '../../components/settings/ThemeStyleSelector';
 import { fontOptions, fontCategoryLabels, getFontById } from '../../shared/config/fonts';
 
@@ -88,6 +90,11 @@ const AppearanceSettings: React.FC = () => {
 
   const handleNavigateToThinkingProcess = () => {
     navigate('/settings/appearance/thinking-process');
+  };
+
+  // 性能监控开关处理函数
+  const handlePerformanceMonitorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setShowPerformanceMonitor(event.target.checked));
   };
 
   return (
@@ -562,12 +569,65 @@ const AppearanceSettings: React.FC = () => {
                 </ListItemAvatar>
                 <ListItemText
                   primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>顶部工具栏设置</Typography>}
-                  secondary="自定义顶部工具栏的组件和布局"
+                  secondary="自定义顶部工具栏的组件和布局，支持拖拽DIY布局"
                 />
                 <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
               </ListItemButton>
             </ListItem>
           </List>
+        </Paper>
+
+        {/* 开发者工具 */}
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              开发者工具
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              用于调试和性能监控的开发者工具设置
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: 3 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.showPerformanceMonitor || false}
+                  onChange={handlePerformanceMonitorChange}
+                  color="primary"
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    显示性能监控
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    在聊天界面显示实时性能监控面板，包括FPS、滚动事件、渲染时间和内存使用情况
+                  </Typography>
+                </Box>
+              }
+              sx={{
+                alignItems: 'flex-start',
+                '& .MuiFormControlLabel-label': {
+                  mt: 0.5
+                }
+              }}
+            />
+          </Box>
         </Paper>
       </Box>
     </Box>

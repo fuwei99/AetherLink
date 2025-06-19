@@ -9,7 +9,6 @@ import {
   Paper,
   FormGroup,
   FormControlLabel,
-  Switch,
   Tooltip,
   IconButton,
   AppBar,
@@ -22,6 +21,7 @@ import {
   CardMedia,
   CardActions
 } from '@mui/material';
+import CustomSwitch from '../../components/CustomSwitch';
 import { ArrowLeft, Info, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
@@ -432,8 +432,7 @@ const ChatInterfaceSettings: React.FC = () => {
           <FormGroup>
             <FormControlLabel
               control={
-                <Switch
-                  size="small"
+                <CustomSwitch
                   checked={showToolDetails}
                   onChange={handleShowToolDetailsChange}
                 />
@@ -461,8 +460,7 @@ const ChatInterfaceSettings: React.FC = () => {
           <FormGroup>
             <FormControlLabel
               control={
-                <Switch
-                  size="small"
+                <CustomSwitch
                   checked={showCitationDetails}
                   onChange={handleShowCitationDetailsChange}
                 />
@@ -490,8 +488,7 @@ const ChatInterfaceSettings: React.FC = () => {
           <FormGroup>
             <FormControlLabel
               control={
-                <Switch
-                  size="small"
+                <CustomSwitch
                   checked={showUserAvatar}
                   onChange={handleShowUserAvatarChange}
                 />
@@ -500,8 +497,7 @@ const ChatInterfaceSettings: React.FC = () => {
             />
             <FormControlLabel
               control={
-                <Switch
-                  size="small"
+                <CustomSwitch
                   checked={showUserName}
                   onChange={handleShowUserNameChange}
                 />
@@ -510,8 +506,7 @@ const ChatInterfaceSettings: React.FC = () => {
             />
             <FormControlLabel
               control={
-                <Switch
-                  size="small"
+                <CustomSwitch
                   checked={showModelAvatar}
                   onChange={handleShowModelAvatarChange}
                 />
@@ -520,8 +515,7 @@ const ChatInterfaceSettings: React.FC = () => {
             />
             <FormControlLabel
               control={
-                <Switch
-                  size="small"
+                <CustomSwitch
                   checked={showModelName}
                   onChange={handleShowModelNameChange}
                 />
@@ -572,8 +566,7 @@ const ChatInterfaceSettings: React.FC = () => {
           <FormGroup sx={{ mb: 2 }}>
             <FormControlLabel
               control={
-                <Switch
-                  size="small"
+                <CustomSwitch
                   checked={chatBackground.enabled}
                   onChange={handleBackgroundEnabledChange}
                 />

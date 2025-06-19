@@ -318,6 +318,26 @@ async function fetchModelsFromEndpoint(provider: any, providerType: string): Pro
       console.log(`[fetchModelsFromEndpoint] AI SDK OpenAI使用标准模型获取`);
       rawModels = await openaiApi.fetchModels(provider);
       break;
+    case 'openai-response':
+      // OpenAI Responses API 使用专门的模型获取逻辑
+      console.log(`[fetchModelsFromEndpoint] OpenAI Responses API使用专门的模型获取`);
+      try {
+        // 创建 OpenAIResponseProvider 实例来获取模型
+        const { OpenAIResponseProvider } = await import('../providers/OpenAIResponseProvider');
+        const responseProvider = new OpenAIResponseProvider({
+          id: provider.id,
+          name: provider.name || 'OpenAI Responses',
+          apiKey: provider.apiKey,
+          baseUrl: provider.baseUrl || 'https://api.openai.com/v1',
+          provider: 'openai',
+          providerType: 'openai-response'
+        });
+        rawModels = await responseProvider.getModels();
+      } catch (error) {
+        console.warn(`[fetchModelsFromEndpoint] OpenAI Responses API模型获取失败，使用标准API:`, error);
+        rawModels = await openaiApi.fetchModels(provider);
+      }
+      break;
     case 'openai':
     case 'google':
     default:

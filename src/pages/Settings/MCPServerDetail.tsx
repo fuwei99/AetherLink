@@ -11,7 +11,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Switch,
   FormControlLabel,
   Button,
   Chip,
@@ -28,6 +27,7 @@ import {
   CircularProgress,
   Checkbox
 } from '@mui/material';
+import CustomSwitch from '../../components/CustomSwitch';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   ArrowLeft as ArrowBackIcon,
@@ -290,10 +290,9 @@ const MCPServerDetail: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={server.isActive}
                   onChange={(e) => handleToggleActive(e.target.checked)}
-                  color="primary"
                 />
               }
               label="启用服务器"

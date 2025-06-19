@@ -14,13 +14,13 @@ import {
   Toolbar,
   Alert,
   FormControlLabel,
-  Switch,
   FormHelperText,
   Tabs,
   Tab,
 
   Chip
 } from '@mui/material';
+import CustomSwitch from '../../components/CustomSwitch';
 import {
   ArrowLeft,
   Volume2,
@@ -771,20 +771,9 @@ const VoiceSettings: React.FC = () => {
             <Box sx={{ mb: { xs: 2, sm: 3 } }}>
               <FormControlLabel
                 control={
-                  <Switch
+                  <CustomSwitch
                     checked={enableTTS}
                     onChange={(e) => setEnableTTS(e.target.checked)}
-                    color="primary"
-                    size="medium"
-                    sx={{
-                      '& .MuiSwitch-thumb': {
-                        width: { xs: 20, sm: 24 },
-                        height: { xs: 20, sm: 24 },
-                      },
-                      '& .MuiSwitch-track': {
-                        borderRadius: { xs: 10, sm: 12 },
-                      },
-                    }}
                   />
                 }
                 label={
@@ -1272,20 +1261,9 @@ const VoiceSettings: React.FC = () => {
             <Box sx={{ mb: { xs: 2, sm: 3 } }}>
               <FormControlLabel
                 control={
-                  <Switch
+                  <CustomSwitch
                     checked={speechRecognitionSettings.enabled}
                     onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, enabled: e.target.checked }))}
-                    color="primary"
-                    size="medium"
-                    sx={{
-                      '& .MuiSwitch-thumb': {
-                        width: { xs: 20, sm: 24 },
-                        height: { xs: 20, sm: 24 },
-                      },
-                      '& .MuiSwitch-track': {
-                        borderRadius: { xs: 10, sm: 12 },
-                      },
-                    }}
                   />
                 }
                 label={
@@ -1530,10 +1508,9 @@ const VoiceSettings: React.FC = () => {
 
                 <FormControlLabel
                   control={
-                    <Switch
+                    <CustomSwitch
                       checked={speechRecognitionSettings.partialResults}
                       onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, partialResults: e.target.checked }))}
-                      color="primary"
                     />
                   }
                   label="显示部分结果"
@@ -1542,10 +1519,9 @@ const VoiceSettings: React.FC = () => {
 
                 <FormControlLabel
                   control={
-                    <Switch
+                    <CustomSwitch
                       checked={speechRecognitionSettings.autoStart}
                       onChange={(e) => setSpeechRecognitionSettings(prev => ({ ...prev, autoStart: e.target.checked }))}
-                      color="primary"
                     />
                   }
                   label="自动开始识别"

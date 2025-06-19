@@ -152,6 +152,9 @@ interface SettingsState {
     pageTitleField: string;
     dateField?: string; // 可选的日期字段名
   };
+
+  // 性能监控设置
+  showPerformanceMonitor?: boolean; // 是否显示性能监控
 }
 
 
@@ -290,6 +293,9 @@ const getInitialState = (): SettingsState => {
       position: 'center', // 默认居中
       repeat: 'no-repeat' // 默认不重复
     },
+
+    // 性能监控默认设置
+    showPerformanceMonitor: false, // 默认不显示性能监控
   };
 
   // 设置默认模型
@@ -452,6 +458,11 @@ export const loadSettings = createAsyncThunk('settings/load', async () => {
             'web-search': true
           }
         };
+      }
+
+      // 如果没有性能监控显示设置，使用默认值
+      if (savedSettings.showPerformanceMonitor === undefined) {
+        savedSettings.showPerformanceMonitor = false;
       }
 
       return {
@@ -775,6 +786,11 @@ const settingsSlice = createSlice({
     updateToolbarButtons: (state, action: PayloadAction<{ order: string[]; visibility: { [key: string]: boolean } }>) => {
       state.toolbarButtons = action.payload;
     },
+
+    // 性能监控显示控制
+    setShowPerformanceMonitor: (state, action: PayloadAction<boolean>) => {
+      state.showPerformanceMonitor = action.payload;
+    },
   },
   extraReducers: (builder) => {
     // 处理加载设置
@@ -866,6 +882,8 @@ export const {
   setToolbarButtonOrder,
   setToolbarButtonVisibility,
   updateToolbarButtons,
+  // 性能监控控制
+  setShowPerformanceMonitor,
 } = settingsSlice.actions;
 
 // 重用现有的action creators，但添加异步保存

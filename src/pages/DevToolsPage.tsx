@@ -14,7 +14,6 @@ import {
   DialogContentText,
   Button,
   FormControlLabel,
-  Switch,
   Tooltip,
 } from '@mui/material';
 import {
@@ -27,6 +26,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
+import CustomSwitch from '../components/CustomSwitch';
 import ConsolePanel from '../components/DevTools/ConsolePanel';
 import NetworkPanel from '../components/DevTools/NetworkPanel';
 import EnhancedConsoleService from '../shared/services/EnhancedConsoleService';
@@ -128,7 +128,7 @@ const DevToolsPage: React.FC = () => {
           <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={autoScroll}
                   onChange={(e) => setAutoScroll(e.target.checked)}
                 />
@@ -137,7 +137,7 @@ const DevToolsPage: React.FC = () => {
             />
             <FormControlLabel
               control={
-                <Switch
+                <CustomSwitch
                   checked={preserveLog}
                   onChange={(e) => setPreserveLog(e.target.checked)}
                 />

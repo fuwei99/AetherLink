@@ -75,7 +75,7 @@ export function createGeminiAPI(model: Model) {
 
   return {
     /**
-     * 发送消息并获取响应 - 使用电脑版completions方法
+     * 发送消息并获取响应 - 使用completions方法
      */
     sendMessage: async (
       messages: Message[],
@@ -93,7 +93,7 @@ export function createGeminiAPI(model: Model) {
     ) => {
       console.log(`[gemini/index.ts] 通过API适配器发送消息 - 模型ID: ${model.id}, 消息数量: ${messages.length}`);
 
-      // 转换为电脑版的参数格式
+      // 转换为的参数格式
       const assistant = options?.assistant || {
         model: model,
         prompt: options?.systemPrompt || '',

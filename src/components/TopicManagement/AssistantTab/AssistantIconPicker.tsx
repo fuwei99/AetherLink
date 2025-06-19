@@ -212,6 +212,10 @@ export default function AssistantIconPicker({
       open={open}
       onClose={onClose}
       maxWidth={false}
+      // 修复aria-hidden警告
+      disableEnforceFocus
+      disableAutoFocus
+      disableRestoreFocus
       sx={{
         '& .MuiDialog-paper': {
           width: isMobile ? '95vw' : isTablet ? '80vw' : '600px',

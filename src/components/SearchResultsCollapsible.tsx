@@ -12,7 +12,8 @@ import {
   ListItemSecondaryAction,
   Avatar,
   alpha,
-  Chip
+  Chip,
+  useTheme
 } from '@mui/material';
 import { ChevronDown as ExpandMoreIcon, ExternalLink as LaunchIcon, Search as SearchIcon } from 'lucide-react';
 import type { WebSearchResult } from '../shared/types';
@@ -31,6 +32,7 @@ const SearchResultsCollapsible: React.FC<SearchResultsCollapsibleProps> = ({
   query
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const theme = useTheme();
 
   if (!results || results.length === 0) {
     return null;
@@ -68,6 +70,7 @@ const SearchResultsCollapsible: React.FC<SearchResultsCollapsibleProps> = ({
         border: '1px solid',
         borderColor: 'divider',
         boxShadow: 'none',
+        userSelect: 'none', // 禁止文本选择
         '&:hover': {
           borderColor: 'primary.main',
           boxShadow: 1
@@ -125,7 +128,9 @@ const SearchResultsCollapsible: React.FC<SearchResultsCollapsibleProps> = ({
       <Collapse in={expanded}>
         <Box
           sx={{
-            bgcolor: '#fafbfc',
+            bgcolor: theme.palette.mode === 'dark'
+              ? alpha(theme.palette.background.paper, 0.5)
+              : alpha(theme.palette.background.paper, 0.8),
             borderTop: '1px solid',
             borderTopColor: 'divider'
           }}

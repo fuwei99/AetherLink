@@ -150,7 +150,7 @@ export function filterEmptyMessages(messages: Message[]): Message[] {
 }
 
 /**
- * 过滤消息以确保从第一个用户消息开始 - 参考电脑版实现
+ * 过滤消息以确保从第一个用户消息开始 - 参考实现
  * @param messages 消息数组
  * @returns 过滤后的消息数组
  */

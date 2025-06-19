@@ -28,6 +28,7 @@ export interface Group {
   id: string;
   name: string;
   type: 'assistant' | 'topic';
+  assistantId?: string; // 关联的助手ID，topic类型分组必需，assistant类型分组可选
   items: string[]; // 存储item IDs
   order: number;   // 显示顺序
   expanded: boolean; // 是否展开

@@ -76,9 +76,15 @@ export const useMessageHandling = (
         return null;
       }
 
-      // 从Redux中的providers获取所有可用模型
+      // 从Redux中的providers获取所有可用模型，确保provider字段正确设置
       const availableModels = providers.flatMap((provider: any) =>
-        provider.models?.filter((model: any) => model.enabled) || []
+        (provider.models?.filter((model: any) => model.enabled) || []).map((model: any) => ({
+          ...model,
+          provider: provider.id, // 确保provider字段设置为正确的provider ID
+          providerType: model.providerType || provider.providerType || provider.id,
+          apiKey: model.apiKey || provider.apiKey,
+          baseUrl: model.baseUrl || provider.baseUrl
+        }))
       );
 
       // 从可用模型列表中找到对应的模型对象

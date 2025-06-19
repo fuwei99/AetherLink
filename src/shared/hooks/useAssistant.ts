@@ -19,80 +19,47 @@ export function useAssistant(assistantId: string | null) {
     ? assistants.find((a: Assistant) => a.id === assistantId) || null
     : null;
 
-  // 添加加载状态
-  const [isLoading, setIsLoading] = useState(false);
+  // ：移除加载状态，即时响应
 
 
 
-  const loadAssistantTopics = useCallback(async () => {
+  const loadAssistantTopics = useCallback(async (forceRefresh = false) => {
     if (!assistantId || !assistant) {
       return;
     }
 
-    // 检查助手是否已经有话题数据，如果有则不需要设置加载状态
-    const hasTopics = assistant.topics && assistant.topics.length > 0;
-
-    if (hasTopics) {
+    // 优化：助手对象已经预包含话题数据，除非强制刷新，否则无需异步加载
+    // 检查助手是否已经有话题数据
+    if (!forceRefresh && assistant.topics && assistant.topics.length > 0) {
+      console.log(`[useAssistant] 助手 ${assistant.name} 已有预加载的话题数据，数量: ${assistant.topics.length}，跳过加载`);
       return;
     }
 
-    // 只有在需要从数据库加载时才设置加载状态
-    setIsLoading(true);
-
-    try {
-      // 直接从数据库获取所有话题
-      const allTopics = await dexieStorage.getAllTopics();
-
-      // 通过assistantId筛选出属于当前助手的话题
-      const assistantTopics = allTopics.filter(topic => topic.assistantId === assistantId);
-
-      // 如果没有找到话题，可能需要创建默认话题
-      if (assistantTopics.length === 0) {
-        try {
-          // 设置当前助手ID
-          await dexieStorage.saveSetting('currentAssistant', assistantId);
-
-          // 创建默认话题
-          // 使用已导入的getDefaultTopic函数
-          const newTopic = getDefaultTopic(assistantId);
-
-          // 保存话题到数据库
-          await dexieStorage.saveTopic(newTopic);
-
-          // 将新创建的话题添加到结果中
-          assistantTopics.push(newTopic);
-        } catch (error) {
-          console.error('[useAssistant] 创建默认话题失败:', error);
-        }
-      }
-
-      // 按固定状态和最后消息时间排序（固定的在前面，然后按时间降序）
-      const sortedTopics = assistantTopics.sort((a: ChatTopic, b: ChatTopic) => {
-        // 首先按固定状态排序，固定的话题在前面
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-
-        // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
-        const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
-        const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
-        return timeB - timeA;
-      });
-
-      // 更新Redux状态
-      if (sortedTopics.length > 0) {
-        dispatch(updateAssistantTopics({ assistantId, topics: sortedTopics }));
-      }
-    } catch (error) {
-      console.error('[useAssistant] 加载话题失败:', error);
-    } finally {
-      // 无论成功失败都重置加载状态
-      setIsLoading(false);
+    // 如果是强制刷新或没有话题数据
+    if (forceRefresh) {
+      console.log(`[useAssistant] 强制刷新助手 ${assistant.name} 的话题数据`);
+      // 这里可以添加从数据库重新加载话题的逻辑
+      // 但目前助手数据已经预加载，通常不需要强制刷新
+    } else {
+      console.log(`[useAssistant] 助手 ${assistant.name} 没有话题数据，后台创建默认话题`);
     }
+
+    // 后台异步创建默认话题，不阻塞UI
+    Promise.resolve().then(async () => {
+      try {
+        const newTopic = getDefaultTopic(assistantId);
+        await dexieStorage.saveTopic(newTopic);
+        dispatch(updateAssistantTopics({ assistantId, topics: [newTopic] }));
+        console.log(`[useAssistant] 后台创建默认话题完成: ${newTopic.name}`);
+      } catch (error) {
+        console.error('[useAssistant] 后台创建默认话题失败:', error);
+      }
+    });
   }, [assistantId, assistant, dispatch]);
 
   useEffect(() => {
     loadAssistantTopics();
-  }, [assistantId, assistant, loadAssistantTopics]);
+  }, [loadAssistantTopics]);
 
   useEffect(() => {
     if (!assistantId) return;
@@ -169,7 +136,6 @@ export function useAssistant(assistantId: string | null) {
 
   return {
     assistant,
-    isLoading, // 导出加载状态
     addTopic: addTopicToAssistant,
     removeTopic: removeTopicFromAssistant,
     updateTopic: updateAssistantTopic,

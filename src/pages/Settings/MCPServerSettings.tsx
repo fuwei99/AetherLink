@@ -11,7 +11,6 @@ import {
   ListItemText,
   ListItemButton,
   ListItemAvatar,
-  Switch,
   Chip,
   Avatar,
   alpha,
@@ -31,6 +30,7 @@ import {
   FormControlLabel,
   Checkbox
 } from '@mui/material';
+import CustomSwitch from '../../components/CustomSwitch';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft as ArrowBackIcon,
@@ -647,13 +647,12 @@ const MCPServerSettings: React.FC = () => {
                       gap: 1,
                       pr: 2
                     }}>
-                      <Switch
+                      <CustomSwitch
                         checked={server.isActive}
                         onChange={(e) => {
                           e.stopPropagation();
                           handleToggleServer(server.id, e.target.checked);
                         }}
-                        color="primary"
                         onClick={(e) => e.stopPropagation()}
                       />
                       <IconButton

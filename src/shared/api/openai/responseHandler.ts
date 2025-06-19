@@ -53,8 +53,43 @@ export class ResponseHandler {
         console.log(`[ResponseHandler] 启用特殊响应处理 - 模型: ${model.id}`);
       }
 
-      // 处理流式数据
+      // 处理流式数据 - 支持 Responses API 和 Chat Completions API
       for await (const chunk of response) {
+        // 处理 Responses API 格式
+        if (chunk.type) {
+          switch (chunk.type) {
+            case 'response.output_text.delta':
+              if (chunk.delta) {
+                content += chunk.delta;
+                onUpdate?.(content, reasoning);
+              }
+              break;
+
+            case 'response.output_text.done':
+              if (chunk.text) {
+                content = chunk.text;
+                onUpdate?.(content, reasoning);
+              }
+              break;
+
+            case 'response.reasoning.delta':
+              if (chunk.delta) {
+                reasoning += chunk.delta;
+                onUpdate?.(content, reasoning);
+              }
+              break;
+
+            case 'response.reasoning.done':
+              if (chunk.reasoning) {
+                reasoning = chunk.reasoning;
+                onUpdate?.(content, reasoning);
+              }
+              break;
+          }
+          continue;
+        }
+
+        // 处理 Chat Completions API 格式（向后兼容）
         const delta = chunk.choices?.[0]?.delta;
         if (!delta) continue;
 
@@ -111,20 +146,49 @@ export class ResponseHandler {
    */
   handleNonStreamResponse(response: any, model: Model): string | { content: string; reasoning?: string } {
     try {
-      const choice = response.choices?.[0];
-      if (!choice) {
-        throw new Error('响应中没有找到有效的选择项');
+      let content = '';
+      let reasoning = '';
+
+      // 处理 Responses API 格式
+      if (response.output_text) {
+        content = response.output_text;
+      } else if (response.output && Array.isArray(response.output)) {
+        // 处理 output 数组格式
+        for (const output of response.output) {
+          if (output.type === 'message' && output.content) {
+            for (const contentItem of output.content) {
+              if (contentItem.type === 'output_text') {
+                content += contentItem.text || '';
+              }
+            }
+          } else if (output.type === 'reasoning') {
+            reasoning += output.content || '';
+          }
+        }
       }
 
-      const message = choice.message;
-      let content = message.content || '';
-      let reasoning = message.reasoning || '';
+      // 处理推理内容
+      if (response.reasoning) {
+        reasoning = response.reasoning;
+      }
 
-      // 特殊格式处理
-      if (this.config.enableSpecialHandling) {
-        const specialContent = this.extractSpecialContent(message, model);
-        if (specialContent) {
-          content += specialContent;
+      // 向后兼容 Chat Completions API 格式
+      if (!content && !reasoning) {
+        const choice = response.choices?.[0];
+        if (!choice) {
+          throw new Error('响应中没有找到有效的选择项');
+        }
+
+        const message = choice.message;
+        content = message.content || '';
+        reasoning = message.reasoning || '';
+
+        // 特殊格式处理
+        if (this.config.enableSpecialHandling) {
+          const specialContent = this.extractSpecialContent(message, model);
+          if (specialContent) {
+            content += specialContent;
+          }
         }
       }
 

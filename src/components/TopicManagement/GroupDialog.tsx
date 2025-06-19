@@ -15,9 +15,10 @@ interface GroupDialogProps {
   onClose: () => void;
   type: 'assistant' | 'topic';
   title?: string;
+  assistantId?: string; // 话题分组需要的助手ID
 }
 
-export default function GroupDialog({ open, onClose, type, title = '添加分组' }: GroupDialogProps) {
+export default function GroupDialog({ open, onClose, type, title = '添加分组', assistantId }: GroupDialogProps) {
   const dispatch = useDispatch();
   const [groupName, setGroupName] = useState('');
   const [error, setError] = useState('');
@@ -33,13 +34,20 @@ export default function GroupDialog({ open, onClose, type, title = '添加分组
       setError('分组名称不能为空');
       return;
     }
-    
+
+    // 对于话题分组，检查assistantId是否存在
+    if (type === 'topic' && !assistantId) {
+      setError('创建话题分组需要指定助手');
+      return;
+    }
+
     // 创建新分组
-    dispatch(createGroup({ 
-      name: groupName.trim(), 
-      type 
+    dispatch(createGroup({
+      name: groupName.trim(),
+      type,
+      assistantId: type === 'topic' ? assistantId : undefined
     }));
-    
+
     handleClose();
   };
   

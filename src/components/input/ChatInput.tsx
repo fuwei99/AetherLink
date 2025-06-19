@@ -643,7 +643,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
             size={isTablet ? "large" : "medium"}
             style={{
-              color: voiceState !== 'normal' ? '#f44336' : iconColor,
+              color: voiceState !== 'normal' ? '#f44336' : (isDarkMode ? '#ffffff' : '#000000'),
               padding: isTablet ? '10px' : '8px',
               backgroundColor: voiceState !== 'normal' ? 'rgba(211, 47, 47, 0.15)' : 'transparent',
               transition: 'all 0.25s ease-in-out'
@@ -726,7 +726,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 onClick={handleOpenUploadMenu}
                 disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
                 style={{
-                  color: uploadingMedia ? disabledColor : iconColor,
+                  color: uploadingMedia ? disabledColor : (isDarkMode ? '#ffffff' : '#000000'),
                   padding: isTablet ? '10px' : '8px',
                   position: 'relative',
                   marginRight: isTablet ? '4px' : '0'

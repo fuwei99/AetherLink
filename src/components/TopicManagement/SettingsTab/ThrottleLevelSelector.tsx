@@ -7,7 +7,7 @@ import {
   Box,
   Typography,
   Chip,
-  Collapse,
+
   IconButton,
   ListItem,
   ListItemText,
@@ -19,6 +19,7 @@ import {
   setThrottleLevel,
   type ThrottleLevel
 } from '../../../shared/utils/performanceSettings';
+import OptimizedCollapse from './OptimizedCollapse';
 
 /**
  * 节流强度选择器组件
@@ -88,20 +89,34 @@ export default function ThrottleLevelSelector() {
           py: 0.75,
           cursor: 'pointer',
           position: 'relative',
-          zIndex: 1, // 确保不会覆盖其他元素
-          '&:hover': {
-            backgroundColor: 'transparent !important', // 强制透明，无悬停效果
-            transform: 'none !important', // 防止任何变换
-            boxShadow: 'none !important' // 防止阴影
+          zIndex: 1,
+          // 优化触摸响应
+          touchAction: 'manipulation', // 防止双击缩放，优化触摸响应
+          userSelect: 'none', // 防止文本选择
+          // 移动端优化
+          '@media (hover: none)': {
+            '&:active': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              transform: 'scale(0.98)', // 轻微缩放反馈
+              transition: 'all 0.1s ease-out'
+            }
           },
-          '&:focus': {
-            backgroundColor: 'transparent !important'
+          // 桌面端优化
+          '@media (hover: hover)': {
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+              transform: 'none !important',
+              boxShadow: 'none !important'
+            },
+            '&:focus': {
+              backgroundColor: 'transparent !important'
+            },
+            '&:active': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+            }
           },
-          '&:active': {
-            backgroundColor: 'rgba(0, 0, 0, 0.02)' // 点击时的轻微反馈
-          },
-          // 防止任何子元素的悬停效果
           '& *': {
+            pointerEvents: 'none', // 防止子元素干扰点击
             '&:hover': {
               backgroundColor: 'transparent !important',
               transform: 'none !important'
@@ -123,10 +138,9 @@ export default function ThrottleLevelSelector() {
       </ListItem>
 
       {/* 可折叠的内容区域 */}
-      <Collapse
+      <OptimizedCollapse
         in={expanded}
-        timeout={{ enter: 300, exit: 200 }}
-        easing={{ enter: 'cubic-bezier(0.4, 0, 0.2, 1)', exit: 'cubic-bezier(0.4, 0, 0.6, 1)' }}
+        timeout={150}
         unmountOnExit
       >
         <Box sx={{ px: 2, pb: 2, pt: 1.5 }}>
@@ -194,7 +208,7 @@ export default function ThrottleLevelSelector() {
             💡 节流强度越高，性能越好但更新越慢。建议根据设备性能选择合适的级别。
           </Typography>
         </Box>
-      </Collapse>
+      </OptimizedCollapse>
     </Box>
   );
 }

@@ -60,6 +60,8 @@ export function getProviderDisplayName(model: Model): string {
   switch (providerType) {
     case 'openai':
       return 'OpenAI (标准)';
+    case 'openai-response':
+      return 'OpenAI (Responses API)';
     case 'openai-aisdk':
       return 'OpenAI (AI SDK)';
     case 'anthropic':

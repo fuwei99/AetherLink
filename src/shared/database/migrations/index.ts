@@ -263,18 +263,14 @@ export class DatabaseMigrationManager {
   }
 
   /**
-   * 添加新版本迁移的模板方法
-   * 复制此方法并修改版本号来添加新的迁移
+   * 迁移到版本7：添加memories表用于存储知识图谱数据
    */
   private async migrateToV7(_db: any): Promise<void> {
-    this.log('开始升级到数据库版本7: [在这里描述版本7的变更]...');
+    this.log('开始升级到数据库版本7: 添加memories表用于存储知识图谱数据...');
 
     try {
-      // 在这里添加版本7的迁移逻辑
-      // 例如：
-      // - 添加新表
-      // - 修改现有数据结构
-      // - 数据迁移和转换
+      // memories表会自动创建，无需特殊处理
+      // 这里可以添加一些初始化数据或验证逻辑
 
       this.log('数据库升级到版本7完成');
     } catch (error) {

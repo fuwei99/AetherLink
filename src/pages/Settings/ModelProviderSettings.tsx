@@ -16,7 +16,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Switch,
   Divider,
   FormControlLabel,
   CircularProgress,
@@ -26,6 +25,7 @@ import {
   Tab,
   InputAdornment
 } from '@mui/material';
+import CustomSwitch from '../../components/CustomSwitch';
 import {
   ArrowLeft,
   Plus,
@@ -91,19 +91,26 @@ const formatApiHost = (host: string) => {
 /**
  * 生成预览URL
  */
-const hostPreview = (baseUrl: string) => {
+const hostPreview = (baseUrl: string, providerType?: string) => {
   if (baseUrl.endsWith('#')) {
     return baseUrl.replace('#', '');
   }
 
-  // 所有OpenAI兼容的API都使用 /v1/chat/completions 端点
+  // 检查是否为 OpenAI Responses API 提供商
+  if (providerType === 'openai-response') {
+    // OpenAI Responses API 不自动添加 /v1，因为自动获取模型功能需要用户手动填写完整路径
+    const normalizedUrl = baseUrl.trim().replace(/\/$/, '');
+    return normalizedUrl + '/responses';
+  }
+
+  // 默认使用 chat/completions 端点
   return formatApiHost(baseUrl) + 'chat/completions';
 };
 
 
 
 /**
- * 判断是否为OpenAI类型的提供商（参考电脑版逻辑）
+ * 判断是否为OpenAI类型的提供商（参考逻辑）
  * @param providerType 供应商类型
  * @returns 是否为OpenAI类型
  */
@@ -114,11 +121,12 @@ const isOpenAIProvider = (providerType?: string): boolean => {
 /**
  * 显示用的URL补全函数 - 仅用于显示完整的API端点
  * @param baseUrl 基础URL
+ * @param providerType 提供商类型
  * @returns 显示用的完整API端点
  */
-const getCompleteApiUrl = (baseUrl: string): string => {
+const getCompleteApiUrl = (baseUrl: string, providerType?: string): string => {
   if (!baseUrl.trim()) return '';
-  return hostPreview(baseUrl);
+  return hostPreview(baseUrl, providerType);
 };
 
 const ModelProviderSettings: React.FC = () => {
@@ -607,14 +615,43 @@ const ModelProviderSettings: React.FC = () => {
         enabled: true
       };
 
-      // 直接发送真实的API请求，而不仅仅是测试连接
-      const testResponse = await sendChatRequest({
-        messages: [{
-          role: 'user',
-          content: '这是一条API测试消息，请简短回复以验证连接。'
-        }],
-        modelId: testModel.id
-      });
+      // 根据提供商类型选择正确的测试方法
+      let testResponse;
+
+      if (provider.providerType === 'openai-response') {
+        // 对于 OpenAI Responses API，使用专用的测试方法
+        try {
+          const { OpenAIResponseProvider } = await import('../../shared/providers/OpenAIResponseProvider');
+          const responseProvider = new OpenAIResponseProvider(testModel);
+
+          // 使用 sendChatMessage 方法测试
+          const result = await responseProvider.sendChatMessage([{
+            role: 'user',
+            content: '这是一条API测试消息，请简短回复以验证连接。'
+          }], {
+            assistant: { temperature: 0.7, maxTokens: 50 }
+          });
+
+          testResponse = {
+            success: true,
+            content: typeof result === 'string' ? result : result.content
+          };
+        } catch (error: any) {
+          testResponse = {
+            success: false,
+            error: error.message || '测试失败'
+          };
+        }
+      } else {
+        // 其他提供商使用原有的测试方法
+        testResponse = await sendChatRequest({
+          messages: [{
+            role: 'user',
+            content: '这是一条API测试消息，请简短回复以验证连接。'
+          }],
+          modelId: testModel.id
+        });
+      }
 
       if (testResponse.success) {
         // 显示成功信息和API响应内容
@@ -849,10 +886,9 @@ const ModelProviderSettings: React.FC = () => {
                 </Typography>
                 <FormControlLabel
                   control={
-                    <Switch
+                    <CustomSwitch
                       checked={isEnabled}
                       onChange={(e) => setIsEnabled(e.target.checked)}
-                      color="primary"
                     />
                   }
                   label={isEnabled ? '已启用' : '已禁用'}
@@ -866,10 +902,9 @@ const ModelProviderSettings: React.FC = () => {
                 </Typography>
                 <FormControlLabel
                   control={
-                    <Switch
+                    <CustomSwitch
                       checked={multiKeyEnabled}
                       onChange={(e) => handleToggleMultiKey(e.target.checked)}
-                      color="primary"
                     />
                   }
                   label={multiKeyEnabled ? '多 Key 负载均衡模式' : '单 Key 模式'}
@@ -999,7 +1034,7 @@ const ModelProviderSettings: React.FC = () => {
                               >
                                 {baseUrl.endsWith('#') ? '强制使用: ' :
                                  baseUrl.endsWith('/') ? '保持原格式: ' : '完整地址: '}
-                                {getCompleteApiUrl(baseUrl)}
+                                {getCompleteApiUrl(baseUrl, provider?.providerType)}
                               </span>
                             )}
                           </span>

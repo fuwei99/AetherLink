@@ -113,7 +113,7 @@ export abstract class BaseOpenAIProvider extends AbstractBaseProvider {
   }
 
   /**
-   * 获取推理优化参数 - 使用参数管理器
+   * 获取推理优化参数 - 使用参数管理器 (Chat Completions API 格式)
    * 根据模型类型和助手设置返回不同的推理参数
    * @param assistant 助手对象
    * @param model 模型对象
@@ -127,6 +127,22 @@ export abstract class BaseOpenAIProvider extends AbstractBaseProvider {
 
     this.parameterManager.updateAssistant(assistant);
     return this.parameterManager.getReasoningParameters();
+  }
+
+  /**
+   * 获取 Responses API 格式的推理参数
+   * @param assistant 助手对象
+   * @param model 模型对象
+   * @returns Responses API 格式的推理参数
+   */
+  protected getResponsesAPIReasoningEffort(assistant?: any, model?: Model): any {
+    // 如果传入了不同的模型，更新参数管理器
+    if (model && model !== this.model) {
+      this.parameterManager.updateModel(model);
+    }
+
+    this.parameterManager.updateAssistant(assistant);
+    return this.parameterManager.getResponsesAPIReasoningParameters();
   }
 
 

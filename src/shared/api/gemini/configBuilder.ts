@@ -158,8 +158,8 @@ export class GeminiConfigBuilder {
       // 优先使用助手设置的思考预算，如果没有则使用应用设置的默认值
       const thinkingBudget = this.assistant?.thinkingBudget || appThinkingBudget;
 
-      // 对于 Gemini 2.5 Pro 0605 模型，必须设置思考预算，不能为0
-      if (this.model.id === 'gemini-2.5-pro-preview-06-05') {
+      // 对于 Gemini 2.5 Pro 模型，必须设置思考预算，不能为0
+      if (this.model.id === 'gemini-2.5-pro-preview-06-05' || this.model.id === 'gemini-2.5-pro') {
         // 确保思考预算在有效范围内 (128-32768)
         const budget = Math.max(128, Math.min(thinkingBudget, 32768));
         

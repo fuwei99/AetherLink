@@ -7,7 +7,7 @@ interface Props {
 }
 
 /**
- * 错误块组件 - 简化版本（类似电脑版）
+ * 错误块组件 - 简化版本（类似）
  * 负责渲染错误信息
  */
 const ErrorBlock: React.FC<Props> = ({ block }) => {

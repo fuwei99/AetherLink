@@ -8,7 +8,8 @@ import {
   Paper,
   FormGroup,
   FormControlLabel,
-  Switch,
+  RadioGroup,
+  Radio,
   IconButton,
   Tooltip,
   Chip,
@@ -16,6 +17,7 @@ import {
   Card,
   Grid
 } from '@mui/material';
+import CustomSwitch from '../../components/CustomSwitch';
 import {
   ArrowLeft,
   Info,
@@ -472,8 +474,7 @@ const TopToolbarDIYSettings: React.FC = () => {
               <Grid size={{ xs: 12, sm: 6 }} key={componentId}>
                 <FormControlLabel
                   control={
-                    <Switch
-                      size="small"
+                    <CustomSwitch
                       checked={topToolbar[config.key as keyof typeof topToolbar] as boolean}
                       onChange={(e) => handleComponentToggle(componentId, e.target.checked)}
                     />
@@ -490,6 +491,84 @@ const TopToolbarDIYSettings: React.FC = () => {
           </Grid>
         </Paper>
 
+        {/* 快速预设配置 */}
+        <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Typography variant="subtitle1">快速预设配置</Typography>
+            <Tooltip title="选择预设的工具栏配置方案">
+              <IconButton size="small" sx={{ ml: 1 }}>
+                <Info size={16} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Box
+              sx={{
+                p: 1.5,
+                border: '1px solid #ddd',
+                borderRadius: 1,
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'action.hover' }
+              }}
+              onClick={() => {
+                dispatch(updateSettings({
+                  topToolbar: {
+                    showSettingsButton: true,
+                    showModelSelector: true,
+                    modelSelectorStyle: 'dialog',
+                    showChatTitle: true,
+                    showTopicName: false,
+                    showNewTopicButton: false,
+                    showClearButton: false,
+                    showMenuButton: true,
+                    leftComponents: ['menuButton', 'chatTitle', 'topicName', 'newTopicButton', 'clearButton'],
+                    rightComponents: ['modelSelector', 'settingsButton'],
+                    componentPositions: [] // 重置DIY布局
+                  }
+                }));
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>默认配置</Typography>
+              <Typography variant="caption" color="text.secondary">
+                标准的工具栏布局
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{
+                p: 1.5,
+                border: '1px solid #ddd',
+                borderRadius: 1,
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'action.hover' }
+              }}
+              onClick={() => {
+                dispatch(updateSettings({
+                  topToolbar: {
+                    showSettingsButton: false,
+                    showModelSelector: true,
+                    modelSelectorStyle: 'dialog',
+                    showChatTitle: false,
+                    showTopicName: true,
+                    showNewTopicButton: true,
+                    showClearButton: true,
+                    showMenuButton: true,
+                    leftComponents: ['menuButton', 'topicName', 'newTopicButton', 'clearButton'],
+                    rightComponents: ['modelSelector'],
+                    componentPositions: [] // 重置DIY布局
+                  }
+                }));
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>简洁配置</Typography>
+              <Typography variant="caption" color="text.secondary">
+                精简的工具栏，节省空间
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+
         {/* 模型选择器样式设置 */}
         {topToolbar.showModelSelector && (
           <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
@@ -502,28 +581,31 @@ const TopToolbarDIYSettings: React.FC = () => {
               </Tooltip>
             </Box>
 
-            <FormGroup row>
+            <RadioGroup
+              value={topToolbar.modelSelectorStyle}
+              onChange={(e) => {
+                dispatch(updateSettings({
+                  topToolbar: {
+                    ...topToolbar,
+                    modelSelectorStyle: e.target.value as 'dialog' | 'dropdown'
+                  }
+                }));
+              }}
+            >
               <FormControlLabel
-                control={
-                  <Switch
-                    size="small"
-                    checked={topToolbar.modelSelectorStyle === 'dialog'}
-                    onChange={(e) => {
-                      dispatch(updateSettings({
-                        topToolbar: {
-                          ...topToolbar,
-                          modelSelectorStyle: e.target.checked ? 'dialog' : 'dropdown'
-                        }
-                      }));
-                    }}
-                  />
-                }
-                label={topToolbar.modelSelectorStyle === 'dialog' ? '弹窗式' : '下拉式'}
+                value="dialog"
+                control={<Radio size="small" />}
+                label="图标模式（显示图标按钮，点击弹出模型选择对话框）"
               />
-            </FormGroup>
+              <FormControlLabel
+                value="dropdown"
+                control={<Radio size="small" />}
+                label="文字模式（显示当前模型名称，点击下拉选择）"
+              />
+            </RadioGroup>
 
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              图标模式可以节省空间，适合小屏设备使用。
+              图标模式节省空间，适合小屏设备；文字模式显示当前模型，更直观。
             </Typography>
           </Paper>
         )}

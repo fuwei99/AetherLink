@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Box,
-  List,
   Button,
   IconButton,
   Typography,
@@ -9,12 +8,12 @@ import {
   InputAdornment,
   Menu,
   MenuItem,
-  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider
+  Divider,
+  Tooltip
 } from '@mui/material';
 import { debounce } from 'lodash';
 import {
@@ -43,8 +42,8 @@ import { getMainTextContent } from '../../../shared/utils/blockUtils';
 import type { ChatTopic } from '../../../shared/types';
 import type { Assistant } from '../../../shared/types/Assistant';
 import { useTopicGroups } from './hooks/useTopicGroups';
-import TopicGroups from './TopicGroups';
-import TopicItem from './TopicItem';
+import VirtualizedTopicGroups from './VirtualizedTopicGroups';
+import VirtualizedTopicList from './VirtualizedTopicList';
 import type { RootState } from '../../../shared/store';
 import store from '../../../shared/store';
 import { TopicService } from '../../../shared/services/TopicService';
@@ -82,9 +81,8 @@ export default function TopicTab({
 }: TopicTabProps) {
   const dispatch = useDispatch();
 
-  // 话题状态管理
+  // 话题状态管理 - ：无加载状态，即时响应
   const [topics, setTopics] = useState<ChatTopic[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,7 +118,7 @@ export default function TopicTab({
   const [moveToMenuAnchorEl, setMoveToMenuAnchorEl] = useState<null | HTMLElement>(null);
 
   // 使用话题分组钩子
-  const { topicGroups, topicGroupMap, ungroupedTopics } = useTopicGroups(topics);
+  const { topicGroups, topicGroupMap, ungroupedTopics } = useTopicGroups(topics, currentAssistant?.id);
 
   // 创建防抖搜索函数
   const debouncedSearch = useMemo(
@@ -133,76 +131,61 @@ export default function TopicTab({
   // 获取所有助手列表（用于移动功能）
   const allAssistants = useSelector((state: RootState) => state.assistants.assistants);
 
-  // 当助手变化时加载话题
-  useEffect(() => {
-    const loadTopics = async () => {
-      if (!currentAssistant) {
-        setTopics([]);
-        return;
-      }
+  // 🔥 使用 ref 缓存上次的计算结果，避免重复计算
+  const lastComputedRef = useRef<{
+    assistantId: string;
+    topicIds: string;
+    result: ChatTopic[];
+  } | null>(null);
 
-      // 避免频繁设置加载状态，只有当真正需要从数据库加载时才设置
-      const hasTopicsInRedux = currentAssistant.topics && currentAssistant.topics.length > 0;
+  // 🔥 进一步优化：创建稳定的话题ID列表作为依赖
+  const topicIds = useMemo(() => {
+    return currentAssistant?.topics?.map(t => t.id).join(',') || '';
+  }, [currentAssistant?.topics]);
 
-      if (hasTopicsInRedux) {
-        // 如果Redux中已有数据，直接使用，不设置加载状态
+  // 🔥 优化：减少重复计算，使用缓存机制
+  const sortedTopics = useMemo(() => {
+    if (!currentAssistant || !Array.isArray(currentAssistant.topics)) {
+      return [];
+    }
 
+    // 检查是否可以使用缓存的结果
+    if (lastComputedRef.current &&
+        lastComputedRef.current.assistantId === currentAssistant.id &&
+        lastComputedRef.current.topicIds === topicIds) {
+      // 使用缓存的结果，避免重复计算
+      return lastComputedRef.current.result;
+    }
 
-        // 按固定状态和最后消息时间排序话题（固定的在前面，然后按时间降序）
-        const sortedTopics = [...currentAssistant.topics].sort((a, b) => {
-          // 首先按固定状态排序，固定的话题在前面
-          if (a.pinned && !b.pinned) return -1;
-          if (!a.pinned && b.pinned) return 1;
+    // 🔥 只在真正需要重新计算时才输出日志
+    console.log('[TopicTab] 重新计算排序话题，助手:', currentAssistant.name, '话题数量:', currentAssistant.topics.length);
 
-          // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
-          const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
-          const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
-          return timeB - timeA; // 降序排序
-        });
+    // 按固定状态和最后消息时间排序话题（固定的在前面，然后按时间降序）
+    const sorted = [...currentAssistant.topics].sort((a, b) => {
+      // 首先按固定状态排序，固定的话题在前面
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
 
+      // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
+      const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
+      const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
+      return timeB - timeA; // 降序排序
+    });
 
-        setTopics(sortedTopics);
-        return;
-      }
-
-      // 只有需要从数据库加载时才设置加载状态
-      setIsLoading(true);
-      try {
-        // 从数据库加载该助手的所有话题
-
-        const allTopics = await dexieStorage.getAllTopics();
-        const assistantTopics = allTopics.filter(
-          topic => topic.assistantId === currentAssistant.id
-        );
-
-        if (assistantTopics.length === 0) {
-          // 助手没有话题，可能需要创建默认话题
-        } else {
-
-          // 按固定状态和最后消息时间排序话题（固定的在前面，然后按时间降序）
-          const sortedTopics = [...assistantTopics].sort((a, b) => {
-            // 首先按固定状态排序，固定的话题在前面
-            if (a.pinned && !b.pinned) return -1;
-            if (!a.pinned && b.pinned) return 1;
-
-            // 如果固定状态相同，按最后消息时间降序排序（最新的在前面）
-            const timeA = new Date(a.lastMessageTime || a.updatedAt || a.createdAt || 0).getTime();
-            const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
-            return timeB - timeA; // 降序排序
-          });
-
-
-          setTopics(sortedTopics);
-        }
-      } catch (error) {
-        console.error(`[TopicTab] 加载话题失败:`, error);
-      } finally {
-        setIsLoading(false);
-      }
+    // 缓存计算结果
+    lastComputedRef.current = {
+      assistantId: currentAssistant.id,
+      topicIds,
+      result: sorted
     };
 
-    loadTopics();
-  }, [currentAssistant]);
+    return sorted;
+  }, [currentAssistant?.id, topicIds]); // 🔥 使用话题ID字符串作为依赖
+
+  // 使用useEffect更新本地状态，但只在必要时更新
+  useEffect(() => {
+    setTopics(sortedTopics);
+  }, [sortedTopics]);
 
   // 添加订阅话题变更事件
   useEffect(() => {
@@ -233,8 +216,13 @@ export default function TopicTab({
             });
           });
         }
-        // 如果currentAssistant.topics已更新，则使用它并排序
-        else if (currentAssistant.topics && currentAssistant.topics.length > 0) {
+        // 如果currentAssistant.topics已更新，则使用它并排序（改造：支持空数组）
+        else if (Array.isArray(currentAssistant.topics)) {
+          // 🔥 减少重复日志输出
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[TopicTab] 事件处理：更新话题数组，话题数量:', currentAssistant.topics.length);
+          }
+
           // 按固定状态和最后消息时间排序话题（固定的在前面，然后按时间降序）
           const sortedTopics = [...currentAssistant.topics].sort((a, b) => {
             // 首先按固定状态排序，固定的话题在前面
@@ -270,40 +258,31 @@ export default function TopicTab({
     // 1. 非加载状态
     // 2. 有话题列表
     // 3. 没有当前选中的话题ID
-    if (!isLoading && topics.length > 0) {
+    if (topics.length > 0) {
       // 从Redux获取当前话题ID
       const currentTopicId = store.getState().messages?.currentTopicId;
 
       // 只有在完全没有选中话题时才自动选择第一个话题
-      // 移除"话题不在当前助手列表中"的检查，避免用户选择被覆盖
       if (!currentTopicId) {
-        console.log('[TopicTab] 自动选择第一个话题:', topics[0].name || topics[0].title);
-
-        // 使用requestAnimationFrame确保在下一次渲染帧中执行
-        requestAnimationFrame(() => {
-          onSelectTopic(topics[0]);
-        });
+        console.log('[TopicTab] 即时选择第一个话题:', topics[0].name || topics[0].title);
+        onSelectTopic(topics[0]);
       }
     }
-  }, [topics, isLoading, onSelectTopic]);
+  }, [topics, onSelectTopic]);
 
   // 监听SHOW_TOPIC_SIDEBAR事件，确保在切换到话题标签页时自动选择话题（优化：与主逻辑保持一致）
   useEffect(() => {
     const handleShowTopicSidebar = () => {
       // 如果有话题但没有选中的话题，自动选择第一个话题
-      if (!isLoading && topics.length > 0) {
+      if (topics.length > 0) {
         // 使用Redux状态检查，与主自动选择逻辑保持一致
         const currentTopicId = store.getState().messages?.currentTopicId;
 
         // 只有在完全没有选中话题时才自动选择第一个话题
         // 移除"话题不在当前助手列表中"的检查，避免用户选择被覆盖
         if (!currentTopicId) {
-          console.log('[TopicTab] SHOW_TOPIC_SIDEBAR事件触发自动选择第一个话题:', topics[0].name);
-
-          // 使用requestAnimationFrame确保在下一次渲染帧中执行
-          requestAnimationFrame(() => {
-            onSelectTopic(topics[0]);
-          });
+          console.log('[TopicTab] SHOW_TOPIC_SIDEBAR事件触发，即时选择第一个话题:', topics[0].name);
+          onSelectTopic(topics[0]);
         }
       }
     };
@@ -313,7 +292,7 @@ export default function TopicTab({
     return () => {
       unsubscribe();
     };
-  }, [topics, isLoading, onSelectTopic]);
+  }, [topics, onSelectTopic]);
 
   // 筛选话题 - 使用防抖搜索查询
   const filteredTopics = useMemo(() => {
@@ -768,7 +747,16 @@ export default function TopicTab({
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      // 整体容器性能优化
+      contain: 'layout style paint',
+      transform: 'translateZ(0)',
+      // 防止不必要的重绘
+      isolation: 'isolate',
+    }}>
       {/* 标题和按钮区域 */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         {showSearch ? (
@@ -799,43 +787,56 @@ export default function TopicTab({
             <Typography variant="subtitle1" fontWeight="medium">
               {currentAssistant?.name || '所有话题'}
             </Typography>
-            <Box>
-              <IconButton size="small" onClick={handleSearchClick} sx={{ mr: 1 }}>
+            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+              <IconButton size="small" onClick={handleSearchClick} sx={{ mr: 0.5 }}>
                 <Search size={18} />
               </IconButton>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Plus size={16} />}
-                onClick={onCreateTopic}
-                sx={{
-                  color: 'text.primary',
-                  borderColor: 'text.secondary',
-                  '&:hover': {
-                    borderColor: 'text.primary',
-                    backgroundColor: 'action.hover'
-                  }
-                }}
-              >
-                新建话题
-              </Button>
+              <Tooltip title="创建话题分组">
+                <IconButton
+                  size="small"
+                  onClick={handleOpenGroupDialog}
+                  sx={{
+                    color: 'text.primary',
+                    border: '1px solid',
+                    borderColor: 'text.secondary',
+                    borderRadius: '6px',
+                    '&:hover': {
+                      borderColor: 'text.primary',
+                      backgroundColor: 'action.hover'
+                    }
+                  }}
+                >
+                  <FolderPlus size={16} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="创建新话题">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Plus size={16} />}
+                  onClick={onCreateTopic}
+                  sx={{
+                    color: 'text.primary',
+                    borderColor: 'text.secondary',
+                    minWidth: 'auto',
+                    px: 1,
+                    fontSize: '0.75rem',
+                    '&:hover': {
+                      borderColor: 'text.primary',
+                      backgroundColor: 'action.hover'
+                    }
+                  }}
+                >
+                  新建话题
+                </Button>
+              </Tooltip>
             </Box>
           </>
         )}
       </Box>
 
-      {/* 加载状态显示 */}
-      {isLoading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-          <CircularProgress size={24} />
-          <Typography variant="body2" sx={{ ml: 1 }}>
-            加载中...
-          </Typography>
-        </Box>
-      )}
-
-      {/* 没有话题时的提示 */}
-      {!isLoading && topics.length === 0 && (
+      {/* 没有话题时的提示 - ：无加载状态，即时显示 */}
+      {topics.length === 0 && (
         <Box sx={{ py: 2, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary">
             此助手没有话题，点击上方的"+"按钮创建一个新话题。
@@ -844,7 +845,7 @@ export default function TopicTab({
       )}
 
       {/* 分组区域 */}
-      <TopicGroups
+      <VirtualizedTopicGroups
         topicGroups={topicGroups}
         topics={filteredTopics}
         topicGroupMap={topicGroupMap}
@@ -852,49 +853,29 @@ export default function TopicTab({
         onSelectTopic={onSelectTopic}
         onOpenMenu={handleOpenMenu}
         onDeleteTopic={onDeleteTopic}
-        onAddItem={handleOpenGroupDialog}
       />
 
-      {/* 未分组话题列表 */}
-      {ungroupedTopics.length > 0 && (
-        <>
-          <Typography variant="body2" color="textSecondary" sx={{ mt: 1, mb: 1 }}>
-            未分组话题
-          </Typography>
-          <List sx={{ flexGrow: 1, overflow: 'auto' }}>
-            {ungroupedTopics
-              .filter(topic => {
-                if (!debouncedSearchQuery) return true;
-                // 检查名称或标题
-                if ((topic.name && topic.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) ||
-                    (topic.title && topic.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))) {
-                  return true;
-                }
-                // 检查消息内容
-                return (topic.messages || []).some(message => {
-                  const content = getMainTextContent(message);
-                  return content ? content.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) : false;
-                });
-              })
-              .map(topic => (
-                <TopicItem
-                  key={topic.id}
-                  topic={topic}
-                  isSelected={currentTopic?.id === topic.id}
-                  onSelectTopic={onSelectTopic}
-                  onOpenMenu={handleOpenMenu}
-                  onDeleteTopic={onDeleteTopic}
-                />
-              ))}
-          </List>
-        </>
-      )}
+      {/* 未分组话题列表 - 使用虚拟化组件 */}
+      <VirtualizedTopicList
+        topics={ungroupedTopics}
+        currentTopic={currentTopic}
+        onSelectTopic={onSelectTopic}
+        onOpenMenu={handleOpenMenu}
+        onDeleteTopic={onDeleteTopic}
+        title="未分组话题"
+        height="calc(100vh - 400px)" // 动态计算高度
+        emptyMessage="暂无未分组话题"
+        itemHeight={64} // 更新为64px以包含margin-bottom空间
+        searchQuery={debouncedSearchQuery}
+        getMainTextContent={getMainTextContent}
+      />
 
       {/* 分组对话框 */}
       <GroupDialog
         open={groupDialogOpen}
         onClose={handleCloseGroupDialog}
         type="topic"
+        assistantId={currentAssistant?.id}
       />
 
       {/* 话题菜单 */}

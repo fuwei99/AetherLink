@@ -39,7 +39,7 @@ export default function SidebarTabs({
     refreshTopics
   } = useSidebarState();
 
-  // 助手管理
+  // 助手管理 - 传递标签页切换函数
   const {
     handleSelectAssistant,
     handleAddAssistant,
@@ -50,7 +50,8 @@ export default function SidebarTabs({
     currentAssistant,
     setCurrentAssistant,
     setUserAssistants,
-    currentTopic
+    currentTopic,
+    switchToTopicTab: () => setValue(1) // 🔥 传递切换到话题标签页的函数
   });
 
   // 话题管理
