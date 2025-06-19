@@ -408,6 +408,7 @@ const ChatInterfaceSettings: React.FC = () => {
             >
               <MenuItem value="default">默认样式（工具栏+输入框分离）</MenuItem>
               <MenuItem value="compact">聚合样式（输入框+功能图标集成）</MenuItem>
+              <MenuItem value="integrated">集成样式（工具菜单+垂直布局）</MenuItem>
             </Select>
           </FormControl>
 
@@ -415,6 +416,7 @@ const ChatInterfaceSettings: React.FC = () => {
             选择聊天输入区域的布局方式：
             <br />• 默认样式：工具栏和输入框分别显示，功能清晰分离
             <br />• 聚合样式：输入框上方，下方为功能图标行，点击+号可展开更多功能
+            <br />• 集成样式：工具菜单集成到输入框，采用垂直布局和现代化设计
           </Typography>
         </Paper>
 

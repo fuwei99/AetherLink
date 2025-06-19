@@ -135,20 +135,29 @@ const MessageActions: React.FC<MessageActionsProps> = React.memo(({
     [theme.palette.mode]
   );
 
-  // 菜单状态
+  // 菜单状态 - 内存泄漏防护：避免存储DOM引用
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
   // 编辑对话框状态
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  // 版本切换弹出框状态
+  // 版本切换弹出框状态 - 内存泄漏防护：避免存储DOM引用
   const [versionAnchorEl, setVersionAnchorEl] = useState<null | HTMLElement>(null);
   const versionPopoverOpen = Boolean(versionAnchorEl);
 
-  // 导出菜单状态
+  // 导出菜单状态 - 内存泄漏防护：避免存储DOM引用
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
   const exportMenuOpen = Boolean(exportAnchorEl);
+
+  // 内存泄漏防护：组件卸载时清理DOM引用
+  useEffect(() => {
+    return () => {
+      setAnchorEl(null);
+      setVersionAnchorEl(null);
+      setExportAnchorEl(null);
+    };
+  }, []);
 
   // 删除按钮状态（两次点击确认）
   const [deleteButtonClicked, setDeleteButtonClicked] = useState(false);

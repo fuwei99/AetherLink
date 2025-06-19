@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Paper } from '@mui/material';
-import { VolumeX } from 'lucide-react';
+import { Box, Typography, Paper, IconButton, Tooltip } from '@mui/material';
+import { VolumeX, ArrowLeft } from 'lucide-react';
 import { useVoiceRecognition } from '../../shared/hooks/useVoiceRecognition';
 
 interface EnhancedVoiceInputProps {
@@ -120,7 +120,7 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
 
     setLongPressTimer(timer);
 
-    // 启动进度动画
+    // 启动进度动画 - 内存泄漏防护：确保定时器被清理
     const progressTimer = setInterval(() => {
       setLongPressProgress(prev => {
         if (prev >= 100) {
@@ -322,6 +322,29 @@ const EnhancedVoiceInput: React.FC<EnhancedVoiceInputProps> = ({
         WebkitTapHighlightColor: 'transparent'
       }}
     >
+      {/* 返回按钮 */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-start',
+          mb: 1
+        }}
+      >
+        <Tooltip title="返回文字输入">
+          <IconButton
+            onClick={onClose}
+            size="small"
+            sx={{
+              color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+              '&:hover': {
+                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+              }
+            }}
+          >
+            <ArrowLeft size={20} />
+          </IconButton>
+        </Tooltip>
+      </Box>
       {/* 错误提示 */}
       {error && (
         <Box sx={{ mb: 1 }}>

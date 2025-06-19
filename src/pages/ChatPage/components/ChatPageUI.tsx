@@ -3,7 +3,7 @@ import { Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import { AlignJustify, Settings, Plus, Trash2 } from 'lucide-react';
 
 import MessageList from '../../../components/message/MessageList';
-import { ChatInput, CompactChatInput, ChatToolbar } from '../../../components/input';
+import { ChatInput, CompactChatInput, IntegratedChatInput, ChatToolbar } from '../../../components/input';
 import { Sidebar } from '../../../components/TopicManagement';
 import { ModelSelector } from './ModelSelector';
 import { useSelector, useDispatch } from 'react-redux';
@@ -424,6 +424,18 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
           toggleImageGenerationMode={toggleImageGenerationMode}
           toggleWebSearch={toggleWebSearch}
           toggleToolsEnabled={toggleToolsEnabled}
+        />
+      );
+    } else if (inputLayoutStyle === 'integrated') {
+      return (
+        <IntegratedChatInput
+          key="integrated-input"
+          {...commonProps}
+          onClearTopic={handleClearTopic}
+          toggleImageGenerationMode={toggleImageGenerationMode}
+          toggleVideoGenerationMode={toggleVideoGenerationMode}
+          toggleWebSearch={toggleWebSearch}
+          onToolsEnabledChange={toggleToolsEnabled}
         />
       );
     } else {

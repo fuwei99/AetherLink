@@ -1,6 +1,8 @@
 // 输入框组件统一导出
 export { default as ChatInput } from './ChatInput';
 export { default as CompactChatInput } from './CompactChatInput';
+export { default as IntegratedChatInput } from './IntegratedChatInput';
+export { default as ToolsMenu } from './ToolsMenu';
 export { default as UploadMenu } from './UploadMenu';
 export { default as MultiModelSelector } from './MultiModelSelector';
 export { default as ChatToolbar, getGlassmorphismToolbarStyles, getTransparentToolbarStyles } from './ChatToolbar';

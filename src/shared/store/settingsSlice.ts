@@ -26,7 +26,7 @@ interface SettingsState {
   thinkingDisplayStyle: string;
   toolbarDisplayStyle: 'icon' | 'text' | 'both'; // 工具栏显示样式：仅图标、仅文字、图标+文字
   inputBoxStyle: 'default' | 'modern' | 'minimal'; // 输入框风格：默认、现代、简约
-  inputLayoutStyle: 'default' | 'compact'; // 输入框布局样式：默认（分离）或聚合
+  inputLayoutStyle: 'default' | 'compact' | 'integrated'; // 输入框布局样式：默认（分离）、聚合或集成
 
   // 代码块设置
   codeStyle: string; // 代码主题风格
@@ -180,7 +180,7 @@ const getInitialState = (): SettingsState => {
     thinkingDisplayStyle: ThinkingDisplayStyle.COMPACT,
     toolbarDisplayStyle: 'both' as 'icon' | 'text' | 'both',
     inputBoxStyle: 'default' as 'default' | 'modern' | 'minimal', // 默认输入框风格
-    inputLayoutStyle: 'default' as 'default' | 'compact', // 输入框布局样式：默认（分离）或聚合
+    inputLayoutStyle: 'integrated' as 'default' | 'compact' | 'integrated', // 输入框布局样式：默认（分离）、聚合或集成
 
     // 代码块默认设置
     codeStyle: 'auto',

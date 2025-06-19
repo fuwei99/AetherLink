@@ -67,20 +67,20 @@ const ScrollPerformanceMonitor: React.FC<ScrollPerformanceMonitorProps> = ({
   const scrollEventsCountRef = useRef(0);
   const scrollEventsStartTimeRef = useRef(performance.now());
 
-  // 拖拽事件处理
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  // 拖拽事件处理 - 统一处理鼠标和触摸事件
+  const startDrag = useCallback((clientX: number, clientY: number) => {
     setIsDragging(true);
     setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
+      x: clientX - position.x,
+      y: clientY - position.y
     });
   }, [position]);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const updateDragPosition = useCallback((clientX: number, clientY: number) => {
     if (!isDragging) return;
 
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
+    const newX = clientX - dragStart.x;
+    const newY = clientY - dragStart.y;
 
     // 限制在屏幕范围内
     const maxX = window.innerWidth - 200; // 减去组件宽度
@@ -92,9 +92,40 @@ const ScrollPerformanceMonitor: React.FC<ScrollPerformanceMonitorProps> = ({
     });
   }, [isDragging, dragStart]);
 
-  const handleMouseUp = useCallback(() => {
+  const endDrag = useCallback(() => {
     setIsDragging(false);
   }, []);
+
+  // 鼠标事件处理
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    startDrag(e.clientX, e.clientY);
+  }, [startDrag]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    updateDragPosition(e.clientX, e.clientY);
+  }, [updateDragPosition]);
+
+  const handleMouseUp = useCallback(() => {
+    endDrag();
+  }, [endDrag]);
+
+  // 触摸事件处理
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    startDrag(touch.clientX, touch.clientY);
+  }, [startDrag]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    updateDragPosition(touch.clientX, touch.clientY);
+  }, [updateDragPosition]);
+
+  const handleTouchEnd = useCallback(() => {
+    endDrag();
+  }, [endDrag]);
 
   // 保存位置到localStorage
   useEffect(() => {
@@ -105,18 +136,30 @@ const ScrollPerformanceMonitor: React.FC<ScrollPerformanceMonitorProps> = ({
     }
   }, [position]);
 
-  // 添加全局鼠标事件监听
+  // 添加全局鼠标和触摸事件监听
   useEffect(() => {
     if (isDragging) {
+      // 鼠标事件
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
 
+      // 触摸事件
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+      document.addEventListener('touchcancel', handleTouchEnd);
+
       return () => {
+        // 清理鼠标事件
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
+
+        // 清理触摸事件
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+        document.removeEventListener('touchcancel', handleTouchEnd);
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   useEffect(() => {
     if (!shouldShow) return;
@@ -257,9 +300,13 @@ const ScrollPerformanceMonitor: React.FC<ScrollPerformanceMonitorProps> = ({
           p: 1,
           cursor: 'grab',
           '&:active': { cursor: 'grabbing' },
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          // 移动端触摸优化
+          touchAction: 'none',
+          userSelect: 'none'
         }}
         onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <GripVertical size={14} style={{ opacity: 0.7 }} />

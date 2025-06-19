@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { IconButton, CircularProgress, Badge, Tooltip } from '@mui/material';
-import { Send, Plus, Square, Keyboard, Mic, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, Plus, Square, Keyboard, Mic, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 
 import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
 
@@ -8,16 +8,19 @@ import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
 import { useInputStyles } from '../../shared/hooks/useInputStyles';
 import MultiModelSelector from './MultiModelSelector';
 import type { ImageContent, SiliconFlowImageFormat, FileContent } from '../../shared/types';
-import { Image, Search } from 'lucide-react';
+import { Image } from 'lucide-react';
+import { CustomIcon } from '../icons';
 
 import type { FileStatus } from '../FilePreview';
 import UploadMenu from './UploadMenu';
+import ToolsMenu from './ToolsMenu';
 import FileUploadManager, { type FileUploadManagerRef } from './ChatInput/FileUploadManager';
 import InputTextArea from './ChatInput/InputTextArea';
 import EnhancedToast, { toastManager } from '../EnhancedToast';
 import { dexieStorage } from '../../shared/services/DexieStorageService';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../shared/store';
+import { toggleWebSearchEnabled, setWebSearchProvider } from '../../shared/store/slices/webSearchSlice';
 import AIDebateButton from '../AIDebateButton';
 import type { DebateConfig } from '../../shared/services/AIDebateService';
 import QuickPhraseButton from '../QuickPhraseButton';
@@ -27,7 +30,7 @@ import { EnhancedVoiceInput } from '../VoiceRecognition';
 import { getThemeColors } from '../../shared/utils/themeUtils';
 import { useTheme } from '@mui/material/styles';
 
-interface ChatInputProps {
+interface IntegratedChatInputProps {
   onSendMessage: (message: string, images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => void;
   onSendMultiModelMessage?: (message: string, models: any[], images?: SiliconFlowImageFormat[], toolsEnabled?: boolean, files?: any[]) => void; // 多模型发送回调
   onStartDebate?: (question: string, config: DebateConfig) => void; // 开始AI辩论回调
@@ -43,9 +46,15 @@ interface ChatInputProps {
   isDebating?: boolean; // 是否正在AI辩论中
   toolsEnabled?: boolean; // 工具开关状态
   availableModels?: any[]; // 可用模型列表
+  // 工具栏相关props
+  onClearTopic?: () => void;
+  toggleImageGenerationMode?: () => void;
+  toggleVideoGenerationMode?: () => void;
+  toggleWebSearch?: () => void;
+  onToolsEnabledChange?: (enabled: boolean) => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({
+const IntegratedChatInput: React.FC<IntegratedChatInputProps> = ({
   onSendMessage,
   onSendMultiModelMessage,
   onStartDebate,
@@ -60,18 +69,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isStreaming = false,
   isDebating = false, // 默认不在辩论中
   toolsEnabled = true, // 默认启用工具
-  availableModels = [] // 默认空数组
+  availableModels = [], // 默认空数组
+  // 工具栏相关props
+  onClearTopic,
+  toggleImageGenerationMode,
+  toggleVideoGenerationMode,
+  toggleWebSearch,
+  onToolsEnabledChange
 }) => {
-  // 基础状态 - 内存泄漏防护：避免存储DOM引用
+  // 基础状态
   const [uploadMenuAnchorEl, setUploadMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [multiModelSelectorOpen, setMultiModelSelectorOpen] = useState(false);
-
-  // 内存泄漏防护：组件卸载时清理DOM引用
-  useEffect(() => {
-    return () => {
-      setUploadMenuAnchorEl(null);
-    };
-  }, []);
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false); // 工具菜单状态
+  const [toolsMenuAnchorEl, setToolsMenuAnchorEl] = useState<null | HTMLElement>(null); // 工具菜单锚点
   const [isIOS, setIsIOS] = useState(false); // 新增: 是否是iOS设备
   // 语音识别三状态管理
   const [voiceState, setVoiceState] = useState<'normal' | 'voice-mode' | 'recording'>('normal');
@@ -94,10 +104,17 @@ const ChatInput: React.FC<ChatInputProps> = ({
   // FileUploadManager 引用
   const fileUploadManagerRef = useRef<FileUploadManagerRef>(null);
 
-
+  // 用于标记是否需要触发Web搜索的状态
+  const [pendingWebSearchToggle, setPendingWebSearchToggle] = useState(false);
 
   // 获取当前助手状态
   const currentAssistant = useSelector((state: RootState) => state.assistants.currentAssistant);
+  
+  // Redux dispatch
+  const dispatch = useDispatch();
+
+  // 获取网络搜索设置
+  const webSearchSettings = useSelector((state: RootState) => state.webSearch);
 
   // 使用共享的 hooks
   const { styles, isDarkMode, inputBoxStyle } = useInputStyles();
@@ -112,6 +129,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   // 获取快捷短语按钮显示设置
   const showQuickPhraseButton = useSelector((state: RootState) => state.settings.showQuickPhraseButton ?? true);
+
+  // 监听Web搜索设置变化，当设置完成后触发搜索
+  useEffect(() => {
+    if (pendingWebSearchToggle && webSearchSettings?.enabled && webSearchSettings?.provider && webSearchSettings.provider !== 'custom') {
+      toggleWebSearch?.();
+      setPendingWebSearchToggle(false);
+    }
+  }, [webSearchSettings?.enabled, webSearchSettings?.provider, pendingWebSearchToggle, toggleWebSearch]);
 
   // 聊天输入逻辑 - 启用 ChatInput 特有功能
   const {
@@ -339,6 +364,47 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleCloseUploadMenu = () => {
     setUploadMenuAnchorEl(null);
+  };
+
+  // 工具菜单处理函数
+  const handleOpenToolsMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setToolsMenuAnchorEl(event.currentTarget);
+    setToolsMenuOpen(true);
+  };
+
+  const handleCloseToolsMenu = () => {
+    setToolsMenuAnchorEl(null);
+    setToolsMenuOpen(false);
+  };
+
+  // 处理快速网络搜索切换
+  const handleQuickWebSearchToggle = () => {
+    if (webSearchActive) {
+      // 如果当前网络搜索处于激活状态，则关闭它
+      toggleWebSearch?.();
+    } else {
+      // 如果当前网络搜索未激活，检查是否有可用的搜索提供商
+      const enabled = webSearchSettings?.enabled || false;
+      const currentProvider = webSearchSettings?.provider;
+      
+      if (enabled && currentProvider && currentProvider !== 'custom') {
+        // 如果网络搜索已启用且有有效的提供商，直接激活
+        toggleWebSearch?.();
+      } else {
+        // 如果没有配置或未启用，需要先启用网络搜索和设置默认提供商
+        const actions: any[] = [];
+        if (!enabled) {
+          actions.push(toggleWebSearchEnabled());
+        }
+        if (!currentProvider || currentProvider === 'custom') {
+          actions.push(setWebSearchProvider('bing-free'));
+        }
+        
+        // 批量dispatch并设置等待标记
+        actions.forEach(action => dispatch(action));
+        setPendingWebSearchToggle(true);
+      }
+    }
   };
 
   // 文件上传处理函数 - 通过 ref 调用 FileUploadManager 的方法
@@ -584,28 +650,28 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
       <div style={{
           display: 'flex',
-          alignItems: 'center',
-        padding: isTablet ? '6px 12px' : isMobile ? '5px 8px' : '5px 8px',
-        borderRadius: borderRadius,
-        /* 使用主题颜色作为背景，防止输入框与底部消息重叠或产生视觉干扰 */
-        background: themeColors.paper,
-        border: border,
-        minHeight: isTablet ? '56px' : isMobile ? '48px' : '50px', // 增加容器最小高度以适应新的textarea高度
-        boxShadow: boxShadow,
-        width: '100%',
-        maxWidth: '100%', // 使用100%宽度，与外部容器一致
-        backdropFilter: inputBoxStyle === 'modern' ? 'blur(10px)' : 'none',
-        WebkitBackdropFilter: inputBoxStyle === 'modern' ? 'blur(10px)' : 'none',
-        transition: 'all 0.3s ease',
-        position: 'relative', // 添加相对定位，用于放置展开按钮
-        // 防止文本选择
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        MozUserSelect: 'none',
-        msUserSelect: 'none',
-        WebkitTouchCallout: 'none',
-        WebkitTapHighlightColor: 'transparent'
-      }}>
+          flexDirection: 'column', // 改为垂直布局
+          padding: isTablet ? '8px 12px' : isMobile ? '6px 8px' : '7px 10px', // 减少内边距
+          borderRadius: '20px', // 增加圆角半径
+          /* 使用主题颜色作为背景，防止输入框与底部消息重叠或产生视觉干扰 */
+          background: themeColors.paper,
+          border: border,
+          minHeight: isTablet ? '72px' : isMobile ? '64px' : '68px', // 调整容器最小高度
+          boxShadow: boxShadow,
+          width: '100%',
+          maxWidth: '100%', // 使用100%宽度，与外部容器一致
+          backdropFilter: inputBoxStyle === 'modern' ? 'blur(10px)' : 'none',
+          WebkitBackdropFilter: inputBoxStyle === 'modern' ? 'blur(10px)' : 'none',
+          transition: 'all 0.3s ease',
+          position: 'relative', // 添加相对定位，用于放置展开按钮
+          // 防止文本选择
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none',
+          WebkitTouchCallout: 'none',
+          WebkitTapHighlightColor: 'transparent'
+        }}>
         {/* 展开/收起按钮 - 显示在输入框容器右上角 */}
         {showExpandButton && (
           <div style={{
@@ -643,145 +709,204 @@ const ChatInput: React.FC<ChatInputProps> = ({
           </div>
         )}
 
-        {/* 语音识别按钮 - 根据状态显示不同图标，当文本超过3行时隐藏 */}
-        {!shouldHideVoiceButton && (
-          <IconButton
-            onClick={handleToggleVoiceMode}
-            disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-            size={isTablet ? "large" : "medium"}
-            style={{
-              color: voiceState !== 'normal' ? '#f44336' : (isDarkMode ? '#ffffff' : '#000000'),
-              padding: isTablet ? '10px' : '8px',
-              backgroundColor: voiceState !== 'normal' ? 'rgba(211, 47, 47, 0.15)' : 'transparent',
-              transition: 'all 0.25s ease-in-out'
-            }}
-          >
-          {voiceState === 'normal' ? (
-            <Tooltip title="切换到语音输入模式">
-              <Mic size={isTablet ? 28 : 24} />
-            </Tooltip>
+        {/* 上层：文本输入区域 */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center', // 改为center，让内容垂直居中
+          marginBottom: '0px', // 移除间距，让两层紧密相连
+          minHeight: '36px', // 设置固定高度
+          height: '36px', // 确保高度一致
+          flex: '1' // 让上层占据可用空间
+        }}>
+          {/* 输入区域 - 根据三状态显示不同的输入方式 */}
+          {voiceState === 'recording' ? (
+            /* 录音状态 - 显示增强语音输入组件 */
+            <div style={{
+              flexGrow: 1,
+              position: 'relative'
+            }}>
+              <EnhancedVoiceInput
+                isDarkMode={isDarkMode}
+                onClose={() => setVoiceState('normal')}
+                onSendMessage={handleVoiceSendMessage}
+                onInsertText={(text: string) => {
+                  // 替换整个消息内容，不是追加
+                  // 界面状态的切换由录音结束时的逻辑处理
+                  setMessage(text);
+                }}
+                startRecognition={startRecognition}
+                currentMessage={message}
+              />
+            </div>
           ) : (
-            <Tooltip title="退出语音输入模式">
-              <Keyboard size={isTablet ? 28 : 24} />
-            </Tooltip>
-          )}
-          </IconButton>
-        )}
-
-        {/* 输入区域 - 根据三状态显示不同的输入方式 */}
-        {voiceState === 'recording' ? (
-          /* 录音状态 - 显示增强语音输入组件 */
-          <div style={{
-            flexGrow: 1,
-            margin: isTablet ? '0 12px' : '0 8px',
-            position: 'relative'
-          }}>
-            <EnhancedVoiceInput
-              isDarkMode={isDarkMode}
-              onClose={() => setVoiceState('normal')}
-              onSendMessage={handleVoiceSendMessage}
-              onInsertText={(text: string) => {
-                // 替换整个消息内容，不是追加
-                // 界面状态的切换由录音结束时的逻辑处理
-                setMessage(text);
+            /* 正常输入框 - 使用 InputTextArea 组件 */
+            <InputTextArea
+              message={message}
+              textareaRef={textareaRef}
+              textareaHeight={textareaHeight}
+              showCharCount={showCharCount}
+              handleChange={enhancedHandleChange}
+              handleKeyDown={handleKeyDown}
+              handleCompositionStart={handleCompositionStart}
+              handleCompositionEnd={handleCompositionEnd}
+              onPaste={(e) => {
+                // 将粘贴事件转发给 FileUploadManager
+                if (fileUploadManagerRef.current) {
+                  fileUploadManagerRef.current.handlePaste(e);
+                }
               }}
-              startRecognition={startRecognition}
-              currentMessage={message}
+              isLoading={isLoading}
+              allowConsecutiveMessages={allowConsecutiveMessages}
+              imageGenerationMode={imageGenerationMode}
+              videoGenerationMode={videoGenerationMode}
+              webSearchActive={webSearchActive}
+              isMobile={isMobile}
+              isTablet={isTablet}
+              isDarkMode={isDarkMode}
+              shouldHideVoiceButton={shouldHideVoiceButton}
+              expanded={expanded}
+              expandedHeight={expandedHeight}
+              onExpandToggle={handleExpandToggle}
+              isPageTransitioning={isPageTransitioning}
+              shouldHandleFocus={shouldHandleFocus}
             />
-          </div>
-        ) : (
-          /* 正常输入框 - 使用 InputTextArea 组件 */
-          <InputTextArea
-            message={message}
-            textareaRef={textareaRef}
-            textareaHeight={textareaHeight}
-            showCharCount={showCharCount}
-            handleChange={enhancedHandleChange}
-            handleKeyDown={handleKeyDown}
-            handleCompositionStart={handleCompositionStart}
-            handleCompositionEnd={handleCompositionEnd}
-            onPaste={(e) => {
-              // 将粘贴事件转发给 FileUploadManager
-              if (fileUploadManagerRef.current) {
-                fileUploadManagerRef.current.handlePaste(e);
-              }
-            }}
-            isLoading={isLoading}
-            allowConsecutiveMessages={allowConsecutiveMessages}
-            imageGenerationMode={imageGenerationMode}
-            videoGenerationMode={videoGenerationMode}
-            webSearchActive={webSearchActive}
-            isMobile={isMobile}
-            isTablet={isTablet}
-            isDarkMode={isDarkMode}
-            shouldHideVoiceButton={shouldHideVoiceButton}
-            expanded={expanded}
-            expandedHeight={expandedHeight}
-            onExpandToggle={handleExpandToggle}
-            isPageTransitioning={isPageTransitioning}
-            shouldHandleFocus={shouldHandleFocus}
-          />
-        )}
+          )}
+        </div>
 
-        {/* 在非录音状态下显示其他按钮 */}
+        {/* 下层：功能按钮区域 */}
         {voiceState !== 'recording' && (
-          <>
-            {/* 添加按钮，打开上传菜单 */}
-            <Tooltip title="添加图片或文件">
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingTop: '0px', // 移除上边距
+            minHeight: '36px', // 与上层相同的固定高度
+            height: '36px', // 确保高度一致
+            flex: '0 0 auto' // 不允许伸缩，固定高度
+          }}>
+            {/* 左侧：添加按钮 */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <Tooltip title="添加图片或文件">
+                <IconButton
+                  size="medium"
+                  onClick={handleOpenUploadMenu}
+                  disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+                  style={{
+                    color: uploadingMedia ? disabledColor : iconColor,
+                    padding: '6px'
+                  }}
+                >
+                  {uploadingMedia ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    <Badge badgeContent={images.length + files.length} color="primary" max={9} invisible={images.length + files.length === 0}>
+                      <Plus size={20} />
+                    </Badge>
+                  )}
+                </IconButton>
+              </Tooltip>
+
+              {/* 工具按钮 */}
+              <Tooltip title="工具">
+                <IconButton
+                  size="medium"
+                  onClick={handleOpenToolsMenu}
+                  disabled={isLoading && !allowConsecutiveMessages}
+                  style={{
+                    color: iconColor,
+                    padding: '6px'
+                  }}
+                >
+                  <Settings size={20} />
+                </IconButton>
+              </Tooltip>
+            </div>
+
+            {/* 右侧：搜索、语音、发送按钮 */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              {/* 搜索按钮 */}
+              <Tooltip title={webSearchActive ? "关闭网络搜索" : "开启网络搜索"}>
+                <IconButton
+                  size="medium"
+                  onClick={handleQuickWebSearchToggle}
+                  style={{
+                    color: webSearchActive ? '#3b82f6' : iconColor,
+                    backgroundColor: webSearchActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                    padding: '6px',
+                    transition: 'all 0.2s ease-in-out'
+                  }}
+                >
+                  <CustomIcon name="search" size={20} />
+                </IconButton>
+              </Tooltip>
+
+              {/* 语音识别按钮 */}
+              {!shouldHideVoiceButton && (
+                <IconButton
+                  onClick={handleToggleVoiceMode}
+                  disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
+                  size="medium"
+                  style={{
+                    color: voiceState !== 'normal' ? '#f44336' : iconColor,
+                    padding: '6px',
+                    backgroundColor: voiceState !== 'normal' ? 'rgba(211, 47, 47, 0.15)' : 'transparent',
+                    transition: 'all 0.25s ease-in-out'
+                  }}
+                >
+                {voiceState === 'normal' ? (
+                  <Tooltip title="切换到语音输入模式">
+                    <Mic size={20} />
+                  </Tooltip>
+                ) : (
+                  <Tooltip title="退出语音输入模式">
+                    <Keyboard size={20} />
+                  </Tooltip>
+                )}
+                </IconButton>
+              )}
+
+              {/* 发送按钮 */}
               <IconButton
-                size={isTablet ? "large" : "medium"}
-                onClick={handleOpenUploadMenu}
-                disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
-                style={{
-                  color: uploadingMedia ? disabledColor : (isDarkMode ? '#ffffff' : '#000000'),
-                  padding: isTablet ? '10px' : '8px',
-                  position: 'relative',
-                  marginRight: isTablet ? '4px' : '0'
-                }}
-              >
-                {uploadingMedia ? (
-                  <CircularProgress size={isTablet ? 28 : 24} />
-                ) : (
-                  <Badge badgeContent={images.length + files.length} color="primary" max={9} invisible={images.length + files.length === 0}>
-                    <Plus size={isTablet ? 28 : 24} />
-                  </Badge>
-                )}
+                  aria-label={
+                    isStreaming
+                      ? '停止生成'
+                      : imageGenerationMode
+                        ? '生成图像'
+                        : '发送消息'
+                  }
+                  onClick={isStreaming && onStopResponse ? onStopResponse : handleSubmit}
+                  disabled={!isStreaming && (!canSendMessage() || (isLoading && !allowConsecutiveMessages))}
+                  size="medium"
+                  style={{
+                    color: isStreaming ? '#ff4d4f' : !canSendMessage() || (isLoading && !allowConsecutiveMessages) ? disabledColor : imageGenerationMode ? '#9C27B0' : isDarkMode ? '#4CAF50' : '#09bb07',
+                    padding: '6px'
+                  }}
+                >
+                  {isStreaming ? (
+                    <Tooltip title="停止生成">
+                      <Square size={18} />
+                    </Tooltip>
+                  ) : showLoadingIndicator ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : imageGenerationMode ? (
+                    <Tooltip title="生成图像">
+                      <Image size={18} />
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title="发送消息">
+                      <Send size={18} />
+                    </Tooltip>
+                  )}
               </IconButton>
-            </Tooltip>
-
-
-
-
-
-            {/* 发送按钮或停止按钮 */}
-            <IconButton
-                onClick={isStreaming && onStopResponse ? onStopResponse : handleSubmit}
-                disabled={!isStreaming && (!canSendMessage() || (isLoading && !allowConsecutiveMessages))}
-                size={isTablet ? "large" : "medium"}
-                style={{
-                  color: isStreaming ? '#ff4d4f' : !canSendMessage() || (isLoading && !allowConsecutiveMessages) ? disabledColor : imageGenerationMode ? '#9C27B0' : webSearchActive ? '#3b82f6' : isDarkMode ? '#4CAF50' : '#09bb07',
-                  padding: isTablet ? '10px' : '8px'
-                }}
-              >
-                {isStreaming ? (
-                  <Tooltip title="停止生成">
-                    <Square size={isTablet ? 20 : 18} />
-                  </Tooltip>
-                ) : showLoadingIndicator ? (
-                  <CircularProgress size={isTablet ? 28 : 24} color="inherit" />
-                ) : imageGenerationMode ? (
-                  <Tooltip title="生成图像">
-                    <Image size={isTablet ? 20 : 18} />
-                  </Tooltip>
-                ) : webSearchActive ? (
-                  <Tooltip title="搜索网络">
-                    <Search size={isTablet ? 20 : 18} />
-                  </Tooltip>
-                ) : (
-                  <Send size={isTablet ? 20 : 18} />
-                )}
-            </IconButton>
-          </>
+            </div>
+          </div>
         )}
       </div>
 
@@ -810,6 +935,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
         availableModels={availableModels}
         onConfirm={handleMultiModelSend}
         maxSelection={5}
+      />
+
+      {/* 工具菜单 */}
+      <ToolsMenu
+        anchorEl={toolsMenuAnchorEl}
+        open={toolsMenuOpen}
+        onClose={handleCloseToolsMenu}
+        onClearTopic={onClearTopic}
+        imageGenerationMode={imageGenerationMode}
+        toggleImageGenerationMode={toggleImageGenerationMode}
+        videoGenerationMode={videoGenerationMode}
+        toggleVideoGenerationMode={toggleVideoGenerationMode}
+        webSearchActive={webSearchActive}
+        toggleWebSearch={toggleWebSearch}
+        toolsEnabled={toolsEnabled}
+        onToolsEnabledChange={onToolsEnabledChange}
       />
 
       {/* Toast通知 */}
@@ -855,4 +996,4 @@ const ChatInput: React.FC<ChatInputProps> = ({
   );
 };
 
-export default ChatInput;
+export default IntegratedChatInput;
