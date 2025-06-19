@@ -34,6 +34,7 @@ const SettingsPage: React.FC = () => {
   };
 
   const navigateTo = (path: string) => {
+    if (path === '/settings/shortcuts' || path === '/settings/features') return; // 功能未开放
     navigate(path);
   };
 
@@ -193,6 +194,7 @@ const SettingsPage: React.FC = () => {
                 >
                   <ListItemButton
                     onClick={() => navigateTo(item.path)}
+                    disabled={item.id === 'shortcuts' || item.id === 'features'}
                     sx={{
                       p: 0,
                       height: '100%',
