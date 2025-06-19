@@ -196,7 +196,7 @@ const IntegratedChatInput: React.FC<IntegratedChatInputProps> = ({
 
   // 从 useInputStyles hook 获取样式
   const { border, borderRadius, boxShadow } = styles;
-  const iconColor = '#000'; // 强制使用黑色图标颜色
+  const iconColor = themeColors.isDark ? '#ffffff' : '#000000'; // 深色主题用白色，浅色主题用黑色
   const disabledColor = themeColors.isDark ? '#555' : '#ccc';
 
   // 检测iOS设备
@@ -795,7 +795,7 @@ const IntegratedChatInput: React.FC<IntegratedChatInputProps> = ({
                   onClick={handleOpenUploadMenu}
                   disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
                   style={{
-                    color: uploadingMedia ? disabledColor : '#000',
+                    color: uploadingMedia ? disabledColor : iconColor,
                     padding: '6px'
                   }}
                 >
@@ -837,7 +837,7 @@ const IntegratedChatInput: React.FC<IntegratedChatInputProps> = ({
                   size="medium"
                   onClick={handleQuickWebSearchToggle}
                   style={{
-                    color: webSearchActive ? '#3b82f6' : '#000',
+                    color: webSearchActive ? '#3b82f6' : iconColor,
                     backgroundColor: webSearchActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                     padding: '6px',
                     transition: 'all 0.2s ease-in-out'
@@ -854,7 +854,7 @@ const IntegratedChatInput: React.FC<IntegratedChatInputProps> = ({
                   disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
                   size="medium"
                   style={{
-                    color: voiceState !== 'normal' ? '#f44336' : '#000',
+                    color: voiceState !== 'normal' ? '#f44336' : iconColor,
                     padding: '6px',
                     backgroundColor: voiceState !== 'normal' ? 'rgba(211, 47, 47, 0.15)' : 'transparent',
                     transition: 'all 0.25s ease-in-out'
