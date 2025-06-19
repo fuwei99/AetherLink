@@ -653,7 +653,6 @@ const MCPServerSettings: React.FC = () => {
                           e.stopPropagation();
                           handleToggleServer(server.id, e.target.checked);
                         }}
-                        onClick={(e) => e.stopPropagation()}
                       />
                       <IconButton
                         onClick={(e) => {
