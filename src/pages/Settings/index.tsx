@@ -33,8 +33,19 @@ const SettingsPage: React.FC = () => {
     navigate('/chat');
   };
 
+  // 功能开放状态配置
+  const FEATURE_FLAGS = {
+    shortcuts: false,  // 快捷键设置功能未开放
+    features: false,   // 功能设置未开放
+  };
+
   const navigateTo = (path: string) => {
-    if (path === '/settings/shortcuts' || path === '/settings/features') return; // 功能未开放
+    // 从路径中提取功能ID
+    const featureId = path.split('/').pop();
+    // 检查功能是否开放
+    if (featureId && FEATURE_FLAGS[featureId as keyof typeof FEATURE_FLAGS] === false) {
+      return; // 功能未开放，不进行导航
+    }
     navigate(path);
   };
 
@@ -194,7 +205,7 @@ const SettingsPage: React.FC = () => {
                 >
                   <ListItemButton
                     onClick={() => navigateTo(item.path)}
-                    disabled={item.id === 'shortcuts' || item.id === 'features'}
+                    disabled={FEATURE_FLAGS[item.id as keyof typeof FEATURE_FLAGS] === false}
                     sx={{
                       p: 0,
                       height: '100%',
