@@ -21,7 +21,6 @@ import CustomSwitch from '../../components/CustomSwitch';
 import {
   ArrowLeft,
   Info,
-  AlignJustify,
   Settings,
   Plus,
   Trash2,
@@ -32,6 +31,7 @@ import {
   Wand2,
   RotateCcw
 } from 'lucide-react';
+import { CustomIcon } from '../../components/icons';
 
 interface ComponentPosition {
   id: string;
@@ -77,7 +77,7 @@ const TopToolbarDIYSettings: React.FC = () => {
 
   // 组件配置
   const componentConfig = {
-    menuButton: { name: '菜单按钮', icon: <AlignJustify size={20} />, key: 'showMenuButton' },
+    menuButton: { name: '菜单按钮', icon: <CustomIcon name="documentPanel" size={20} />, key: 'showMenuButton' },
     chatTitle: { name: '对话标题', icon: <Type size={20} />, key: 'showChatTitle' },
     topicName: { name: '话题名称', icon: <MessageSquare size={20} />, key: 'showTopicName' },
     newTopicButton: { name: '新建话题', icon: <Plus size={20} />, key: 'showNewTopicButton' },
@@ -201,7 +201,7 @@ const TopToolbarDIYSettings: React.FC = () => {
       case 'menuButton':
         return (
           <IconButton key={componentId} color="inherit" size="small" sx={style}>
-            <AlignJustify size={20} />
+            <CustomIcon name="documentPanel" size={20} />
           </IconButton>
         );
       case 'chatTitle':

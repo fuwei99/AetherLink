@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material';
-import { AlignJustify, Settings, Plus, Trash2 } from 'lucide-react';
+import { Settings, Plus, Trash2 } from 'lucide-react';
+import { CustomIcon } from '../../../components/icons';
 
 import MessageList from '../../../components/message/MessageList';
 import { ChatInput, CompactChatInput, IntegratedChatInput, ChatToolbar } from '../../../components/input';
@@ -263,7 +264,7 @@ export const ChatPageUI: React.FC<ChatPageUIProps> = ({
             onClick={() => setDrawerOpen(!drawerOpen)}
             sx={{ mr: 1 }}
           >
-            <AlignJustify size={20} />
+            <CustomIcon name="documentPanel" size={20} />
           </IconButton>
         ) : null;
 

@@ -57,10 +57,20 @@ const iconName: IconName = 'search'; // 类型安全
 - AI 图片创建功能
 - 图像工具栏
 
+### documentPanel
+带有文本行的双面板文档布局图标。
+
+**使用场景**：
+- 文档管理界面
+- 双栏布局切换
+- 内容预览面板
+- 文档编辑器
+
 **示例**：
 ```tsx
 <CustomIcon name="search" size={16} color="rgba(59, 130, 246, 0.8)" />
 <CustomIcon name="imageGenerate" size={16} color="rgba(156, 39, 176, 0.8)" />
+<CustomIcon name="documentPanel" size={16} color="rgba(76, 175, 80, 0.8)" />
 ```
 
 ## 添加新图标
