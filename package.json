@@ -107,7 +107,6 @@
     "buffer": "6.0.3",
     "capacitor-advanced-file-manager": "^0.1.5",
     "capacitor-cors-bypass-enhanced": "^1.0.4",
-    "capacitor-native-input-dialog": "^1.2.5",
     "chart.js": "^4.4.9",
     "codemirror": "^6.0.1",
     "core-js": "^3.43.0",

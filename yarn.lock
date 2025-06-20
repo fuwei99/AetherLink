@@ -2980,13 +2980,6 @@ capacitor-cors-bypass-enhanced@^1.0.4:
   dependencies:
     "@modelcontextprotocol/sdk" "^1.12.1"
 
-capacitor-native-input-dialog@^1.0.0, capacitor-native-input-dialog@^1.2.5:
-  version "1.2.5"
-  resolved "https://registry.npmjs.org/capacitor-native-input-dialog/-/capacitor-native-input-dialog-1.2.5.tgz"
-  integrity sha512-qmJ0v9lk0K3j4p7LitMfFX22CKWtVQhTs6DWBC2IpVkeD3VssgQFuA1DhP0/IxsWxGTgqUKse/6LOmZSvkx47A==
-  dependencies:
-    capacitor-native-input-dialog "^1.0.0"
-
 caseless@~0.12.0:
   version "0.12.0"
   resolved "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz"
