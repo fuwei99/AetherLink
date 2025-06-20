@@ -7,10 +7,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [
     // 使用 SWC 处理 React - 兼容 rolldown-vite
-    react({
-      include: /\.(jsx|tsx)$/,  // 只处理 JSX/TSX 文件
-      exclude: [/\.vue$/, /node_modules/]
-    }),
+    react(),
     vue({
       template: {
         compilerOptions: {
@@ -99,6 +96,15 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/notion/, ''),
         headers: {
           'Origin': 'https://api.notion.com'
+        }
+      },
+      // WebDAV 代理 - 支持坚果云等 WebDAV 服务
+      '/api/webdav': {
+        target: 'https://dav.jianguoyun.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/webdav/, '/dav'),
+        headers: {
+          'Origin': 'https://dav.jianguoyun.com'
         }
       }
     }

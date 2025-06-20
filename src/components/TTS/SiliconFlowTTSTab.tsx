@@ -10,9 +10,9 @@ import {
   IconButton,
   FormHelperText,
   FormControlLabel,
-  Switch,
 } from '@mui/material';
 import { Eye as VisibilityIcon, EyeOff as VisibilityOffIcon } from 'lucide-react';
+import CustomSwitch from '../CustomSwitch';
 
 // 硅基流动TTS配置接口
 export interface SiliconFlowTTSSettings {
@@ -192,11 +192,9 @@ export const SiliconFlowTTSTab: React.FC<SiliconFlowTTSTabProps> = ({
 
         <FormControlLabel
           control={
-            <Switch
+            <CustomSwitch
               checked={settings.useStream}
               onChange={(e) => handleStreamToggle(e.target.checked)}
-              color="primary"
-              size={window.innerWidth < 600 ? "small" : "medium"}
             />
           }
           label="启用流式输出"
@@ -204,9 +202,6 @@ export const SiliconFlowTTSTab: React.FC<SiliconFlowTTSTabProps> = ({
             '& .MuiFormControlLabel-label': {
               fontSize: { xs: '0.9rem', sm: '1rem' },
               fontWeight: 500,
-            },
-            '& .MuiSwitch-root': {
-              ml: { xs: 1, sm: 2 },
             },
           }}
         />

@@ -7,6 +7,7 @@ import { AnthropicProvider } from '../../api/anthropic';
 import GeminiProvider from '../../api/gemini/provider';
 import { ModelComboProvider } from './ModelComboProvider';
 import EnhancedApiProvider from '../EnhancedApiProvider';
+import { OpenAIResponseProvider } from '../../providers/OpenAIResponseProvider';
 import store from '../../store';
 
 /**
@@ -130,6 +131,37 @@ function isVideoGenerationModel(model: Model): boolean {
 }
 
 /**
+ * 检查是否应该使用 OpenAI Responses API
+ */
+function shouldUseResponsesAPI(model: Model): boolean {
+  // 检查模型是否支持 Responses API
+  const responsesAPIModels = [
+    'gpt-4o',
+    'gpt-4o-mini',
+    'gpt-4o-2024-11-20',
+    'gpt-4o-2024-08-06',
+    'gpt-4o-mini-2024-07-18',
+    'o1-preview',
+    'o1-mini'
+  ];
+
+  // 检查模型ID是否在支持列表中
+  if (responsesAPIModels.includes(model.id)) {
+    return true;
+  }
+
+  // 检查是否明确启用了 Responses API
+  if ((model as any).useResponsesAPI === true) {
+    return true;
+  }
+
+  // 检查全局设置（暂时跳过，因为移动端设置结构不同）
+  // 可以在后续版本中添加全局 Responses API 开关
+
+  return false;
+}
+
+/**
  * API提供商注册表 - 修复版本，避免重复请求
  * 负责管理和获取API服务提供商
  */
@@ -173,6 +205,10 @@ export const ApiProviderRegistry = {
       case 'openai-aisdk':
         originalProvider = new OpenAIAISDKProvider(model);
         break;
+      case 'openai-response':
+        console.log(`[ApiProvider] 🚀 使用 OpenAI Responses API for ${model.id}`);
+        originalProvider = new OpenAIResponseProvider(model);
+        break;
       case 'azure-openai':
       case 'openai':
       case 'deepseek':
@@ -182,7 +218,13 @@ export const ApiProviderRegistry = {
       case 'siliconflow':
       case 'volcengine':
       default:
-        originalProvider = new OpenAIProvider(model);
+        // 检查是否应该使用 OpenAI Responses API
+        if (providerType === 'openai' && shouldUseResponsesAPI(model)) {
+          console.log(`[ApiProvider] 🚀 自动使用 OpenAI Responses API for ${model.id}`);
+          originalProvider = new OpenAIResponseProvider(model);
+        } else {
+          originalProvider = new OpenAIProvider(model);
+        }
         break;
     }
 

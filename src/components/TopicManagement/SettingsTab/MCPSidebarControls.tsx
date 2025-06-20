@@ -20,23 +20,23 @@ import {
   FormLabel,
   RadioGroup,
   Radio,
-  Collapse,
+
   IconButton
 } from '@mui/material';
-import CustomSwitch from '../CustomSwitch'; // 导入 CustomSwitch 组件
+import CustomSwitch from '../../CustomSwitch'; // 导入 CustomSwitch 组件
 import {
   ChevronDown, ChevronUp, Settings, Database, Globe, Brain, Code
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { MCPServer, MCPServerType } from '../../shared/types';
-import { mcpService } from '../../shared/services/mcp';
+import type { MCPServer, MCPServerType } from '../../../shared/types';
+import { mcpService } from '../../../shared/services/mcp';
 import {
-  animationOptimization,
   createOptimizedClickHandler,
   createOptimizedSwitchHandler,
   listItemOptimization,
-} from '../TopicManagement/SettingsTab/scrollOptimization';
-import { useMCPServerStateManager } from '../../hooks/useMCPServerStateManager';
+} from './scrollOptimization';
+import { useMCPServerStateManager } from '../../../hooks/useMCPServerStateManager';
+import OptimizedCollapse from './OptimizedCollapse';
 
 interface MCPSidebarControlsProps {
   onMCPModeChange?: (mode: 'prompt' | 'function') => void;
@@ -188,12 +188,10 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
       </ListItem>
 
       {/* 可折叠的内容区域 */}
-      <Collapse
+      <OptimizedCollapse
         in={expanded}
-        timeout={animationOptimization.timeout}
-        easing={animationOptimization.easing}
+        timeout={150}
         unmountOnExit
-        sx={animationOptimization.sx}
       >
         <Box sx={{ px: 2, pb: 2 }}>
           {/* MCP 工具总开关 */}
@@ -409,7 +407,7 @@ const MCPSidebarControls: React.FC<MCPSidebarControlsProps> = ({
             </Box>
           </>
         </Box>
-      </Collapse>
+      </OptimizedCollapse>
     </Box>
   );
 };

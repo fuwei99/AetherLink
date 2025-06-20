@@ -150,18 +150,33 @@ export default function ContextSettings({
           cursor: 'pointer',
           position: 'relative',
           zIndex: 1,
-          '&:hover': {
-            backgroundColor: 'transparent !important',
-            transform: 'none !important',
-            boxShadow: 'none !important'
+          // 优化触摸响应
+          touchAction: 'manipulation', // 防止双击缩放，优化触摸响应
+          userSelect: 'none', // 防止文本选择
+          // 移动端优化
+          '@media (hover: none)': {
+            '&:active': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              transform: 'scale(0.98)', // 轻微缩放反馈
+              transition: 'all 0.1s ease-out'
+            }
           },
-          '&:focus': {
-            backgroundColor: 'transparent !important'
-          },
-          '&:active': {
-            backgroundColor: 'rgba(0, 0, 0, 0.02)'
+          // 桌面端优化
+          '@media (hover: hover)': {
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+              transform: 'none !important',
+              boxShadow: 'none !important'
+            },
+            '&:focus': {
+              backgroundColor: 'transparent !important'
+            },
+            '&:active': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+            }
           },
           '& *': {
+            pointerEvents: 'none', // 防止子元素干扰点击
             '&:hover': {
               backgroundColor: 'transparent !important',
               transform: 'none !important'

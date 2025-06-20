@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Paper, useTheme } from '@mui/material';
+import { Box, Typography, Paper, useTheme, alpha } from '@mui/material';
 import { Edit, Brain } from 'lucide-react';
 import type { ChatTopic, Assistant } from '../shared/types/Assistant';
 // 移除不再使用的useAppSelector导入
@@ -62,17 +62,18 @@ const SystemPromptBubble: React.FC<SystemPromptBubbleProps> = React.memo(({ topi
         cursor: 'pointer',
         backgroundColor: theme.palette.mode === 'dark'
           ? 'rgba(30, 30, 30, 0.95)'
-          : 'rgba(255, 255, 255, 0.95)',
+          : alpha(theme.palette.background.paper, 0.95), // 使用主题paper颜色并添加95%透明度
         border: `1px solid`,
         borderColor: theme.palette.mode === 'dark'
           ? 'rgba(255, 255, 255, 0.15)'
           : 'rgba(0, 0, 0, 0.15)',
         transition: 'all 0.2s ease',
         backdropFilter: 'blur(8px)',
+        userSelect: 'none', // 禁止文本选择
         '&:hover': {
           backgroundColor: theme.palette.mode === 'dark'
             ? 'rgba(40, 40, 40, 0.98)'
-            : 'rgba(250, 250, 250, 0.98)',
+            : alpha(theme.palette.background.paper, 0.98), // 使用主题paper颜色并添加98%透明度
           borderColor: theme.palette.mode === 'dark'
             ? 'rgba(255, 255, 255, 0.25)'
             : 'rgba(0, 0, 0, 0.25)',

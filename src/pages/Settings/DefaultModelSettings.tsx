@@ -126,6 +126,7 @@ const DefaultModelSettings: React.FC = () => {
   // 供应商类型选项
   const providerTypeOptions = [
     { value: 'openai', label: 'OpenAI' },
+    { value: 'openai-response', label: 'OpenAI (Responses API)' },
     { value: 'anthropic', label: 'Anthropic' },
     { value: 'deepseek', label: 'DeepSeek' },
     { value: 'zhipu', label: '智谱AI' },

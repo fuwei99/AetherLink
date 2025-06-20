@@ -26,7 +26,7 @@ interface SettingsState {
   thinkingDisplayStyle: string;
   toolbarDisplayStyle: 'icon' | 'text' | 'both'; // 工具栏显示样式：仅图标、仅文字、图标+文字
   inputBoxStyle: 'default' | 'modern' | 'minimal'; // 输入框风格：默认、现代、简约
-  inputLayoutStyle: 'default' | 'compact'; // 输入框布局样式：默认（分离）或聚合
+  inputLayoutStyle: 'default' | 'compact' | 'integrated'; // 输入框布局样式：默认（分离）、聚合或集成
 
   // 代码块设置
   codeStyle: string; // 代码主题风格
@@ -152,6 +152,9 @@ interface SettingsState {
     pageTitleField: string;
     dateField?: string; // 可选的日期字段名
   };
+
+  // 性能监控设置
+  showPerformanceMonitor?: boolean; // 是否显示性能监控
 }
 
 
@@ -177,7 +180,7 @@ const getInitialState = (): SettingsState => {
     thinkingDisplayStyle: ThinkingDisplayStyle.COMPACT,
     toolbarDisplayStyle: 'both' as 'icon' | 'text' | 'both',
     inputBoxStyle: 'default' as 'default' | 'modern' | 'minimal', // 默认输入框风格
-    inputLayoutStyle: 'default' as 'default' | 'compact', // 输入框布局样式：默认（分离）或聚合
+    inputLayoutStyle: 'integrated' as 'default' | 'compact' | 'integrated', // 输入框布局样式：默认（分离）、聚合或集成
 
     // 代码块默认设置
     codeStyle: 'auto',
@@ -290,6 +293,9 @@ const getInitialState = (): SettingsState => {
       position: 'center', // 默认居中
       repeat: 'no-repeat' // 默认不重复
     },
+
+    // 性能监控默认设置
+    showPerformanceMonitor: false, // 默认不显示性能监控
   };
 
   // 设置默认模型
@@ -452,6 +458,11 @@ export const loadSettings = createAsyncThunk('settings/load', async () => {
             'web-search': true
           }
         };
+      }
+
+      // 如果没有性能监控显示设置，使用默认值
+      if (savedSettings.showPerformanceMonitor === undefined) {
+        savedSettings.showPerformanceMonitor = false;
       }
 
       return {
@@ -775,6 +786,11 @@ const settingsSlice = createSlice({
     updateToolbarButtons: (state, action: PayloadAction<{ order: string[]; visibility: { [key: string]: boolean } }>) => {
       state.toolbarButtons = action.payload;
     },
+
+    // 性能监控显示控制
+    setShowPerformanceMonitor: (state, action: PayloadAction<boolean>) => {
+      state.showPerformanceMonitor = action.payload;
+    },
   },
   extraReducers: (builder) => {
     // 处理加载设置
@@ -866,6 +882,8 @@ export const {
   setToolbarButtonOrder,
   setToolbarButtonVisibility,
   updateToolbarButtons,
+  // 性能监控控制
+  setShowPerformanceMonitor,
 } = settingsSlice.actions;
 
 // 重用现有的action creators，但添加异步保存

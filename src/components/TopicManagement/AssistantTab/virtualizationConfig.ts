@@ -14,15 +14,15 @@ export const VIRTUALIZATION_CONFIG = {
   // 项目高度配置
   ITEM_HEIGHT: {
     ASSISTANT_ITEM: 72,       // 助手项高度
-    TOPIC_ITEM: 56,          // 话题项高度
+    TOPIC_ITEM: 64,          // 话题项高度 (56px + 8px margin-bottom)
     GROUP_HEADER: 48,        // 分组头部高度
   },
 
-  // 预渲染配置
+  // 预渲染配置 - 优化：减少预渲染数量提升性能
   OVERSCAN_COUNT: {
-    DEFAULT: 5,              // 默认预渲染项目数
-    LARGE_LIST: 10,          // 大列表预渲染项目数
-    SMALL_LIST: 3,           // 小列表预渲染项目数
+    DEFAULT: 2,              // 默认预渲染项目数（减少到2）
+    LARGE_LIST: 3,           // 大列表预渲染项目数（减少到3）
+    SMALL_LIST: 1,           // 小列表预渲染项目数（减少到1）
   },
 
   // 容器高度配置

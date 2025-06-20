@@ -11,9 +11,9 @@ import {
   FormHelperText,
   Slider,
   FormControlLabel,
-  Switch,
   Box,
 } from '@mui/material';
+import CustomSwitch from '../CustomSwitch';
 import { Eye as VisibilityIcon, EyeOff as VisibilityOffIcon } from 'lucide-react';
 
 // Azure TTS配置接口
@@ -378,10 +378,9 @@ export const AzureTTSTab: React.FC<AzureTTSTabProps> = ({
 
         <FormControlLabel
           control={
-            <Switch
+            <CustomSwitch
               checked={settings.useSSML}
               onChange={(e) => handleUseSSMLToggle(e.target.checked)}
-              color="primary"
             />
           }
           label="使用SSML标记语言"

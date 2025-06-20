@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Box, Typography, Tooltip, useTheme } from '@mui/material';
 import { Hash } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '../../shared/store';
 import { estimateTokens } from '../../shared/utils';
 import { getMainTextContent } from '../../shared/utils/messageUtils';
@@ -11,6 +12,20 @@ interface TokenDisplayProps {
   currentMessage?: Message; // 当前选中或正在编辑的消息
   showCurrentMessage?: boolean; // 是否显示当前消息的token
 }
+
+// 创建memoized selector来避免不必要的重新渲染
+const selectCurrentTopicMessages = createSelector(
+  [
+    (state: RootState) => state.messages.currentTopicId,
+    (state: RootState) => state.messages.messageIdsByTopic,
+    (state: RootState) => state.messages.entities
+  ],
+  (currentTopicId, messageIdsByTopic, entities) => {
+    if (!currentTopicId) return [];
+    const messageIds = messageIdsByTopic[currentTopicId] || [];
+    return messageIds.map(id => entities[id]).filter(Boolean);
+  }
+);
 
 const TokenDisplay: React.FC<TokenDisplayProps> = ({
   currentMessage,
@@ -41,12 +56,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
   }, []);
   
   // 获取当前话题的所有消息
-  const currentTopicId = useSelector((state: RootState) => state.messages.currentTopicId);
-  const messages = useSelector((state: RootState) => {
-    if (!currentTopicId) return [];
-    const messageIds = state.messages.messageIdsByTopic[currentTopicId] || [];
-    return messageIds.map(id => state.messages.entities[id]).filter(Boolean);
-  });
+  const messages = useSelector(selectCurrentTopicMessages);
 
   // 计算总token数
   const totalTokens = useMemo(() => {

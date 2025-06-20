@@ -406,14 +406,14 @@ const BackupRestorePanel: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // 准备备份数据
-      const backupData = await prepareBasicBackupData();
+      // 准备完整备份数据（包含设置、本地存储等）
+      const backupData = await prepareFullBackupData();
 
       // 上传到 WebDAV
       const result = await webdavService.backupToWebDav(backupData);
 
       if (result.success) {
-        showMessage('备份已成功上传到 WebDAV 服务器', 'success');
+        showMessage('完整备份已成功上传到 WebDAV 服务器', 'success');
       } else {
         showMessage(`WebDAV 备份失败: ${result.error}`, 'error');
       }

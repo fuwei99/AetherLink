@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Box } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Box, Fade } from '@mui/material';
 import type { RootState } from '../../shared/store';
 import { messageBlocksSelectors } from '../../shared/store/slices/messageBlocksSlice';
 import type { MessageBlock, Message } from '../../shared/types/newMessage';
@@ -25,15 +24,9 @@ import FileBlock from './blocks/FileBlock';
 import PlaceholderBlock from './blocks/PlaceholderBlock';
 import SearchResultsBlock from './blocks/SearchResultsBlock';
 import KnowledgeReferenceBlock from './blocks/KnowledgeReferenceBlock';
+import ToolBlock from './blocks/ToolBlock';
 
-// 定义动画变体
-const blockWrapperVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  static: { opacity: 1, y: 0 }
-};
-
-// 动画块包装器组件
+// 简单的动画块包装器组件（使用 MUI Fade）
 interface AnimatedBlockWrapperProps {
   children: React.ReactNode;
   enableAnimation: boolean;
@@ -41,12 +34,11 @@ interface AnimatedBlockWrapperProps {
 
 const AnimatedBlockWrapper: React.FC<AnimatedBlockWrapperProps> = ({ children, enableAnimation }) => {
   return (
-    <motion.div
-      variants={blockWrapperVariants}
-      initial={enableAnimation ? 'hidden' : 'static'}
-      animate={enableAnimation ? 'visible' : 'static'}>
-      {children}
-    </motion.div>
+    <Fade in={true} timeout={enableAnimation ? 300 : 0}>
+      <div>
+        {children}
+      </div>
+    </Fade>
   );
 };
 
@@ -157,8 +149,8 @@ const MessageBlockRenderer: React.FC<Props> = ({
       ) : hasEmptySuccessBlock ? (
         renderEmptyContentMessage()
       ) : (
-        <AnimatePresence mode="sync">
-          {/* 添加key属性，确保在内容变化时重新渲染 */}
+        <>
+          {/* 渲染所有块 */}
           {renderedBlocks.map((block) => {
             let blockComponent: React.ReactNode = null;
 
@@ -228,8 +220,8 @@ const MessageBlockRenderer: React.FC<Props> = ({
                 blockComponent = <FileBlock key={block.id} block={block} />;
                 break;
               case MessageBlockType.TOOL:
-                // 工具块现在在 MainTextBlock 中原位置渲染，这里跳过
-                blockComponent = null;
+                // 支持 OpenAI Responses API 的工具块渲染
+                blockComponent = <ToolBlock key={block.id} block={block as any} />;
                 break;
               case MessageBlockType.SEARCH_RESULTS:
                 blockComponent = <SearchResultsBlock key={block.id} block={block as any} />;
@@ -262,7 +254,7 @@ const MessageBlockRenderer: React.FC<Props> = ({
               </AnimatedBlockWrapper>
             );
           })}
-        </AnimatePresence>
+        </>
       )}
     </Box>
   );

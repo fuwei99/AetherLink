@@ -9,6 +9,7 @@ import {
 import MessageActions from '../MessageActions';
 import MessageBlockRenderer from '../MessageBlockRenderer';
 import type { BaseMessageStyleProps } from '../types/MessageComponent';
+import { messageItemStyles } from '../../../shared/config/scrollOptimization';
 
 const MinimalStyleMessage: React.FC<BaseMessageStyleProps> = ({
   message,
@@ -46,6 +47,8 @@ const MinimalStyleMessage: React.FC<BaseMessageStyleProps> = ({
         borderColor: showMessageDivider
           ? (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)')
           : 'transparent',
+        // 🚀 使用统一的消息项优化配置
+        ...messageItemStyles,
       }}
     >
       {/* 头像 - 根据设置控制显示 */}
@@ -155,4 +158,18 @@ const MinimalStyleMessage: React.FC<BaseMessageStyleProps> = ({
   );
 };
 
-export default MinimalStyleMessage;
+// 🚀 使用React.memo优化重新渲染
+export default React.memo(MinimalStyleMessage, (prevProps, nextProps) => {
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.updatedAt === nextProps.message.updatedAt &&
+    prevProps.message.status === nextProps.message.status && // 🔥 关键！流式输出状态变化
+    JSON.stringify(prevProps.message.blocks) === JSON.stringify(nextProps.message.blocks) && // 🔥 消息块变化
+    prevProps.loading === nextProps.loading &&
+    prevProps.showUserAvatar === nextProps.showUserAvatar &&
+    prevProps.showUserName === nextProps.showUserName &&
+    prevProps.showModelAvatar === nextProps.showModelAvatar &&
+    prevProps.showModelName === nextProps.showModelName &&
+    prevProps.showMessageDivider === nextProps.showMessageDivider
+  );
+});

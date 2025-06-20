@@ -48,7 +48,19 @@ export interface StandardApiRequest {
 // 测试API连接
 export const testApiConnection = async (model: Model): Promise<boolean> => {
   try {
-    // 使用接口调用
+    // 检查是否为 OpenAI Responses API 提供商
+    if (model.providerType === 'openai-response') {
+      console.log('[testApiConnection] 使用 OpenAI Responses API 测试连接');
+
+      // 动态导入 OpenAIResponseProvider
+      const { OpenAIResponseProvider } = await import('../providers/OpenAIResponseProvider');
+      const provider = new OpenAIResponseProvider(model);
+
+      // 使用 Responses API 专用的测试方法
+      return await provider.testConnection();
+    }
+
+    // 其他提供商使用原有的测试方法
     const response = await sendChatRequest({
       messages: [{
         role: 'user',

@@ -11,9 +11,7 @@ const SettingsPage = lazy(() => import('../pages/Settings'));
 const AppearanceSettings = lazy(() => import('../pages/Settings/AppearanceSettings.tsx'));
 const BehaviorSettings = lazy(() => import('../pages/Settings/BehaviorSettings'));
 const ChatInterfaceSettings = lazy(() => import('../pages/Settings/ChatInterfaceSettings'));
-const TopToolbarSettings = lazy(() => import('../pages/Settings/TopToolbarSettings'));
 const TopToolbarDIYSettings = lazy(() => import('../pages/Settings/TopToolbarDIYSettings'));
-const TopToolbarTestPage = lazy(() => import('../pages/Settings/TopToolbarTestPage'));
 const DefaultModelSettings = lazy(() => import('../pages/Settings/DefaultModelSettings'));
 // 导入知识库页面
 const KnowledgeBasePage = lazy(() => import('../pages/KnowledgeBase'));
@@ -53,6 +51,8 @@ const WorkspaceDetail = lazy(() => import('../pages/Settings/WorkspaceDetail'));
 const FilePermissionPage = lazy(() => import('../pages/Settings/FilePermissionPage'));
 // 导入思考过程设置页面
 const ThinkingProcessSettings = lazy(() => import('../pages/Settings/ThinkingProcessSettings'));
+// 导入输入框管理设置页面
+const InputBoxSettings = lazy(() => import('../pages/Settings/InputBoxSettings'));
 // 导入Notion设置页面
 const NotionSettings = lazy(() => import('../pages/Settings/NotionSettings'));
 
@@ -129,9 +129,8 @@ const AppRouter: React.FC = () => {
         <Route path="/settings/appearance/message-bubble" element={<MessageBubbleSettings />} />
         <Route path="/settings/appearance/toolbar-customization" element={<ToolbarCustomization />} />
         <Route path="/settings/appearance/thinking-process" element={<ThinkingProcessSettings />} />
-        <Route path="/settings/appearance/top-toolbar" element={<TopToolbarSettings />} />
-        <Route path="/settings/appearance/top-toolbar-diy" element={<TopToolbarDIYSettings />} />
-        <Route path="/settings/appearance/top-toolbar-test" element={<TopToolbarTestPage />} />
+        <Route path="/settings/appearance/input-box" element={<InputBoxSettings />} />
+        <Route path="/settings/appearance/top-toolbar" element={<TopToolbarDIYSettings />} />
         <Route path="/settings/behavior" element={<BehaviorSettings />} />
         <Route path="/settings/default-model" element={<DefaultModelSettings />} />
         <Route path="/settings/default-model-settings" element={<DefaultModelSettingsPage />} />

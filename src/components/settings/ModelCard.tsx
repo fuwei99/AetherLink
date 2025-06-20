@@ -4,7 +4,6 @@ import {
   CardContent,
   Typography,
   Box,
-  Switch,
   IconButton,
   Chip,
   Avatar,
@@ -13,6 +12,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
+import CustomSwitch from '../CustomSwitch';
 import { Edit as EditIcon, Trash2 as DeleteIcon, MoreVertical as MoreVertIcon, CheckCircle as CheckCircleIcon } from 'lucide-react';
 import type { Model } from '../../shared/types';
 import { getProviderName } from '../../shared/data/presetModels';
@@ -143,10 +143,9 @@ const ModelCard: React.FC<ModelCardProps> = ({
           <Typography variant="body2">
             {model.enabled ? '已启用' : '已禁用'}
           </Typography>
-          <Switch
+          <CustomSwitch
             checked={model.enabled}
             onChange={(e) => onToggleEnabled(model.id, e.target.checked)}
-            inputProps={{ 'aria-label': 'toggle model' }}
           />
         </Box>
       </CardContent>

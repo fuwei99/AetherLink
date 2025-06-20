@@ -18,7 +18,7 @@ export const saveMessageAndBlocksToDB = async (message: Message, blocks: Message
       // 保存消息到messages表（保持兼容性）
       await dexieStorage.messages.put(message);
 
-      // 更新topics表中的messages数组（电脑端方式）
+      // 更新topics表中的messages数组（改造为：按时间顺序存储）
       const topic = await dexieStorage.topics.get(message.topicId);
       if (topic) {
         // 确保messages数组存在
@@ -29,27 +29,45 @@ export const saveMessageAndBlocksToDB = async (message: Message, blocks: Message
         // 查找消息在数组中的位置
         const messageIndex = topic.messages.findIndex((m: Message) => m.id === message.id);
 
-        // 更新或添加消息
         if (messageIndex >= 0) {
+          // 更新现有消息
           topic.messages[messageIndex] = message;
+          console.log(`[saveMessageAndBlocksToDB] 更新现有消息 ${message.id} 在位置 ${messageIndex}`);
         } else {
-          topic.messages.push(message);
+          // ：按时间顺序插入新消息
+          const newMessageTime = new Date(message.createdAt).getTime();
+          let insertIndex = topic.messages.length;
+
+          // 找到正确的插入位置（保持时间升序）
+          for (let i = topic.messages.length - 1; i >= 0; i--) {
+            const existingMessage = topic.messages[i];
+            const existingTime = new Date(existingMessage.createdAt).getTime();
+            if (newMessageTime >= existingTime) {
+              insertIndex = i + 1;
+              break;
+            }
+            insertIndex = i;
+          }
+
+          // 在正确位置插入消息
+          topic.messages.splice(insertIndex, 0, message);
+          console.log(`[saveMessageAndBlocksToDB] 插入新消息 ${message.id} 到位置 ${insertIndex}，时间: ${message.createdAt}`);
         }
 
-        // 同时更新messageIds数组（保持兼容性）
+        // 同时更新messageIds数组（保持兼容性和顺序）
         if (!topic.messageIds) {
           topic.messageIds = [];
         }
 
-        if (!topic.messageIds.includes(message.id)) {
-          topic.messageIds.push(message.id);
-        }
+        // 重新构建messageIds数组以保持与messages数组的顺序一致
+        topic.messageIds = topic.messages.map((m: Message) => m.id);
 
         // 更新话题的lastMessageTime
         topic.lastMessageTime = message.createdAt || message.updatedAt || new Date().toISOString();
 
         // 保存更新后的话题
         await dexieStorage.topics.put(topic);
+        console.log(`[saveMessageAndBlocksToDB] 话题 ${topic.id} 现有 ${topic.messages.length} 条有序消息`);
       }
     });
   } catch (error) {

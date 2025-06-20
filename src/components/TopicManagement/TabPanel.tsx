@@ -8,9 +8,9 @@ interface TabPanelProps {
 }
 
 /**
- * 标签面板组件，用于在标签页中显示内容
+ * 标签面板组件，用于在标签页中显示内容 - 使用memo优化性能
  */
-export default function TabPanel(props: TabPanelProps) {
+const TabPanel = React.memo(function TabPanel(props: TabPanelProps) {
   const { children, value, index } = props;
 
   return (
@@ -24,38 +24,31 @@ export default function TabPanel(props: TabPanelProps) {
         overflow: 'auto',
         padding: '10px',
         display: value === index ? 'block' : 'none',
-        // 移动端滚动优化
-        WebkitOverflowScrolling: 'touch', // iOS 平滑滚动
-        scrollBehavior: 'smooth', // 平滑滚动行为
-        // 性能优化
-        willChange: 'scroll-position', // 提示浏览器优化滚动
+        // 性能优化 - 简化样式，减少重排计算
         transform: 'translateZ(0)', // 启用硬件加速
-        // 滚动条样式优化
-        scrollbarWidth: 'thin', // Firefox 细滚动条
-        // 自定义滚动条样式
+        // 隐藏滚动条，与虚拟化列表保持一致
+        scrollbarWidth: 'none', // Firefox
+        msOverflowStyle: 'none', // IE/Edge
         '&::-webkit-scrollbar': {
-          width: '4px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'rgba(0, 0, 0, 0.2)',
-          borderRadius: '2px',
-          '&:hover': {
-            background: 'rgba(0, 0, 0, 0.3)',
-          },
+          display: 'none', // WebKit浏览器
         },
         // 防止过度滚动
         overscrollBehavior: 'contain',
-        // 防止内容溢出导致的滚动问题
-        minHeight: 'fit-content',
       }}
     >
       {children}
     </Box>
   );
-}
+}, (prevProps, nextProps) => {
+  // 自定义比较函数：只有在value、index或children发生变化时才重新渲染
+  return (
+    prevProps.value === nextProps.value &&
+    prevProps.index === nextProps.index &&
+    prevProps.children === nextProps.children
+  );
+});
+
+export default TabPanel;
 
 /**
  * 生成标签页的辅助属性

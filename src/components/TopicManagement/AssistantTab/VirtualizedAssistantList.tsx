@@ -113,6 +113,7 @@ const VirtualizedAssistantList = memo(function VirtualizedAssistantList({
       ) : (
         // 助手数量较少时直接渲染，避免虚拟化的开销
         <Box
+          className="hide-scrollbar"
           sx={{
             maxHeight: height,
             overflow: 'auto',
@@ -120,6 +121,12 @@ const VirtualizedAssistantList = memo(function VirtualizedAssistantList({
             borderColor: 'divider',
             borderRadius: '8px',
             backgroundColor: 'background.paper',
+            // 隐藏滚动条样式
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none', // IE/Edge
+            '&::-webkit-scrollbar': {
+              display: 'none', // WebKit浏览器
+            },
           }}
         >
           {assistants.map((assistant) => (

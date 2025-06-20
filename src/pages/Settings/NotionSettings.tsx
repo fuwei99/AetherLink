@@ -5,7 +5,6 @@ import {
   Typography,
   TextField,
   Button,
-  Switch,
   FormControlLabel,
   Alert,
   CircularProgress,
@@ -16,6 +15,7 @@ import {
   IconButton,
   alpha
 } from '@mui/material';
+import CustomSwitch from '../../components/CustomSwitch';
 import { ArrowLeft, ExternalLink, Database, Key, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -220,10 +220,9 @@ const NotionSettingsPage: React.FC = () => {
           {/* 启用开关 */}
           <FormControlLabel
             control={
-              <Switch
+              <CustomSwitch
                 checked={localSettings.enabled}
                 onChange={(e) => handleSettingChange('enabled', e.target.checked)}
-                color="primary"
               />
             }
             label="启用Notion导出"

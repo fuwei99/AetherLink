@@ -243,38 +243,39 @@ jobs:
         id: date
         run: echo "date=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
 
-      - name: Create Release
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ios-v${{ steps.date.outputs.date }}
-          name: iOS Build ${{ steps.date.outputs.date }}
-          body: |
-            🍎 自动构建的 iOS IPA 文件
-
-            📱 **构建信息**：
-            - 构建时间：${{ steps.date.outputs.date }}
-            - 提交：${{ github.sha }}
-            - 分支：${{ github.ref_name }}
-
-            📦 **下载文件**：
-            - `AetherLink-iOS-${{ steps.date.outputs.date }}.ipa` - iOS 应用安装包（未签名）
-            - `iOS-安装说明-${{ steps.date.outputs.date }}.md` - 详细安装说明
-
-            ⚠️ **重要提示**：
-            - 此 IPA 文件未签名，需要使用第三方工具安装
-            - 推荐使用 AltStore、SideStore 或重新签名后安装
-            - 详细安装方法请查看说明文件
-
-            🔧 **安装方法**：
-            1. **AltStore/SideStore**：最简单的安装方式
-            2. **Xcode**：需要开发者账号
-            3. **3uTools/iMazing**：第三方工具
-            4. **重新签名**：使用 iOS App Signer
-          files: |
-            ios/App/build/AetherLink-unsigned.ipa
-            ios/App/build/INSTALL_INSTRUCTIONS.md
-          draft: false
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 注释掉自动发布功能，避免产生过多的 releases
+      # - name: Create Release
+      #   if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: ios-v${{ steps.date.outputs.date }}
+      #     name: iOS Build ${{ steps.date.outputs.date }}
+      #     body: |
+      #       🍎 自动构建的 iOS IPA 文件
+      #
+      #       📱 **构建信息**：
+      #       - 构建时间：${{ steps.date.outputs.date }}
+      #       - 提交：${{ github.sha }}
+      #       - 分支：${{ github.ref_name }}
+      #
+      #       📦 **下载文件**：
+      #       - `AetherLink-iOS-${{ steps.date.outputs.date }}.ipa` - iOS 应用安装包（未签名）
+      #       - `iOS-安装说明-${{ steps.date.outputs.date }}.md` - 详细安装说明
+      #
+      #       ⚠️ **重要提示**：
+      #       - 此 IPA 文件未签名，需要使用第三方工具安装
+      #       - 推荐使用 AltStore、SideStore 或重新签名后安装
+      #       - 详细安装方法请查看说明文件
+      #
+      #       🔧 **安装方法**：
+      #       1. **AltStore/SideStore**：最简单的安装方式
+      #       2. **Xcode**：需要开发者账号
+      #       3. **3uTools/iMazing**：第三方工具
+      #       4. **重新签名**：使用 iOS App Signer
+      #     files: |
+      #       ios/App/build/AetherLink-unsigned.ipa
+      #       ios/App/build/INSTALL_INSTRUCTIONS.md
+      #     draft: false
+      #     prerelease: true
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,10 +4,10 @@ import type { Message } from '../../shared/types/newMessage.ts';
 import MessageGroup from './MessageGroup';
 import SystemPromptBubble from '../SystemPromptBubble';
 import SystemPromptDialog from '../SystemPromptDialog';
-// 移除 VirtualScroller 导入，使用简单的DOM渲染
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { throttle } from 'lodash';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 import { dexieStorage } from '../../shared/services/DexieStorageService';
 import { upsertManyBlocks } from '../../shared/store/slices/messageBlocksSlice';
@@ -15,8 +15,34 @@ import { newMessagesActions } from '../../shared/store/slices/newMessagesSlice';
 import useScrollPosition from '../../hooks/useScrollPosition';
 import { getGroupedMessages, MessageGroupingType } from '../../shared/utils/messageGrouping';
 import { EventEmitter, EVENT_NAMES } from '../../shared/services/EventEmitter';
-import { deduplicateMessages } from '../../shared/utils/messageUtils/filters';
 import { generateBlockId } from '../../shared/utils';
+import { scrollContainerStyles, scrollbarStyles, getOptimizedConfig, debugScrollPerformance } from '../../shared/config/scrollOptimization';
+import ScrollPerformanceMonitor from '../debug/ScrollPerformanceMonitor';
+
+// 加载更多消息的数量
+const LOAD_MORE_COUNT = 20;
+
+// 改造为：简化消息显示逻辑
+const computeDisplayMessages = (messages: Message[], startIndex: number, displayCount: number) => {
+  console.log(`[computeDisplayMessages] 输入 ${messages.length} 条消息，从索引 ${startIndex} 开始，显示 ${displayCount} 条`);
+
+  // ：消息已经按时间顺序存储，直接使用
+  // 为了让最新消息显示在底部，我们需要从末尾开始取消息
+  const totalMessages = messages.length;
+
+  if (totalMessages === 0) {
+    return [];
+  }
+
+  // 计算实际的起始位置（从末尾倒数）
+  const actualStartIndex = Math.max(0, totalMessages - startIndex - displayCount);
+  const actualEndIndex = totalMessages - startIndex;
+
+  const displayMessages = messages.slice(actualStartIndex, actualEndIndex);
+
+  console.log(`[computeDisplayMessages] 返回 ${displayMessages.length} 条消息，索引范围: ${actualStartIndex}-${actualEndIndex}`);
+  return displayMessages;
+};
 
 interface MessageListProps {
   messages: Message[];
@@ -31,6 +57,22 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
   const theme = useTheme();
   const dispatch = useDispatch();
   const [promptDialogOpen, setPromptDialogOpen] = useState(false);
+
+  // 🚀 获取优化配置
+  const optimizedConfig = React.useMemo(() => getOptimizedConfig(), []);
+
+  // 🚀 调试性能配置（仅在开发环境）
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      debugScrollPerformance();
+    }
+  }, []);
+
+  // 无限滚动相关状态
+  const [displayMessages, setDisplayMessages] = useState<Message[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [displayCount] = useState(optimizedConfig.virtualScrollThreshold); // 🚀 使用优化配置
 
   // 添加强制更新机制 - 使用更稳定的实现
   const [, setUpdateCounter] = useState(0);
@@ -112,13 +154,13 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
     state.settings.autoScrollToBottom !== false
   );
 
-  // 使用简化的滚动位置钩子
+  // 🚀 使用优化的滚动位置钩子
   const {
     containerRef,
     handleScroll,
     scrollToBottom,
   } = useScrollPosition('messageList', {
-    throttleTime: 100,
+    throttleTime: optimizedConfig.scrollThrottle, // 🚀 使用优化的节流时间
     autoRestore: false, // 禁用自动恢复，避免滚动冲突
     onScroll: (_scrollPos) => {
       // 可以在这里添加滚动位置相关的逻辑
@@ -369,23 +411,45 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
     throttledLoadBlocks();
   }, [throttledLoadBlocks]);
 
-  // 过滤消息，去除重复消息 - 使用统一的去重逻辑
+  // 改造为：直接使用有序消息，无需去重
   const filteredMessages = useMemo(() => {
-    return deduplicateMessages(messages);
+    console.log(`[MessageList] 使用，直接使用 ${messages.length} 条有序消息，无需去重`);
+    // ：假设消息已经按时间顺序存储且无重复，直接使用
+    return messages;
   }, [messages]);
 
-  // 这些回调在使用虚拟滚动和消息分组后不再直接使用
-  // 但保留它们以便将来可能需要
+  // 计算显示的消息
+  useEffect(() => {
+    const newDisplayMessages = computeDisplayMessages(filteredMessages, 0, displayCount);
+    setDisplayMessages(newDisplayMessages);
+    setHasMore(filteredMessages.length > displayCount);
+    console.log(`[MessageList] 显示 ${newDisplayMessages.length} 条消息，还有更多: ${filteredMessages.length > displayCount}`);
+  }, [filteredMessages, displayCount]);
+
+  // 加载更多消息的函数
+  const loadMoreMessages = useCallback(() => {
+    if (!hasMore || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      const currentLength = displayMessages.length;
+      const newMessages = computeDisplayMessages(filteredMessages, currentLength, LOAD_MORE_COUNT);
+
+      setDisplayMessages((prev) => [...prev, ...newMessages]);
+      setHasMore(currentLength + LOAD_MORE_COUNT < filteredMessages.length);
+      setIsLoadingMore(false);
+    }, 300);
+  }, [displayMessages.length, hasMore, isLoadingMore, filteredMessages]);
 
   // 获取消息分组设置
   const messageGroupingType = useSelector((state: RootState) =>
     (state.settings as any).messageGrouping || 'byDate'
   );
 
-  // 对消息进行分组
+  // 对显示的消息进行分组
   const groupedMessages = useMemo(() => {
-    return Object.entries(getGroupedMessages(filteredMessages, messageGroupingType as MessageGroupingType));
-  }, [filteredMessages, messageGroupingType]);
+    return Object.entries(getGroupedMessages(displayMessages, messageGroupingType as MessageGroupingType));
+  }, [displayMessages, messageGroupingType]);
 
   // 移除虚拟滚动相关的函数，使用简单的DOM渲染
 
@@ -396,6 +460,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
 
   return (
     <Box
+      id="messageList"
       ref={containerRef}
       sx={{
         display: 'flex',
@@ -407,27 +472,14 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
         pb: 2, // 保持底部padding
         width: '100%', // 确保容器占满可用宽度
         maxWidth: '100%', // 确保不超出父容器
+        // 🚀 使用统一的滚动性能优化配置
+        ...scrollContainerStyles,
         // 只有在没有自定义背景时才设置默认背景色
         ...(chatBackground.enabled ? {} : {
-          bgcolor: theme.palette.mode === 'dark'
-            ? theme.palette.background.default
-            : '#f5f5f5'
+          bgcolor: theme.palette.background.default
         }),
-        scrollbarWidth: 'thin',
-        scrollbarColor: `${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e1e1e1'} transparent`,
-        '&::-webkit-scrollbar': {
-          width: '4px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e1e1e1',
-          borderRadius: '10px',
-        },
-        '&::-webkit-scrollbar-thumb:hover': {
-          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.3)' : '#cccccc',
-        },
+        // 🚀 使用优化的滚动条样式
+        ...scrollbarStyles(theme.palette.mode === 'dark'),
       }}
       onScroll={handleScroll}
     >
@@ -450,7 +502,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
         onSave={handlePromptSave}
       />
 
-      {filteredMessages.length === 0 ? (
+      {displayMessages.length === 0 ? (
         <Box
           sx={{
             flex: 1,
@@ -465,34 +517,69 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onRegenerate, onDel
           新的对话开始了，请输入您的问题
         </Box>
       ) : (
-        // 使用简单的DOM渲染，避免虚拟滚动的高度计算问题
-        <Box sx={{ width: '100%' }}>
-          {groupedMessages.map(([date, messages], groupIndex) => {
-            // 计算当前组之前的所有消息数量，用于计算全局索引
-            const previousMessagesCount = groupedMessages
-              .slice(0, groupIndex)
-              .reduce((total, [, msgs]) => total + msgs.length, 0);
+        // 使用无限滚动优化性能
+        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column-reverse' }}>
+          <InfiniteScroll
+            dataLength={displayMessages.length}
+            next={loadMoreMessages}
+            hasMore={hasMore}
+            loader={
+              isLoadingMore ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', padding: '10px' }}>
+                  <Box sx={{
+                    width: '20px',
+                    height: '20px',
+                    border: '2px solid',
+                    borderColor: theme.palette.primary.main,
+                    borderTopColor: 'transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    '@keyframes spin': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' }
+                    }
+                  }} />
+                </Box>
+              ) : null
+            }
+            scrollableTarget="messageList"
+            inverse={false}
+            style={{ overflow: 'visible', display: 'flex', flexDirection: 'column' }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              {groupedMessages.map(([date, messages], groupIndex) => {
+                // 计算当前组之前的所有消息数量，用于计算全局索引
+                const previousMessagesCount = groupedMessages
+                  .slice(0, groupIndex)
+                  .reduce((total, [, msgs]) => total + msgs.length, 0);
 
-            return (
-              <MessageGroup
-                key={date}
-                date={date}
-                messages={messages}
-                expanded={true}
-                forceUpdate={forceUpdateRef.current}
-                startIndex={previousMessagesCount} // 传递起始索引
-                onRegenerate={onRegenerate}
-                onDelete={onDelete}
-                onSwitchVersion={onSwitchVersion}
-                onResend={onResend}
-              />
-            );
-          })}
+                return (
+                  <MessageGroup
+                    key={date}
+                    date={date}
+                    messages={messages}
+                    expanded={true}
+                    forceUpdate={forceUpdateRef.current}
+                    startIndex={previousMessagesCount} // 传递起始索引
+                    onRegenerate={onRegenerate}
+                    onDelete={onDelete}
+                    onSwitchVersion={onSwitchVersion}
+                    onResend={onResend}
+                  />
+                );
+              })}
+            </Box>
+          </InfiniteScroll>
         </Box>
       )}
       <div ref={messagesEndRef} />
       {/* 添加一个隐形的底部占位元素，确保最后的消息不被输入框遮挡 */}
       <div style={{ height: '35px', minHeight: '35px', width: '100%' }} />
+
+      {/* 🚀 性能监控组件 */}
+      <ScrollPerformanceMonitor
+        targetId="messageList"
+      />
     </Box>
   );
 };

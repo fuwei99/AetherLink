@@ -25,15 +25,38 @@ import {
 import { ChevronRight as ChevronRightIcon, Palette as FormatColorFillIcon } from 'lucide-react';
 import { Settings as SettingsApplicationsIcon, Sliders as TuneIcon, Wand2 as AutoFixHighIcon, GitBranch } from 'lucide-react';
 import { Code as CodeIcon, MessageSquare as ForumIcon, BookOpen as MenuBookIcon, Folder as WorkspaceIcon, Database as DatabaseIcon } from 'lucide-react';
+import useScrollPosition from '../../hooks/useScrollPosition';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
+
+  // 使用滚动位置保存功能
+  const {
+    containerRef,
+    handleScroll,
+    restoreScrollPosition
+  } = useScrollPosition('settings-main', {
+    autoRestore: true,
+    restoreDelay: 100
+  });
 
   const handleBack = () => {
     navigate('/chat');
   };
 
+  // 功能开放状态配置
+  const FEATURE_FLAGS = {
+    shortcuts: false,  // 快捷键设置功能未开放
+    features: false,   // 功能设置未开放
+  };
+
   const navigateTo = (path: string) => {
+    // 从路径中提取功能ID
+    const featureId = path.split('/').pop();
+    // 检查功能是否开放
+    if (featureId && FEATURE_FLAGS[featureId as keyof typeof FEATURE_FLAGS] === false) {
+      return; // 功能未开放，不进行导航
+    }
     navigate(path);
   };
 
@@ -130,6 +153,8 @@ const SettingsPage: React.FC = () => {
       </AppBar>
 
       <Box
+        ref={containerRef}
+        onScroll={handleScroll}
         sx={{
           flexGrow: 1,
           overflow: 'auto',
@@ -193,6 +218,7 @@ const SettingsPage: React.FC = () => {
                 >
                   <ListItemButton
                     onClick={() => navigateTo(item.path)}
+                    disabled={FEATURE_FLAGS[item.id as keyof typeof FEATURE_FLAGS] === false}
                     sx={{
                       p: 0,
                       height: '100%',

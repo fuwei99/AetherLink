@@ -1,6 +1,6 @@
 /**
  * Gemini 文件服务 - 移动端适配版
- * 提供类似电脑版的文件上传和管理功能，适配移动端环境
+ * 提供类似的文件上传和管理功能，适配移动端环境
  * 支持真正的文件上传到 Gemini 服务器
  */
 import { GoogleGenAI, FileState } from '@google/genai';
@@ -14,12 +14,12 @@ import { createClient } from './client';
 
 // 文件大小常量
 const MB = 1024 * 1024;
-const MAX_FILE_SIZE = 20 * MB; // 20MB 限制，与电脑版保持一致
+const MAX_FILE_SIZE = 20 * MB; // 20MB 限制，与保持一致
 
-const FILE_CACHE_DURATION = 3000; // 3秒缓存，与电脑版保持一致
+const FILE_CACHE_DURATION = 3000; // 3秒缓存，与保持一致
 
 /**
- * 缓存服务 - 模拟电脑版的 CacheService
+ * 缓存服务 - 模拟的 CacheService
  */
 class MobileCacheService {
   private static cache = new Map<string, { data: any; timestamp: number; duration: number }>();
@@ -197,7 +197,7 @@ export class GeminiFileService {
   }
 
   /**
-   * 检索已上传的文件 - 模拟电脑版实现
+   * 检索已上传的文件 - 模拟实现
    * @param file 文件对象
    * @returns Gemini 文件对象或 undefined
    */
@@ -207,7 +207,7 @@ export class GeminiFileService {
 
       const FILE_LIST_CACHE_KEY = 'gemini_file_list';
 
-      // 使用缓存服务检查缓存 - 模拟电脑版的 CacheService
+      // 使用缓存服务检查缓存 - 模拟的 CacheService
       const cachedResponse = MobileCacheService.get<GeminiFile[]>(FILE_LIST_CACHE_KEY);
       if (cachedResponse) {
         const cachedFile = this.processFileList(cachedResponse, file);
@@ -220,7 +220,7 @@ export class GeminiFileService {
       // 从 Gemini 服务器获取文件列表
       const files = await this.listFiles();
 
-      // 设置缓存 - 模拟电脑版的缓存策略
+      // 设置缓存 - 模拟的缓存策略
       MobileCacheService.set(FILE_LIST_CACHE_KEY, files, FILE_CACHE_DURATION);
 
       // 查找匹配的文件
@@ -239,7 +239,7 @@ export class GeminiFileService {
   }
 
   /**
-   * 处理文件列表 - 模拟电脑版的 processResponse 方法
+   * 处理文件列表 - 模拟的 processResponse 方法
    * @param files 文件列表
    * @param targetFile 目标文件
    * @returns 匹配的文件或 undefined

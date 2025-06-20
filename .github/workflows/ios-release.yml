@@ -1,15 +1,16 @@
-name: iOS Release
+# 注释掉自动发布工作流，避免产生过多的 releases
+# name: iOS Release
 
-on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
+# on:
+#   push:
+#     tags:
+#       - 'v*'
+#   workflow_dispatch:
 
-jobs:
-  release:
-    runs-on: macos-latest
-    steps:
+# jobs:
+#   release:
+#     runs-on: macos-latest
+#     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 

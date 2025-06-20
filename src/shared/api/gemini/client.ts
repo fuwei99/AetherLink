@@ -1,5 +1,5 @@
 /**
- * Gemini客户端模块 - 电脑版实现
+ * Gemini客户端模块 - 实现
  * 负责创建和配置Gemini客户端实例
  */
 import { GoogleGenAI } from '@google/genai';
@@ -9,7 +9,7 @@ import axios from 'axios';
 import type OpenAI from 'openai';
 
 /**
- * 创建Gemini客户端 - 电脑版实现
+ * 创建Gemini客户端 - 实现
  * @param model 模型配置
  * @returns Gemini客户端实例
  */
@@ -26,7 +26,7 @@ export function createClient(model: Model): GoogleGenAI {
     const cleanBaseUrl = baseUrl.replace(/\/v1beta\/?$/, '');
     console.log(`[Gemini createClient] 创建客户端, 模型ID: ${model.id}, baseURL: ${cleanBaseUrl}`);
 
-    // 使用电脑版的SDK创建客户端
+    // 使用的SDK创建客户端
     const client = new GoogleGenAI({
       vertexai: false,
       apiKey: apiKey,
@@ -67,7 +67,7 @@ export async function testConnection(model: Model): Promise<boolean> {
       baseUrl: cleanBaseUrl
     });
 
-    // 发送简单的测试请求 - 使用电脑版SDK
+    // 发送简单的测试请求 - 使用SDK
     const result = await genAI.models.generateContent({
       model: modelId,
       contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],

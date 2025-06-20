@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, startTransition, useDeferredValue } from 'react';
 import { Box, Tabs, Tab, CircularProgress, useTheme } from '@mui/material';
 import { useSidebarContext } from './SidebarContext';
 import TabPanel, { a11yProps } from './TabPanel';
@@ -11,9 +11,9 @@ import type { RootState } from '../../shared/store';
 import { Bot, MessageSquare, Settings } from 'lucide-react';
 
 /**
- * 侧边栏标签页内容组件
+ * 侧边栏标签页内容组件 - 使用memo优化性能
  */
-export default function SidebarTabsContent() {
+const SidebarTabsContent = React.memo(function SidebarTabsContent() {
   const {
     loading,
     value,
@@ -26,7 +26,7 @@ export default function SidebarTabsContent() {
     handleAddAssistant,
     handleUpdateAssistant,
     handleDeleteAssistant,
-    isPending, // 获取isPending状态
+
     handleSelectTopic,
     handleCreateTopic,
     handleDeleteTopic,
@@ -45,12 +45,20 @@ export default function SidebarTabsContent() {
     refreshTopics
   } = useSidebarContext();
 
-  // 获取主题和主题工具
+  // 获取主题和主题工具 - 使用useMemo优化性能
   const theme = useTheme();
-  const themeStyle = useSelector((state: RootState) => state.settings.themeStyle);
-  const themeColors = getThemeColors(theme, themeStyle);
+  // 使用更精确的选择器，避免不必要的重新渲染
+  const themeStyle = useSelector((state: RootState) => state.settings.themeStyle, (prev, next) => prev === next);
+  const themeColors = useMemo(() => getThemeColors(theme, themeStyle), [theme, themeStyle]);
 
-  // 标签页切换
+  // 使用useDeferredValue延迟非关键状态更新，提升切换性能
+  const deferredValue = useDeferredValue(value);
+  const deferredUserAssistants = useDeferredValue(userAssistants);
+  const deferredCurrentAssistant = useDeferredValue(currentAssistant);
+  const deferredAssistantWithTopics = useDeferredValue(assistantWithTopics);
+  const deferredCurrentTopic = useDeferredValue(currentTopic);
+
+  // 标签页切换 - 优化版本，避免不必要的数据刷新
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     console.log(`[SidebarTabs] 标签页切换: ${value} -> ${newValue}`, {
       currentAssistant: currentAssistant?.id,
@@ -64,27 +72,32 @@ export default function SidebarTabsContent() {
       console.log('[SidebarTabs] 切换到话题标签页，话题详情:',
         assistantWithTopics?.topics?.map((t) => ({id: t.id, name: t.name})) || []);
 
-      // 切换到话题标签页时刷新话题数据
-      if (refreshTopics) {
-        console.log('[SidebarTabs] 刷新话题数据');
+      // 优化：只有在话题数据为空或过期时才刷新
+      const hasTopics = assistantWithTopics?.topics && assistantWithTopics.topics.length > 0;
+      if (!hasTopics && refreshTopics) {
+        console.log('[SidebarTabs] 话题数据为空，刷新话题数据');
         refreshTopics();
+      } else {
+        console.log('[SidebarTabs] 话题数据已存在，跳过刷新以提升性能');
       }
     }
 
     if (newValue === 0) { // 切换到助手标签页
       console.log('[SidebarTabs] 切换到助手标签页');
-      // 可以在这里添加助手数据刷新逻辑
+      // 助手数据已预加载，无需刷新
     }
 
-    setValue(newValue);
+    // 使用startTransition标记为非紧急更新，提升性能
+    startTransition(() => {
+      setValue(newValue);
+    });
   };
 
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {loading || isPending ? (
+      {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
           <CircularProgress />
-          {isPending && <Box sx={{ ml: 2 }}>切换助手中...</Box>}
         </Box>
       ) : (
         <>
@@ -104,7 +117,8 @@ export default function SidebarTabsContent() {
                 '& .MuiTab-root': {
                   minHeight: '32px',
                   borderRadius: '8px',
-                  transition: 'background-color 0.3s',
+                  // 移除transition，减少动画计算开销
+                  transition: 'none',
                   '&.Mui-selected': {
                     backgroundColor: themeColors.selectedColor,
                   },
@@ -174,10 +188,11 @@ export default function SidebarTabsContent() {
             </Tabs>
           </Box>
 
-          <TabPanel value={value} index={0}>
+          {/* 修复：保持所有TabPanel挂载，只通过TabPanel内部的display控制显示 */}
+          <TabPanel value={deferredValue} index={0}>
             <AssistantTab
-              userAssistants={userAssistants}
-              currentAssistant={currentAssistant}
+              userAssistants={deferredUserAssistants}
+              currentAssistant={deferredCurrentAssistant}
               onSelectAssistant={handleSelectAssistant}
               onAddAssistant={handleAddAssistant}
               onUpdateAssistant={handleUpdateAssistant}
@@ -185,12 +200,12 @@ export default function SidebarTabsContent() {
             />
           </TabPanel>
 
-          <TabPanel value={value} index={1}>
+          <TabPanel value={deferredValue} index={1}>
             {/* 直接渲染组件，与最佳实例保持一致 */}
             <TopicTab
-              key={assistantWithTopics?.id || currentAssistant?.id || 'no-assistant'}
-              currentAssistant={assistantWithTopics || currentAssistant}
-              currentTopic={currentTopic}
+              key={deferredAssistantWithTopics?.id || deferredCurrentAssistant?.id || 'no-assistant'}
+              currentAssistant={deferredAssistantWithTopics || deferredCurrentAssistant}
+              currentTopic={deferredCurrentTopic}
               onSelectTopic={handleSelectTopic}
               onCreateTopic={handleCreateTopic}
               onDeleteTopic={handleDeleteTopic}
@@ -198,7 +213,7 @@ export default function SidebarTabsContent() {
             />
           </TabPanel>
 
-          <TabPanel value={value} index={2}>
+          <TabPanel value={deferredValue} index={2}>
             <SettingsTab
               settings={settingsArray}
               onSettingChange={handleSettingChange}
@@ -220,4 +235,6 @@ export default function SidebarTabsContent() {
       )}
     </Box>
   );
-}
+});
+
+export default SidebarTabsContent;

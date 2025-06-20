@@ -1,7 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Box, Typography, useTheme, IconButton } from '@mui/material';
 // Lucide Icons - 按需导入，高端简约设计
-import { Plus, Trash2, AlertTriangle, Camera, Search, ChevronLeft, BookOpen, Video } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, ChevronLeft, BookOpen, Video } from 'lucide-react';
+// 自定义图标
+import { CustomIcon } from '../icons';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../shared/store';
 import { TopicService } from '../../shared/services/TopicService';
@@ -12,39 +14,47 @@ import WebSearchProviderSelector from '../WebSearchProviderSelector';
 import MCPToolsButton from '../chat/MCPToolsButton';
 import KnowledgeSelector from '../chat/KnowledgeSelector';
 
-// 现代玻璃UI工具栏样式 - 2025年设计趋势
+// iOS 26 液体玻璃UI工具栏样式 - 2025年设计趋势
 // 导出供其他组件使用
 export const getGlassmorphismToolbarStyles = (isDarkMode: boolean) => {
   return {
-    // 容器样式 - 玻璃容器
+    // 容器样式 - 液体玻璃容器
     container: {
       background: 'transparent',
       border: 'none',
       borderRadius: '24px',
-      padding: '0 8px'
+      padding: '0 8px',
+      position: 'relative'
     },
-    // 按钮样式 - 长方圆形玻璃背景
+    // 按钮样式 - iOS 26 液体玻璃背景
     button: {
-      // 玻璃背景效果
+      position: 'relative',
+      // iOS 26 液体玻璃背景效果 - 极致通透感
       background: isDarkMode
-        ? 'rgba(255, 255, 255, 0.08)'
-        : 'rgba(255, 255, 255, 0.15)',
-      // 玻璃边框
+        ? 'rgba(255, 255, 255, 0.02)'
+        : 'rgba(255, 255, 255, 0.06)',
+      // 液体玻璃边框 - 几乎透明的边框
       border: isDarkMode
-        ? '1px solid rgba(255, 255, 255, 0.12)'
-        : '1px solid rgba(255, 255, 255, 0.25)',
-      // 长方圆形设计
+        ? '1px solid rgba(255, 255, 255, 0.04)'
+        : '1px solid rgba(255, 255, 255, 0.08)',
+      // 保持原有圆角设计
       borderRadius: '16px',
       padding: '8px 14px',
-      // 毛玻璃效果
-      backdropFilter: 'blur(12px) saturate(120%)',
-      WebkitBackdropFilter: 'blur(12px) saturate(120%)', // Safari兼容
-      // 阴影效果
+      // iOS 26 极致通透的毛玻璃效果
+      backdropFilter: 'blur(40px) saturate(200%) brightness(105%)',
+      WebkitBackdropFilter: 'blur(40px) saturate(200%) brightness(105%)',
+      // iOS 26 轻盈的液体玻璃阴影 - 极致通透
       boxShadow: isDarkMode
-        ? '0 4px 16px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-        : '0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-      // 动画过渡
-      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        ? `0 4px 20px rgba(0, 0, 0, 0.06),
+           0 1px 4px rgba(0, 0, 0, 0.04),
+           inset 0 1px 0 rgba(255, 255, 255, 0.03),
+           inset 0 -1px 0 rgba(255, 255, 255, 0.01)`
+        : `0 4px 20px rgba(0, 0, 0, 0.03),
+           0 1px 4px rgba(0, 0, 0, 0.02),
+           inset 0 1px 0 rgba(255, 255, 255, 0.12),
+           inset 0 -1px 0 rgba(255, 255, 255, 0.06)`,
+      // 流畅的液体动画过渡
+      transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -53,49 +63,73 @@ export const getGlassmorphismToolbarStyles = (isDarkMode: boolean) => {
       // 防止文本选择
       userSelect: 'none',
       WebkitUserSelect: 'none',
-      // 硬件加速
-      willChange: 'transform, background, box-shadow',
-      transform: 'translateZ(0)'
+      // 硬件加速和液体效果
+      willChange: 'transform, background, box-shadow, backdrop-filter',
+      transform: 'translateZ(0)',
+      // iOS 26 极致微妙的液体反射效果
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: '1px',
+        left: '1px',
+        right: '1px',
+        height: '40%',
+        background: isDarkMode
+          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%)'
+          : 'linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%)',
+        borderRadius: '15px 15px 0 0',
+        pointerEvents: 'none'
+      }
     },
-    // 按钮悬停效果 - 增强玻璃效果
+    // 按钮悬停效果 - iOS 26 通透悬停
     buttonHover: {
       background: isDarkMode
-        ? 'rgba(255, 255, 255, 0.12)'
-        : 'rgba(255, 255, 255, 0.25)',
+        ? 'rgba(255, 255, 255, 0.04)'
+        : 'rgba(255, 255, 255, 0.1)',
       border: isDarkMode
-        ? '1px solid rgba(255, 255, 255, 0.18)'
-        : '1px solid rgba(255, 255, 255, 0.35)',
-      backdropFilter: 'blur(16px) saturate(140%)',
-      WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+        ? '1px solid rgba(255, 255, 255, 0.06)'
+        : '1px solid rgba(255, 255, 255, 0.12)',
+      backdropFilter: 'blur(50px) saturate(220%) brightness(108%)',
+      WebkitBackdropFilter: 'blur(50px) saturate(220%) brightness(108%)',
       boxShadow: isDarkMode
-        ? '0 6px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
-        : '0 6px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
-      transform: 'translateY(-1px) translateZ(0)'
+        ? `0 8px 30px rgba(0, 0, 0, 0.08),
+           0 2px 8px rgba(0, 0, 0, 0.06),
+           inset 0 1px 0 rgba(255, 255, 255, 0.05),
+           inset 0 -1px 0 rgba(255, 255, 255, 0.02)`
+        : `0 8px 30px rgba(0, 0, 0, 0.04),
+           0 2px 8px rgba(0, 0, 0, 0.03),
+           inset 0 1px 0 rgba(255, 255, 255, 0.18),
+           inset 0 -1px 0 rgba(255, 255, 255, 0.08)`,
+      transform: 'translateY(-1px) scale(1.01) translateZ(0)'
     },
-    // 按钮激活效果 - 按压玻璃效果
+    // 按钮激活效果 - iOS 26 通透按压
     buttonActive: {
       background: isDarkMode
-        ? 'rgba(255, 255, 255, 0.15)'
-        : 'rgba(255, 255, 255, 0.3)',
+        ? 'rgba(255, 255, 255, 0.06)'
+        : 'rgba(255, 255, 255, 0.14)',
       border: isDarkMode
-        ? '1px solid rgba(255, 255, 255, 0.2)'
-        : '1px solid rgba(255, 255, 255, 0.4)',
-      backdropFilter: 'blur(20px) saturate(160%)',
-      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+        ? '1px solid rgba(255, 255, 255, 0.08)'
+        : '1px solid rgba(255, 255, 255, 0.16)',
+      backdropFilter: 'blur(35px) saturate(240%) brightness(112%)',
+      WebkitBackdropFilter: 'blur(35px) saturate(240%) brightness(112%)',
       boxShadow: isDarkMode
-        ? '0 2px 8px rgba(0, 0, 0, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-        : '0 2px 8px rgba(0, 0, 0, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+        ? `0 2px 12px rgba(0, 0, 0, 0.1),
+           inset 0 1px 4px rgba(0, 0, 0, 0.04),
+           inset 0 1px 0 rgba(255, 255, 255, 0.06)`
+        : `0 2px 12px rgba(0, 0, 0, 0.05),
+           inset 0 1px 4px rgba(0, 0, 0, 0.02),
+           inset 0 1px 0 rgba(255, 255, 255, 0.22)`,
       transform: 'translateY(0px) scale(0.98) translateZ(0)'
     },
-    // 文字样式 - 现代字体
+    // 文字样式 - iOS 26 现代字体
     text: {
       fontSize: '13px',
       fontWeight: 600,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)',
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.92)' : 'rgba(0, 0, 0, 0.85)',
       textShadow: isDarkMode
-        ? '0 1px 2px rgba(0, 0, 0, 0.3)'
-        : '0 1px 2px rgba(255, 255, 255, 0.8)',
-      letterSpacing: '0.01em'
+        ? '0 1px 3px rgba(0, 0, 0, 0.4)'
+        : '0 1px 3px rgba(255, 255, 255, 0.9)',
+      letterSpacing: '0.02em'
     }
   };
 };
@@ -231,23 +265,43 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     ? getGlassmorphismToolbarStyles(isDarkMode)
     : getTransparentToolbarStyles(isDarkMode);
 
-  // 获取按钮的当前样式
+  // 获取按钮的当前样式 - iOS 26 液体玻璃风格
   const getButtonCurrentStyle = (isActive: boolean) => {
     const baseStyle = {
       ...currentStyles.button,
-      // 激活状态的特殊效果（仅在玻璃样式下）
+      // 激活状态的特殊效果（仅在液体玻璃样式下）
       ...(isActive && toolbarStyle === 'glassmorphism' && {
         background: isDarkMode
-          ? 'rgba(255, 255, 255, 0.18)'
-          : 'rgba(255, 255, 255, 0.35)',
+          ? 'rgba(255, 255, 255, 0.15)'
+          : 'rgba(255, 255, 255, 0.28)',
         border: isDarkMode
-          ? '1px solid rgba(255, 255, 255, 0.25)'
-          : '1px solid rgba(255, 255, 255, 0.45)',
-        backdropFilter: 'blur(20px) saturate(160%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+          ? '1px solid rgba(255, 255, 255, 0.18)'
+          : '1px solid rgba(255, 255, 255, 0.35)',
+        backdropFilter: 'blur(26px) saturate(220%) brightness(118%)',
+        WebkitBackdropFilter: 'blur(26px) saturate(220%) brightness(118%)',
         boxShadow: isDarkMode
-          ? '0 4px 20px rgba(0, 0, 0, 0.2), 0 1px 6px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-          : '0 4px 20px rgba(0, 0, 0, 0.1), 0 1px 6px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+          ? `0 6px 24px rgba(0, 0, 0, 0.18),
+             0 2px 8px rgba(0, 0, 0, 0.12),
+             inset 0 1px 0 rgba(255, 255, 255, 0.18),
+             inset 0 -1px 0 rgba(255, 255, 255, 0.08)`
+          : `0 6px 24px rgba(0, 0, 0, 0.09),
+             0 2px 8px rgba(0, 0, 0, 0.06),
+             inset 0 1px 0 rgba(255, 255, 255, 0.5),
+             inset 0 -1px 0 rgba(255, 255, 255, 0.25)`,
+        // 激活状态的液体光泽效果
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          top: '2px',
+          left: '2px',
+          right: '2px',
+          height: '40%',
+          background: isDarkMode
+            ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%)'
+            : 'linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 100%)',
+          borderRadius: '18px 18px 0 0',
+          pointerEvents: 'none'
+        }
       }),
       // 激活状态的透明样式效果
       ...(isActive && toolbarStyle === 'transparent' && {
@@ -518,7 +572,8 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     },
     'generate-image': {
       id: 'generate-image',
-      icon: <Camera
+      icon: <CustomIcon
+        name="imageGenerate"
         size={16}
         color={imageGenerationMode
           ? (isDarkMode ? 'rgba(156, 39, 176, 0.9)' : 'rgba(156, 39, 176, 0.8)')
@@ -554,7 +609,8 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
     },
     'web-search': webSearchEnabled && toggleWebSearch ? {
       id: 'web-search',
-      icon: <Search
+      icon: <CustomIcon
+        name="search"
         size={16}
         color={webSearchActive
           ? (isDarkMode ? 'rgba(59, 130, 246, 0.9)' : 'rgba(59, 130, 246, 0.8)')
@@ -602,51 +658,61 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
           ...currentStyles.container
         }}
       >
-        {/* 动态样式折叠按钮 */}
+        {/* 动态样式折叠按钮 - iOS 26 液体玻璃风格 */}
         <IconButton
           onClick={toggleToolbarCollapse}
           size="small"
           sx={{
             ...(toolbarStyle === 'glassmorphism' ? {
-              // 玻璃背景效果
+              // iOS 26 极致通透的液体玻璃背景
               background: isDarkMode
-                ? 'rgba(255, 255, 255, 0.06)'
-                : 'rgba(255, 255, 255, 0.12)',
-              // 玻璃边框
+                ? 'rgba(255, 255, 255, 0.02)'
+                : 'rgba(255, 255, 255, 0.05)',
+              // 极致通透的液体玻璃边框
               border: isDarkMode
-                ? '1px solid rgba(255, 255, 255, 0.08)'
-                : '1px solid rgba(255, 255, 255, 0.2)',
+                ? '1px solid rgba(255, 255, 255, 0.03)'
+                : '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '14px',
               width: 32,
               height: 32,
-              // 毛玻璃效果
-              backdropFilter: 'blur(10px) saturate(120%)',
-              WebkitBackdropFilter: 'blur(10px) saturate(120%)',
-              // 阴影效果
+              // 增强的毛玻璃效果
+              backdropFilter: 'blur(18px) saturate(180%) brightness(110%)',
+              WebkitBackdropFilter: 'blur(18px) saturate(180%) brightness(110%)',
+              // 液体玻璃阴影效果
               boxShadow: isDarkMode
-                ? '0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-                : '0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                ? `0 6px 20px rgba(0, 0, 0, 0.1),
+                   0 1px 4px rgba(0, 0, 0, 0.06),
+                   inset 0 1px 0 rgba(255, 255, 255, 0.06)`
+                : `0 6px 20px rgba(0, 0, 0, 0.05),
+                   0 1px 4px rgba(0, 0, 0, 0.03),
+                   inset 0 1px 0 rgba(255, 255, 255, 0.25)`,
+              transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               marginRight: 1,
               '&:hover': {
                 background: isDarkMode
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(255, 255, 255, 0.2)',
+                  ? 'rgba(255, 255, 255, 0.07)'
+                  : 'rgba(255, 255, 255, 0.15)',
                 border: isDarkMode
-                  ? '1px solid rgba(255, 255, 255, 0.12)'
-                  : '1px solid rgba(255, 255, 255, 0.3)',
-                backdropFilter: 'blur(12px) saturate(140%)',
-                WebkitBackdropFilter: 'blur(12px) saturate(140%)',
+                  ? '1px solid rgba(255, 255, 255, 0.1)'
+                  : '1px solid rgba(255, 255, 255, 0.22)',
+                backdropFilter: 'blur(22px) saturate(200%) brightness(115%)',
+                WebkitBackdropFilter: 'blur(22px) saturate(200%) brightness(115%)',
                 boxShadow: isDarkMode
-                  ? '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
-                  : '0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-                transform: 'translateY(-1px)'
+                  ? `0 8px 28px rgba(0, 0, 0, 0.12),
+                     0 2px 8px rgba(0, 0, 0, 0.08),
+                     inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                  : `0 8px 28px rgba(0, 0, 0, 0.06),
+                     0 2px 8px rgba(0, 0, 0, 0.04),
+                     inset 0 1px 0 rgba(255, 255, 255, 0.35)`,
+                transform: 'translateY(-1px) scale(1.05)'
               },
               '&:active': {
                 transform: 'translateY(0px) scale(0.95)',
                 boxShadow: isDarkMode
-                  ? '0 1px 4px rgba(0, 0, 0, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1)'
-                  : '0 1px 4px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.05)'
+                  ? `0 2px 8px rgba(0, 0, 0, 0.15),
+                     inset 0 2px 6px rgba(0, 0, 0, 0.08)`
+                  : `0 2px 8px rgba(0, 0, 0, 0.08),
+                     inset 0 2px 6px rgba(0, 0, 0, 0.04)`
               }
             } : {
               // 透明样式
@@ -660,7 +726,7 @@ const ChatToolbar: React.FC<ChatToolbarProps> = ({
                 background: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)'
               }
             }),
-            color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)',
             flexShrink: 0,
           }}
         >

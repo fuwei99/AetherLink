@@ -5,23 +5,31 @@ import type { ChatTopic } from '../../../../shared/types';
 
 /**
  * 话题分组钩子
- * 
+ *
  * 用于管理话题分组相关的状态和操作
  */
-export function useTopicGroups(topics: ChatTopic[]) {
+export function useTopicGroups(topics: ChatTopic[], assistantId?: string) {
   // 从Redux获取分组数据
   const { groups, topicGroupMap } = useSelector((state: RootState) => state.groups);
 
-  // 获取话题分组
+  // 获取当前助手的话题分组
   const topicGroups = useMemo(() => {
+    if (!assistantId) return [];
+
     return groups
-      .filter(group => group.type === 'topic')
+      .filter(group => group.type === 'topic' && group.assistantId === assistantId)
       .sort((a, b) => a.order - b.order);
-  }, [groups]);
+  }, [groups, assistantId]);
+
+  // 获取当前助手的话题分组映射
+  const currentTopicGroupMap = useMemo(() => {
+    if (!assistantId) return {};
+    return topicGroupMap[assistantId] || {};
+  }, [topicGroupMap, assistantId]);
 
   // 获取未分组的话题并排序
   const ungroupedTopics = useMemo(() => {
-    const filtered = topics.filter(topic => !topicGroupMap[topic.id]);
+    const filtered = topics.filter(topic => !currentTopicGroupMap[topic.id]);
 
     // 对未分组话题进行排序：固定的在前面，然后按时间降序
     return filtered.sort((a, b) => {
@@ -34,11 +42,11 @@ export function useTopicGroups(topics: ChatTopic[]) {
       const timeB = new Date(b.lastMessageTime || b.updatedAt || b.createdAt || 0).getTime();
       return timeB - timeA; // 降序排序
     });
-  }, [topics, topicGroupMap]);
+  }, [topics, currentTopicGroupMap]);
 
   return {
     topicGroups,
-    topicGroupMap,
+    topicGroupMap: currentTopicGroupMap,
     ungroupedTopics
   };
-} 
+}

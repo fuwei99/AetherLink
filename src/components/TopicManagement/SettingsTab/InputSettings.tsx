@@ -5,7 +5,7 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   TextField,
-  Collapse,
+
   Typography,
   IconButton,
   Divider,
@@ -15,6 +15,7 @@ import CustomSwitch from '../../CustomSwitch'; // 导入 CustomSwitch 组件
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../../shared/store';
 import { setPasteLongTextAsFile, setPasteLongTextThreshold } from '../../../shared/store/settingsSlice';
+import OptimizedCollapse from './OptimizedCollapse';
 
 /**
  * 输入设置组件
@@ -110,10 +111,9 @@ export default function InputSettings() {
       </ListItem>
 
       {/* 可折叠的内容区域 */}
-      <Collapse
+      <OptimizedCollapse
         in={expanded}
-        timeout={{ enter: 300, exit: 200 }}
-        easing={{ enter: 'cubic-bezier(0.4, 0, 0.2, 1)', exit: 'cubic-bezier(0.4, 0, 0.6, 1)' }}
+        timeout={150}
         unmountOnExit
       >
         <Box sx={{ px: 2, pb: 2 }}>
@@ -194,7 +194,7 @@ export default function InputSettings() {
             </>
           )}
         </Box>
-      </Collapse>
+      </OptimizedCollapse>
     </>
   );
 }

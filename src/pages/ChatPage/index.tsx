@@ -20,15 +20,20 @@ import { TopicService } from '../../shared/services/TopicService';
 import { VideoTaskManager } from '../../shared/services/VideoTaskManager';
 import { newMessagesActions } from '../../shared/store/slices/newMessagesSlice';
 import { addTopic } from '../../shared/store/slices/assistantsSlice';
+import { useActiveTopic } from '../../hooks/useActiveTopic';
 
 
 const ChatPage: React.FC = () => {
   const dispatch = useDispatch();
 
   // 从Redux获取状态
-  const currentTopicId = useSelector((state: RootState) => state.messages.currentTopicId);
   const currentAssistant = useSelector((state: RootState) => state.assistants.currentAssistant);
-  const [currentTopic, setCurrentTopic] = useState<any>(null);
+
+  // 改造为：使用useActiveTopic Hook自动处理话题加载
+  const { activeTopic: currentTopic, isLoading: topicLoading } = useActiveTopic(
+    currentAssistant || {} as any,
+    undefined
+  );
 
   // 消息引用，用于分支功能
   const messagesRef = useRef<any[]>([]);
@@ -49,26 +54,7 @@ const ChatPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []); // 只在组件挂载时执行一次
 
-  // 当话题ID变化时，从数据库获取话题信息
-  useEffect(() => {
-    const loadTopic = async () => {
-      if (!currentTopicId) {
-        setCurrentTopic(null);
-        return;
-      }
-
-      try {
-        const topic = await dexieStorage.getTopic(currentTopicId);
-        if (topic) {
-          setCurrentTopic(topic);
-        }
-      } catch (error) {
-        console.error('加载话题信息失败:', error);
-      }
-    };
-
-    loadTopic();
-  }, [currentTopicId]);
+  // ：话题加载由useActiveTopic Hook自动处理，无需手动加载
 
   // 创建稳定的空数组引用
   const EMPTY_MESSAGES_ARRAY = useMemo(() => [], []);
@@ -133,7 +119,10 @@ const ChatPage: React.FC = () => {
 
   // 使用记忆化的选择器获取状态
   const isStreaming = useSelector(selectCurrentTopicStreaming);
-  const isLoading = useSelector(selectCurrentTopicLoading);
+  const reduxLoading = useSelector(selectCurrentTopicLoading);
+
+  // ：结合Hook的loading和Redux的loading
+  const isLoading = topicLoading || reduxLoading;
 
   // 布局相关钩子
   const {
@@ -193,20 +182,7 @@ const ChatPage: React.FC = () => {
     currentTopic
   });
 
-  // 在主题切换时加载消息
-  useEffect(() => {
-    if (currentTopic?.id) {
-      console.log(`[ChatPage] 开始加载主题 ${currentTopic.id} 的消息`);
-      // 直接使用在组件顶层获取的loadTopicMessages函数
-      loadTopicMessages(currentTopic.id)
-        .then((messageCount) => {
-          console.log(`[ChatPage] 主题 ${currentTopic.id} 的消息加载完成，消息数量:`, messageCount);
-        })
-        .catch(error => {
-          console.error('[ChatPage] 加载主题消息失败:', error);
-        });
-    }
-  }, [currentTopic?.id, selectedModel, loadTopicMessages]);
+  // ：消息加载由useActiveTopic Hook自动处理，无需手动加载
 
   // 添加NEW_BRANCH事件处理
   useEffect(() => {

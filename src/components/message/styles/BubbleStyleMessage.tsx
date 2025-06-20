@@ -11,6 +11,7 @@ import MessageActions from '../MessageActions';
 import MessageBlockRenderer from '../MessageBlockRenderer';
 import type { BaseMessageStyleProps } from '../types/MessageComponent';
 import { Z_INDEX } from '../../../shared/constants/zIndex';
+import { messageItemStyles, bubbleStyles } from '../../../shared/config/scrollOptimization';
 
 const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
   message,
@@ -62,6 +63,8 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
         marginTop: isCompact ? 1 : 2,
         paddingX: 2,
         alignItems: isUserMessage ? 'flex-end' : 'flex-start',
+        // 🚀 使用统一的消息项优化配置
+        ...messageItemStyles,
       }}
     >
       {/* 头像和模型信息 - 根据样式和设置控制显示 */}
@@ -238,13 +241,10 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
             backgroundColor: actualBubbleColor,
             color: actualTextColor,
             width: '100%',
-            borderRadius: '12px',
             border: 'none',
-            position: 'relative',
             maxWidth: '100%',
-            boxShadow: 'none',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            // 🚀 使用统一的气泡优化配置（包含position: 'relative'）
+            ...bubbleStyles,
           }}
         >
           {loading ? (
@@ -360,4 +360,22 @@ const BubbleStyleMessage: React.FC<BaseMessageStyleProps> = ({
   );
 };
 
-export default BubbleStyleMessage;
+// 🚀 使用React.memo优化重新渲染
+export default React.memo(BubbleStyleMessage, (prevProps, nextProps) => {
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.updatedAt === nextProps.message.updatedAt &&
+    prevProps.message.status === nextProps.message.status && // 🔥 关键！流式输出状态变化
+    JSON.stringify(prevProps.message.blocks) === JSON.stringify(nextProps.message.blocks) && // 🔥 消息块变化
+    prevProps.loading === nextProps.loading &&
+    prevProps.showAvatar === nextProps.showAvatar &&
+    prevProps.isCompact === nextProps.isCompact &&
+    prevProps.showUserAvatar === nextProps.showUserAvatar &&
+    prevProps.showUserName === nextProps.showUserName &&
+    prevProps.showModelAvatar === nextProps.showModelAvatar &&
+    prevProps.showModelName === nextProps.showModelName &&
+    JSON.stringify(prevProps.settings) === JSON.stringify(nextProps.settings) &&
+    JSON.stringify(prevProps.themeColors) === JSON.stringify(nextProps.themeColors) &&
+    prevProps.themeStyle === nextProps.themeStyle
+  );
+});

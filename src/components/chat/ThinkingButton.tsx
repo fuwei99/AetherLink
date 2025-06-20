@@ -2,7 +2,7 @@
  * 思考按钮组件
  * 用于控制思考过程的显示和配置
  */
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   IconButton,
   Menu,
@@ -41,6 +41,13 @@ const ThinkingButton: React.FC<ThinkingButtonProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  // 内存泄漏防护：组件卸载时清理DOM引用
+  useEffect(() => {
+    return () => {
+      setAnchorEl(null);
+    };
+  }, []);
 
   // 获取支持的选项
   const supportedOptions = useMemo(() => {

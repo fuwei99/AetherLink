@@ -148,7 +148,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ block }) => {
     return language.toUpperCase();
   };
 
-  // 处理尾部空白字符，参考电脑版实现
+  // 处理尾部空白字符，参考实现
   const safeCodeContent = useMemo(() => {
     return typeof block.content === 'string' ? block.content.trimEnd() : ''
   }, [block.content]);

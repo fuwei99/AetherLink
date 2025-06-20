@@ -62,9 +62,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
   toolsEnabled = true, // 默认启用工具
   availableModels = [] // 默认空数组
 }) => {
-  // 基础状态
+  // 基础状态 - 内存泄漏防护：避免存储DOM引用
   const [uploadMenuAnchorEl, setUploadMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [multiModelSelectorOpen, setMultiModelSelectorOpen] = useState(false);
+
+  // 内存泄漏防护：组件卸载时清理DOM引用
+  useEffect(() => {
+    return () => {
+      setUploadMenuAnchorEl(null);
+    };
+  }, []);
   const [isIOS, setIsIOS] = useState(false); // 新增: 是否是iOS设备
   // 语音识别三状态管理
   const [voiceState, setVoiceState] = useState<'normal' | 'voice-mode' | 'recording'>('normal');
@@ -643,7 +650,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
             size={isTablet ? "large" : "medium"}
             style={{
-              color: voiceState !== 'normal' ? '#f44336' : iconColor,
+              color: voiceState !== 'normal' ? '#f44336' : (isDarkMode ? '#ffffff' : '#000000'),
               padding: isTablet ? '10px' : '8px',
               backgroundColor: voiceState !== 'normal' ? 'rgba(211, 47, 47, 0.15)' : 'transparent',
               transition: 'all 0.25s ease-in-out'
@@ -726,7 +733,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 onClick={handleOpenUploadMenu}
                 disabled={uploadingMedia || (isLoading && !allowConsecutiveMessages)}
                 style={{
-                  color: uploadingMedia ? disabledColor : iconColor,
+                  color: uploadingMedia ? disabledColor : (isDarkMode ? '#ffffff' : '#000000'),
                   padding: isTablet ? '10px' : '8px',
                   position: 'relative',
                   marginRight: isTablet ? '4px' : '0'

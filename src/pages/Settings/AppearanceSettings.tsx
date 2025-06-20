@@ -20,19 +20,31 @@ import {
   ListItemText,
   Avatar,
   Divider,
-  alpha
+  alpha,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
 import { ArrowLeft, ChevronRight, MessageSquare, MessageCircle, Wrench, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../shared/store';
-import { setTheme, setFontSize, setFontFamily } from '../../shared/store/settingsSlice';
+import { setTheme, setFontSize, setFontFamily, setShowPerformanceMonitor } from '../../shared/store/settingsSlice';
 import ThemeStyleSelector from '../../components/settings/ThemeStyleSelector';
 import { fontOptions, fontCategoryLabels, getFontById } from '../../shared/config/fonts';
+import useScrollPosition from '../../hooks/useScrollPosition';
 
 const AppearanceSettings: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.settings);
+
+  // 使用滚动位置保存功能
+  const {
+    containerRef,
+    handleScroll
+  } = useScrollPosition('settings-appearance', {
+    autoRestore: true,
+    restoreDelay: 100
+  });
 
   const handleBack = () => {
     navigate('/settings');
@@ -90,6 +102,15 @@ const AppearanceSettings: React.FC = () => {
     navigate('/settings/appearance/thinking-process');
   };
 
+  const handleNavigateToInputBox = () => {
+    navigate('/settings/appearance/input-box');
+  };
+
+  // 性能监控开关处理函数
+  const handlePerformanceMonitorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setShowPerformanceMonitor(event.target.checked));
+  };
+
   return (
     <Box sx={{
       flexGrow: 1,
@@ -141,6 +162,8 @@ const AppearanceSettings: React.FC = () => {
       </AppBar>
 
       <Box
+        ref={containerRef}
+        onScroll={handleScroll}
         sx={{
           flexGrow: 1,
           overflowY: 'auto',
@@ -425,6 +448,37 @@ const AppearanceSettings: React.FC = () => {
           <Divider />
 
           <List disablePadding>
+            {/* 1. 顶部工具栏设置 */}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToTopToolbar}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#10b981', 0.12),
+                    color: '#10b981',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <Wrench size={20} />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>顶部工具栏设置</Typography>}
+                  secondary="自定义顶部工具栏的组件和布局，支持拖拽DIY布局"
+                />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            {/* 2. 聊天界面设置 */}
             <ListItem disablePadding>
               <ListItemButton
                 onClick={handleNavigateToChatInterface}
@@ -454,35 +508,7 @@ const AppearanceSettings: React.FC = () => {
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
 
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={handleNavigateToMessageBubble}
-                sx={{
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
-                  }
-                }}
-              >
-                <ListItemAvatar>
-                  <Avatar sx={{
-                    bgcolor: alpha('#8b5cf6', 0.12),
-                    color: '#8b5cf6',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
-                  }}>
-                    <MessageCircle size={20} />
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>信息气泡管理</Typography>}
-                  secondary="调整消息气泡的样式和宽度设置"
-                />
-                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
-              </ListItemButton>
-            </ListItem>
-
-            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
-
+            {/* 3. 思考过程设置 */}
             <ListItem disablePadding>
               <ListItemButton
                 onClick={handleNavigateToThinkingProcess}
@@ -512,6 +538,37 @@ const AppearanceSettings: React.FC = () => {
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
 
+            {/* 4. 信息气泡管理 */}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToMessageBubble}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#8b5cf6', 0.12),
+                    color: '#8b5cf6',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <MessageCircle size={20} />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>信息气泡管理</Typography>}
+                  secondary="调整消息气泡的样式和宽度设置"
+                />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            {/* 5. 输入框工具栏设置 */}
             <ListItem disablePadding>
               <ListItemButton
                 onClick={handleNavigateToToolbarCustomization}
@@ -541,9 +598,10 @@ const AppearanceSettings: React.FC = () => {
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
 
+            {/* 6. 输入框管理设置 */}
             <ListItem disablePadding>
               <ListItemButton
-                onClick={handleNavigateToTopToolbar}
+                onClick={handleNavigateToInputBox}
                 sx={{
                   transition: 'all 0.2s',
                   '&:hover': {
@@ -553,21 +611,74 @@ const AppearanceSettings: React.FC = () => {
               >
                 <ListItemAvatar>
                   <Avatar sx={{
-                    bgcolor: alpha('#10b981', 0.12),
-                    color: '#10b981',
+                    bgcolor: alpha('#ec4899', 0.12),
+                    color: '#ec4899',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                   }}>
-                    <Wrench size={20} />
+                    <MessageSquare size={20} />
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>顶部工具栏设置</Typography>}
-                  secondary="自定义顶部工具栏的组件和布局"
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>输入框管理设置</Typography>}
+                  secondary="自定义输入框的风格和布局样式"
                 />
                 <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
               </ListItemButton>
             </ListItem>
           </List>
+        </Paper>
+
+        {/* 开发者工具 */}
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              开发者工具
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              用于调试和性能监控的开发者工具设置
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: 3 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.showPerformanceMonitor || false}
+                  onChange={handlePerformanceMonitorChange}
+                  color="primary"
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    显示性能监控
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    在聊天界面显示实时性能监控面板，包括FPS、滚动事件、渲染时间和内存使用情况
+                  </Typography>
+                </Box>
+              }
+              sx={{
+                alignItems: 'flex-start',
+                '& .MuiFormControlLabel-label': {
+                  mt: 0.5
+                }
+              }}
+            />
+          </Box>
         </Paper>
       </Box>
     </Box>

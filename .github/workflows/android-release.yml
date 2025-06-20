@@ -1,14 +1,15 @@
-name: Android Release
+# 注释掉自动发布工作流，避免产生过多的 releases
+# name: Android Release
 
-on:
-  push:
-    tags:
-      - 'v*'
+# on:
+#   push:
+#     tags:
+#       - 'v*'
 
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
+# jobs:
+#   release:
+#     runs-on: ubuntu-latest
+#     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 

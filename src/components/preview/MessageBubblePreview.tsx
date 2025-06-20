@@ -20,6 +20,11 @@ interface MessageBubblePreviewProps {
   messageBubbleMinWidth?: number;
   messageBubbleMaxWidth?: number;
   userMessageMaxWidth?: number;
+  // 新增头像和名称显示props
+  showUserAvatar?: boolean;
+  showUserName?: boolean;
+  showModelAvatar?: boolean;
+  showModelName?: boolean;
 }
 
 const MessageBubblePreview: React.FC<MessageBubblePreviewProps> = ({
@@ -28,7 +33,11 @@ const MessageBubblePreview: React.FC<MessageBubblePreviewProps> = ({
   showMicroBubbles,
   messageBubbleMinWidth = 50,
   messageBubbleMaxWidth = 99,
-  userMessageMaxWidth = 80
+  userMessageMaxWidth = 80,
+  showUserAvatar = true,
+  showUserName = true,
+  showModelAvatar = true,
+  showModelName = true
 }) => {
   const theme = useTheme();
   const themeColors = getThemeColors(theme);
@@ -58,12 +67,24 @@ const MessageBubblePreview: React.FC<MessageBubblePreviewProps> = ({
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {/* 用户消息预览 */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', gap: 1 }}>
           <Box sx={{
             maxWidth: `${userMessageMaxWidth}%`,
             minWidth: `${messageBubbleMinWidth}%`,
             position: 'relative'
           }}>
+            {/* 用户名称 */}
+            {showUserName && (
+              <Typography variant="caption" sx={{
+                display: 'block',
+                textAlign: 'right',
+                mb: 0.5,
+                color: 'text.secondary',
+                fontSize: '0.75rem'
+              }}>
+                用户
+              </Typography>
+            )}
             <Paper
               sx={{
                 padding: 1.5,
@@ -154,15 +175,65 @@ const MessageBubblePreview: React.FC<MessageBubblePreviewProps> = ({
               </>
             )}
           </Box>
+
+          {/* 用户头像 */}
+          {showUserAvatar && (
+            <Box sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              backgroundColor: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              mt: showUserName ? 2.5 : 0
+            }}>
+              <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.7rem' }}>
+                U
+              </Typography>
+            </Box>
+          )}
         </Box>
 
         {/* AI消息预览 */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 1 }}>
+          {/* AI头像 */}
+          {showModelAvatar && (
+            <Box sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              backgroundColor: 'secondary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              mt: showModelName ? 2.5 : 0
+            }}>
+              <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.7rem' }}>
+                AI
+              </Typography>
+            </Box>
+          )}
+
           <Box sx={{
             maxWidth: `${messageBubbleMaxWidth}%`,
             minWidth: `${messageBubbleMinWidth}%`,
             position: 'relative'
           }}>
+            {/* AI名称 */}
+            {showModelName && (
+              <Typography variant="caption" sx={{
+                display: 'block',
+                textAlign: 'left',
+                mb: 0.5,
+                color: 'text.secondary',
+                fontSize: '0.75rem'
+              }}>
+                AI助手
+              </Typography>
+            )}
             <Paper
               sx={{
                 padding: 1.5,

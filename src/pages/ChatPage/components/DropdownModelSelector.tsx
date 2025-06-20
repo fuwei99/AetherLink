@@ -79,7 +79,7 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
 
   const handleChange = (event: SelectChangeEvent<string>) => {
     const compositeValue = event.target.value;
-    if (!compositeValue) return;
+    if (!compositeValue || typeof compositeValue !== 'string') return;
 
     try {
       // 从复合值中提取模型ID和提供商
@@ -213,10 +213,11 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
       sx={{
         minWidth: 180,
         mr: 1,
+        userSelect: 'none', // 禁止文本选择
         '& .MuiOutlinedInput-root': {
           borderRadius: '16px',
           fontSize: '0.9rem',
-          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', // 深色模式淡背景，浅色模式纯白背景
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : theme.palette.background.paper, // 深色模式淡背景，浅色模式跟随主题
           '& .MuiOutlinedInput-notchedOutline': {
             border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`, // 淡黑边框
           },
@@ -227,7 +228,7 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
             border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)'}`, // 聚焦时更明显
           },
           '&:hover': {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : theme.palette.background.paper,
           }
         }
       }}
@@ -275,7 +276,7 @@ export const DropdownModelSelector: React.FC<DropdownModelSelectorProps> = ({
               minHeight: 300, // 设置最小高度
               mt: 0.5,
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-              bgcolor: theme.palette.mode === 'dark' ? '#2A2A2A' : '#FFFFFF', // 不透明背景
+              bgcolor: theme.palette.mode === 'dark' ? '#2A2A2A' : theme.palette.background.paper, // 不透明背景
               '& .MuiList-root': {
                 py: 0,
                 bgcolor: 'transparent'

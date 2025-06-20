@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import {
   Trash2 as DeleteIcon,
-  Download as DownloadIcon,
+  RotateCcw as RestoreIcon,
   RefreshCw as RefreshIcon,
   CloudDownload as CloudDownloadIcon
 } from 'lucide-react';
@@ -268,9 +268,10 @@ const WebDavBackupManager: React.FC<WebDavBackupManagerProps> = ({
                             size="small"
                             onClick={() => handleRestore(file.fileName)}
                             disabled={restoring || deleting}
-                            title="恢复备份"
+                            title="恢复此备份"
+                            color="primary"
                           >
-                            <DownloadIcon fontSize="small" />
+                            <RestoreIcon fontSize="small" />
                           </IconButton>
                           <IconButton
                             size="small"

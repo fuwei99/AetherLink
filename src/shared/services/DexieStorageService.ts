@@ -4,7 +4,7 @@ import type { Assistant } from '../types/Assistant';
 import type { ChatTopic, QuickPhrase } from '../types';
 import type { MessageBlock } from '../types';
 import type { Message } from '../types/newMessage.ts';
-import { DB_CONFIG, VERSION_CONFIGS } from '../database/config';
+import { DB_CONFIG, VERSION_CONFIGS, type Memory } from '../database/config';
 import { databaseMigrationManager } from '../database/migrations';
 import { throttle } from 'lodash';
 import { makeSerializable, diagnoseSerializationIssues } from '../utils/serialization';
@@ -28,6 +28,7 @@ export class DexieStorageService extends Dexie {
   knowledge_bases!: Dexie.Table<any, string>;
   knowledge_documents!: Dexie.Table<any, string>;
   quick_phrases!: Dexie.Table<QuickPhrase, string>;
+  memories!: Dexie.Table<Memory, string>;
 
 
   private static instance: DexieStorageService;
@@ -57,6 +58,14 @@ export class DexieStorageService extends Dexie {
         const result = await databaseMigrationManager.executeSingleMigration(this, 6);
         if (!result.success) {
           throw new Error(`版本6迁移失败: ${result.error}`);
+        }
+      });
+
+    this.version(7).stores(VERSION_CONFIGS[7].stores)
+      .upgrade(async () => {
+        const result = await databaseMigrationManager.executeSingleMigration(this, 7);
+        if (!result.success) {
+          throw new Error(`版本7迁移失败: ${result.error}`);
         }
       });
   }
@@ -1164,6 +1173,68 @@ export class DexieStorageService extends Dexie {
       throw error;
     }
   }
+
+  // === Memories 相关方法 ===
+
+  async saveMemory(memory: Memory): Promise<void> {
+    try {
+      if (!memory.id) {
+        memory.id = uuid();
+      }
+
+      if (!memory.createdAt) {
+        memory.createdAt = new Date().toISOString();
+      }
+
+      memory.updatedAt = new Date().toISOString();
+
+      await this.memories.put(memory);
+      console.log(`[DexieStorageService] 已保存记忆: ${memory.id}`);
+    } catch (error) {
+      console.error(`[DexieStorageService] 保存记忆失败: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }
+
+  async getMemory(id: string): Promise<Memory | null> {
+    try {
+      const memory = await this.memories.get(id);
+      return memory || null;
+    } catch (error) {
+      console.error(`[DexieStorageService] 获取记忆失败: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
+  }
+
+  async getAllMemories(): Promise<Memory[]> {
+    try {
+      return await this.memories.toArray();
+    } catch (error) {
+      console.error(`[DexieStorageService] 获取所有记忆失败: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
+    }
+  }
+
+  async getMemoriesByType(type: 'entity' | 'relation'): Promise<Memory[]> {
+    try {
+      return await this.memories.where('type').equals(type).toArray();
+    } catch (error) {
+      console.error(`[DexieStorageService] 按类型获取记忆失败: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
+    }
+  }
+
+  async deleteMemory(id: string): Promise<void> {
+    try {
+      await this.memories.delete(id);
+      console.log(`[DexieStorageService] 已删除记忆: ${id}`);
+    } catch (error) {
+      console.error(`[DexieStorageService] 删除记忆失败: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }
+
+
 }
 
 export const dexieStorage = DexieStorageService.getInstance();
