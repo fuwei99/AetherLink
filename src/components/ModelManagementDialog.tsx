@@ -25,7 +25,8 @@ import {
 } from '@mui/material';
 import { Plus as AddIcon, Minus as RemoveIcon, ChevronDown as ExpandMoreIcon, Search as SearchIcon, Database } from 'lucide-react';
 import { alpha } from '@mui/material/styles';
-import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import { FixedSizeList } from 'react-window';
+import type { ListChildComponentProps } from 'react-window';
 import { fetchModels } from '../shared/services/APIService';
 import type { Model } from '../shared/types';
 import { debounce } from 'lodash';
