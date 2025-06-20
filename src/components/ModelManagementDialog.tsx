@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useTransition, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useTransition, useOptimistic, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -17,121 +17,18 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Chip,
-  Skeleton,
-  Fade,
-  useTheme,
-  useMediaQuery
+  Chip
 } from '@mui/material';
-import { Plus as AddIcon, Minus as RemoveIcon, ChevronDown as ExpandMoreIcon, Search as SearchIcon, Database } from 'lucide-react';
+import { Plus as AddIcon, Minus as RemoveIcon, ChevronDown as ExpandMoreIcon, Search as SearchIcon } from 'lucide-react';
 import { alpha } from '@mui/material/styles';
-import { FixedSizeList } from 'react-window';
-import type { ListChildComponentProps } from 'react-window';
 import { fetchModels } from '../shared/services/APIService';
 import type { Model } from '../shared/types';
 import { debounce } from 'lodash';
 
-// STEP 1: Define necessary types and a shell for the Row component
-
-// Virtual list item data type
-type ListItemData = { type: 'group'; name: string; modelCount: number } | { type: 'model'; data: Model };
-
-// Complete data passed to each list item
-interface RowData {
-  items: ListItemData[];
-  isModelInProvider: (modelId: string) => boolean;
-  handleAddSingleModel: (model: Model) => void;
-  handleRemoveSingleModel: (modelId: string) => void;
+// 分组模型的接口
+interface GroupedModels {
+  [key: string]: Model[];
 }
-
-// Row component, memoized for performance.
-const Row = React.memo(({ index, style, data }: ListChildComponentProps<RowData>) => {
-  const theme = useTheme();
-  const { items, isModelInProvider, handleAddSingleModel, handleRemoveSingleModel } = data;
-  const item = items[index];
-
-  // Render Group Header
-  if (item.type === 'group') {
-    return (
-      <Box
-        style={style}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          pl: 2,
-          pr: 2,
-          backgroundColor: (theme) => alpha(theme.palette.background.default, 0.95),
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <Typography variant="subtitle2" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          {item.name}
-        </Typography>
-        <Chip label={item.modelCount} size="small" sx={{ ml: 1.5, height: 20, fontSize: '0.7rem' }} />
-      </Box>
-    );
-  }
-
-  // Render Model Item
-  const model = item.data;
-  return (
-    <Box style={style} sx={{ display: 'flex', alignItems: 'center' }}>
-      <ListItem
-        key={model.id}
-        sx={{
-          pl: 2, pr: 2,
-          '&:hover': {
-            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
-          }
-        }}
-        secondaryAction={
-          isModelInProvider(model.id) ? (
-            <IconButton
-              edge="end" size="small"
-              onClick={() => handleRemoveSingleModel(model.id)}
-              sx={{
-                border: '1px solid',
-                borderColor: 'error.light',
-                color: 'error.main',
-                '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.1) }
-              }}
-            >
-              <RemoveIcon size={16} />
-            </IconButton>
-          ) : (
-            <IconButton
-              edge="end" size="small"
-              onClick={() => handleAddSingleModel(model)}
-              sx={{
-                border: '1px solid',
-                borderColor: 'primary.light',
-                color: 'primary.main',
-                '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1) }
-              }}
-            >
-              <AddIcon size={16} />
-            </IconButton>
-          )
-        }
-      >
-        <Database size={20} color={theme.palette.text.secondary} style={{ marginRight: theme.spacing(2) }} />
-        <ListItemText
-          primary={
-            <Typography variant="body1" fontWeight={500} sx={{ lineHeight: 1.4 }}>
-              {model.name}
-            </Typography>
-          }
-          secondary={
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
-              {model.id}
-            </Typography>
-          }
-        />
-      </ListItem>
-    </Box>
-  );
-});
 
 interface ModelManagementDialogProps {
   open: boolean;
@@ -154,16 +51,17 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
   onRemoveModels,
   existingModels
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [loading, setLoading] = useState<boolean>(false);
   const [models, setModels] = useState<Model[]>([]);
-  const [searchInputValue, setSearchInputValue] = useState<string>(''); // 输入框显示值
-  const [actualSearchTerm, setActualSearchTerm] = useState<string>(''); // 实际搜索值
+  const [actualSearchTerm, setActualSearchTerm] = useState<string>('');
+  const [optimisticSearchTerm, setOptimisticSearchTerm] = useOptimistic(
+    actualSearchTerm,
+    (_currentSearchTerm, newSearchTerm: string) => newSearchTerm
+  );
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [pendingModels, setPendingModels] = useState<Map<string, boolean>>(new Map());
 
-  // 恢复 useTransition 进行性能优化
+  // 性能优化：使用 useTransition 处理搜索和筛选
   const [isSearchPending, startSearchTransition] = useTransition();
   const [isGroupTogglePending, startGroupToggleTransition] = useTransition();
 
@@ -175,13 +73,13 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
     return existingModels.some(m => m.id === modelId) || pendingModels.get(modelId) === true;
   }, [existingModels, pendingModels]);
 
-  // 恢复防抖搜索函数，使用 useTransition 优化性能
+  // 防抖搜索函数
   const debouncedSetSearchTerm = useMemo(
     () => debounce((value: string) => {
       startSearchTransition(() => {
         setActualSearchTerm(value);
       });
-    }, 300), // 300ms防抖延迟
+    }, 300),
     []
   );
 
@@ -192,71 +90,24 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
     };
   }, [debouncedSetSearchTerm]);
 
-  // 优化搜索输入处理 - 确保输入框立即响应
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value;
-    // 立即同步更新输入框显示，不使用任何异步操作
-    setSearchInputValue(newValue);
-    // 防抖更新实际搜索逻辑
-    debouncedSetSearchTerm(newValue);
-  }, [debouncedSetSearchTerm]);
-
-  // 将过滤和分组操作合并为一次循环，以提升性能，解决首次输入卡顿问题
+  // 按group对模型进行分组 - 使用 useMemo 优化性能
   const groupedModels = useMemo((): GroupedModels => {
-    const searchLower = actualSearchTerm.toLowerCase();
-    const result: GroupedModels = {};
+    // 过滤搜索结果
+    const filteredModels = models.filter(model =>
+      model.name.toLowerCase().includes(actualSearchTerm.toLowerCase()) ||
+      model.id.toLowerCase().includes(actualSearchTerm.toLowerCase())
+    );
 
-    for (const model of models) {
-      // 如果搜索词为空，或模型名称/ID匹配，则处理该模型
-      if (!searchLower || model.name.toLowerCase().includes(searchLower) || model.id.toLowerCase().includes(searchLower)) {
-        const group = model.group || '其他模型';
-        if (!result[group]) {
-          result[group] = [];
-        }
-        result[group].push(model);
+    // 按group分组
+    return filteredModels.reduce((groups: GroupedModels, model) => {
+      const group = model.group || '其他模型';
+      if (!groups[group]) {
+        groups[group] = [];
       }
-    }
-    return result;
+      groups[group].push(model);
+      return groups;
+    }, {});
   }, [models, actualSearchTerm]);
-
-  // STEP 2: Add memoized hooks to prepare data for react-window
-
-  const flattenedData = useMemo((): ListItemData[] => {
-    const data: ListItemData[] = [];
-    const sortedGroupNames = Object.keys(groupedModels).sort((a, b) => a.localeCompare(b));
-
-    for (const groupName of sortedGroupNames) {
-      const modelsInGroup = groupedModels[groupName];
-      data.push({ type: 'group', name: groupName, modelCount: modelsInGroup.length });
-      modelsInGroup.forEach(model => {
-        data.push({ type: 'model', data: model });
-      });
-    }
-    return data;
-  }, [groupedModels]);
-
-  const handleAddSingleModel = useCallback((model: Model) => {
-    if (!isModelInProvider(model.id)) {
-      setPendingModels(prev => new Map(prev).set(model.id, true));
-      onAddModel(model);
-    }
-  }, [isModelInProvider, onAddModel]);
-
-  const handleRemoveSingleModel = useCallback((modelId: string) => {
-    setPendingModels(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(modelId);
-      return newMap;
-    });
-    onRemoveModel(modelId);
-  }, [onRemoveModel]);
-
-  const itemData = useMemo((): RowData => ({
-    items: flattenedData,
-    isModelInProvider,
-    handleAddSingleModel,
-    handleRemoveSingleModel,
-  }), [flattenedData, isModelInProvider, handleAddSingleModel, handleRemoveSingleModel]);
 
   // 加载模型列表
   const loadModels = async () => {
@@ -299,6 +150,28 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
     });
   }, []);
 
+  // 添加模型，更新pending状态 - 使用 useCallback 优化性能
+  const handleAddSingleModel = useCallback((model: Model) => {
+    if (!isModelInProvider(model.id)) {
+      setPendingModels(prev => {
+        const newPendingModels = new Map(prev);
+        newPendingModels.set(model.id, true);
+        return newPendingModels;
+      });
+      onAddModel(model);
+    }
+  }, [isModelInProvider, onAddModel]);
+
+  // 移除模型，更新pending状态 - 使用 useCallback 优化性能
+  const handleRemoveSingleModel = useCallback((modelId: string) => {
+    setPendingModels(prev => {
+      const newPendingModels = new Map(prev);
+      newPendingModels.delete(modelId);
+      return newPendingModels;
+    });
+    onRemoveModel(modelId);
+  }, [onRemoveModel]);
+
   // 添加整个组 - 使用 useCallback 优化性能
   const handleAddGroup = useCallback((group: string) => {
     // 创建新模型集合，一次性添加整个组
@@ -331,70 +204,49 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
 
   // 移除整个组 - 使用 useCallback 优化性能
   const handleRemoveGroup = useCallback((group: string) => {
-    const modelsToRemove = groupedModels[group]?.filter(model => isModelInProvider(model.id)) || [];
+    // 找出要移除的模型ID列表
+    const modelIdsToRemove = groupedModels[group]
+      ?.filter(model => isModelInProvider(model.id))
+      ?.map(model => model.id) || [];
 
-    if (modelsToRemove.length > 0) {
+    if (modelIdsToRemove.length > 0) {
       // 批量更新pendingModels状态
       setPendingModels(prev => {
         const newPendingModels = new Map(prev);
-        modelsToRemove.forEach(model => {
-          newPendingModels.delete(model.id);
+        modelIdsToRemove.forEach(modelId => {
+          newPendingModels.delete(modelId);
         });
         return newPendingModels;
       });
 
-      // 使用批量移除API（如果可用）
+      // 使用批量删除API（如果可用）
       if (onRemoveModels) {
-        // 批量移除
-        const modelIdsToRemove = modelsToRemove.map(model => model.id);
+        // 批量删除
         onRemoveModels(modelIdsToRemove);
       } else {
-        // 逐个移除
-        modelsToRemove.forEach(model => {
-          onRemoveModel(model.id);
+        // 移除每个模型
+        modelIdsToRemove.forEach(modelId => {
+          onRemoveModel(modelId);
         });
       }
     }
   }, [groupedModels, isModelInProvider, onRemoveModels, onRemoveModel]);
 
-  // 当对话框打开时加载模型（避免每次provider变化都重新加载）
+  // 加载模型，只在对话框打开时加载一次
   useEffect(() => {
-    if (open && provider && (!initialProviderRef.current || initialProviderRef.current.id !== provider.id)) {
-      initialProviderRef.current = provider;
+    if (open) {
+      // 首次打开时保存provider的引用
+      if (!initialProviderRef.current) {
+        initialProviderRef.current = provider;
+      }
       loadModels();
+      // 重置pendingModels
+      setPendingModels(new Map());
+    } else {
+      // 对话框关闭时重置ref，以便下次打开时使用新的provider
+      initialProviderRef.current = null;
     }
-  }, [open, provider]); // 只依赖open状态，不依赖provider
-
-  // 当对话框关闭时重置搜索状态
-  useEffect(() => {
-    if (!open) {
-      setSearchInputValue('');
-      setActualSearchTerm('');
-      debouncedSetSearchTerm.cancel();
-    }
-  }, [open, debouncedSetSearchTerm]);
-
-  const listHeight = useMemo(() => {
-    const dialogHeight = window.innerHeight * (isMobile ? 0.85 : 0.9);
-    // 140 is a rough estimate for header, search, and actions
-    return dialogHeight - 140; 
-  }, [isMobile]);
-
-  // 渲染加载骨架屏
-  const renderLoadingSkeleton = () => (
-    <Box sx={{ p: 2 }}>
-      {[1, 2, 3].map((index) => (
-        <Box key={index} sx={{ mb: 2 }}>
-          <Skeleton variant="rectangular" height={48} sx={{ borderRadius: 2, mb: 1 }} />
-          <Box sx={{ pl: 2 }}>
-            {[1, 2, 3].map((itemIndex) => (
-              <Skeleton key={itemIndex} variant="rectangular" height={60} sx={{ borderRadius: 1, mb: 1 }} />
-            ))}
-          </Box>
-        </Box>
-      ))}
-    </Box>
-  );
+  }, [open]); // 只依赖open状态，不依赖provider
 
   return (
     <Dialog
@@ -402,14 +254,10 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
       onClose={onClose}
       fullWidth
       maxWidth="md"
-      fullScreen={isMobile}
       PaperProps={{
         sx: {
-          borderRadius: isMobile ? 0 : 2,
-          height: isMobile ? '100%' : '90vh', // 移动端全屏，桌面端固定高度
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column'
+          borderRadius: 2,
+          maxHeight: '90vh'
         }
       }}
     >
@@ -422,90 +270,215 @@ const ModelManagementDialog: React.FC<ModelManagementDialogProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          p: 3,
-          flexShrink: 0 // 防止标题区域收缩
+          p: 3
         }}
       >
         {provider.name}模型管理
         {loading && <CircularProgress size={24} sx={{ ml: 2 }} />}
       </DialogTitle>
 
-      <Box sx={{ px: 3, pb: 2, flexShrink: 0 }}>
+      <Box sx={{ px: 3, pb: 2 }}>
         <TextField
           fullWidth
           placeholder="搜索模型..."
           size="small"
-          value={searchInputValue}
-          onChange={handleSearchChange}
-          autoComplete="off"
-          spellCheck={false}
+          value={optimisticSearchTerm}
+          onChange={(e) => {
+            const newSearchValue = e.target.value;
+            setOptimisticSearchTerm(newSearchValue); // 立即更新输入框
+            debouncedSetSearchTerm(newSearchValue); // 防抖更新实际搜索
+          }}
           InputProps={{
             startAdornment: <SearchIcon size={20} color="var(--mui-palette-text-secondary)" style={{ marginRight: 8 }} />,
-            sx: { 
-              borderRadius: 2
-            }
-          }}
-          sx={{
-            '& .MuiInputBase-input': {
-              transition: 'none', // 移除可能的过渡效果
-              padding: '8px 14px'
-            }
+            sx: { borderRadius: 2 }
           }}
         />
         {isSearchPending && (
-          <Fade in={isSearchPending}>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
-              <CircularProgress size={16} />
-            </Box>
-          </Fade>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+            <CircularProgress size={16} />
+          </Box>
         )}
       </Box>
 
-      <Divider sx={{ flexShrink: 0 }} />
+      <Divider />
 
       <DialogContent
         sx={{
-          flex: 1,
-          overflow: 'hidden', // IMPORTANT: Keep this hidden
-          p: 0,
+          p: 2,
+          '&::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
         }}
       >
-        {loading ? (
-          renderLoadingSkeleton()
+        {loading || isSearchPending || isGroupTogglePending ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress />
+          </Box>
         ) : (
-          <Fade in={!isSearchPending} timeout={300}>
-            <Box sx={{ height: '100%' }}>
-              {flattenedData.length === 0 ? (
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  minHeight: '200px',
-                  textAlign: 'center'
-                }}>
-                  <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                    {actualSearchTerm ? '找不到匹配的模型' : '暂无模型'}
-                  </Typography>
-                </Box>
-              ) : (
-                <FixedSizeList
-                  height={listHeight}
-                  itemCount={flattenedData.length}
-                  itemSize={56} // Optimized item size for tighter layout
-                  width="100%"
-                  itemData={itemData}
-                >
-                  {Row}
-                </FixedSizeList>
-              )}
-            </Box>
-          </Fade>
+          <>
+            {Object.keys(groupedModels).length === 0 ? (
+              <Typography variant="body1" sx={{ textAlign: 'center', my: 4, color: 'text.secondary' }}>
+                找不到匹配的模型
+              </Typography>
+            ) : (
+              Object.entries(groupedModels).map(([group, groupModels]) => {
+                const isAllInProvider = groupModels.every(model => isModelInProvider(model.id));
+
+                return (
+                  <Accordion
+                    key={group}
+                    expanded={expandedGroups.has(group)}
+                    onChange={() => handleGroupToggle(group)}
+                    sx={{
+                      mb: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: '8px !important',
+                      '&:before': {
+                        display: 'none',
+                      },
+                      boxShadow: 'none'
+                    }}
+                  >
+                    <Box sx={{ position: 'relative' }}>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{ borderRadius: '8px', pr: 6 }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {group}
+                          </Typography>
+                          <Chip
+                            label={groupModels.length}
+                            size="small"
+                            sx={{
+                              ml: 1,
+                              height: 20,
+                              bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
+                              color: 'success.main',
+                              fontWeight: 600,
+                              fontSize: '0.7rem'
+                            }}
+                          />
+                        </Box>
+                      </AccordionSummary>
+
+                      <IconButton
+                        size="small"
+                        color={isAllInProvider ? "error" : "primary"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          isAllInProvider ? handleRemoveGroup(group) : handleAddGroup(group);
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          right: 48,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          bgcolor: (theme) => alpha(
+                            isAllInProvider ? theme.palette.error.main : theme.palette.primary.main,
+                            0.1
+                          ),
+                          '&:hover': {
+                            bgcolor: (theme) => alpha(
+                              isAllInProvider ? theme.palette.error.main : theme.palette.primary.main,
+                              0.2
+                            ),
+                          }
+                        }}
+                      >
+                        {isAllInProvider ? <RemoveIcon /> : <AddIcon />}
+                      </IconButton>
+                    </Box>
+
+                    <AccordionDetails sx={{ p: 1 }}>
+                      <List disablePadding>
+                        {groupModels.map((model) => (
+                          <ListItem
+                            key={model.id}
+                            sx={{
+                              mb: 1,
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              bgcolor: isModelInProvider(model.id)
+                                ? (theme) => alpha(theme.palette.success.main, 0.05)
+                                : 'transparent',
+                              transition: 'all 0.2s',
+                            }}
+                            secondaryAction={
+                              isModelInProvider(model.id) ? (
+                                <IconButton
+                                  edge="end"
+                                  color="error"
+                                  onClick={() => handleRemoveSingleModel(model.id)}
+                                  sx={{
+                                    bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+                                    '&:hover': {
+                                      bgcolor: (theme) => alpha(theme.palette.error.main, 0.2),
+                                    }
+                                  }}
+                                >
+                                  <RemoveIcon />
+                                </IconButton>
+                              ) : (
+                                <IconButton
+                                  edge="end"
+                                  color="primary"
+                                  onClick={() => handleAddSingleModel(model)}
+                                  sx={{
+                                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                                    '&:hover': {
+                                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                                    }
+                                  }}
+                                >
+                                  <AddIcon />
+                                </IconButton>
+                              )
+                            }
+                          >
+                            <ListItemText
+                              primary={
+                                <Typography variant="body1" fontWeight={600}>
+                                  {model.name}
+                                </Typography>
+                              }
+                              secondary={
+                                <Typography variant="body2" color="text.secondary" fontSize="0.8rem">
+                                  {model.id}
+                                </Typography>
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </AccordionDetails>
+                  </Accordion>
+                );
+              })
+            )}
+          </>
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: isMobile ? 2 : 3, flexShrink: 0 }}>
-        <Button onClick={onClose} variant="outlined">
+      <Divider />
+
+      <DialogActions sx={{ p: 2 }}>
+        <Button
+          onClick={onClose}
+          sx={{
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            fontWeight: 600
+          }}
+        >
           关闭
         </Button>
       </DialogActions>
