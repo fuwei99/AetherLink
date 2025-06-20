@@ -46,6 +46,7 @@ interface RowData {
 
 // Row component, memoized for performance.
 const Row = React.memo(({ index, style, data }: ListChildComponentProps<RowData>) => {
+  const theme = useTheme();
   const { items, isModelInProvider, handleAddSingleModel, handleRemoveSingleModel } = data;
   const item = items[index];
 
@@ -74,7 +75,6 @@ const Row = React.memo(({ index, style, data }: ListChildComponentProps<RowData>
 
   // Render Model Item
   const model = item.data;
-  const theme = useTheme();
   return (
     <Box style={style} sx={{ display: 'flex', alignItems: 'center' }}>
       <ListItem
