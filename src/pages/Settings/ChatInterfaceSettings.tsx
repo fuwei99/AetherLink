@@ -51,13 +51,7 @@ const ChatInterfaceSettings: React.FC = () => {
   const showToolDetails = (settings as any).showToolDetails !== false;
   const showCitationDetails = (settings as any).showCitationDetails !== false;
 
-  const inputBoxStyle = settings.inputBoxStyle || 'default';
-  const inputLayoutStyle = (settings as any).inputLayoutStyle || 'default';
   const showSystemPromptBubble = settings.showSystemPromptBubble !== false;
-  const showUserAvatar = settings.showUserAvatar !== false;
-  const showUserName = settings.showUserName !== false;
-  const showModelAvatar = settings.showModelAvatar !== false;
-  const showModelName = settings.showModelName !== false;
 
   // 背景设置
   const chatBackground = settings.chatBackground || {
@@ -95,17 +89,7 @@ const ChatInterfaceSettings: React.FC = () => {
 
 
 
-  const handleInputBoxStyleChange = (event: { target: { value: any } }) => {
-    dispatch(updateSettings({
-      inputBoxStyle: event.target.value
-    }));
-  };
 
-  const handleInputLayoutStyleChange = (event: { target: { value: any } }) => {
-    dispatch(updateSettings({
-      inputLayoutStyle: event.target.value
-    }));
-  };
 
   const handleSystemPromptBubbleChange = (event: { target: { value: any } }) => {
     dispatch(updateSettings({
@@ -115,30 +99,6 @@ const ChatInterfaceSettings: React.FC = () => {
 
 
 
-  // 头像和名称显示设置的事件处理函数
-  const handleShowUserAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(updateSettings({
-      showUserAvatar: event.target.checked
-    }));
-  };
-
-  const handleShowUserNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(updateSettings({
-      showUserName: event.target.checked
-    }));
-  };
-
-  const handleShowModelAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(updateSettings({
-      showModelAvatar: event.target.checked
-    }));
-  };
-
-  const handleShowModelNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(updateSettings({
-      showModelName: event.target.checked
-    }));
-  };
 
   // 背景设置事件处理函数
   const handleBackgroundEnabledChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -361,64 +321,7 @@ const ChatInterfaceSettings: React.FC = () => {
 
 
 
-        {/* 输入框风格设置 */}
-        <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
-          <Typography variant="subtitle1" sx={{ mb: 2 }}>
-            输入框风格
-          </Typography>
 
-          <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
-            <InputLabel>输入框风格</InputLabel>
-            <Select
-              value={inputBoxStyle}
-              onChange={handleInputBoxStyleChange}
-              label="输入框风格"
-              MenuProps={{
-                disableAutoFocus: true,
-                disableRestoreFocus: true
-              }}
-            >
-              <MenuItem value="default">默认风格</MenuItem>
-              <MenuItem value="modern">现代风格</MenuItem>
-              <MenuItem value="minimal">简约风格</MenuItem>
-            </Select>
-          </FormControl>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            选择聊天输入框和工具栏的视觉风格。默认风格保持原有设计，现代风格采用更时尚的外观，简约风格则更加简洁。
-          </Typography>
-        </Paper>
-
-        {/* 输入框布局样式设置 */}
-        <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
-          <Typography variant="subtitle1" sx={{ mb: 2 }}>
-            输入框布局样式
-          </Typography>
-
-          <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
-            <InputLabel>布局样式</InputLabel>
-            <Select
-              value={inputLayoutStyle}
-              onChange={handleInputLayoutStyleChange}
-              label="布局样式"
-              MenuProps={{
-                disableAutoFocus: true,
-                disableRestoreFocus: true
-              }}
-            >
-              <MenuItem value="default">默认样式（工具栏+输入框分离）</MenuItem>
-              <MenuItem value="compact">聚合样式（输入框+功能图标集成）</MenuItem>
-              <MenuItem value="integrated">集成样式（工具菜单+垂直布局）</MenuItem>
-            </Select>
-          </FormControl>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            选择聊天输入区域的布局方式：
-            <br />• 默认样式：工具栏和输入框分别显示，功能清晰分离
-            <br />• 聚合样式：输入框上方，下方为功能图标行，点击+号可展开更多功能
-            <br />• 集成样式：工具菜单集成到输入框，采用垂直布局和现代化设计
-          </Typography>
-        </Paper>
 
         {/* 工具调用设置 */}
         <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
@@ -476,60 +379,7 @@ const ChatInterfaceSettings: React.FC = () => {
           </Typography>
         </Paper>
 
-        {/* 头像和名称显示设置 */}
-        <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Typography variant="subtitle1">头像和名称显示</Typography>
-            <Tooltip title="自定义聊天界面中用户和模型的头像及名称显示">
-              <IconButton size="small" sx={{ ml: 1 }}>
-                <Info size={16} />
-              </IconButton>
-            </Tooltip>
-          </Box>
 
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <CustomSwitch
-                  checked={showUserAvatar}
-                  onChange={handleShowUserAvatarChange}
-                />
-              }
-              label="显示用户头像"
-            />
-            <FormControlLabel
-              control={
-                <CustomSwitch
-                  checked={showUserName}
-                  onChange={handleShowUserNameChange}
-                />
-              }
-              label="显示用户名称"
-            />
-            <FormControlLabel
-              control={
-                <CustomSwitch
-                  checked={showModelAvatar}
-                  onChange={handleShowModelAvatarChange}
-                />
-              }
-              label="显示模型头像"
-            />
-            <FormControlLabel
-              control={
-                <CustomSwitch
-                  checked={showModelName}
-                  onChange={handleShowModelNameChange}
-                />
-              }
-              label="显示模型名称"
-            />
-          </FormGroup>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            控制聊天界面中用户和AI模型的头像及名称显示。可以根据个人喜好选择性隐藏这些元素，获得更简洁的聊天体验。
-          </Typography>
-        </Paper>
 
         <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #eee' }}>
           <Typography variant="subtitle1" sx={{ mb: 2 }}>

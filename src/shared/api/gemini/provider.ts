@@ -26,6 +26,7 @@ import { GeminiConfigBuilder } from './configBuilder';
 import { createGeminiEmbeddingService } from './embeddingService';
 import { createGeminiMessageContentService } from './messageContentService';
 import { fetchModels, createClient, testConnection } from './client';
+import { createAbortController } from '../../utils/abortController';
 
 
 
@@ -81,10 +82,9 @@ export abstract class BaseProvider {
 
 
 
-  protected createAbortController(_messageId?: string, _autoCleanup = false) {
-    const abortController = new AbortController();
-    const cleanup = () => {};
-    return { abortController, cleanup };
+  protected createAbortController(messageId?: string, autoCleanup = false) {
+    // 使用统一的 createAbortController 工具函数
+    return createAbortController(messageId, autoCleanup);
   }
 
   protected async getMessageContent(message: Message): Promise<string> {
@@ -362,6 +362,12 @@ export default class GeminiProvider extends BaseProvider {
         let thinkingContent = '';
 
         for await (const chunk of stream) {
+          // 检查中断信号
+          if (abortController.signal.aborted) {
+            console.log('[GeminiProvider] 流式响应被用户中断');
+            break;
+          }
+
           if (time_first_token_millsec == 0) {
             time_first_token_millsec = new Date().getTime();
           }
@@ -489,7 +495,8 @@ export default class GeminiProvider extends BaseProvider {
   public async translate(
     content: string,
     assistant: any,
-    onResponse?: (text: string, isComplete: boolean) => void
+    onResponse?: (text: string, isComplete: boolean) => void,
+    abortSignal?: AbortSignal
   ) {
     const model = assistant.model || this.model;
     const { maxTokens } = this.getAssistantSettings(assistant);
@@ -525,6 +532,12 @@ export default class GeminiProvider extends BaseProvider {
 
     let text = '';
     for await (const chunk of response) {
+      // 检查中断信号
+      if (abortSignal?.aborted) {
+        console.log('[GeminiProvider.translate] 流式响应被用户中断');
+        break;
+      }
+
       text += chunk.text;
       onResponse?.(text, false);
     }
@@ -813,6 +826,12 @@ export default class GeminiProvider extends BaseProvider {
 
     // 按照的方式处理流式响应
     for await (const chunk of response) {
+      // 检查中断信号
+      if (options?.abortSignal?.aborted) {
+        console.log('[GeminiProvider.sendChatMessage] 流式响应被用户中断');
+        break;
+      }
+
       if (chunk.candidates?.[0]?.content?.parts) {
         const parts = chunk.candidates[0].content.parts;
         for (const part of parts) {

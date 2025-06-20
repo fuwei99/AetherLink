@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { IconButton, CircularProgress, Badge, Tooltip } from '@mui/material';
-import { Send, Plus, Square, Keyboard, Mic, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { Send, Plus, Square, Keyboard, Mic, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { useChatInputLogic } from '../../shared/hooks/useChatInputLogic';
 
@@ -820,7 +820,7 @@ const IntegratedChatInput: React.FC<IntegratedChatInputProps> = ({
                     padding: '6px'
                   }}
                 >
-                  <Settings size={20} />
+                  <CustomIcon name="settingsPanel" size={20} />
                 </IconButton>
               </Tooltip>
             </div>

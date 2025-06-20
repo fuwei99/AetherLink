@@ -15,7 +15,8 @@ import {
   alpha,
   FormControlLabel,
   Button,
-  Slider
+  Slider,
+  FormGroup
 } from '@mui/material';
 import { ArrowLeft, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -51,6 +52,12 @@ const MessageBubbleSettings: React.FC = () => {
   const messageBubbleMinWidth = settings.messageBubbleMinWidth || 50;
   const messageBubbleMaxWidth = settings.messageBubbleMaxWidth || 99;
   const userMessageMaxWidth = settings.userMessageMaxWidth || 80;
+
+  // 获取头像和名称显示设置
+  const showUserAvatar = settings.showUserAvatar !== false;
+  const showUserName = settings.showUserName !== false;
+  const showModelAvatar = settings.showModelAvatar !== false;
+  const showModelName = settings.showModelName !== false;
 
   const handleBack = () => {
     navigate('/settings/appearance');
@@ -115,6 +122,31 @@ const MessageBubbleSettings: React.FC = () => {
   const handleUserMessageMaxWidthChange = (_event: Event, newValue: number | number[]) => {
     dispatch(updateSettings({
       userMessageMaxWidth: newValue as number
+    }));
+  };
+
+  // 头像和名称显示设置的事件处理函数
+  const handleShowUserAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(updateSettings({
+      showUserAvatar: event.target.checked
+    }));
+  };
+
+  const handleShowUserNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(updateSettings({
+      showUserName: event.target.checked
+    }));
+  };
+
+  const handleShowModelAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(updateSettings({
+      showModelAvatar: event.target.checked
+    }));
+  };
+
+  const handleShowModelNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(updateSettings({
+      showModelName: event.target.checked
     }));
   };
 
@@ -484,6 +516,93 @@ const MessageBubbleSettings: React.FC = () => {
           </Box>
         </Paper>
 
+        {/* 头像和名称显示设置 */}
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' }
+                }}
+              >
+                头像和名称显示
+              </Typography>
+              <Tooltip title="自定义聊天界面中用户和模型的头像及名称显示">
+                <IconButton size="small" sx={{ ml: 1 }}>
+                  <Info />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              控制消息气泡中用户和AI模型的头像及名称显示
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <CustomSwitch
+                    checked={showUserAvatar}
+                    onChange={handleShowUserAvatarChange}
+                  />
+                }
+                label="显示用户头像"
+              />
+              <FormControlLabel
+                control={
+                  <CustomSwitch
+                    checked={showUserName}
+                    onChange={handleShowUserNameChange}
+                  />
+                }
+                label="显示用户名称"
+              />
+              <FormControlLabel
+                control={
+                  <CustomSwitch
+                    checked={showModelAvatar}
+                    onChange={handleShowModelAvatarChange}
+                  />
+                }
+                label="显示模型头像"
+              />
+              <FormControlLabel
+                control={
+                  <CustomSwitch
+                    checked={showModelName}
+                    onChange={handleShowModelNameChange}
+                  />
+                }
+                label="显示模型名称"
+              />
+            </FormGroup>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              控制聊天界面中用户和AI模型的头像及名称显示。可以根据个人喜好选择性隐藏这些元素，获得更简洁的聊天体验。
+            </Typography>
+          </Box>
+        </Paper>
+
         {/* 自定义气泡颜色设置 */}
         <Paper
           elevation={0}
@@ -616,6 +735,10 @@ const MessageBubbleSettings: React.FC = () => {
                   messageBubbleMinWidth={messageBubbleMinWidth}
                   messageBubbleMaxWidth={messageBubbleMaxWidth}
                   userMessageMaxWidth={userMessageMaxWidth}
+                  showUserAvatar={showUserAvatar}
+                  showUserName={showUserName}
+                  showModelAvatar={showModelAvatar}
+                  showModelName={showModelName}
                 />
               </Box>
             </Box>

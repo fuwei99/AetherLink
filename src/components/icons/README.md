@@ -66,11 +66,21 @@ const iconName: IconName = 'search'; // 类型安全
 - 内容预览面板
 - 文档编辑器
 
+### settingsPanel
+带有星形装饰和网格布局的设置图标。
+
+**使用场景**：
+- 设置按钮
+- 配置面板入口
+- 工具栏设置
+- 系统配置
+
 **示例**：
 ```tsx
 <CustomIcon name="search" size={16} color="rgba(59, 130, 246, 0.8)" />
 <CustomIcon name="imageGenerate" size={16} color="rgba(156, 39, 176, 0.8)" />
 <CustomIcon name="documentPanel" size={16} color="rgba(76, 175, 80, 0.8)" />
+<CustomIcon name="settingsPanel" size={16} color="rgba(255, 152, 0, 0.8)" />
 ```
 
 ## 添加新图标

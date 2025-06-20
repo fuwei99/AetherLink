@@ -369,12 +369,21 @@ export const regenerateMessage = (messageId: string, topicId: string, model: Mod
       }
     });
 
-    // 9. 处理助手响应
+    // 9. 设置流式状态 - 关键修复：让重新生成时显示停止按钮
+    dispatch(newMessagesActions.setTopicLoading({ topicId, loading: true }));
+    dispatch(newMessagesActions.setTopicStreaming({ topicId, streaming: true }));
+
+    // 10. 处理助手响应
     await processAssistantResponse(dispatch, getState, resetMessage, topicId, model, true); // 默认启用工具
 
     return true;
   } catch (error) {
     console.error(`重新生成消息 ${messageId} 失败:`, error);
+
+    // 清除加载状态
+    dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }));
+    dispatch(newMessagesActions.setTopicStreaming({ topicId, streaming: false }));
+
     throw error;
   }
 };

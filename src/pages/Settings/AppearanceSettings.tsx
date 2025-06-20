@@ -92,6 +92,10 @@ const AppearanceSettings: React.FC = () => {
     navigate('/settings/appearance/thinking-process');
   };
 
+  const handleNavigateToInputBox = () => {
+    navigate('/settings/appearance/input-box');
+  };
+
   // 性能监控开关处理函数
   const handlePerformanceMonitorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setShowPerformanceMonitor(event.target.checked));
@@ -432,6 +436,37 @@ const AppearanceSettings: React.FC = () => {
           <Divider />
 
           <List disablePadding>
+            {/* 1. 顶部工具栏设置 */}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToTopToolbar}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#10b981', 0.12),
+                    color: '#10b981',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <Wrench size={20} />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>顶部工具栏设置</Typography>}
+                  secondary="自定义顶部工具栏的组件和布局，支持拖拽DIY布局"
+                />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            {/* 2. 聊天界面设置 */}
             <ListItem disablePadding>
               <ListItemButton
                 onClick={handleNavigateToChatInterface}
@@ -461,35 +496,7 @@ const AppearanceSettings: React.FC = () => {
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
 
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={handleNavigateToMessageBubble}
-                sx={{
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
-                  }
-                }}
-              >
-                <ListItemAvatar>
-                  <Avatar sx={{
-                    bgcolor: alpha('#8b5cf6', 0.12),
-                    color: '#8b5cf6',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
-                  }}>
-                    <MessageCircle size={20} />
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>信息气泡管理</Typography>}
-                  secondary="调整消息气泡的样式和宽度设置"
-                />
-                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
-              </ListItemButton>
-            </ListItem>
-
-            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
-
+            {/* 3. 思考过程设置 */}
             <ListItem disablePadding>
               <ListItemButton
                 onClick={handleNavigateToThinkingProcess}
@@ -519,6 +526,37 @@ const AppearanceSettings: React.FC = () => {
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
 
+            {/* 4. 信息气泡管理 */}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={handleNavigateToMessageBubble}
+                sx={{
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                  }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    bgcolor: alpha('#8b5cf6', 0.12),
+                    color: '#8b5cf6',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <MessageCircle size={20} />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>信息气泡管理</Typography>}
+                  secondary="调整消息气泡的样式和宽度设置"
+                />
+                <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider variant="inset" component="li" sx={{ ml: 0 }} />
+
+            {/* 5. 输入框工具栏设置 */}
             <ListItem disablePadding>
               <ListItemButton
                 onClick={handleNavigateToToolbarCustomization}
@@ -548,9 +586,10 @@ const AppearanceSettings: React.FC = () => {
 
             <Divider variant="inset" component="li" sx={{ ml: 0 }} />
 
+            {/* 6. 输入框管理设置 */}
             <ListItem disablePadding>
               <ListItemButton
-                onClick={handleNavigateToTopToolbar}
+                onClick={handleNavigateToInputBox}
                 sx={{
                   transition: 'all 0.2s',
                   '&:hover': {
@@ -560,16 +599,16 @@ const AppearanceSettings: React.FC = () => {
               >
                 <ListItemAvatar>
                   <Avatar sx={{
-                    bgcolor: alpha('#10b981', 0.12),
-                    color: '#10b981',
+                    bgcolor: alpha('#ec4899', 0.12),
+                    color: '#ec4899',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                   }}>
-                    <Wrench size={20} />
+                    <MessageSquare size={20} />
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>顶部工具栏设置</Typography>}
-                  secondary="自定义顶部工具栏的组件和布局，支持拖拽DIY布局"
+                  primary={<Typography sx={{ fontWeight: 600, color: 'text.primary' }}>输入框管理设置</Typography>}
+                  secondary="自定义输入框的风格和布局样式"
                 />
                 <ChevronRight size={20} style={{ color: 'var(--mui-palette-text-secondary)' }} />
               </ListItemButton>

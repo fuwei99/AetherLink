@@ -40,7 +40,7 @@ export default function Sidebar({
   const [localMobileOpen, setLocalMobileOpen] = useState(false);
   const [localDesktopOpen, setLocalDesktopOpen] = useState(true);
 
-  const drawerWidth = 308;
+  const drawerWidth = 340;
 
   // 使用优化的侧边栏切换Hook
   const { handleToggle: handleDrawerToggle } = useSidebarToggle({

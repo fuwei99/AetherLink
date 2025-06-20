@@ -1,5 +1,5 @@
 import type { WebDavConfig, WebDavSyncState, WebDavUploadResult, WebDavDownloadResult } from '../types';
-import { WebDavService } from './WebDavService';
+import { WebDavManagerService } from './WebDavManagerService';
 import { getStorageItem, setStorageItem } from '../utils/storage';
 
 /**
@@ -8,7 +8,7 @@ import { getStorageItem, setStorageItem } from '../utils/storage';
  */
 export class WebDavBackupService {
   private static instance: WebDavBackupService;
-  private webdavService: WebDavService | null = null;
+  private webdavService: WebDavManagerService | null = null;
   private syncTimer: NodeJS.Timeout | null = null;
   private isAutoSyncing = false;
 
@@ -26,7 +26,7 @@ export class WebDavBackupService {
    */
   async initialize(config: WebDavConfig): Promise<boolean> {
     try {
-      this.webdavService = new WebDavService(config);
+      this.webdavService = new WebDavManagerService(config);
       const result = await this.webdavService.checkConnection();
       return result.success;
     } catch (error) {
@@ -271,7 +271,7 @@ export class WebDavBackupService {
    */
   async checkConnection(config: WebDavConfig): Promise<boolean> {
     try {
-      const service = new WebDavService(config);
+      const service = new WebDavManagerService(config);
       const result = await service.checkConnection();
       return result.success;
     } catch (error) {
